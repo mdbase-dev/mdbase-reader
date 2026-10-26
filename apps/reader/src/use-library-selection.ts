@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { t as translate } from "@lingui/core/macro";
 import {
   useCallback,
   useEffect,
@@ -15,6 +15,7 @@ import { readerErrorMessage } from "./errors.js";
 import type { AsyncResource } from "./use-reader-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type {
+  CslProvenance,
   Source,
   SourceDeletionPlan,
   SourceFileAttachmentRequest,
@@ -50,6 +51,7 @@ export interface LibrarySelection {
   readonly saveNewSourceCitation?: (
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ) => Promise<Source>;
   /** Present when sources can be removed: checks one, listing the records that link to it. */
   readonly planSourceRemoval?: (id: SourceId) => Promise<SourceDeletionPlan>;
@@ -127,7 +129,7 @@ export function useLibrarySelection(
               status: "error",
               message: readerErrorMessage(
                 reason,
-                t({ message: "Reader could not load this collection." }),
+                translate({ message: "Reader could not load this collection." }),
               ),
             });
           }
@@ -205,14 +207,14 @@ function sourceWrites(
     importSourceFile: (request, options) =>
       writeSource(
         () => gateway.importSourceFile(request, options),
-        t({ message: "Reader could not import this document." }),
+        translate({ message: "Reader could not add this document." }),
       ),
     ...(createSource
       ? {
           createSource: (request, options) =>
             writeSource(
               () => createSource(request, options),
-              t({ message: "Reader could not add this source." }),
+              translate({ message: "Reader could not add this source." }),
             ),
         }
       : {}),
@@ -227,8 +229,8 @@ function sourceWrites(
       : {}),
     ...(saveNewSourceCitation
       ? {
-          saveNewSourceCitation: async (source, citation) => {
-            const saved = await saveNewSourceCitation(source, citation);
+          saveNewSourceCitation: async (source, citation, provenance) => {
+            const saved = await saveNewSourceCitation(source, citation, provenance);
             reconcileSource(saved);
             return saved;
           },
@@ -248,7 +250,7 @@ function useSourceRemovalWrites(
   const removeSource = useCallback(
     async (plan: SourceDeletionPlan): Promise<void> => {
       if (!gateway.removeSource) {
-        throw new Error(t({ message: "This collection cannot remove sources." }));
+        throw new Error(translate({ message: "This collection cannot remove sources." }));
       }
       await gateway.removeSource(plan);
       setLibrary((current) => removeLibrarySource(current, plan.sourceId));

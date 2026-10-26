@@ -1,34 +1,66 @@
-import { plural, t } from "@lingui/core/macro";
+import { t as translate, plural } from "@lingui/core/macro";
+import { searchQuote } from "@mdbase-reader/core";
 import { useEffect, useMemo, useState } from "react";
 
 import { searchExcerpt, type SearchExcerpt } from "./search-passages.js";
 
-import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type {
+  DocumentTarget,
+  SearchDestination,
+  SearchTextSegment,
+  SourceId,
+  SourceSummary,
+} from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 interface IndexedText {
   readonly key: string;
   readonly sourceId: SourceId;
-  readonly text: string;
+  readonly segments: readonly SearchTextSegment[];
+  readonly document: DocumentTarget;
+  readonly locatable: boolean;
   readonly truncated: boolean;
 }
 const characterLimit = 1_000_000;
 const emptySurfaces: ReadonlyMap<string, ReadingSurface> = new Map();
 
-function documentSearchCoverage(
-  pending: boolean,
-  loaded: number,
-  readable: number,
-  truncated: boolean,
-): string {
-  const progress = pending
-    ? t`Indexing ${loaded} of ${readable} readable sources.`
-    : t`Searched ${loaded} of ${readable} readable sources.`;
-  const scope = t`Only loaded, supported documents are searched; suspended tabs are not included.`;
-  const limit = truncated
-    ? t`Large documents are limited to their first 1,000,000 characters.`
-    : "";
-  return [progress, scope, limit].filter(Boolean).join(" ");
+function boundSearchSegments(segments: readonly SearchTextSegment[]): {
+  segments: readonly SearchTextSegment[];
+  truncated: boolean;
+} {
+  let remaining = characterLimit;
+  let truncated = false;
+  const bounded = segments.flatMap((segment) => {
+    const text = segment.text.slice(0, remaining);
+    remaining -= text.length;
+    truncated ||= text.length < segment.text.length;
+    return text ? [{ ...segment, text }] : [];
+  });
+  return { segments: bounded, truncated };
+}
+
+async function extractSearchEntry(
+  key: string,
+  sourceId: SourceId,
+  surface: ReadingSurface,
+  signal: AbortSignal,
+): Promise<IndexedText | null> {
+  const extraction = surface.capabilities.textExtraction;
+  if (!extraction) {
+    return null;
+  }
+  const located = await extraction.extractSearchSegments?.({ signal });
+  const segments = located ?? [
+    { location: { kind: "html" as const }, text: await extraction.extractText({ signal }) },
+  ];
+  const bounded = boundSearchSegments(segments);
+  return {
+    key,
+    sourceId,
+    document: surface.document.document,
+    locatable: Boolean(located),
+    ...bounded,
+  };
 }
 
 /** Only currently resident exact revisions; no background opening of the collection. */
@@ -38,7 +70,10 @@ export function useOpenDocumentSearch(
   surfaces: ReadonlyMap<string, ReadingSurface> = emptySurfaces,
   query: string,
 ): {
-  readonly matches: ReadonlyMap<SourceId, SearchExcerpt>;
+  readonly matches: ReadonlyMap<
+    SourceId,
+    SearchExcerpt & { readonly destination?: SearchDestination }
+  >;
   readonly coverage: string;
   readonly problem: string | null;
 } {
@@ -86,19 +121,11 @@ export function useOpenDocumentSearch(
               next.push(cached);
               continue;
             }
-            const text = await surface.capabilities.textExtraction?.extractText({
-              signal: controller.signal,
-            });
+            const entry = await extractSearchEntry(key, sourceId, surface, controller.signal);
             if (controller.signal.aborted) {
               return;
             }
-            if (text) {
-              const entry = {
-                key,
-                sourceId,
-                text: text.slice(0, characterLimit),
-                truncated: text.length > characterLimit,
-              };
+            if (entry) {
               cache.set(surface, entry);
               next.push(entry);
             }
@@ -111,7 +138,7 @@ export function useOpenDocumentSearch(
           setPending(false);
           setProblem(
             failures
-              ? t({
+              ? translate({
                   message: `${plural(failures, { one: "# loaded document could not be indexed", other: "# loaded documents could not be indexed" })}. Reopen document search to retry.`,
                 })
               : null,
@@ -126,22 +153,29 @@ export function useOpenDocumentSearch(
   }, [cache, documents, enabled]);
   const currentKeys = new Set(documents.map(({ key }) => key));
   const currentTexts = texts.filter(({ key }) => currentKeys.has(key));
-  const matches = new Map<SourceId, SearchExcerpt>();
+  const matches = new Map<SourceId, SearchExcerpt & { readonly destination?: SearchDestination }>();
   for (const entry of currentTexts) {
-    const excerpt = searchExcerpt(entry.text, query);
-    if (excerpt) {
-      matches.set(entry.sourceId, excerpt);
+    for (const segment of entry.segments) {
+      const excerpt = searchExcerpt(segment.text, query);
+      const quote = searchQuote(segment.text, query);
+      if (excerpt && quote && !matches.has(entry.sourceId)) {
+        matches.set(entry.sourceId, {
+          ...excerpt,
+          ...(entry.locatable
+            ? { destination: { document: entry.document, location: segment.location, quote } }
+            : {}),
+        });
+      }
     }
   }
   const readable = sources.filter((source) => source.documents.length > 0).length;
+  const state = pending ? translate`indexing` : translate`searched`;
+  const limit = currentTexts.some((entry) => entry.truncated)
+    ? translate` Loaded documents are limited to their first 1,000,000 characters.`
+    : "";
   return {
     matches,
     problem,
-    coverage: documentSearchCoverage(
-      pending,
-      currentTexts.length,
-      readable,
-      currentTexts.some((entry) => entry.truncated),
-    ),
+    coverage: translate`Loaded-document fallback: ${state} ${currentTexts.length} of ${readable} readable sources. Suspended/unopened PDF/EPUB files are not included.${limit}`,
   };
 }

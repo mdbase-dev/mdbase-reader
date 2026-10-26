@@ -1,0 +1,10 @@
+{
+  "url": "https://stackoverflow.com/questions/2003505/how-do-i-delete-a-git-branch-locally-and-remotely",
+  "retrievedAt": "2026-10-23T06:16:00.781784+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 403. Final URL: https://stackoverflow.com/questions/2003505/how-do-i-delete-a-git-branch-locally-and-remotely.",
+    "HTTP 403 Cloudflare challenge. Title, question owner Matthew Rankin and creation date independently verified with the public Stack Exchange API https://api.stackexchange.com/2.3/questions/2003505?site=stackoverflow. The question later became community-owned; this expectation credits its original author, not subsequent answer authors. Citoid recovers title/site only.",
+    "Baseline extractScholarlyMetadata at d0c7061: 0/6 expected fields match; wrong or missing fields: type, title, author, issued, container-title, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

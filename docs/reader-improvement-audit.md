@@ -183,12 +183,33 @@ routing/authorization and real collection performance still require LAB retestin
 
 Remaining opportunities:
 
-- A persistent, revision-keyed whole-library document index. Currently only loaded
-  supported documents are searched; suspended/unopened documents are explicitly
-  excluded. Each loaded document is capped at its first 1,000,000 characters.
-- Passage-level document destinations. Results currently open the correct source
-  or note surface; document results tell the user to use the renderer's Find
-  control rather than pretending to have a precise PDF/EPUB locator.
+- Whole-library PDF/EPUB indexing. The [device-local HTML index](library-text-index.md)
+  now covers unopened/suspended saved pages up to 256 KiB, keyed by file identity
+  and digest revision. PDF/EPUB and larger saved pages still use loaded-document
+  search, capped at its first 1,000,000 characters. Coverage and storage fallback
+  remain explicit.
+- Loaded-document results and persistent HTML-index hits now carry revision-bound
+  passage destinations (PDF page, EPUB spine href, or HTML quotation). Indexed hits
+  retain original-text prefix/suffix evidence and the indexed file/revision; loaded
+  destinations take precedence when both exist. The renderers verify quotation
+  evidence before jumping and draw a separate, 12-second search highlight without
+  saving an annotation.
+  A focused status announces the passage or an explicit Find fallback. Approximate,
+  ambiguous, changed-revision and unsupported destinations are not silently substituted.
+  PDF/EPUB native text navigation conservatively falls back on repeated native hits,
+  even when annotation quotation context alone could distinguish them. The core
+  `SearchDestination` contract is independent of the index. Current descriptors
+  reject stale indexed hits, and a revision change after search still produces the
+  explicit Find status rather than silently rebinding the destination. Alternate-file
+  opening remains follow-up work; a different opened file also falls back to Find.
+
+  Fixture browser verification: `node apps/reader/scripts/audit-search-passages.mjs`
+  against an owned loopback Vite server covers Enter activation and focused announcements,
+  unopened indexed HTML range visibility, real PDF/EPUB rendering and transient
+  highlights, plus ambiguous indexed-quotation fallback without a highlight. It
+  intercepts all collection requests and refuses annotation writes; it is not
+  connected LAB acceptance.
+
 - Cold-start offline authentication/collection discovery. Open a collection while
   connected first; the new document cache is not a complete offline mirror.
 - Browser cache quota management across many historical revisions, multi-window
@@ -198,5 +219,7 @@ Remaining opportunities:
   scrolling tabs on every layout event interferes with native dragging.
 - Native-shell coverage and further PDF/EPUB position coverage across renderer
   eviction. Browser docking now has pointer, touch, persistence, and mobile coverage.
-- Further initial bundle splitting. The production build still warns about large
-  renderer chunks and YAML being imported both statically and dynamically.
+- Large on-demand renderer dependencies. [Further bundle splitting](reader-bundle-splitting.md)
+  now defers secondary surfaces, overlaps selected-renderer loading with document
+  fetching, and shares one YAML runtime behind async writer adapters. Large PDF,
+  Readium and Dockview chunks still need dependency-specific reductions.

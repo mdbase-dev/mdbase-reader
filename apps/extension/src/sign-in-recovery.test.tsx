@@ -1,12 +1,11 @@
 // @vitest-environment happy-dom
 import { describeError } from "@mdbase-reader/connect/native";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { connectionView } from "./connection-view.js";
 import { ConnectionPanel, type ConnectionControls } from "./ConnectionPanel.js";
-import { withI18n } from "./testing/i18n.js";
+import { createRoot, withI18n } from "./testing/i18n.js";
 import { applicationFixture } from "./testing/sdk-fixture.js";
 
 let host: HTMLDivElement;

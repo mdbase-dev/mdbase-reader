@@ -1,0 +1,60 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "GT2VHSRL",
+      "version": 0,
+      "itemType": "journalArticle",
+      "creators": [
+        {
+          "firstName": "J. D.",
+          "lastName": "Watson",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "F. H. C.",
+          "lastName": "Crick",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "Science",
+          "type": 1
+        },
+        {
+          "tag": "Humanities and Social Sciences",
+          "type": 1
+        },
+        {
+          "tag": "multidisciplinary",
+          "type": 1
+        },
+        {
+          "tag": "Science",
+          "type": 1
+        },
+        {
+          "tag": "multidisciplinary",
+          "type": 1
+        }
+      ],
+      "title": "Molecular Structure of Nucleic Acids: A Structure for Deoxyribose Nucleic Acid",
+      "publicationTitle": "Nature",
+      "rights": "1953 Springer Nature Limited",
+      "volume": "171",
+      "issue": "4356",
+      "pages": "737–738",
+      "publisher": "Nature Publishing Group",
+      "date": "1953-04",
+      "DOI": "10.1038/171737a0",
+      "ISSN": "1476-4687",
+      "url": "https://www.nature.com/articles/171737a0",
+      "abstractNote": "The determination in 1953 of the structure of deoxyribonucleic acid (DNA), with its two entwined helices and paired organic bases, was a tour de force in X-ray crystallography.",
+      "language": "en",
+      "libraryCatalog": "www.nature.com",
+      "accessDate": "2026-10-23",
+      "shortTitle": "Molecular Structure of Nucleic Acids"
+    }
+  ]
+}

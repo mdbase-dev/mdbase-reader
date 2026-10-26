@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, lstat } from "node:fs/promises";
 import { assertInventory } from "./native-publish-bytes.mjs";
 import { join } from "node:path";
-import { storeExtensionId } from "../../apps/extension/scripts/extension-manifest.mjs";
+import { storeExtensionId } from "../../apps/extension/scripts/extension-ids.mjs";
 import {
   stagingExtensionId,
   stagingManifestKey,

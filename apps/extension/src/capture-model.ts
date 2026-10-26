@@ -1,5 +1,10 @@
 import { describeError } from "@mdbase-reader/connect/native";
-import { normalizedSourceUrl, sameSourceUrl, type SourceSummary } from "@mdbase-reader/core";
+import {
+  normalizedSourceUrl,
+  sameSourceUrl,
+  type Annotation,
+  type SourceSummary,
+} from "@mdbase-reader/core";
 
 import { environment } from "./environment.js";
 
@@ -9,6 +14,16 @@ export function readerSourceUrl(source: Pick<SourceSummary, "collectionId" | "id
   const url = new URL(`${environment.readerOrigin}/`);
   url.searchParams.set("collection", source.collectionId);
   url.searchParams.set("source", source.id);
+  return url.href;
+}
+
+/** The source in Reader with `annotation` revealed, named by record path where it has one. */
+export function readerAnnotationUrl(
+  source: Pick<SourceSummary, "collectionId" | "id">,
+  annotation: Pick<Annotation, "id" | "path">,
+): string {
+  const url = new URL(readerSourceUrl(source));
+  url.searchParams.set("annotation", annotation.path ?? annotation.id);
   return url.href;
 }
 
@@ -63,6 +78,17 @@ export async function sourceForUrl(
     cursor = page.nextCursor;
   } while (cursor);
   return null;
+}
+
+/**
+ * A failure the panel words itself, plainly enough to show as it is. Any other failure is
+ * summarised by the panel, with its own message kept under Technical details.
+ */
+export class PlainError extends Error {}
+
+/** The plain summary of a failure, when it has one. */
+export function plainMessage(reason: unknown): string | null {
+  return reason instanceof PlainError ? reason.message : null;
 }
 
 export function problemMessage(reason: unknown): string {

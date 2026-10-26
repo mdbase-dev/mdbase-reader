@@ -1,0 +1,1713 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1280" />
+    <title>
+      Selection toolbar and highlight popover — current and proposed · mdbase Reader design mockup
+    </title>
+    <style>
+      /* ==========================================================================
+   Proposed mdbase Reader tokens (see docs/design-direction.md).
+   Scoped to .p so the recreated "current" UI keeps its own values.
+   ========================================================================== */
+      :root {
+        --font-ui:
+          "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui,
+          -apple-system, "Segoe UI", sans-serif;
+        --font-read:
+          "Iowan Old Style", Charter, "Bitstream Charter", "Source Serif 4", "Noto Serif", Georgia,
+          serif;
+        --font-mono: "Azeret Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .p {
+        /* Type: size / line-height pairs. */
+        --text-xs: 12px;
+        --lh-xs: 16px;
+        --text-sm: 13px;
+        --lh-sm: 18px;
+        --text-md: 14px;
+        --lh-md: 20px;
+        --text-lg: 16px;
+        --lh-lg: 24px;
+        --text-xl: 20px;
+        --lh-xl: 28px;
+        --text-2xl: 28px;
+        --lh-2xl: 34px;
+        --text-quote: 15px;
+        --lh-quote: 1.6;
+        --weight-regular: 400;
+        --weight-medium: 520;
+        --weight-strong: 650;
+
+        /* Space: 4px grid. */
+        --sp-0-5: 2px;
+        --sp-1: 4px;
+        --sp-2: 8px;
+        --sp-3: 12px;
+        --sp-4: 16px;
+        --sp-5: 20px;
+        --sp-6: 24px;
+        --sp-8: 32px;
+        --sp-12: 48px;
+
+        /* Radii. */
+        --r-xs: 4px;
+        --r-sm: 6px;
+        --r-md: 8px;
+        --r-lg: 12px;
+        --r-xl: 16px;
+        --r-full: 999px;
+
+        /* Controls. */
+        --control-h: 32px;
+        --control-h-sm: 28px;
+        --target-min: 24px;
+
+        /* Motion. */
+        --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+        --dur-fast: 120ms;
+        --dur-base: 180ms;
+        --dur-slow: 260ms;
+
+        color-scheme: light;
+        --bg-canvas: oklch(96.9% 0.006 80);
+        --bg-surface: oklch(99.1% 0.004 85);
+        --bg-raised: oklch(100% 0 0);
+        --bg-sunken: oklch(95.6% 0.007 80);
+        --bg-hover: oklch(95.2% 0.008 80);
+        --bg-paper: oklch(99.6% 0.004 90);
+        --text-1: oklch(24% 0.012 60);
+        --text-2: oklch(44% 0.012 60);
+        --text-3: oklch(52% 0.011 60);
+        --line: oklch(91.5% 0.007 75);
+        --line-strong: oklch(84% 0.009 75);
+        --line-control: oklch(64% 0.01 75);
+        --accent: oklch(47% 0.115 250);
+        --accent-strong: oklch(41% 0.115 250);
+        --accent-soft: oklch(94.6% 0.024 250);
+        --on-accent: oklch(99% 0.004 250);
+        --success: oklch(47% 0.09 150);
+        --warning-text: oklch(46% 0.085 65);
+        --warning-soft: oklch(96.2% 0.03 85);
+        --danger: oklch(50% 0.14 28);
+        --shadow-color: oklch(30% 0.02 60);
+        --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 8%, transparent);
+        --e-2:
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 7%, transparent),
+          0 6px 20px color-mix(in oklch, var(--shadow-color) 12%, transparent);
+        --e-3:
+          0 0 0 1px color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 20px 56px color-mix(in oklch, var(--shadow-color) 20%, transparent);
+        --focus-ring: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--accent);
+
+        /* Highlights: wash (behind text) and ink (margin bars, swatches). */
+        --hl-yellow: oklch(92% 0.1 95);
+        --hl-green: oklch(91.5% 0.075 150);
+        --hl-blue: oklch(91% 0.055 235);
+        --hl-pink: oklch(91% 0.06 355);
+        --hl-purple: oklch(90.5% 0.055 300);
+        --ink-yellow: oklch(76% 0.15 82);
+        --ink-green: oklch(63% 0.13 150);
+        --ink-blue: oklch(60% 0.12 245);
+        --ink-pink: oklch(62% 0.15 355);
+        --ink-purple: oklch(56% 0.13 300);
+      }
+      [data-theme="dark"] .p {
+        color-scheme: dark;
+        --bg-canvas: oklch(16.5% 0.006 70);
+        --bg-surface: oklch(19.5% 0.006 70);
+        --bg-raised: oklch(25.5% 0.008 70);
+        --bg-sunken: oklch(16% 0.005 70);
+        --bg-hover: oklch(24.5% 0.007 70);
+        --bg-paper: oklch(21.5% 0.006 75);
+        --text-1: oklch(92.5% 0.008 80);
+        --text-2: oklch(76% 0.01 80);
+        --text-3: oklch(66% 0.01 80);
+        --line: oklch(29% 0.007 70);
+        --line-strong: oklch(37% 0.008 70);
+        --line-control: oklch(56% 0.01 70);
+        --accent: oklch(77% 0.1 245);
+        --accent-strong: oklch(83% 0.09 245);
+        --accent-soft: oklch(31% 0.05 250);
+        --on-accent: oklch(18% 0.02 250);
+        --success: oklch(74% 0.1 150);
+        --warning-text: oklch(82% 0.08 80);
+        --warning-soft: oklch(27% 0.03 80);
+        --danger: oklch(72% 0.13 28);
+        --shadow-color: oklch(5% 0.01 60);
+        --e-1: 0 1px 2px color-mix(in oklch, var(--shadow-color) 40%, transparent);
+        --e-2:
+          0 0 0 1px oklch(100% 0 0 / 0.06),
+          0 8px 24px color-mix(in oklch, var(--shadow-color) 55%, transparent);
+        --e-3:
+          0 0 0 1px oklch(100% 0 0 / 0.07),
+          0 24px 64px color-mix(in oklch, var(--shadow-color) 70%, transparent);
+        --hl-yellow: oklch(41% 0.075 88);
+        --hl-green: oklch(39% 0.06 150);
+        --hl-blue: oklch(39% 0.06 245);
+        --hl-pink: oklch(39% 0.07 355);
+        --hl-purple: oklch(38% 0.06 300);
+        --ink-yellow: oklch(83% 0.14 88);
+        --ink-green: oklch(75% 0.12 150);
+        --ink-blue: oklch(74% 0.11 245);
+        --ink-pink: oklch(75% 0.12 355);
+        --ink-purple: oklch(73% 0.11 300);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .p {
+          --dur-fast: 0ms;
+          --dur-base: 0ms;
+          --dur-slow: 0ms;
+        }
+      }
+      .p {
+        font-family: var(--font-ui);
+        font-size: var(--text-md);
+        line-height: var(--lh-md);
+        color: var(--text-1);
+        font-variant-numeric: tabular-nums;
+        -webkit-font-smoothing: antialiased;
+      }
+      .p button {
+        font: inherit;
+        color: inherit;
+      }
+      .p :focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+
+      /* --- Proposed components -------------------------------------------------- */
+      .p .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-2);
+        height: var(--control-h);
+        padding: 0 var(--sp-3);
+        border: 1px solid var(--line-strong);
+        border-radius: var(--r-md);
+        background: var(--bg-surface);
+        color: var(--text-1);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .p .btn:hover {
+        background: var(--bg-hover);
+      }
+      .p .btn.primary {
+        border-color: transparent;
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+      .p .btn.primary:hover {
+        background: var(--accent-strong);
+      }
+      .p .btn.quiet {
+        border-color: transparent;
+        background: transparent;
+        color: var(--text-2);
+      }
+      .p .btn.quiet:hover {
+        background: var(--bg-hover);
+        color: var(--text-1);
+      }
+      .p .icon-btn {
+        display: inline-grid;
+        place-items: center;
+        width: var(--control-h);
+        height: var(--control-h);
+        border: 0;
+        border-radius: var(--r-md);
+        background: transparent;
+        color: var(--text-2);
+        cursor: pointer;
+      }
+      .p .icon-btn:hover {
+        background: var(--bg-hover);
+        color: var(--text-1);
+      }
+      .p .icon-btn svg,
+      .p .btn svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+      }
+      .p .field {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        height: var(--control-h);
+        padding: 0 var(--sp-3);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        background: var(--bg-sunken);
+        color: var(--text-3);
+        font-size: var(--text-sm);
+      }
+      .p .field svg {
+        width: 15px;
+        height: 15px;
+        flex: none;
+      }
+      .p .field .grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .p .kbd {
+        padding: 0 5px;
+        border: 1px solid var(--line);
+        border-radius: var(--r-xs);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        line-height: 16px;
+        color: var(--text-3);
+      }
+      .p .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--sp-1);
+        height: 22px;
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-full);
+        background: var(--bg-sunken);
+        color: var(--text-2);
+        font-size: var(--text-xs);
+      }
+      .p .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex: none;
+      }
+      .p .menu {
+        min-width: 220px;
+        padding: var(--sp-1);
+        border-radius: var(--r-lg);
+        background: var(--bg-raised);
+        box-shadow: var(--e-2);
+        font-size: var(--text-sm);
+      }
+      .p .menu .item {
+        display: flex;
+        align-items: center;
+        gap: var(--sp-2);
+        min-height: 32px;
+        padding: 0 var(--sp-2);
+        border-radius: var(--r-sm);
+        color: var(--text-1);
+      }
+      .p .menu .item.on {
+        background: var(--bg-hover);
+      }
+      .p .menu .item .end {
+        margin-left: auto;
+        color: var(--text-3);
+      }
+      .p .menu .label {
+        padding: var(--sp-2) var(--sp-2) var(--sp-1);
+        color: var(--text-3);
+        font-size: var(--text-xs);
+      }
+      .p .menu hr {
+        margin: var(--sp-1) 0;
+        border: 0;
+        border-top: 1px solid var(--line);
+      }
+      .p .tabs {
+        display: flex;
+        gap: var(--sp-4);
+        border-bottom: 1px solid var(--line);
+      }
+      .p .tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+        color: var(--text-2);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-medium);
+      }
+      .p .tab.on {
+        color: var(--text-1);
+      }
+      .p .tab.on::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 -1px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--accent);
+      }
+      .p .tab .n {
+        color: var(--text-3);
+        font-weight: var(--weight-regular);
+      }
+      .p .quote {
+        font-family: var(--font-read);
+        font-size: var(--text-quote);
+        line-height: var(--lh-quote);
+        color: var(--text-1);
+      }
+
+      /* --- Mockup board (not part of the proposal) ----------------------------- */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        min-width: 1280px;
+        background: oklch(93% 0.004 80);
+        color: oklch(30% 0.01 60);
+        font-family:
+          "Atkinson Hyperlegible Next Variable", "Atkinson Hyperlegible Next", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      [data-theme="dark"] body {
+        background: oklch(12.5% 0.004 70);
+        color: oklch(82% 0.008 80);
+      }
+      .board {
+        width: 1280px;
+        margin: 0 auto;
+        padding: 32px 40px 56px;
+      }
+      .board-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+      .board-head h1 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        line-height: 28px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .board-head p {
+        max-width: 760px;
+        margin: 0;
+        font-size: 14px;
+        line-height: 21px;
+        opacity: 0.78;
+      }
+      .theme-toggle {
+        display: inline-flex;
+        padding: 3px;
+        border-radius: 999px;
+        background: oklch(88% 0.005 80);
+      }
+      [data-theme="dark"] .theme-toggle {
+        background: oklch(22% 0.006 70);
+      }
+      .theme-toggle button {
+        height: 28px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .theme-toggle button[aria-pressed="true"] {
+        background: oklch(99% 0.003 80);
+        box-shadow: 0 1px 2px oklch(0% 0 0 / 0.12);
+      }
+      [data-theme="dark"] .theme-toggle button[aria-pressed="true"] {
+        background: oklch(32% 0.007 70);
+      }
+      .theme-toggle button:focus-visible {
+        outline: 2px solid oklch(55% 0.12 250);
+        outline-offset: 2px;
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        opacity: 0.7;
+      }
+      .tag::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: oklch(62% 0.02 255);
+      }
+      .tag.is-proposed::before {
+        background: oklch(60% 0.13 250);
+      }
+      .frame {
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow:
+          0 0 0 1px oklch(0% 0 0 / 0.08),
+          0 12px 32px oklch(30% 0.02 60 / 0.12);
+      }
+      [data-theme="dark"] .frame {
+        box-shadow:
+          0 0 0 1px oklch(100% 0 0 / 0.08),
+          0 12px 32px oklch(0% 0 0 / 0.5);
+      }
+      .notes {
+        margin: 14px 0 0;
+        padding: 0 0 0 18px;
+        font-size: 13px;
+        line-height: 20px;
+        opacity: 0.85;
+      }
+      .notes li + li {
+        margin-top: 4px;
+      }
+      .notes b {
+        font-weight: 650;
+      }
+      .cols {
+        display: grid;
+        gap: 32px;
+        align-items: start;
+      }
+      .section-title {
+        margin: 40px 0 14px;
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      /* --- Recreated current UI (values from @mdbase-dev/ui tokens and
+   reader-shell.css; the UI face falls back because --sans names the
+   unloaded "Atkinson Hyperlegible"). -------------------------------------- */
+      .c {
+        --paper: oklch(99.5% 0.002 255);
+        --canvas: oklch(99.5% 0.002 255);
+        --hover: oklch(97.8% 0.003 255);
+        --ink: oklch(21% 0.018 255);
+        --soft: oklch(50% 0.014 255);
+        --muted: oklch(54% 0.01 255);
+        --faint: oklch(70% 0.009 255);
+        --line: oklch(92% 0.006 255);
+        --line-strong: oklch(82% 0.008 255);
+        --accent: oklch(47% 0.1 238);
+        --sel: color-mix(in srgb, oklch(86% 0.12 86) 20%, oklch(99.5% 0.002 255));
+        --hl: oklch(80% 0.11 86 / 0.52);
+        --hl-strong: oklch(80% 0.13 80 / 0.85);
+        --bar: oklch(66% 0.13 76);
+        --tool: oklch(96.2% 0.004 255);
+        color-scheme: light;
+        font-family: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+        color: var(--ink);
+        background: var(--paper);
+      }
+      [data-theme="dark"] .c {
+        --paper: oklch(19.5% 0.012 255);
+        --canvas: oklch(17.5% 0.012 255);
+        --hover: oklch(22.5% 0.012 255);
+        --ink: oklch(92% 0.008 255);
+        --soft: oklch(70% 0.012 255);
+        --muted: oklch(62% 0.011 255);
+        --faint: oklch(56% 0.011 255);
+        --line: oklch(29% 0.012 255);
+        --line-strong: oklch(39% 0.012 255);
+        --accent: oklch(73% 0.105 238);
+        --sel: oklch(23.5% 0.012 255);
+        --hl: oklch(55% 0.1 86 / 0.45);
+        --hl-strong: oklch(62% 0.12 80 / 0.7);
+        --tool: oklch(17.5% 0.012 255);
+        color-scheme: dark;
+      }
+      .c button {
+        font: inherit;
+        color: inherit;
+      }
+      .c svg {
+        width: 14px;
+        height: 14px;
+        flex: none;
+      }
+
+      .cols {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      /* Shared page-of-text stage */
+      .stage {
+        position: relative;
+        height: 430px;
+        padding: 28px 0;
+        overflow: hidden;
+      }
+      .page {
+        position: relative;
+        width: 470px;
+        margin: 0 auto;
+        padding: 40px 46px;
+        font-family: var(--font-read, Georgia, serif);
+        font-size: 15px;
+        line-height: 1.65;
+      }
+      .page h3 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        letter-spacing: 0.08em;
+      }
+      .page p {
+        margin: 0 0 12px;
+        text-align: justify;
+        hyphens: auto;
+      }
+
+      /* ---------- Current recreation ---------- */
+      .c.stage {
+        background: oklch(96.5% 0.003 255);
+      }
+      [data-theme="dark"] .c.stage {
+        background: var(--canvas);
+      }
+      .c .page {
+        font-family: "Liberation Serif", "Times New Roman", serif;
+        font-size: 15.5px;
+        background: oklch(100% 0 0);
+        color: oklch(15% 0 0);
+        box-shadow: 0 0 0 1px oklch(90% 0.004 255);
+      }
+      [data-theme="dark"] .c .page {
+        background: oklch(100% 0 0);
+        filter: none;
+      }
+      .c .sel {
+        background: oklch(80% 0.07 235 / 0.7);
+      }
+      .c .hl {
+        background: var(--hl-strong);
+        text-decoration: underline;
+      }
+      .c .tb {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 6px;
+        border: 1px solid oklch(90% 0.004 255);
+        border-radius: 6px;
+        background: oklch(99.5% 0.002 255);
+        color: oklch(40% 0.014 255);
+        box-shadow: 0 4px 12px oklch(20% 0.02 255 / 0.08);
+        font-family: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1;
+      }
+      [data-theme="dark"] .c .tb {
+        border-color: var(--line);
+        background: var(--paper);
+        color: var(--soft);
+      }
+      .c .tb span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 7px;
+      }
+      .c .tb i {
+        width: 1px;
+        height: 18px;
+        background: var(--line);
+      }
+      .c .owner {
+        position: absolute;
+        font-family: "Atkinson Hyperlegible", "Segoe UI", Arial, sans-serif;
+        font-size: 10px;
+        color: oklch(30% 0.014 255);
+      }
+      [data-theme="dark"] .c .owner {
+        color: var(--ink);
+      }
+      .c .owner a {
+        color: var(--accent);
+        text-decoration: underline;
+      }
+
+      /* ---------- Proposed ---------- */
+      .p.stage {
+        background: var(--bg-canvas);
+      }
+      .p .page {
+        background: var(--bg-paper);
+        color: var(--text-1);
+        border-radius: 2px;
+        box-shadow:
+          0 0 0 1px var(--line),
+          0 1px 2px color-mix(in oklch, var(--shadow-color) 8%, transparent),
+          0 12px 32px color-mix(in oklch, var(--shadow-color) 8%, transparent);
+      }
+      .p .sel {
+        background: color-mix(in srgb, var(--accent) 26%, transparent);
+        border-radius: 2px;
+      }
+      .p .hl {
+        background: var(--hl-yellow);
+        border-radius: 2px;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+      }
+      .p .hl.on {
+        box-shadow: 0 0 0 1.5px var(--ink-yellow);
+      }
+      .p .margin {
+        position: absolute;
+        left: 22px;
+        width: 3px;
+        border-radius: 3px;
+        background: var(--ink-yellow);
+      }
+      .p .pill {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 4px;
+        border-radius: var(--r-lg);
+        background: var(--bg-raised);
+        box-shadow: var(--e-2);
+        font-family: var(--font-ui);
+        font-size: var(--text-sm);
+        line-height: 1;
+        color: var(--text-1);
+      }
+      .p .pill::after {
+        content: "";
+        position: absolute;
+        left: var(--caret, 50%);
+        bottom: -5px;
+        width: 10px;
+        height: 10px;
+        transform: translateX(-50%) rotate(45deg);
+        background: var(--bg-raised);
+        box-shadow: 2px 2px 3px -1px color-mix(in oklch, var(--shadow-color) 12%, transparent);
+      }
+      .p .pill.below::after {
+        top: -5px;
+        bottom: auto;
+        box-shadow: -1px -1px 0 0 color-mix(in oklch, var(--shadow-color) 7%, transparent);
+      }
+      .p .sw {
+        display: inline-grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--r-md);
+      }
+      .p .sw i {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--text-1) 12%, transparent);
+      }
+      .p .sw.on i {
+        box-shadow:
+          0 0 0 2px var(--bg-raised),
+          0 0 0 3.5px var(--text-1);
+      }
+      .p .sw.hover {
+        background: var(--bg-hover);
+      }
+      .p .divider {
+        width: 1px;
+        height: 20px;
+        margin: 0 4px;
+        background: var(--line);
+      }
+      .p .pill .icon-btn {
+        width: 28px;
+        height: 28px;
+      }
+      .p .pill .btn {
+        height: 28px;
+        border: 0;
+        background: transparent;
+        padding: 0 10px;
+      }
+      .p .pill .btn:hover {
+        background: var(--bg-hover);
+      }
+      .p .pill .icon-btn {
+        color: var(--text-2);
+      }
+      .p .tip {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 8px;
+        border-radius: var(--r-sm);
+        background: var(--text-1);
+        color: var(--bg-surface);
+        font-family: var(--font-ui);
+        font-size: var(--text-xs);
+        line-height: 16px;
+        white-space: nowrap;
+      }
+      .p .tip .kbd {
+        border-color: color-mix(in oklch, var(--bg-surface) 35%, transparent);
+        color: var(--bg-surface);
+      }
+
+      /* Storyboard */
+      .story {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .shot {
+        border-radius: var(--r-lg);
+        background: var(--bg-canvas);
+        overflow: hidden;
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      .shot .cap {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-top: 1px solid var(--line);
+        background: var(--bg-surface);
+        color: var(--text-2);
+        font-size: var(--text-xs);
+        line-height: var(--lh-xs);
+      }
+      .shot .cap b {
+        color: var(--text-1);
+        font-weight: var(--weight-medium);
+      }
+      .mini {
+        position: relative;
+        height: 150px;
+        padding: 58px 18px 0 30px;
+      }
+      .mini .line {
+        font-family: var(--font-read);
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text-1);
+      }
+      .mini .pill {
+        top: 10px;
+        left: 40px;
+        transform-origin: 50% 100%;
+      }
+      .mini .margin {
+        left: 16px;
+        top: 61px;
+        height: 18px;
+      }
+      .sweep {
+        background-image: linear-gradient(var(--hl-yellow), var(--hl-yellow));
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        border-radius: 2px;
+      }
+      .saved {
+        position: absolute;
+        left: 30px;
+        top: 104px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 24px;
+        padding: 0 10px 0 6px;
+        border-radius: var(--r-full);
+        background: var(--bg-raised);
+        box-shadow: var(--e-2);
+        color: var(--text-2);
+        font-size: var(--text-xs);
+      }
+      .saved .ok {
+        display: inline-grid;
+        place-items: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--success);
+        color: var(--bg-surface);
+      }
+      .saved .ok svg {
+        width: 11px;
+        height: 11px;
+      }
+      .count {
+        position: absolute;
+        right: 14px;
+        top: 12px;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        color: var(--text-3);
+        font-size: var(--text-xs);
+      }
+      .count b {
+        display: inline-grid;
+        place-items: center;
+        min-width: 20px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: var(--r-full);
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: var(--weight-strong);
+      }
+
+      /* Live demo */
+      .live {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+        margin-top: 20px;
+        align-items: start;
+      }
+      .demo-stage {
+        position: relative;
+        padding: 30px 34px 30px 46px;
+        border-radius: var(--r-lg);
+        background: var(--bg-paper);
+        box-shadow:
+          0 0 0 1px var(--line),
+          var(--e-1);
+      }
+      .demo-stage .line {
+        font-family: var(--font-read);
+        font-size: 17px;
+        line-height: 1.7;
+      }
+      .demo-stage .margin {
+        left: 26px;
+        top: 34px;
+        height: 22px;
+        transform-origin: 50% 0;
+      }
+      .demo-stage .saved {
+        left: 150px;
+        top: auto;
+        bottom: 34px;
+      }
+      .play .ink {
+        animation: ink var(--dur-slow) var(--ease-out) 400ms both;
+      }
+      .play .margin {
+        animation: grow var(--dur-base) var(--ease-out) 560ms both;
+      }
+      .play .saved {
+        animation: saved 2.4s var(--ease-out) 620ms both;
+      }
+      @keyframes ink {
+        from {
+          background-size: 0% 100%;
+        }
+        to {
+          background-size: 100% 100%;
+        }
+      }
+      @keyframes grow {
+        from {
+          transform: scaleY(0);
+          opacity: 0;
+        }
+        to {
+          transform: scaleY(1);
+          opacity: 1;
+        }
+      }
+      @keyframes saved {
+        0% {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        10%,
+        80% {
+          opacity: 1;
+          transform: none;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .play .ink {
+          animation: none;
+          background-size: 100% 100%;
+        }
+        .play .margin {
+          animation: none;
+        }
+        .play .saved {
+          animation: fade 2.4s linear 0s both;
+        }
+        @keyframes fade {
+          0%,
+          80% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+      }
+      .spec {
+        padding: 18px 20px;
+        border-radius: var(--r-lg);
+        background: var(--bg-surface);
+        box-shadow: 0 0 0 1px var(--line);
+        font-size: var(--text-sm);
+        line-height: 20px;
+        color: var(--text-2);
+      }
+      .spec h4 {
+        margin: 0 0 8px;
+        color: var(--text-1);
+        font-size: var(--text-sm);
+        font-weight: var(--weight-strong);
+      }
+      .spec ul {
+        margin: 0 0 12px;
+        padding-left: 18px;
+      }
+      .phone-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        padding: 6px;
+        border-radius: var(--r-xl);
+        background: var(--bg-raised);
+        box-shadow: var(--e-2);
+      }
+      .phone-bar .sw {
+        width: 44px;
+        height: 44px;
+      }
+      .phone-bar .sw i {
+        width: 24px;
+        height: 24px;
+      }
+      .phone-bar .icon-btn {
+        width: 44px;
+        height: 44px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol
+          id="i-search"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </symbol>
+        <symbol
+          id="i-filter"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3 5h18l-7 8v6l-4 2v-8z" />
+        </symbol>
+        <symbol
+          id="i-sliders"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+          <circle cx="16" cy="7" r="2" />
+          <circle cx="10" cy="17" r="2" />
+        </symbol>
+        <symbol
+          id="i-plus"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="5" cy="12" r="1.6" />
+          <circle cx="12" cy="12" r="1.6" />
+          <circle cx="19" cy="12" r="1.6" />
+        </symbol>
+        <symbol
+          id="i-chev"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </symbol>
+        <symbol
+          id="i-chev-r"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 6 6 6-6 6" />
+        </symbol>
+        <symbol
+          id="i-comment"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.2-4.4A8 8 0 1 1 21 12z" />
+        </symbol>
+        <symbol
+          id="i-bookmark"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M6 3h12v18l-6-4-6 4z" />
+        </symbol>
+        <symbol
+          id="i-copy"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="8" y="8" width="12" height="12" rx="2" />
+          <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        </symbol>
+        <symbol id="i-cite" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M4 18v-5.5C4 8.4 6 6 9.6 5.4l.6 1.6C8.2 7.7 7.3 9 7.2 11H10v7zm9 0v-5.5c0-4.1 2-6.5 5.6-7.1l.6 1.6c-2 .7-2.9 2-3 4H19v7z"
+          />
+        </symbol>
+        <symbol
+          id="i-trash"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+        </symbol>
+        <symbol
+          id="i-check"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m5 12.5 4.5 4.5L19 7.5" />
+        </symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="7" y="5" width="3.2" height="14" rx="1" />
+          <rect x="13.8" y="5" width="3.2" height="14" rx="1" />
+        </symbol>
+        <symbol
+          id="i-note"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 3h10l4 4v14H5z" />
+          <path d="M14 3v5h5M8 12h8M8 16h6" />
+        </symbol>
+        <symbol
+          id="i-at"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8" />
+        </symbol>
+        <symbol
+          id="i-hl"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 11-5 5v4h4l5-5M9 11l7-7 4 4-7 7M9 11l4 4" />
+        </symbol>
+        <symbol
+          id="i-x"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <path d="M6 6l12 12M18 6 6 18" />
+        </symbol>
+        <symbol
+          id="i-sidebar"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M9 4v16" />
+        </symbol>
+        <symbol
+          id="i-panel"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M15 4v16" />
+        </symbol>
+        <symbol
+          id="i-book"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 6c-2-1.5-5-2-8-2v14c3 0 6 .5 8 2 2-1.5 5-2 8-2V4c-3 0-6 .5-8 2zM12 6v14" />
+        </symbol>
+        <symbol
+          id="i-pen"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 20h4L19 9l-4-4L4 16z" />
+        </symbol>
+        <symbol
+          id="i-insert"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 3h10l4 4v14H5z" />
+          <path d="M12 10v6M9 13h6" />
+        </symbol>
+        <symbol
+          id="i-target"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        >
+          <circle cx="12" cy="12" r="7" />
+          <circle cx="12" cy="12" r="2.5" />
+        </symbol>
+        <symbol
+          id="i-sort"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4" />
+        </symbol>
+        <symbol
+          id="i-layout"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M3 10h18M10 10v10" />
+        </symbol>
+        <symbol
+          id="i-type"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M4 7V5h16v2M12 5v14M9 19h6" />
+        </symbol>
+        <symbol
+          id="i-sparkle"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+        </symbol>
+        <symbol
+          id="i-wrench"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8zM3 21l6-6" />
+        </symbol>
+        <symbol
+          id="i-pin"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 4h6l-1 6 4 3v2H6v-2l4-3zM12 15v6" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <main class="board">
+      <header class="board-head">
+        <div>
+          <h1>Selection toolbar · highlight popover</h1>
+          <p>
+            Colour is the first choice, so it comes first. The toolbar sits just above its passage
+            with a caret pointing at it; an existing highlight opens the same shape with its colour
+            ringed. Saving is acknowledged by the ink itself, not by a dialog.
+          </p>
+        </div>
+        <div class="theme-toggle" role="group" aria-label="Theme">
+          <button type="button" data-set="light">Light</button>
+          <button type="button" data-set="dark">Dark</button>
+        </div>
+      </header>
+
+      <div class="cols">
+        <section>
+          <div class="tag">Current</div>
+          <div class="frame">
+            <div class="c stage">
+              <div class="page">
+                <h3>2 ALGORITHM</h3>
+                <p>
+                  The algorithm updates exponential moving averages of the gradient (mₜ) and the
+                  squared gradient (vₜ) where the hyper-parameters β₁, β₂ ∈ [0, 1) control the
+                  exponential decay rates of these moving averages. The moving averages themselves
+                  are
+                  <span class="sel"
+                    >estimates of the 1st moment (the mean) and the 2nd raw moment</span
+                  >
+                  (the uncentered variance) of the gradient. However, these moving averages are
+                  initialized as (vectors of) 0’s, leading to moment estimates that are
+                  <span class="hl">biased towards zero</span>, especially during the initial
+                  timesteps.
+                </p>
+              </div>
+              <div class="tb" style="left: 92px; top: 176px">
+                <span
+                  ><svg><use href="#i-hl" /></svg>Highlight</span
+                ><span
+                  ><svg><use href="#i-comment" /></svg>Comment</span
+                ><i></i
+                ><span
+                  ><svg><use href="#i-copy" /></svg></span
+                ><span
+                  ><svg><use href="#i-cite" /></svg
+                ></span>
+              </div>
+            </div>
+          </div>
+          <div class="frame" style="margin-top: 16px">
+            <div class="c stage" style="height: 300px">
+              <div class="page">
+                <p>
+                  However, these moving averages are initialized as (vectors of) 0’s, leading to
+                  moment estimates that are <span class="hl">biased towards zero</span>, especially
+                  during the initial timesteps, and especially when the decay rates are small (i.e.
+                  the βs are close to 1). The good news is that this initialization bias can be
+                  easily counteracted.
+                </p>
+              </div>
+              <div
+                class="tb"
+                style="left: 210px; top: 28px; display: block; padding: 4px 6px 2px; width: 360px"
+              >
+                <div class="owner" style="position: static; padding: 2px 0 4px">
+                  Owner: <a>Adam: A Method for Stochastic Optimization</a>
+                </div>
+                <div style="display: flex; gap: 4px; align-items: center">
+                  <span
+                    ><svg><use href="#i-comment" /></svg>Comment</span
+                  ><i></i
+                  ><span
+                    ><svg><use href="#i-copy" /></svg></span
+                  ><span
+                    ><svg><use href="#i-cite" /></svg></span
+                  ><span
+                    ><svg><use href="#i-trash" /></svg
+                  ></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="notes">
+            <li>
+              No caret ties the toolbar to its passage, so it reads as floating chrome and can land
+              on a neighbouring highlight. Colour is not offered; Highlight and Comment carry equal
+              weight.
+            </li>
+            <li>
+              The highlight popover opens over the text it refers to, with a 10px <b>Owner:</b> link
+              wider than its actions.
+            </li>
+          </ol>
+        </section>
+
+        <section class="p">
+          <div class="tag is-proposed">Proposed</div>
+          <div class="frame">
+            <div class="p stage">
+              <div class="page">
+                <h3>2 ALGORITHM</h3>
+                <p>
+                  The algorithm updates exponential moving averages of the gradient (mₜ) and the
+                  squared gradient (vₜ) where the hyper-parameters β₁, β₂ ∈ [0, 1) control the
+                  exponential decay rates of these moving averages. The moving averages themselves
+                  are
+                  <span class="sel"
+                    >estimates of the 1st moment (the mean) and the 2nd raw moment</span
+                  >
+                  (the uncentered variance) of the gradient. However, these moving averages are
+                  initialized as (vectors of) 0’s, leading to moment estimates that are
+                  <span class="hl">biased towards zero</span>, especially during the initial
+                  timesteps.
+                </p>
+                <span class="margin" style="top: 294px; height: 24px"></span>
+              </div>
+              <div
+                class="pill"
+                role="toolbar"
+                aria-label="Selected text"
+                style="left: 150px; top: 160px; --caret: 290px"
+              >
+                <span class="sw on hover" aria-label="Highlight yellow"
+                  ><i style="background: var(--ink-yellow)"></i
+                ></span>
+                <span class="sw" aria-label="Highlight green"
+                  ><i style="background: var(--ink-green)"></i
+                ></span>
+                <span class="sw" aria-label="Highlight blue"
+                  ><i style="background: var(--ink-blue)"></i
+                ></span>
+                <span class="sw" aria-label="Highlight pink"
+                  ><i style="background: var(--ink-pink)"></i
+                ></span>
+                <span class="sw" aria-label="Highlight purple"
+                  ><i style="background: var(--ink-purple)"></i
+                ></span>
+                <span class="divider"></span>
+                <button class="btn">
+                  <svg><use href="#i-comment" /></svg>Comment
+                </button>
+                <button class="icon-btn" aria-label="Copy">
+                  <svg><use href="#i-copy" /></svg>
+                </button>
+                <button class="icon-btn" aria-label="Copy with citation">
+                  <svg><use href="#i-cite" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="frame" style="margin-top: 16px">
+            <div class="p stage" style="height: 300px">
+              <div class="page">
+                <p>
+                  However, these moving averages are initialized as (vectors of) 0’s, leading to
+                  moment estimates that are <span class="hl on">biased towards zero</span>,
+                  especially during the initial timesteps, and especially when the decay rates are
+                  small (i.e. the βs are close to 1). The good news is that this initialization bias
+                  can be easily counteracted.
+                </p>
+                <span class="margin" style="top: 90px; height: 24px; width: 4px"></span>
+              </div>
+              <div
+                class="pill below"
+                role="toolbar"
+                aria-label="Highlight"
+                style="left: 100px; top: 150px; --caret: 80px"
+              >
+                <span class="sw on" aria-label="Yellow, current colour"
+                  ><i style="background: var(--ink-yellow)"></i
+                ></span>
+                <span class="sw"><i style="background: var(--ink-green)"></i></span>
+                <span class="sw"><i style="background: var(--ink-blue)"></i></span>
+                <span class="sw"><i style="background: var(--ink-pink)"></i></span>
+                <span class="sw"><i style="background: var(--ink-purple)"></i></span>
+                <span class="divider"></span>
+                <button class="btn">
+                  <svg><use href="#i-comment" /></svg>Comment
+                </button>
+                <button class="icon-btn" aria-label="More actions: copy, cite, delete highlight">
+                  <svg><use href="#i-more" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <ol class="notes">
+            <li>
+              <b>Swatches first</b> (yellow is the default for <span class="kbd">H</span>); Comment
+              is the one labelled action; Copy and Cite are icons with names and shortcuts in
+              tooltips.
+            </li>
+            <li>
+              The popover opens <b>below</b> a highlight when the line above holds text, with the
+              current colour ringed; Delete moves into More.
+            </li>
+            <li>
+              Shown on a saved web page, which follows the theme. PDF pages keep their own paper in
+              dark mode (optionally dimmed) and use the light highlight washes.
+            </li>
+          </ol>
+        </section>
+      </div>
+
+      <div class="p">
+        <h2 class="section-title">Highlight saved · micro-interaction</h2>
+        <div class="story">
+          <figure class="shot" style="margin: 0">
+            <div class="mini">
+              <div class="pill" style="--caret: 40px; transform: scale(0.86)">
+                <span class="sw"><i style="background: var(--ink-yellow)"></i></span>
+                <span class="sw"><i style="background: var(--ink-green)"></i></span>
+                <span class="sw"><i style="background: var(--ink-blue)"></i></span>
+                <span class="divider"></span>
+                <button class="icon-btn">
+                  <svg><use href="#i-comment" /></svg>
+                </button>
+              </div>
+              <div class="line">
+                are
+                <span
+                  class="sel"
+                  style="background: color-mix(in srgb, var(--accent) 26%, transparent)"
+                  >biased towards zero</span
+                >, especially
+              </div>
+            </div>
+            <figcaption class="cap"><b>1 · Select</b><span>0 ms</span></figcaption>
+          </figure>
+          <figure class="shot" style="margin: 0">
+            <div class="mini">
+              <div class="pill" style="--caret: 40px; transform: scale(0.86)">
+                <span class="sw on hover" style="transform: scale(0.9)"
+                  ><i style="background: var(--ink-yellow)"></i
+                ></span>
+                <span class="sw"><i style="background: var(--ink-green)"></i></span>
+                <span class="sw"><i style="background: var(--ink-blue)"></i></span>
+                <span class="divider"></span>
+                <button class="icon-btn">
+                  <svg><use href="#i-comment" /></svg>
+                </button>
+              </div>
+              <div class="line">
+                are
+                <span
+                  class="sel"
+                  style="background: color-mix(in srgb, var(--accent) 26%, transparent)"
+                  >biased towards zero</span
+                >, especially
+              </div>
+            </div>
+            <figcaption class="cap"><b>2 · Press H or a swatch</b><span>press</span></figcaption>
+          </figure>
+          <figure class="shot" style="margin: 0">
+            <div class="mini">
+              <div class="pill" style="--caret: 40px; transform: scale(0.82); opacity: 0.35">
+                <span class="sw on"><i style="background: var(--ink-yellow)"></i></span>
+                <span class="sw"><i style="background: var(--ink-green)"></i></span>
+                <span class="sw"><i style="background: var(--ink-blue)"></i></span>
+                <span class="divider"></span>
+                <button class="icon-btn">
+                  <svg><use href="#i-comment" /></svg>
+                </button>
+              </div>
+              <div class="line">
+                are
+                <span class="sweep" style="background-size: 62% 100%">biased towards zero</span>,
+                especially
+              </div>
+              <span
+                class="margin"
+                style="transform: scaleY(0.5); transform-origin: 50% 0; opacity: 0.6"
+              ></span>
+            </div>
+            <figcaption class="cap">
+              <b>3 · Ink sweeps left to right</b><span>260 ms</span>
+            </figcaption>
+          </figure>
+          <figure class="shot" style="margin: 0">
+            <div class="mini">
+              <span class="count">Annotations <b>6</b></span>
+              <div class="line">
+                are
+                <span class="sweep" style="background-size: 100% 100%">biased towards zero</span>,
+                especially
+              </div>
+              <span class="margin"></span>
+              <span class="saved"
+                ><span class="ok"
+                  ><svg><use href="#i-check" /></svg></span
+                >Saved · Undo</span
+              >
+            </div>
+            <figcaption class="cap">
+              <b>4 · Marker settles, count ticks</b><span>+2.4 s fade</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="live">
+          <div class="demo-stage" id="live">
+            <div class="line">
+              However, these moving averages are initialized as (vectors of) 0’s, leading to moment
+              estimates that are <span class="sweep ink">biased towards zero</span>, especially
+              during the initial timesteps.
+            </div>
+            <span class="margin"></span>
+            <span class="saved" role="status"
+              ><span class="ok"
+                ><svg><use href="#i-check" /></svg></span
+              >Saved · Undo</span
+            >
+            <button class="btn" id="replay" style="margin-top: 16px">
+              <svg><use href="#i-sparkle" /></svg>Replay
+            </button>
+          </div>
+          <div class="spec">
+            <h4>Motion and access</h4>
+            <ul>
+              <li>
+                Ink: <code>background-size</code> 0→100%, 260 ms, ease-out. Marker: scaleY 180 ms.
+                No bounce.
+              </li>
+              <li>Reduced motion: the highlight appears at once; “Saved” simply fades.</li>
+              <li>
+                “Saved · Undo” is a polite live region; Undo is reachable by
+                <span class="kbd">Ctrl Z</span> for 6 s.
+              </li>
+              <li>
+                Swatches have names (“Highlight yellow”), not colour alone; the selected one carries
+                a ring and <code>aria-pressed</code>.
+              </li>
+            </ul>
+            <h4>Touch · 390px</h4>
+            <div class="phone-bar" role="toolbar" aria-label="Selected text">
+              <span class="sw on"><i style="background: var(--ink-yellow)"></i></span>
+              <span class="sw"><i style="background: var(--ink-green)"></i></span>
+              <span class="sw"><i style="background: var(--ink-blue)"></i></span>
+              <span class="sw"><i style="background: var(--ink-pink)"></i></span>
+              <button class="icon-btn" aria-label="Comment">
+                <svg><use href="#i-comment" /></svg>
+              </button>
+              <button class="icon-btn" aria-label="More">
+                <svg><use href="#i-more" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      (() => {
+        const buttons = document.querySelectorAll("[data-set]");
+        const set = (theme) => {
+          document.documentElement.dataset.theme = theme;
+          buttons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.set === theme)));
+        };
+        const hash = location.hash.slice(1);
+        set(
+          hash === "dark" || hash === "light"
+            ? hash
+            : matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light",
+        );
+        buttons.forEach((b) => b.addEventListener("click", () => set(b.dataset.set)));
+      })();
+    </script>
+    <script>
+      (() => {
+        const live = document.getElementById("live");
+        const play = () => {
+          live.classList.remove("play");
+          void live.offsetWidth;
+          live.classList.add("play");
+        };
+        document.getElementById("replay").addEventListener("click", play);
+        if (!location.hash.includes("still")) play();
+      })();
+    </script>
+  </body>
+</html>

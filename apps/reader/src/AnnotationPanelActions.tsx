@@ -1,43 +1,67 @@
-import { t as translate } from "@lingui/core/macro";
+import { t, t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX, type MouseEvent } from "react";
 
 import { commentRequest } from "./annotation-composer-request.js";
 import { annotationEditorKeys, confirmAnnotationDiscard } from "./annotation-draft-actions.js";
+import { isAnnotationSaveCancelled } from "./annotation-ownership.js";
+import { AnnotationOwnerChooser } from "./AnnotationOwnerChooser.js";
 import { AnnotationTextArea } from "./AnnotationTextArea.js";
 import { readerErrorMessage } from "./errors.js";
-import { BookmarkIcon, CloseIcon, CommentIcon } from "./icons.js";
+import { BookmarkIcon, CloseIcon, CommentIcon, PlusIcon } from "./icons.js";
+import { Menu } from "./Menu.js";
+import { useAnnotationOwner, type AnnotationOwnerControl } from "./use-annotation-owner.js";
 
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 
 /**
  * Annotations that need no selection: a comment about the whole source, or a bookmark at the
- * current reading position. Highlights and areas still start from the document.
+ * current reading position. Highlights and areas still start from the document. The Add menu
+ * ends the Notes panel's control row; the comment composer opens below it.
  */
-export function AnnotationPanelActions({
+export function useAnnotationPanelActions({
   workspace,
   composer,
+  gateway,
 }: {
+  readonly gateway?: ReaderWorkspaceGateway | undefined;
   readonly workspace: ReaderSourceWorkspaceController;
   readonly composer: AnnotationComposerController;
-}): JSX.Element {
-  const { t } = useLingui();
+}): { readonly addMenu: JSX.Element; readonly composerPanel: JSX.Element | null } {
   const [commenting, setCommenting] = useState(false);
+  // Choosing an item closes the menu and hides the focused button; focus then returns here.
+  const trigger = useRef<HTMLElement | null>(null);
+  const rememberTrigger = (event: MouseEvent<HTMLElement>): void => {
+    trigger.current = event.currentTarget.closest("details")?.querySelector("summary") ?? null;
+  };
   const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
-  return (
-    <>
-      <div className="annotation-panel-actions">
+  const ownership = useAnnotationOwner({
+    source,
+    surface: null,
+    selection: null,
+    sources: workspace.annotationView?.sources,
+    gateway,
+    create: workspace.createAnnotation,
+  });
+  return {
+    addMenu: (
+      <Menu
+        className="annotation-add-menu"
+        label={translate({ message: "Add source comment or bookmark" })}
+        trigger={<PlusIcon />}
+      >
         <button
           type="button"
-          aria-expanded={commenting}
           disabled={!source}
-          title={t({ message: "Comment on the source as a whole" })}
-          onClick={() => setCommenting(true)}
+          onClick={(event) => {
+            rememberTrigger(event);
+            setCommenting(true);
+          }}
         >
-          <CommentIcon />
-          <Trans> Comment</Trans>
+          <CommentIcon /> <Trans>Add source comment</Trans>
         </button>
         <button
           type="button"
@@ -47,31 +71,42 @@ export function AnnotationPanelActions({
               ? t({ message: "Bookmark the current reading position" })
               : t({ message: "Open the document to bookmark a position" })
           }
-          onClick={composer.bookmark}
+          onClick={(event) => {
+            rememberTrigger(event);
+            composer.bookmark();
+            trigger.current?.focus();
+          }}
         >
           <BookmarkIcon />{" "}
           {composer.bookmarking
             ? t({ message: "Bookmarking…", context: "AnnotationPanelActions interface" })
             : t({ message: "Bookmark", context: "AnnotationPanelActions interface" })}
         </button>
-      </div>
-      {commenting && source ? (
+      </Menu>
+    ),
+    composerPanel:
+      commenting && source ? (
         <SourceCommentComposer
           key={source.id}
+          ownerControl={ownership.control}
           onSave={(comment) =>
-            workspace.createAnnotation(commentRequest(source, comment)).then(() => undefined)
+            ownership.create(commentRequest(source, comment)).then(() => undefined)
           }
-          onClose={() => setCommenting(false)}
+          onClose={() => {
+            setCommenting(false);
+            trigger.current?.focus();
+          }}
         />
-      ) : null}
-    </>
-  );
+      ) : null,
+  };
 }
 
 function SourceCommentComposer({
   onSave,
   onClose,
+  ownerControl,
 }: {
+  readonly ownerControl?: AnnotationOwnerControl | undefined;
   readonly onSave: (comment: string) => Promise<void>;
   readonly onClose: () => void;
 }): JSX.Element {
@@ -79,11 +114,21 @@ function SourceCommentComposer({
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const dismiss = (): void => {
+  const region = useRef<HTMLElement>(null);
+  useEffect(() => {
+    // The menu that opened this closes in the same click; focus the comment once that settles.
+    const frame = requestAnimationFrame(() => {
+      if (!region.current?.contains(document.activeElement)) {
+        region.current?.querySelector("textarea")?.focus({ preventScroll: true });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  const dismiss = async (): Promise<void> => {
     if (
       saving ||
       (comment.trim() &&
-        !confirmAnnotationDiscard(translate({ message: "Discard this unsaved comment?" })))
+        !(await confirmAnnotationDiscard(translate({ message: "Discard this unsaved comment?" }))))
     ) {
       return;
     }
@@ -96,9 +141,14 @@ function SourceCommentComposer({
     setSaving(true);
     setProblem(null);
     onSave(comment).then(onClose, (reason: unknown) => {
-      setProblem(
-        readerErrorMessage(reason, translate({ message: "Reader could not save this comment." })),
-      );
+      if (!isAnnotationSaveCancelled(reason)) {
+        setProblem(
+          readerErrorMessage(
+            reason,
+            translate({ message: "Reader could not save this source comment." }),
+          ),
+        );
+      }
       setSaving(false);
     });
   };
@@ -106,27 +156,26 @@ function SourceCommentComposer({
     // The region delegates keyboard shortcuts from its interactive children.
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <section
+      ref={region}
       className="annotation-composer is-comment"
       aria-labelledby="source-comment-title"
-      onKeyDown={(event) => annotationEditorKeys(event, dismiss, save)}
+      onKeyDown={(event) => annotationEditorKeys(event, () => void dismiss(), save)}
     >
       <header>
         <strong id="source-comment-title">
-          <Trans>New comment</Trans>
+          <Trans>New source comment</Trans>
         </strong>
         <button
           type="button"
           className="icon-button"
-          aria-label={t({
-            message: "Discard comment",
-            context: "AnnotationPanelActions interface",
-          })}
-          onClick={dismiss}
+          aria-label={translate({ message: "Discard source comment" })}
+          onClick={() => void dismiss()}
           disabled={saving}
         >
           <CloseIcon />
         </button>
       </header>
+      <AnnotationOwnerChooser control={ownerControl} />
       <AnnotationTextArea
         value={comment}
         readOnly={saving}
@@ -135,13 +184,13 @@ function SourceCommentComposer({
       />
       {problem ? <p role="alert">{problem}</p> : null}
       <footer>
-        <button type="button" onClick={dismiss} disabled={saving}>
-          <Trans context="Reader action">Cancel</Trans>
+        <button type="button" onClick={() => void dismiss()} disabled={saving}>
+          <Trans context="Reader interface">Cancel</Trans>
         </button>
         <ReaderButton disabled={saving || !comment.trim()} onClick={save}>
           {saving
             ? t({ message: "Saving…", context: "AnnotationPanelActions interface" })
-            : t({ message: "Save comment", context: "AnnotationPanelActions interface" })}
+            : translate({ message: "Save source comment" })}
         </ReaderButton>
       </footer>
     </section>

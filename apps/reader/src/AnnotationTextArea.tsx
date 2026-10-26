@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { useEffect, useLayoutEffect, useRef, type JSX } from "react";
 
 /** Native editing, selection and IME; no Markdown parser or shared document transactions. */
@@ -24,6 +25,7 @@ export function AnnotationTextArea({
   readonly autoSize?: boolean;
   readonly className?: string;
 }): JSX.Element {
+  useLocale();
   const ref = useRef<HTMLTextAreaElement>(null);
   useLayoutEffect(() => {
     const element = ref.current;

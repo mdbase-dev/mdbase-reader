@@ -78,7 +78,7 @@ export function CitationStructuredEditor({
           </label>
           <label className="citation-field citation-citekey-field">
             <span>
-              <Trans>Citekey</Trans>
+              <Trans>Citation key</Trans>
             </span>
             <div>
               <b>@</b>

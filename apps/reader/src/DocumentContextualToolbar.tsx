@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useMemo } from "react";
 
@@ -14,6 +16,9 @@ import {
   TrashIcon,
 } from "./icons.js";
 import { Menu } from "./Menu.js";
+import { supportsChapterCreation } from "./source-parts-features.js";
+import { useSourcePartCreation } from "./SourcePartCreation.js";
+import { ChapterReadingChip } from "./SourceReadingBoundary.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
 
 import type { SourceWorkspacePane } from "./source-workspace-layout.js";
@@ -26,6 +31,8 @@ import type { JSX } from "react";
 
 export interface DocumentContextualToolbarProps {
   readonly source: SourceSummary;
+  /** The library's sources, so a chapter can name its book and next part. */
+  readonly sources: readonly SourceSummary[];
   readonly pane: SourceWorkspacePane;
   readonly workspace: SourceWorkspaceController;
   readonly focusMode: boolean;
@@ -49,6 +56,7 @@ export interface DocumentContextualToolbarProps {
 
 export function DocumentContextualToolbar({
   source,
+  sources,
   pane,
   workspace,
   focusMode,
@@ -67,8 +75,10 @@ export function DocumentContextualToolbar({
   sessionId,
   compact = false,
 }: DocumentContextualToolbarProps): JSX.Element {
-  const { t } = useLingui();
-  const contents = surfaces.get(sessionId)?.capabilities.contents;
+  useLocale();
+  const surface = surfaces.get(sessionId);
+  const contents = surface?.capabilities.contents;
+  const createParts = useSourcePartCreation();
   return (
     <div
       className="document-toolbar"
@@ -77,6 +87,14 @@ export function DocumentContextualToolbar({
         context: "DocumentContextualToolbar interface",
       })}
     >
+      <ChapterReadingChip
+        key={`${source.id}\u0000${sessionId}`}
+        source={source}
+        sources={sources}
+        surface={surface}
+        open={workspace.open}
+        compact={compact}
+      />
       {canSelectArea ? (
         <button
           type="button"
@@ -125,8 +143,7 @@ export function DocumentContextualToolbar({
           <Trans> Annotations</Trans>
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-          <NoteIcon />
-          <Trans> Literature note</Trans>
+          <NoteIcon /> <Trans>Source note</Trans>
         </button>
         <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
           <CitationIcon />
@@ -134,8 +151,7 @@ export function DocumentContextualToolbar({
         </button>
         <hr />
         <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-          <NoteIcon />
-          <Trans> Open literature note beside</Trans>
+          <NoteIcon /> <Trans>Open source note beside</Trans>
         </button>
         <button
           type="button"
@@ -147,11 +163,26 @@ export function DocumentContextualToolbar({
             ? t({ message: "Leave reading mode" })
             : t({ message: "Reading mode", context: "DocumentContextualToolbar interface" })}
         </button>
+        <CreatePartsItem source={source} createParts={createParts} />
         <ExportItem sourceExport={sourceExport} />
         <RemoveItem source={source} onRemoveSource={onRemoveSource} />
       </Menu>
     </div>
   );
+}
+
+function CreatePartsItem({
+  source,
+  createParts,
+}: {
+  readonly source: SourceSummary;
+  readonly createParts: ((source: SourceSummary) => void) | null;
+}): JSX.Element | null {
+  return createParts && supportsChapterCreation(source) ? (
+    <button type="button" onClick={() => createParts(source)}>
+      <ListIcon /> <Trans>Add chapters as sources…</Trans>
+    </button>
+  ) : null;
 }
 
 function ExportItem({

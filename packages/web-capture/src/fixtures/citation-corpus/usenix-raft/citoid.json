@@ -1,0 +1,32 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "78356GGD",
+      "version": 0,
+      "itemType": "conferencePaper",
+      "creators": [
+        {
+          "firstName": "Diego",
+          "lastName": "Ongaro",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "John",
+          "lastName": "Ousterhout",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "title": "In Search of an Understandable Consensus Algorithm",
+      "date": "2014",
+      "conferenceName": "2014 USENIX Annual Technical Conference (USENIX ATC 14)",
+      "ISBN": "9781931971102",
+      "pages": "305–319",
+      "url": "https://www.usenix.org/conference/atc14/technical-sessions/presentation/ongaro",
+      "language": "en",
+      "libraryCatalog": "www.usenix.org",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

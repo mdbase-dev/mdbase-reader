@@ -18,20 +18,25 @@ import {
   toggleTouchRow,
   type RowSelection,
 } from "./library-row-selection.js";
+import { libraryPartKey } from "./library-source-parts.js";
 import { useLibraryRowMenu, type LibraryRowMenuActions } from "./LibraryRowMenu.js";
 import { LibraryTableHead } from "./LibraryTableHead.js";
 import { LibraryTableRow, isEditableColumn } from "./LibraryTableRow.js";
+import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { useLibraryColumns } from "./use-library-columns.js";
 import { hasModifier, useLongPress } from "./use-long-press.js";
 
+import type { LibraryPartRow } from "./library-source-parts.js";
 import type { LibraryLayout } from "./use-library-layout-draft.js";
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
 
-export const libraryRowHeight = 52;
-const headerHeight = 34;
+export const libraryRowHeight = 56;
+const headerHeight = 32;
 
 export interface LibraryTableProps {
   readonly sources: readonly SourceSummary[];
+  readonly partRows?: ReadonlyMap<SourceId, LibraryPartRow>;
+  readonly onTogglePart?: (id: SourceId) => void;
   readonly layout: LibraryLayout;
   readonly onLayoutChange: (layout: LibraryLayout) => void;
   readonly properties: readonly { readonly key: string; readonly label?: string }[];
@@ -58,16 +63,31 @@ interface EditingCell {
   readonly column: LibraryColumn;
 }
 
+// Keep the virtualized grid, existing editing, and disclosure keyboard handling in one owner.
+// eslint-disable-next-line max-lines-per-function
 export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const { t } = useLingui();
   const { sources, layout, selection, onSelectionChange, scrollRef } = props;
   const gridRef = useRef<HTMLDivElement>(null);
   const table = useLibraryColumns(props);
   const rowIds = useMemo(() => sources.map(({ id }) => id), [sources]);
-  const { virtualizer, margin } = useSourceRows(sources, scrollRef, gridRef);
+  const offset = useOffsetTop(gridRef);
+  // TanStack Virtual returns fresh functions each render; the React Compiler must not memoize them.
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const virtualizer = useVirtualizer({
+    count: sources.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => libraryRowHeight,
+    getItemKey: (index) => sources[index]?.id ?? index,
+    overscan: 10,
+    scrollPaddingStart: headerHeight,
+    scrollMargin: offset + headerHeight,
+  });
+  const margin = offset + headerHeight;
   const focusRow = useRowFocus(gridRef);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
+  const createChapters = useSourcePartCreation();
   const rowMenu = useLibraryRowMenu({
     sources,
     selection,
@@ -75,7 +95,11 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     gridRef,
     onSelectionChange,
     onClosed: focusRow,
-    actions: rowMenuActions(props, (source) => setEditing({ id: source.id, column: "title" })),
+    actions: rowMenuActions(
+      props,
+      (source) => setEditing({ id: source.id, column: "title" }),
+      createChapters,
+    ),
   });
   const sizes = layout.columns.map(
     (column) => table.getColumn(column)?.getSize() ?? defaultColumnWidth(column),
@@ -86,12 +110,12 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     <div className="library-table-frame">
       <div
         ref={gridRef}
-        className={`library-table${layout.columns.includes("creator") ? " has-creator-column" : ""}`}
-        role="grid"
+        className={`library-table${layout.columns.includes("creator") ? " has-creator-column" : ""}${layout.columns.includes("format") ? " has-format-column" : ""}`}
+        role={props.partRows ? "treegrid" : "grid"}
         tabIndex={-1}
         aria-label={t({ message: "Sources", context: "LibraryTable interface" })}
         aria-rowcount={sources.length + 1}
-        aria-colcount={layout.columns.length}
+        aria-colcount={layout.columns.length + 1}
         aria-multiselectable="true"
         style={{ minWidth: `${String(width)}px` }}
         onKeyDown={(event) => {
@@ -99,6 +123,15 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
             (event.target as Element).closest("select, input, button, summary, [role=separator]") ||
             rowMenu.openFromKey(event) ||
             startCellEdit(event, props, selection.active, setEditing)
+          ) {
+            return;
+          }
+          if (
+            handlePartGridKey(event, props, (index) => {
+              focusRow(index);
+              virtualizer.scrollToIndex(index, { align: "auto" });
+              onSelectionChange(selectRow(selection, rowIds, index, "replace"));
+            })
           ) {
             return;
           }
@@ -170,28 +203,30 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   );
 }
 
-function useSourceRows(
-  sources: readonly SourceSummary[],
-  scrollRef: RefObject<HTMLDivElement | null>,
-  gridRef: RefObject<HTMLDivElement | null>,
-): {
-  readonly virtualizer: ReturnType<typeof useVirtualizer<HTMLDivElement, Element>>;
-  readonly margin: number;
-} {
-  const offset = useOffsetTop(gridRef);
-  // TanStack Virtual returns fresh functions each render; the React Compiler must not memoize them.
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const virtualizer = useVirtualizer({
-    count: sources.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => libraryRowHeight,
-    getItemKey: (index) => sources[index]?.id ?? index,
-    overscan: 10,
-    scrollPaddingStart: headerHeight,
-    // Rows are measured from the top of the scroller; content above the table offsets them.
-    scrollMargin: offset + headerHeight,
-  });
-  return { virtualizer, margin: offset + headerHeight };
+function handlePartGridKey(
+  event: { readonly key: string; preventDefault: () => void },
+  props: LibraryTableProps,
+  move: (index: number) => void,
+): boolean {
+  const { sources, selection } = props;
+  const source = sources[selection.active ?? 0];
+  const action = source && libraryPartKey(event.key, source, props.partRows?.get(source.id));
+  if (!source || !action) {
+    return false;
+  }
+  event.preventDefault();
+  if (action === "expand" || action === "collapse") {
+    props.onTogglePart?.(source.id);
+  } else {
+    const index =
+      action === "child"
+        ? (selection.active ?? 0) + 1
+        : sources.findIndex(({ id }) => id === source.partOf);
+    if (index >= 0 && index < sources.length) {
+      move(index);
+    }
+  }
+  return true;
 }
 
 /** F2 edits the focused row's first editable field, like renaming in a file manager. */
@@ -214,8 +249,10 @@ function startCellEdit(
 function rowMenuActions(
   props: LibraryTableProps,
   rename: (source: SourceSummary) => void,
+  createChapters: ((source: SourceSummary) => void) | null,
 ): LibraryRowMenuActions {
   return {
+    ...(createChapters ? { onCreateChapters: createChapters } : {}),
     onOpen: props.onOpen,
     onOpenBeside: props.onOpenBeside,
     ...(props.onChangeStatus ? { onChangeStatus: props.onChangeStatus } : {}),

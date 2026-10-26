@@ -1,0 +1,15 @@
+{
+  "type": "patent",
+  "title": "Method for node ranking in a linked database",
+  "author": [
+    {
+      "family": "Page",
+      "given": "Lawrence"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2001, 9, 4]]
+  },
+  "number": "US6285999B1",
+  "URL": "https://patents.google.com/patent/US6285999B1/en"
+}

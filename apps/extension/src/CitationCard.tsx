@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
@@ -16,16 +17,13 @@ export function CitationCard({
   if (c.source) {
     return null;
   }
-  if (c.citationPending) {
-    return (
-      <p className="hint citation">
-        <Trans>Looking for citation details…</Trans>
-      </p>
-    );
-  }
   const preview = c.citation;
   if (!preview) {
-    return null;
+    return c.citationPending ? (
+      <p className="hint citation" role="status">
+        <Trans>Looking for citation details…</Trans>
+      </p>
+    ) : null;
   }
   return (
     <section className="citation" aria-label={t`Citation`}>
@@ -33,11 +31,26 @@ export function CitationCard({
         <Trans>CITATION</Trans>
       </span>
       <CitationDetails citation={preview.citation} doi={preview.doi ?? null} />
+      {c.citationPending ? (
+        <p className="hint" role="status">
+          <Trans>Still looking for citation details… You can save now.</Trans>
+        </p>
+      ) : null}
       <p className="hint">
         {preview.origin === "doi"
-          ? t`From the DOI registry. Saved with the source; edit it later in Reader.`
-          : t`From the publisher’s page metadata. Saved with the source; edit it later in Reader.`}
-        {preview.problem ? t` The DOI record was unavailable (${preview.problem}).` : ""}
+          ? translate({
+              message: "From the DOI registry. Saved with the source; edit it later in Reader.",
+            })
+          : preview.origin === "citoid"
+            ? translate({
+                message:
+                  "Includes details from Wikimedia’s Citoid service. Saved with the source; edit it later in Reader.",
+              })
+            : translate({
+                message:
+                  "From the page’s metadata. Saved with the source; edit it later in Reader.",
+              })}
+        {preview.problem ? ` ${preview.problem}` : ""}
       </p>
     </section>
   );

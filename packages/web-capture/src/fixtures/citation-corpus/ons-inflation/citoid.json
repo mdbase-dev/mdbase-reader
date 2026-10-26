@@ -1,0 +1,15 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "YM83P8ZG",
+      "version": 0,
+      "itemType": "webpage",
+      "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/january2024",
+      "title": "Consumer price inflation, UK - Office for National Statistics",
+      "abstractNote": "Price indices, percentage changes, and weights for the different measures of consumer price inflation.",
+      "accessDate": "2026-10-23",
+      "websiteTitle": "www.ons.gov.uk"
+    }
+  ]
+}

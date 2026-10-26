@@ -1,0 +1,7 @@
+/* The reading face (SIL OFL). Faces are subset by unicode-range and download only
+   when text uses them. */
+@import "@fontsource-variable/source-serif-4/wght.css";
+@import "@fontsource-variable/source-serif-4/wght-italic.css";
+
+/* The token layer, shared with the extension: packages/ui/src/tokens.css. */
+@import "@mdbase-reader/ui/tokens.css";

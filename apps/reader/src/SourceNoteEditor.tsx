@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { SaveNotice, type SaveTone } from "@mdbase-dev/ui/save-notice";
@@ -44,7 +45,7 @@ export function SourceNoteEditor({
   composer,
   onOpenSourceView,
 }: SourceNoteEditorProps): JSX.Element {
-  const { t } = useLingui();
+  useLocale();
   const [insertion, setInsertion] = useState<TextInsertionRequest | null>(null);
   const [formatting, setFormatting] = useState<MarkdownCommandRequest | null>(null);
   const librarySources = useContext(SourceLibraryContext);
@@ -78,14 +79,14 @@ export function SourceNoteEditor({
       </div>
     ) : (
       <div className="editor-loading">
-        <Trans>Opening literature note…</Trans>
+        <Trans>Opening source note…</Trans>
       </div>
     );
   }
   if (!workspace.draftReady) {
     return (
       <div className="editor-loading">
-        <Trans>Opening literature note…</Trans>
+        <Trans>Opening source note…</Trans>
       </div>
     );
   }
@@ -118,7 +119,7 @@ export function SourceNoteEditor({
       <Suspense
         fallback={
           <div className="editor-loading">
-            <Trans>Opening literature note…</Trans>
+            <Trans>Opening source note…</Trans>
           </div>
         }
       >
@@ -126,7 +127,7 @@ export function SourceNoteEditor({
           className="source-note-editor-surface"
           value={workspace.draft}
           {...(workspace.draftDocument ? { sharedDocument: workspace.draftDocument } : {})}
-          ariaLabel={t({ message: "Source literature note" })}
+          ariaLabel={translate({ message: "Source note" })}
           onChange={workspace.setDraft}
           onSave={workspace.saveDraft}
           insertion={insertion}
@@ -194,6 +195,7 @@ function SaveStatus({
   readonly locallySaved: boolean;
   readonly conflict: boolean;
 }): JSX.Element {
+  useLocale();
   // Autosaves usually finish at once; until one runs long, keep showing the unsaved state.
   const slowSave = useSustained(status === "saving", SLOW_SAVE_MS);
   const [tone, label, detail]: readonly [SaveTone, string, string | undefined] = conflict

@@ -5,6 +5,7 @@ import { useSourceImport, type SourceImportFlow } from "./use-source-import.js";
 import { useWebCapture, type WebCaptureFlow } from "./use-web-capture.js";
 
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { SourceId } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 
@@ -23,7 +24,18 @@ export interface SourceAdditionController {
   /** Adding by link or identifier: live progress, a citation-only offer, or a notice. */
   readonly lookup: Pick<
     WebCaptureFlow,
-    "progress" | "offer" | "notice" | "saveCitationOnly" | "openNoticed"
+    | "canCancel"
+    | "cancel"
+    | "progress"
+    | "offer"
+    | "notice"
+    | "saveCitationOnly"
+    | "openNoticed"
+    | "chapterOffer"
+    | "confirmChapter"
+    | "findChapterBook"
+    | "bookOffer"
+    | "saveChapterBook"
   >;
 }
 
@@ -31,6 +43,7 @@ export function useSourceAddition(
   workspace: ReaderWorkspaceController,
   pickSourceFile: (() => Promise<PickedFile | null>) | undefined,
   onImported: (sourceId: SourceId) => void,
+  gateway?: ReaderWorkspaceGateway,
 ): SourceAdditionController {
   const [dialogOpen, setDialogOpen] = useState(false);
   const finish = useCallback(
@@ -41,7 +54,7 @@ export function useSourceAddition(
     [onImported],
   );
   const fileImport = useSourceImport(workspace, pickSourceFile, finish);
-  const webCapture = useWebCapture(workspace, finish);
+  const webCapture = useWebCapture(workspace, finish, gateway);
   const [dropError, setDropError] = useState<string | null>(null);
   const close = useCallback((): void => setDialogOpen(false), []);
   const acceptFile = fileImport.accept;
@@ -82,11 +95,18 @@ export function useSourceAddition(
       webCapture.clearError();
     },
     lookup: {
+      canCancel: webCapture.canCancel,
+      cancel: webCapture.cancel,
       progress: webCapture.progress,
       offer: webCapture.offer,
       notice: webCapture.notice,
       saveCitationOnly: webCapture.saveCitationOnly,
       openNoticed: webCapture.openNoticed,
+      chapterOffer: webCapture.chapterOffer,
+      confirmChapter: webCapture.confirmChapter,
+      findChapterBook: webCapture.findChapterBook,
+      bookOffer: webCapture.bookOffer,
+      saveChapterBook: webCapture.saveChapterBook,
     },
   };
 }

@@ -39,6 +39,8 @@ export function ReaderWorkspace({
         opened.libraryViews,
         opened.bodyRecovery,
         opened.subscribeSourceChanges,
+        opened.createFollowThrough,
+        opened.settings,
       ),
     [opened],
   );

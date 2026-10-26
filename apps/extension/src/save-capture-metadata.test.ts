@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from "vitest";
 
+import { saveCaptureCitation } from "./capture-citation.js";
 import { capture, fixture } from "./testing/save-capture-fixture.js";
 
 import type { PageCapture } from "./page-capture.js";
@@ -24,13 +25,22 @@ describe("capture metadata and formats", () => {
       } as unknown as SourceSummary,
     ]);
     const citation = {
+      id: "placeholder",
       type: "article-journal",
       title: "Molecular structure of nucleic acids",
       author: [{ family: "Watson", given: "James D." }],
       issued: { "date-parts": [[1953]] },
     };
+    const provenance = {
+      title: { value: citation.title, source: "registry:doi.org", agreed: ["json-ld headline"] },
+      author: { value: citation.author, source: "registry:doi.org" },
+      issued: { value: citation.issued, source: "registry:doi.org" },
+      id: { value: "placeholder", source: "registry:doi.org" },
+      publisher: { value: "Not saved", source: "page:html" },
+      type: { value: "webpage", source: "page:html" },
+    };
     const result = await f.save({ highlight: false }, capture, {
-      citation: { citation, origin: "doi", doi: "10.1038/171737a0" },
+      citation: { citation, origin: "doi", doi: "10.1038/171737a0", provenance, outcomes: [] },
     });
     expect(f.updateCitation.mock.calls[0]?.[0].citation).toMatchObject({
       id: "watsonmolecular1953a",
@@ -38,12 +48,55 @@ describe("capture metadata and formats", () => {
     });
     expect(f.commit.mock.calls[0]?.[0].metadata?.authors).toEqual(["James D. Watson"]);
     expect(result.notices).toEqual([]);
+    const expected = {
+      title: provenance.title,
+      author: provenance.author,
+      issued: provenance.issued,
+    };
+    expect(f.updateCitation.mock.calls[0]?.[0]).toMatchObject({ provenance: expected });
+    const loaded = await f.collection.sources.get(f.collection.collectionId, result.source.id);
+    expect(loaded?.cslProvenance).toEqual(expected);
+    expect(loaded?.frontmatter["csl-provenance"]).toEqual(expected);
+    expect(loaded?.frontmatter["csl"]).not.toHaveProperty("provenance");
+    // Filtering evidence must not change the resolver's preview.
+    expect(provenance).toHaveProperty("id");
   });
+});
+
+describe("capture provenance filtering", () => {
+  it("preserves dismissals when filtering capture provenance for saved values", async () => {
+    const f = fixture();
+    const publisher = {
+      rejected: [{ value: "Dismissed press", from: "user" }],
+    };
+    const title = {
+      value: "Original",
+      source: "page:html",
+      rejected: [{ value: "Dismissed title", from: "user" }],
+    };
+    await f.save({ highlight: false }, capture, {
+      citation: {
+        citation: { type: "article", title: "Typed" },
+        origin: "page",
+        provenance: { publisher, title, language: { value: "en", source: "page:html" } },
+        outcomes: [],
+      },
+    });
+    expect(f.updateCitation.mock.lastCall?.[0].provenance).toEqual({ publisher, title });
+  });
+});
+
+describe("capture save failures and PDFs", () => {
   it("keeps the source when its citation cannot be stored, and says so", async () => {
     const f = fixture();
     f.updateCitation.mockRejectedValueOnce(new Error("revision conflict"));
     const result = await f.save({ highlight: false }, capture, {
-      citation: { citation: { type: "article", title: "T" }, origin: "page" },
+      citation: {
+        citation: { type: "article", title: "T" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
     });
     expect(result.source).toBeTruthy();
     expect(result.notices[0]).toContain("revision conflict");
@@ -68,6 +121,8 @@ describe("capture metadata and formats", () => {
             "Calculation of Prompt Diphoton Production Cross Sections at Tevatron and LHC Energies",
         },
         origin: "doi",
+        provenance: {},
+        outcomes: [],
       },
     });
     const plan = f.commit.mock.calls[0]?.[0];
@@ -78,5 +133,36 @@ describe("capture metadata and formats", () => {
     // Written with the import itself rather than as a second update.
     expect(plan?.url).toBe("https://arxiv.org/pdf/0704.0001");
     expect(f.updateFields).not.toHaveBeenCalled();
+  });
+});
+
+describe("capture citation baseline", () => {
+  it("passes an existing source's loaded citation to the guarded save", async () => {
+    const f = fixture();
+    const first = await f.save({ highlight: false }, capture, {
+      citation: {
+        citation: { type: "article", title: "Original" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
+    });
+    f.updateCitation.mockClear();
+    const loaded = await f.collection.sources.get(f.collection.collectionId, first.source.id);
+    if (!loaded) {
+      throw new Error("Missing saved source");
+    }
+
+    await saveCaptureCitation(
+      f.collection,
+      loaded,
+      { type: "article", title: "Edited" },
+      Promise.resolve([]),
+      {},
+    );
+
+    expect(f.updateCitation).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ expectedCitation: loaded.citation, provenance: {} }),
+    );
   });
 });

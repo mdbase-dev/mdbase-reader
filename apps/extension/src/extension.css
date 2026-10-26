@@ -1,57 +1,33 @@
-/* Extension pages: the capture side panel, settings and welcome.
-   Colours, fonts and the Select come from @mdbase-reader/ui, as in Reader; the type scale
-   matches Reader's shell (11px meta, 12px controls, 13px body, 15px headings). Monospace is
-   reserved for keyboard shortcuts and codes. */
+/* The reading face (SIL OFL), as in Reader, for passages, quotations and citations. Upright
+   only: the extension sets nothing in italic. Packaged with the extension and subset by
+   unicode-range, so a page loads only the scripts it shows. */
+@import "@fontsource-variable/source-serif-4/wght.css";
+/* Reader's warm token layer: colours, type scale, space, radii, elevation, highlight washes
+   and inks, and the one focus ring. */
+@import "@mdbase-reader/ui/tokens.css";
 
-.post-picker fieldset {
-  border: 0;
-  padding: 0;
-  max-height: 50vh;
-  overflow: auto;
-}
-.post-picker-item {
-  display: flex;
-  gap: 10px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-}
-.post-picker-item > span {
-  min-width: 0;
-  display: grid;
-  gap: 4px;
-}
-.post-picker-item input {
-  flex: 0 0 auto;
-  align-self: start;
-}
-.post-picker-item time {
-  color: var(--muted);
-  font-size: 11px;
-}
-.post-picker .save-bar {
-  margin-top: 12px;
-}
+/* Extension pages: the capture side panel, settings and welcome.
+   Everything comes from the shared tokens (packages/ui/src/tokens.css), so the panel reads as
+   a piece of Reader: chrome (header, page card, tabs) on the canvas plane, tab content on the
+   surface plane, passages and citations in the reading face, nothing below 12px. Monospace
+   is reserved for keyboard shortcuts and codes. */
 
 :root {
-  /* Times is the last resort: Linux has Noto or DejaVu Serif, which sit better beside Atkinson. */
-  --serif:
-    Georgia, Charter, "Iowan Old Style", "Noto Serif", "DejaVu Serif", "Times New Roman", serif;
-  --ui-control: 13px;
-  --ui-control-height: 34px;
-  --ui-radius: 6px;
-  --control-height: var(--ui-control-height);
-  --control-font-size: var(--ui-control);
-  --gutter: 20px;
-  background: var(--canvas);
+  --gutter: var(--sp-4);
+  /* Shared controls (@mdbase-dev/ui) take Reader's density. */
+  --control-height: var(--control-h);
+  --control-font-size: var(--text-sm);
+  --control-radius: var(--r-md);
+  background: var(--bg-surface);
 }
 body {
   min-width: 320px;
-  background: var(--canvas);
+  color: var(--text-1);
+  background: var(--bg-surface);
   /* Chrome's own stylesheet for extension pages sets a system font on body; restate ours. */
-  font-family: var(--sans);
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
 }
 button,
 input,
@@ -63,7 +39,7 @@ a {
   cursor: pointer;
 }
 a {
-  color: var(--action);
+  color: var(--accent);
 }
 button:disabled,
 fieldset:disabled {
@@ -73,14 +49,14 @@ fieldset:disabled {
 kbd,
 code {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 kbd {
-  padding: 1px 5px;
+  padding: 0 5px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  color: var(--ink-soft);
-  background: var(--paper);
+  border-radius: var(--r-xs);
+  color: var(--text-2);
+  background: var(--bg-surface);
   white-space: nowrap;
 }
 
@@ -95,34 +71,34 @@ kbd {
 
 /* Header -------------------------------------------------------------------- */
 .extension-header {
-  height: 50px;
+  height: 48px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 0 var(--gutter);
   border-bottom: 1px solid var(--line);
-  background: var(--paper);
+  background: var(--bg-canvas);
 }
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   margin-left: -6px;
-  padding: 4px 6px;
-  border-radius: var(--ui-radius);
-  color: var(--ink);
+  padding: var(--sp-1) 6px;
+  border-radius: var(--r-md);
+  color: var(--text-1);
   text-decoration: none;
 }
 .brand:hover {
-  background: var(--hover);
+  background: var(--bg-hover);
 }
 .brand strong {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-strong);
 }
 .brand span {
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--text-3);
+  font-size: var(--text-sm);
 }
 .mark {
   width: 18px;
@@ -139,15 +115,17 @@ kbd {
 /* The collection being saved to; opens its controls below the header. */
 .header-collection {
   min-width: 0;
+  height: var(--control-h-sm);
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 4px 4px 4px 8px;
+  padding: 0 var(--sp-1) 0 var(--sp-2);
   border: 0;
-  border-radius: var(--ui-radius);
-  color: var(--ink-soft);
+  border-radius: var(--r-md);
+  color: var(--text-2);
   background: none;
-  font-size: 12px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
 }
 .header-collection-name {
   max-width: 130px;
@@ -157,42 +135,37 @@ kbd {
 }
 .header-collection svg,
 .header-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   flex: none;
 }
 .header-collection[aria-expanded="true"] svg {
   transform: rotate(180deg);
 }
 .header-icon {
-  width: 28px;
-  height: 28px;
+  width: var(--control-h);
+  height: var(--control-h);
   display: grid;
   place-items: center;
   margin-right: -6px;
   padding: 0;
   border: 0;
-  border-radius: var(--ui-radius);
-  color: var(--muted);
+  border-radius: var(--r-md);
+  color: var(--text-2);
   background: none;
 }
 .header-collection:hover,
 .header-icon:hover {
-  color: var(--ink);
-  background: var(--hover);
-}
-.header-collection:focus-visible,
-.header-icon:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  color: var(--text-1);
+  background: var(--bg-hover);
 }
 .environment {
-  padding: 2px 6px;
+  padding: 1px 6px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
+  border-radius: var(--r-xs);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
   letter-spacing: 0.04em;
 }
 
@@ -202,82 +175,85 @@ kbd {
   display: flex;
   flex-direction: column;
 }
+/* The panel's head stays put and the body scrolls under it, tabs pinned at its top. */
+.capture-shell:has(> .panel-head) {
+  height: 100vh;
+}
+.panel-head {
+  flex: none;
+}
+.panel-body {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.panel-body > .secondary.compact {
+  margin: var(--sp-3) var(--gutter) 0;
+}
 .page-card {
-  padding: 14px var(--gutter);
+  padding: var(--sp-3) var(--gutter) var(--sp-4);
   border-bottom: 1px solid var(--line);
-  background: var(--paper);
+  background: var(--bg-canvas);
 }
 .eyebrow {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
+  display: block;
+  margin-bottom: var(--sp-1);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
   letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 .page-card h1 {
-  margin: 0 0 2px;
-  font:
-    500 18px/1.3 var(--serif),
-    serif;
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-strong);
+  line-height: var(--lh-lg);
   overflow-wrap: anywhere;
 }
 .page-card p {
   margin: 0;
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
 }
 .action-panel,
 .tab-section {
-  padding: 16px var(--gutter);
+  padding: var(--sp-4) var(--gutter);
 }
 .action-panel {
   border-bottom: 1px solid var(--line);
+  background: var(--bg-canvas);
 }
 .action-panel h2 {
-  margin: 0 0 4px;
-  font-size: 15px;
+  margin: 0 0 var(--sp-1);
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
 }
 .action-panel p,
 .action-panel li,
 .hint {
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
 }
 .action-panel p {
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-3);
 }
 .device-code kbd {
-  color: var(--ink);
-  font-size: 12px;
-}
-/* One line naming the collection once connected; the full controls are behind Change. */
-.collection-line {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px var(--gutter);
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 12px;
-}
-.collection-line strong {
-  color: var(--ink-soft);
-  overflow-wrap: anywhere;
-}
-.collection-line .text-button,
-.collapse-button {
-  flex: none;
-  margin: 0;
+  color: var(--text-1);
 }
 .collapse-button {
   float: right;
+  margin: 0;
 }
 details.technical {
   margin-top: 6px;
 }
 details.technical summary {
-  color: var(--muted);
+  color: var(--text-3);
   cursor: pointer;
 }
 .visually-hidden {
@@ -288,17 +264,14 @@ details.technical summary {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.save-status:not(:empty) {
-  padding: 0 var(--gutter) 16px;
-  color: var(--muted);
-  font-size: 12px;
-}
-.save-status p {
-  margin: 0 0 4px;
+/* The page's one status line, under its title. */
+.page-card .page-status:not(:empty) {
+  margin-top: 6px;
+  color: var(--text-2);
 }
 /* Save action ---------------------------------------------------------------------- */
 .save-bar {
-  margin-top: 12px;
+  margin-top: var(--sp-3);
 }
 .save-bar .secondary {
   margin-top: 0;
@@ -306,18 +279,16 @@ details.technical summary {
 .save-bar .hint {
   margin: 6px 0 0;
 }
-.page-card .saved-line {
-  margin-top: 6px;
-}
 /* A page Reader cannot read: an ordinary state, said without alarm. */
 .page-note {
-  padding: 14px var(--gutter);
+  padding: var(--sp-3) var(--gutter);
   border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
 }
 .page-note p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--sp-2);
 }
 .page-note .secondary {
   width: auto;
@@ -326,22 +297,20 @@ details.technical summary {
 /* One quiet line where a tab has nothing to show yet. */
 .tab-hint {
   margin: 0;
-  padding: 14px var(--gutter);
-  color: var(--muted);
-  font-size: 12px;
+  padding: var(--sp-4) var(--gutter);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
 }
 .tab-hint p {
   margin: 0;
 }
 .hint-keys {
   display: grid;
-  gap: 6px;
-  margin: 12px 0 0;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 0;
   padding: 0;
   list-style: none;
-}
-.hint-keys kbd {
-  font-size: 10px;
 }
 
 /* Tabs: Reader's inspector strip. A narrow panel names only the open tab, then shows only
@@ -352,63 +321,65 @@ details.technical summary {
   top: 0;
   container: panel-tabs / inline-size;
   display: flex;
-  gap: 2px;
-  padding: 0 calc(var(--gutter) - 8px);
+  gap: var(--sp-1);
+  padding: 0 calc(var(--gutter) - var(--sp-2));
   border-bottom: 1px solid var(--line);
-  background: var(--canvas);
+  background: var(--bg-canvas);
 }
 .panel-tabs button {
   position: relative;
   min-width: 0;
-  height: 38px;
+  height: 40px;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 8px;
+  padding: 0 var(--sp-2);
   border: 0;
-  color: var(--muted);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
   background: transparent;
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   white-space: nowrap;
 }
 .panel-tabs button:hover {
-  color: var(--ink);
+  color: var(--text-1);
 }
 .panel-tabs button::after {
   position: absolute;
-  right: 8px;
-  bottom: 0;
-  left: 8px;
+  right: var(--sp-2);
+  bottom: -1px;
+  left: var(--sp-2);
   height: 2px;
-  border-radius: 1px;
+  border-radius: 2px;
   background: transparent;
   content: "";
 }
 .panel-tabs button[aria-selected="true"] {
-  color: var(--ink);
+  color: var(--text-1);
 }
 .panel-tabs button[aria-selected="true"]::after {
   background: var(--accent);
 }
-.panel-tabs button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
 .panel-tabs svg {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   flex: none;
 }
-.panel-tab-count {
-  min-width: 18px;
-  padding: 1px 5px;
-  border-radius: 999px;
-  color: var(--muted);
-  background: var(--hover);
-  font-size: 11px;
-  text-align: center;
+/* The literature note waits on a decision. */
+.panel-tab-alert {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--danger);
 }
-@container panel-tabs (max-width: 260px) {
+.panel-tab-count {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+}
+@container panel-tabs (max-width: 350px) {
   .panel-tabs button:not([aria-selected="true"]) .panel-tab-label {
     position: absolute;
     width: 1px;
@@ -424,27 +395,16 @@ details.technical summary {
 
 /* Literature note ------------------------------------------------------------------- */
 .note-text {
-  font:
-    14px/1.55 var(--serif),
-    serif;
+  font-family: var(--font-read);
+  font-size: var(--text-md);
+  line-height: 1.55;
 }
-.details-form {
-  margin-bottom: 18px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--line);
-}
-.details-form .item-actions {
-  margin: -4px 0 14px;
-}
-.note-heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
+/* One save state for the title, tags and note, level with the first label. */
 .note-state {
-  color: var(--muted);
-  font-size: 11px;
+  float: right;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-sm);
 }
 .note-state.is-conflict,
 .note-state.is-error,
@@ -452,99 +412,217 @@ details.technical summary {
   color: var(--danger);
 }
 .saved-note .problem {
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-3);
 }
-.saved-note textarea[readonly] {
+.saved-note .problem.conflict {
+  clear: both;
+}
+.saved-note textarea[readonly],
+.saved-note input[readonly] {
   opacity: 0.7;
 }
-
-/* Citation ------------------------------------------------------------------------- */
-.citation-title {
+.other-version {
+  margin: var(--sp-2) 0 0;
+}
+.other-version dt {
+  margin-top: var(--sp-2);
+  color: var(--text-3);
+}
+.other-version dd {
   margin: 0;
-  font:
-    15px/1.4 var(--serif),
-    serif;
   overflow-wrap: anywhere;
 }
+.other-version pre {
+  max-height: 12em;
+  margin: 0;
+  overflow: auto;
+  font-family: var(--font-read);
+  white-space: pre-wrap;
+}
+
+/* Citation: the reference leads, in the reading face, on a raised card as in Reader's
+   citation tab. ----------------------------------------------------------------------- */
+.citation {
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  border-radius: var(--r-lg);
+  color: var(--text-2);
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--e-1);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+}
+.citation p {
+  margin: var(--sp-1) 0 0;
+}
+.citation .hint {
+  margin-top: var(--sp-3);
+}
+.citation code {
+  overflow-wrap: anywhere;
+}
+.citation-title {
+  color: var(--text-1);
+  font-family: var(--font-read);
+  font-size: var(--text-quote);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.citation .citation-title {
+  margin: 0 0 var(--sp-1);
+}
 .citation-fields {
-  margin: 8px 0 0;
+  margin: var(--sp-3) 0 0;
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
 }
 .citation-fields > div {
   display: flex;
-  gap: 8px;
-  padding-top: 4px;
+  gap: var(--sp-2);
+  padding-top: var(--sp-1);
 }
 .citation-fields dt {
   min-width: 56px;
-  color: var(--muted);
+  color: var(--text-3);
 }
 .citation-fields dd {
   min-width: 0;
   margin: 0;
+  color: var(--text-1);
   overflow-wrap: anywhere;
 }
 .secondary.compact {
   width: auto;
-  min-height: 30px;
+  min-height: var(--control-h-sm);
   margin: 0;
 }
+/* The stored citation, formatted as Reader formats it, then the ways to copy it. */
+.citation-reference {
+  color: var(--text-1);
+  font-family: var(--font-read);
+  font-size: var(--text-quote);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.citation .citation-key {
+  margin-top: var(--sp-3);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+.copy-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+.copy-actions .primary.compact {
+  flex: 1;
+  min-height: var(--control-h-sm);
+}
+.copy-menu {
+  position: relative;
+}
+.copy-menu summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-h-sm);
+  height: 100%;
+  padding: 0;
+  list-style: none;
+  cursor: pointer;
+}
+.copy-menu summary::-webkit-details-marker {
+  display: none;
+}
+.copy-menu[open] summary {
+  background: var(--bg-hover);
+}
+.copy-menu-panel {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + var(--sp-1));
+  right: 0;
+  min-width: 160px;
+  padding: var(--sp-1);
+  border-radius: var(--r-md);
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--e-2);
+}
+.copy-menu-panel .text-button {
+  width: 100%;
+  min-height: var(--target-min);
+  margin: 0;
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--text-1);
+}
+.copy-menu-panel .text-button:hover {
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+.copy-status:empty {
+  display: none;
+}
+.copy-status {
+  margin: var(--sp-2) 0 0;
+}
 
-/* Saved highlights ------------------------------------------------------------ */
+/* Saved highlights: Reader's cards. No box at rest, a tint on hover; the passage keeps its
+   wash, as it is on the page. --------------------------------------------------------- */
 .saved-highlights {
-  padding: 16px var(--gutter);
+  padding: var(--sp-4) calc(var(--gutter) - var(--sp-2));
 }
 .list-header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin: 0 var(--sp-2) var(--sp-2);
 }
 .list-header h2 {
   margin: 0;
-  font-size: 15px;
-}
-.list-header h2 span {
-  margin-left: 4px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 400;
-}
-.list-header .text-button {
-  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
 }
 .saved-highlights ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.saved-highlights .hint {
-  margin: 0 0 8px;
+.saved-highlights > .hint {
+  margin: 0 var(--sp-2) var(--sp-2);
 }
 .saved-highlight {
-  margin-bottom: 10px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  background: var(--paper);
+  margin-bottom: var(--sp-1);
+  padding: var(--sp-3) var(--sp-2);
+  border-radius: var(--r-lg);
+  transition: background var(--dur-fast) ease-out;
 }
-/* The passage is tinted in its colour, as it is on the page, rather than edged with it. */
+.saved-highlight:hover,
+.saved-highlight:focus-within {
+  background: var(--bg-hover);
+}
 .highlight-mark {
-  padding: 0 2px;
+  padding: 1px 2px;
   border-radius: 2px;
-  background: color-mix(in oklch, var(--swatch, var(--accent)) 40%, transparent);
+  background: var(--wash, var(--hl-yellow));
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
 /* Each card's actions stay quiet until it is pointed at or focused, so a list of cards
    does not read as a column of links. They keep their place, so nothing shifts. */
 .saved-highlight > .item-actions .text-button:not(:disabled) {
-  color: var(--muted);
-  text-decoration-color: transparent;
+  color: var(--text-3);
 }
 .saved-highlight:hover > .item-actions .text-button:not(:disabled),
 .saved-highlight:focus-within > .item-actions .text-button:not(:disabled) {
-  color: var(--action);
-  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+  color: var(--accent);
 }
 .highlight-quote {
   display: -webkit-box;
@@ -553,39 +631,41 @@ details.technical summary {
   padding: 0;
   overflow: hidden;
   border: 0;
-  color: var(--ink);
+  color: var(--text-1);
   background: none;
-  font:
-    14px/1.45 var(--serif),
-    serif;
+  font-family: var(--font-read);
+  font-size: var(--text-quote);
+  line-height: var(--lh-quote);
   text-align: left;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
 }
 .highlight-quote:hover:not(:disabled) {
   text-decoration: underline;
-  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
   text-underline-offset: 3px;
 }
 .highlight-quote:disabled {
   opacity: 0.8;
 }
 .saved-highlight .hint {
-  margin: 4px 0 0;
+  margin: var(--sp-1) 0 0;
 }
 .highlight-comment {
-  margin: 6px 0 0;
-  color: var(--ink-soft);
-  font-size: 12px;
+  margin: var(--sp-2) 0 0;
+  color: var(--text-2);
+  font-size: var(--text-md);
+  line-height: var(--lh-md);
   white-space: pre-wrap;
 }
 .highlight-tags {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 11px;
+  margin: var(--sp-1) 0 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
 }
 .comment-editor {
-  margin-top: 8px;
+  margin-top: var(--sp-2);
 }
 .comment-editor textarea {
   margin-bottom: 6px;
@@ -594,8 +674,8 @@ details.technical summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px 14px;
-  margin-top: 6px;
+  gap: 6px var(--sp-4);
+  margin-top: var(--sp-2);
 }
 .item-actions .text-button {
   margin: 0;
@@ -603,33 +683,38 @@ details.technical summary {
 .item-actions .secondary,
 .item-actions .danger {
   width: auto;
-  min-height: 30px;
+  min-height: var(--control-h-sm);
   margin: 0;
 }
 .delete-confirm {
-  margin-top: 8px;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in oklch, var(--danger) 35%, var(--line));
-  border-radius: var(--ui-radius);
-  background: color-mix(in oklch, var(--danger) 6%, var(--paper));
-  font-size: 12px;
+  margin-top: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--danger-soft);
+  font-size: var(--text-xs);
 }
 .delete-confirm p {
   margin: 0;
 }
 .danger {
-  padding: 0 12px;
+  padding: 0 var(--sp-3);
   border: 1px solid var(--danger);
-  border-radius: var(--ui-radius);
-  color: var(--paper);
+  border-radius: var(--r-md);
+  color: var(--bg-surface);
   background: var(--danger);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
 }
 .item-problem {
   margin: 6px 0 0;
   color: var(--danger);
-  font-size: 12px;
+  font-size: var(--text-xs);
+}
+.item-problem p {
+  margin: 0;
+}
+.item-problem details.technical {
+  color: var(--text-2);
 }
 .panel-footer {
   margin-top: auto;
@@ -638,41 +723,56 @@ details.technical summary {
 }
 .panel-footer .text-button {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-3);
 }
 
-/* Fields ----------------------------------------------------------------------- */
+/* Fields: a sunken fill and a hairline border; the focus ring is the shared one. -------- */
 label,
 .field-label {
   display: block;
   margin-bottom: 6px;
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 700;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-xs);
 }
 label span {
-  color: var(--muted);
-  font-weight: 400;
+  color: var(--text-3);
+  font-weight: var(--weight-regular);
 }
 input:not([type="checkbox"], [type="radio"]),
 textarea {
   width: 100%;
-  min-height: var(--ui-control-height);
-  margin-bottom: 14px;
-  padding: 7px 10px;
-  font-size: 13px;
+  min-height: var(--control-h);
+  margin-bottom: var(--sp-4);
+  padding: 6px 10px;
+  font-size: var(--text-sm);
 }
 textarea {
   resize: vertical;
   line-height: 1.5;
+}
+.mdbase-field,
+.collection-select {
+  border-color: var(--line-strong);
+  background: var(--bg-sunken);
+}
+.mdbase-field:hover:not(:disabled),
+.collection-select:hover:not(:disabled) {
+  border-color: var(--line-control);
+}
+.mdbase-field:focus-visible,
+.mdbase-select:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 input[type="checkbox"] {
   accent-color: var(--accent);
 }
 .collection-select {
   width: 100%;
-  margin-bottom: 4px;
-  border-color: var(--line-strong);
+  margin-bottom: var(--sp-1);
 }
 fieldset {
   min-width: 0;
@@ -682,76 +782,71 @@ fieldset {
 }
 .checkbox {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   align-items: center;
-  font-weight: 400;
+  color: var(--text-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--lh-sm);
 }
+/* The selected passage, about to be highlighted: the reading face on a raised card. */
 blockquote {
   max-height: 180px;
-  margin: 0 0 10px;
-  padding: 8px 12px;
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
   overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  background: var(--paper);
-  font:
-    15px/1.5 var(--serif),
-    serif;
+  border-radius: var(--r-lg);
+  color: var(--text-1);
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--e-1);
+  font-family: var(--font-read);
+  font-size: var(--text-quote);
+  line-height: var(--lh-quote);
   white-space: pre-wrap;
 }
-.citation {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  background: var(--paper);
-  font-size: 12px;
-}
-.citation p {
-  margin: 4px 0 0;
-}
-.citation code {
-  overflow-wrap: anywhere;
-}
 
-/* Buttons ---------------------------------------------------------------------- */
+/* Buttons: primary (accent fill) once per surface, secondary with a hairline, text buttons
+   quiet. ------------------------------------------------------------------------------ */
 .primary,
 .secondary,
 .problem button:not(.inline-link, .text-button) {
-  min-height: var(--ui-control-height);
-  padding: 0 12px;
+  min-height: var(--control-h);
+  padding: 0 var(--sp-3);
   border: 1px solid var(--line-strong);
-  border-radius: var(--ui-radius);
-  color: var(--ink-soft);
-  background: var(--paper);
-  font-size: 13px;
+  border-radius: var(--r-md);
+  color: var(--text-1);
+  background: var(--bg-surface);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  transition:
+    background-color var(--dur-fast) ease-out,
+    border-color var(--dur-fast) ease-out;
 }
 .secondary:hover:not(:disabled),
 .problem button:not(.inline-link, .text-button):hover:not(:disabled) {
-  border-color: var(--muted);
-  color: var(--ink);
-  background: var(--hover);
+  border-color: var(--line-control);
+  background: var(--bg-hover);
 }
 .primary {
   display: block;
   width: 100%;
-  min-height: 38px;
   border-color: var(--accent);
-  color: var(--paper);
+  color: var(--on-accent);
   background: var(--accent);
-  font-weight: 700;
   text-align: center;
 }
 /* A disabled primary reads as unavailable, not as a faded call to action. */
 .primary:disabled {
-  border-color: var(--line-strong);
-  color: var(--muted);
-  background: var(--hover);
+  border-color: var(--line);
+  color: var(--text-3);
+  background: var(--bg-sunken);
   opacity: 1;
 }
 .primary:hover:not(:disabled) {
-  border-color: var(--action);
-  background: var(--action);
+  border-color: var(--accent-strong);
+  background: var(--accent-strong);
 }
 .reader-link {
   display: flex;
@@ -762,41 +857,45 @@ blockquote {
 }
 .secondary {
   width: 100%;
-  margin-top: 12px;
+  margin-top: var(--sp-3);
 }
 .text-button,
 .inline-link {
   padding: 0;
   border: 0;
-  color: var(--action);
+  border-radius: var(--r-xs);
+  color: var(--accent);
   background: none;
-  font-size: 12px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-xs);
   text-align: left;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
-  text-underline-offset: 3px;
+  text-decoration: none;
 }
 .text-button {
   display: block;
-  margin: 8px 0 12px;
+  margin: var(--sp-2) 0 var(--sp-3);
 }
 .inline-link {
   font-size: inherit;
 }
 .text-button:hover:not(:disabled),
 .inline-link:hover {
-  text-decoration-color: currentColor;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* Problems --------------------------------------------------------------------- */
 .problem {
-  margin: 16px var(--gutter) 0;
-  padding: 12px;
-  border: 1px solid color-mix(in oklch, var(--danger) 35%, var(--line));
+  margin: var(--sp-4) var(--gutter) 0;
+  padding: var(--sp-3);
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--line));
   border-left: 3px solid var(--danger);
-  border-radius: var(--ui-radius);
-  background: color-mix(in oklch, var(--danger) 6%, var(--paper));
-  font-size: 12px;
+  border-radius: var(--r-md);
+  color: var(--text-1);
+  background: var(--danger-soft);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
 }
 .problem p {
   margin: 6px 0 0;
@@ -807,71 +906,116 @@ blockquote {
 .problem-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+.problem button:not(.inline-link, .text-button) {
+  min-height: var(--control-h-sm);
 }
 
-/* Highlights ------------------------------------------------------------------- */
-.passage-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 4px 0 8px;
-}
+/* Highlights: one Highlight action, with its colour chosen beside it. ------------------ */
 .highlight-fields > .text-button {
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-3);
 }
-.passage-actions .text-button,
-.passage-actions .field-label {
-  margin: 0;
+.swatch-yellow {
+  --swatch: var(--ink-yellow);
+  --wash: var(--hl-yellow);
 }
-.colors {
+.swatch-green {
+  --swatch: var(--ink-green);
+  --wash: var(--hl-green);
+}
+.swatch-blue {
+  --swatch: var(--ink-blue);
+  --wash: var(--hl-blue);
+}
+.swatch-pink {
+  --swatch: var(--ink-pink);
+  --wash: var(--hl-pink);
+}
+.swatch-purple {
+  --swatch: var(--ink-purple);
+  --wash: var(--hl-purple);
+}
+.highlight-action {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-.swatch {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  margin: 0;
-  padding: 3px 7px 3px 8px;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: var(--paper);
-  color: var(--ink-soft);
-  font-size: 12px;
-  font-weight: 400;
-  text-transform: capitalize;
-  cursor: pointer;
+  gap: var(--sp-2) var(--sp-3);
 }
-.swatch:hover:not(:disabled) {
-  border-color: var(--muted);
-  color: var(--ink);
-  background: var(--hover);
+.highlight-button.primary {
+  display: inline-flex;
+  flex: 1 1 120px;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  width: auto;
 }
-.swatch::before {
+/* The ink of the colour it will use, so the action names its colour without words. */
+.highlight-button::before {
   width: 12px;
   height: 12px;
+  flex: none;
   border-radius: 50%;
   background: var(--swatch);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--on-accent) 70%, transparent);
   content: "";
 }
-/* The colour used last, which Ctrl/⌘+Enter saves in; every swatch is still a save button. */
-.swatch.is-last {
-  border-color: var(--muted);
-  color: var(--ink);
+.highlight-button:disabled::before {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-1) 12%, transparent);
 }
-.swatch:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+.color-choice {
+  display: flex;
+  gap: var(--sp-1);
+}
+.color-dot {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+}
+.color-dot::before {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--swatch);
+  /* The inner ring keeps the lightest inks visible, as on Reader's swatches. */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-1) 12%, transparent);
+  content: "";
+}
+.color-dot:hover {
+  background: var(--bg-hover);
+}
+/* The chosen colour carries a ring, so the state never rests on telling inks apart. */
+.color-dot[aria-checked="true"] {
+  border-color: var(--text-2);
+}
+.passage-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+.passage-footer .hint,
+.passage-footer .text-button {
+  margin: 0;
+}
+@media (pointer: coarse) {
+  .color-dot {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Tag suggestions --------------------------------------------------------------- */
 .tag-input {
-  margin-bottom: 14px;
+  margin-bottom: var(--sp-4);
 }
 .tag-input input:not([type="checkbox"], [type="radio"]) {
   margin-bottom: 0;
@@ -886,83 +1030,82 @@ blockquote {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 8px;
+  min-height: 24px;
+  padding: 0 var(--sp-2);
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  color: var(--ink-soft);
-  background: var(--paper);
-  font-size: 12px;
+  border-radius: var(--r-full);
+  color: var(--text-2);
+  background: var(--bg-surface);
+  font-size: var(--text-xs);
 }
 .tag-chip:hover {
-  border-color: var(--muted);
-  color: var(--ink);
-  background: var(--hover);
+  border-color: var(--line-control);
+  color: var(--text-1);
+  background: var(--bg-hover);
 }
 .tag-chip kbd {
-  padding: 0 4px;
-  font-size: 10px;
-}
-.swatch-yellow {
-  --swatch: #f7d24e;
-}
-.swatch-green {
-  --swatch: #83cf99;
-}
-.swatch-blue {
-  --swatch: #78bcee;
-}
-.swatch-pink {
-  --swatch: #f49fc6;
-}
-.swatch-purple {
-  --swatch: #bb9bec;
+  padding: 0 3px;
+  line-height: 1.2;
 }
 
-/* Settings and welcome pages ---------------------------------------------------- */
+/* Settings and welcome pages: Reader's Settings page. ------------------------------- */
+.extension-page {
+  min-height: 100vh;
+  background: var(--bg-canvas);
+}
 .extension-page main {
-  max-width: 640px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 36px var(--gutter) 64px;
+  padding: var(--sp-8) var(--sp-6) 80px;
 }
 .extension-page h1 {
-  margin: 0 0 8px;
-  font:
-    500 28px/1.2 var(--serif),
-    serif;
+  margin: 0 0 var(--sp-2);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-strong);
+  line-height: var(--lh-2xl);
+  letter-spacing: -0.02em;
 }
 .extension-page main > section {
-  margin-top: 28px;
-  padding-top: 20px;
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-6);
   border-top: 1px solid var(--line);
 }
 .extension-page h2 {
-  margin: 0 0 12px;
-  font-size: 15px;
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-strong);
+  line-height: var(--lh-lg);
+}
+.extension-page .hint {
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
 }
 .extension-page .action-panel {
   padding: 0;
   border: 0;
+  background: none;
 }
 .extension-page .action-panel h2 {
   display: none;
 }
 .extension-page .problem {
-  margin: 12px 0 0;
+  margin: var(--sp-3) 0 0;
 }
 .extension-page .primary {
   width: auto;
   display: inline-block;
-  padding: 0 18px;
+  padding: 0 var(--sp-4);
 }
 .lede {
-  margin: 0 0 28px;
-  color: var(--ink-soft);
-  font-size: 15px;
+  margin: 0 0 var(--sp-8);
+  color: var(--text-2);
+  font-size: var(--text-lg);
+  line-height: var(--lh-lg);
 }
 .connected-note {
   margin: 0;
-  color: var(--connected);
-  font-size: 12px;
+  color: var(--success);
+  font-size: var(--text-sm);
 }
 .steps {
   margin: 0;
@@ -972,7 +1115,7 @@ blockquote {
 }
 .steps > li {
   position: relative;
-  padding: 20px 0 20px 40px;
+  padding: var(--sp-5) 0 var(--sp-5) 40px;
   border-top: 1px solid var(--line);
   counter-increment: step;
 }
@@ -985,38 +1128,41 @@ blockquote {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: var(--paper);
+  color: var(--on-accent);
   background: var(--accent);
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-strong);
   content: counter(step);
 }
 .steps p {
   margin: 0;
-  color: var(--ink-soft);
+  color: var(--text-2);
 }
-/* A row of mutually exclusive choices, such as the theme. */
+/* A row of mutually exclusive choices, such as the theme: a segmented control whose
+   choice is lifted, keeping the accent for the primary action and focus. */
 .choice-group {
   display: inline-flex;
-  margin-bottom: 8px;
+  gap: 2px;
+  margin-bottom: var(--sp-2);
   padding: 2px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--ui-radius);
-  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-sunken);
 }
 .choice {
   display: inline-flex;
   align-items: center;
+  min-height: var(--control-h-sm);
   margin: 0;
-  padding: 5px 12px;
-  border-radius: calc(var(--ui-radius) - 2px);
-  color: var(--ink-soft);
-  font-weight: 400;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   cursor: pointer;
 }
 .choice:hover {
-  color: var(--ink);
-  background: var(--hover);
+  color: var(--text-1);
 }
 .choice input {
   position: absolute;
@@ -1024,13 +1170,15 @@ blockquote {
   pointer-events: none;
 }
 .choice:has(input:checked) {
-  color: var(--paper);
-  background: var(--accent);
-  font-weight: 700;
+  color: var(--text-1);
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 1px var(--line),
+    var(--e-1);
 }
 .choice:has(input:focus-visible) {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: 2px solid transparent;
+  box-shadow: var(--focus-ring);
 }
 .shortcuts {
   margin: 0;
@@ -1039,21 +1187,56 @@ blockquote {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 16px;
-  padding: 8px 0;
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
   border-bottom: 1px solid var(--line);
 }
 .shortcuts dt {
-  color: var(--ink-soft);
+  color: var(--text-1);
 }
 .shortcuts dd {
   margin: 0;
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--text-3);
+  font-size: var(--text-xs);
   text-align: right;
 }
 .shortcuts + .text-button {
-  margin-top: 12px;
+  margin-top: var(--sp-3);
+}
+
+/* Feed picker ------------------------------------------------------------------- */
+.post-picker fieldset {
+  border: 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow: auto;
+}
+.post-picker-item {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  cursor: pointer;
+}
+.post-picker-item > span {
+  min-width: 0;
+  display: grid;
+  gap: var(--sp-1);
+}
+.post-picker-item input {
+  flex: 0 0 auto;
+  align-self: start;
+}
+.post-picker-item time {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+.post-picker .save-bar {
+  margin-top: var(--sp-3);
 }
 
 @media (forced-colors: active) {
@@ -1062,12 +1245,26 @@ blockquote {
     color: ButtonText;
     background: ButtonFace;
   }
+  .panel-tab-alert {
+    background: Mark;
+    forced-color-adjust: none;
+  }
   .problem,
   blockquote,
-  .saved-highlight {
-    border-color: Highlight;
+  .citation {
+    border: 1px solid CanvasText;
   }
-  .swatch[aria-pressed="true"],
+  .color-dot::before,
+  .highlight-button::before {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+  .mdbase-field:focus-visible,
+  .mdbase-select:focus-visible,
+  .choice:has(input:focus-visible) {
+    outline-color: Highlight;
+  }
+  .color-dot[aria-checked="true"],
   .choice:has(input:checked) {
     outline: 2px solid Highlight;
   }

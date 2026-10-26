@@ -77,7 +77,9 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
 // Extension pages ask for the SDK host here: the worker owns the offscreen document.
 chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
-  const fromExtension = sender.id === chrome.runtime.id && !sender.tab;
+  // Extension pages may run in a tab (settings, capture); content scripts carry the web page's URL.
+  const fromExtension =
+    sender.id === chrome.runtime.id && sender.url?.startsWith(chrome.runtime.getURL("")) === true;
   if (
     !fromExtension ||
     typeof message !== "object" ||

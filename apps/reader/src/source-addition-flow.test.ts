@@ -1,9 +1,15 @@
-import { collectionId, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
-import { describe, expect, it, vi } from "vitest";
+import { collectionId, dateTime, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { addSourceFromInput, type SourceAdditionServices } from "./source-addition-flow.js";
 
 import type { CaptureResult } from "./web-capture-client.js";
+import type { ClaimBatch, WebCaptureImport } from "@mdbase-reader/web-capture";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 
 const pdfBytes = new TextEncoder().encode("%PDF-1.7 fixture");
 
@@ -55,6 +61,9 @@ describe("adding a source from pasted text", () => {
     expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
       source(),
       expect.not.objectContaining({ id: expect.anything() }),
+      expect.objectContaining({
+        title: { value: dostoevsky.title, source: "generic-remote:test" },
+      }),
     );
     expect(outcome).toMatchObject({ kind: "added", notices: [] });
   });
@@ -152,10 +161,322 @@ describe("adding a source from pasted text", () => {
     });
     expect(await addSourceFromInput("isbn 9780140449136", deps)).toMatchObject({
       kind: "added",
-      notices: [expect.stringContaining("Citekey taken.")],
+      notices: [expect.objectContaining({ detail: expect.stringContaining("Citekey taken.") })],
     });
     await expect(addSourceFromInput("Crime and Punishment", deps)).rejects.toThrow(
       "Paste a web address",
+    );
+  });
+});
+
+function capturedPage(claims: ClaimBatch): WebCaptureImport {
+  return {
+    name: "example.readable.html",
+    title: "Captured title",
+    bytes: new TextEncoder().encode("<p>Captured article</p>"),
+    archive: { name: "example.archive.html", bytes: new Uint8Array() },
+    capture: {
+      submittedUrl: "https://example.com/article",
+      canonicalUrl: "https://example.com/article",
+      retrievedAt: dateTime("2026-10-21T00:00:00Z"),
+    },
+    metadata: {},
+    scholarly: {},
+    claims,
+  };
+}
+
+const pageClaims: ClaimBatch = {
+  claims: Object.entries({
+    type: "webpage",
+    title: "Page title",
+    author: [{ literal: "Page Author" }],
+  }).map(([field, value]) => ({
+    field,
+    value,
+    source: { kind: "page", signal: "json-ld" },
+    observedAt: "2026-10-21T00:00:00Z",
+  })),
+};
+
+it("limits a Citoid-discovered DOI round to six seconds total", async () => {
+  vi.useFakeTimers();
+  const fetch = vi
+    .fn<typeof globalThis.fetch>()
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve(
+                Response.json([
+                  {
+                    itemType: "journalArticle",
+                    title: "Remote title",
+                    DOI: "10.1234/discovered",
+                  },
+                ]),
+              ),
+            5_500,
+          ),
+        ),
+    )
+    .mockImplementation(() => new Promise(() => undefined));
+  vi.stubGlobal("fetch", fetch);
+  const page = capturedPage(pageClaims);
+  const deps = services({
+    capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+  });
+  const result = addSourceFromInput(page.capture.canonicalUrl, deps);
+  await vi.advanceTimersByTimeAsync(5_999);
+  expect(deps.workspace.importSourceFile).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(1);
+  expect(await result).toMatchObject({ kind: "added" });
+  expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+    source(),
+    expect.objectContaining({ title: "Remote title" }),
+    expect.anything(),
+  );
+});
+
+describe("captured citation disclosure", () => {
+  it.each([
+    "https://router.local/admin",
+    "http://127.0.0.1/private",
+    "http://192.168.1.1/",
+    "http://[fd00::1]/private",
+    "https://alice:secret@example.com/doc?token=secret#private",
+    "https://example.com/doc?token=private-secret",
+    "https://example.com/private.pdf",
+  ])("never discloses a protected captured canonical URL: %s", async (canonicalUrl) => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
+    vi.stubGlobal("fetch", fetch);
+    const base = capturedPage(pageClaims);
+    const page = { ...base, capture: { ...base.capture, canonicalUrl } };
+    const deps = services({ capture: vi.fn().mockResolvedValue({ kind: "html", page }) });
+    await addSourceFromInput("https://example.com/document", deps);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(deps.workspace.importSourceFile).toHaveBeenCalled();
+  });
+
+  it("retains article queries but never discloses captured fragments", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(Response.json([]));
+    vi.stubGlobal("fetch", fetch);
+    const base = capturedPage(pageClaims);
+    const canonicalUrl = "https://example.com/document?article=7#private-fragment";
+    const page = { ...base, capture: { ...base.capture, canonicalUrl } };
+    await addSourceFromInput(
+      "https://example.com/document",
+      services({
+        capture: vi.fn().mockResolvedValue({ kind: "html", page }),
+      }),
+    );
+    expect(fetch.mock.calls[0]?.[0]).toBe(
+      `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent("https://example.com/document?article=7")}`,
+    );
+  });
+});
+
+describe("adding captured page citations", () => {
+  it("enables Citoid and saves the resolved citation with pinned field provenance", async () => {
+    const page = capturedPage(pageClaims);
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      Response.json([
+        {
+          itemType: "encyclopediaArticle",
+          title: "Australia",
+          encyclopediaTitle: "Wikipedia",
+          date: "2026-10-20",
+          // A remote title override requires proof that this record is about the captured work.
+          url: page.capture.canonicalUrl,
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+    });
+    const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
+    expect(fetch.mock.calls[0]?.[0]).toBe(
+      `https://en.wikipedia.org/api/rest_v1/data/citation/zotero/${encodeURIComponent(page.capture.canonicalUrl)}`,
+    );
+    expect(deps.lookUp).not.toHaveBeenCalled();
+    expect(deps.workspace.importSourceFile).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Australia",
+        metadata: expect.objectContaining({ authors: ["Page Author"] }),
+      }),
+      undefined,
+    );
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+      source(),
+      expect.objectContaining({
+        title: "Australia",
+        type: "entry-encyclopedia",
+        "container-title": "Wikipedia",
+        author: [{ literal: "Page Author" }],
+      }),
+      expect.objectContaining({
+        title: expect.objectContaining({
+          value: "Australia",
+          source: "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle",
+        }),
+        author: expect.objectContaining({
+          value: [{ literal: "Page Author" }],
+          source: "page:json-ld",
+        }),
+      }),
+    );
+    expect(result).toMatchObject({
+      kind: "added",
+      provenance: {
+        title: {
+          value: "Australia",
+          source: "site-adapter:citoid/encyclopediaArticle Citoid encyclopediaArticle",
+        },
+      },
+    });
+  });
+});
+
+describe("captured citation remote fallbacks", () => {
+  it("keeps the captured citation when Citoid returns a different work", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      Response.json([
+        {
+          itemType: "encyclopediaArticle",
+          title: "Australia",
+          url: "https://en.wikipedia.org/wiki/Australia",
+          DOI: "10.1234/unrelated",
+        },
+      ]),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const page = capturedPage(pageClaims);
+    const deps = services({ capture: vi.fn().mockResolvedValue({ kind: "html", page }) });
+    const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
+    expect(result).toMatchObject({
+      kind: "added",
+      provenance: { title: { value: "Page title", source: "page:json-ld" } },
+    });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+      source(),
+      expect.objectContaining({ title: "Page title" }),
+      expect.anything(),
+    );
+  });
+
+  it("still saves page evidence when Citoid is unavailable", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockRejectedValue(new Error("Offline"));
+    vi.stubGlobal("fetch", fetch);
+    const page = capturedPage(pageClaims);
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+    });
+    const result = await addSourceFromInput(page.capture.canonicalUrl, deps);
+    expect(result).toMatchObject({
+      kind: "added",
+      provenance: { title: { value: "Page title", source: "page:json-ld" } },
+    });
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(
+      source(),
+      expect.objectContaining({ title: "Page title" }),
+      expect.objectContaining({
+        title: expect.objectContaining({ value: "Page title", source: "page:json-ld" }),
+      }),
+    );
+  });
+});
+
+describe("remote lookup boundaries for captured pages", () => {
+  it("does not send social post URLs to remote providers or change their citation", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>();
+    vi.stubGlobal("fetch", fetch);
+    const citation = { type: "post", title: "A post", author: [{ literal: "A poster" }] };
+    const page: WebCaptureImport = {
+      ...capturedPage({ claims: [] }),
+      scholarly: { citation },
+      metadata: {
+        socialPost: {
+          platform: "bluesky",
+          id: "post",
+          url: "https://bsky.app/profile/fixture.test/post/first",
+          author: { id: "poster", name: "A poster", handle: "fixture.test" },
+          threadRoot: "post",
+          threadPartial: false,
+          text: "A post",
+          media: [],
+          parts: [],
+        },
+      },
+    };
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+    });
+    await addSourceFromInput("https://bsky.app/profile/fixture.test/post/first", deps);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(deps.workspace.saveNewSourceCitation).toHaveBeenCalledWith(source(), citation);
+  });
+
+  it("does not import after a caller cancels a remote lookup", async () => {
+    const controller = new AbortController();
+    const fetch = vi.fn<typeof globalThis.fetch>(() => new Promise(() => undefined));
+    vi.stubGlobal("fetch", fetch);
+    const page = capturedPage(pageClaims);
+    const deps = services({
+      capture: vi.fn(() => Promise.resolve({ kind: "html" as const, page })),
+      signal: controller.signal,
+    });
+    const result = addSourceFromInput(page.capture.canonicalUrl, deps);
+    const rejected = expect(result).rejects.toThrow("Cancelled");
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+    controller.abort(new Error("Cancelled"));
+    await rejected;
+    expect(deps.workspace.importSourceFile).not.toHaveBeenCalled();
+  });
+});
+
+describe("cancellation before source writes", () => {
+  it("does not save a PDF when an extractor swallows an abort", async () => {
+    const controller = new AbortController();
+    const deps = services({
+      signal: controller.signal,
+      capture: vi.fn().mockResolvedValue({
+        kind: "pdf",
+        bytes: pdfBytes,
+        submittedUrl: "https://example.com/paper.pdf",
+        canonicalUrl: "https://example.com/paper.pdf",
+        retrievedAt: "2026-09-25T00:00:00Z",
+      }),
+      pdfIdentifiers: vi.fn(() => {
+        controller.abort(new Error("Cancelled"));
+        return Promise.reject(new Error("Cancelled"));
+      }),
+    });
+    await expect(addSourceFromInput("https://example.com/paper.pdf", deps)).rejects.toThrow(
+      "Cancelled",
+    );
+    expect(deps.workspace.importSourceFile).not.toHaveBeenCalled();
+    expect(deps.workspace.createSource).not.toHaveBeenCalled();
+  });
+
+  it("marks the write boundary before importing a PDF", async () => {
+    const onWriteStart = vi.fn();
+    const deps = services({
+      onWriteStart,
+      capture: vi.fn().mockResolvedValue({
+        kind: "pdf",
+        bytes: pdfBytes,
+        submittedUrl: "https://example.com/paper.pdf",
+        canonicalUrl: "https://example.com/paper.pdf",
+        retrievedAt: "2026-09-25T00:00:00Z",
+      }),
+    });
+    await addSourceFromInput("https://example.com/paper.pdf", deps);
+    expect(onWriteStart).toHaveBeenCalledOnce();
+    expect(onWriteStart.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(deps.workspace.importSourceFile).mock.invocationCallOrder[0]!,
     );
   });
 });

@@ -6,11 +6,12 @@ import {
   sourceId,
   type Annotation,
 } from "@mdbase-reader/core";
-import { act } from "react";
+import { act, type JSX } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { browseAnnotations } from "./annotation-list-order.js";
 import { AnnotationList } from "./AnnotationList.js";
+import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
 import { createRoot } from "./testing/i18n.js";
 
 import type * as TanstackVirtual from "@tanstack/react-virtual";
@@ -46,12 +47,24 @@ vi.mock("@tanstack/react-virtual", async (original) => {
     }),
   };
 });
+const cardEdit = vi.hoisted((): { current: (() => void) | undefined } => ({ current: undefined }));
 vi.mock("./AnnotationCard.js", () => ({
-  AnnotationCard: ({ annotation, editing }: { annotation: Annotation; editing: boolean }) => (
-    <div data-annotation-id={annotation.id}>
-      <button>{editing ? "Editing" : annotation.body}</button>
-    </div>
-  ),
+  AnnotationCard: ({
+    annotation,
+    editing,
+    onEdit,
+  }: {
+    annotation: Annotation;
+    editing: boolean;
+    onEdit: () => void;
+  }) => {
+    cardEdit.current = onEdit;
+    return (
+      <div data-annotation-id={annotation.id}>
+        <button>{editing ? "Editing" : annotation.body}</button>
+      </div>
+    );
+  },
 }));
 
 const annotations = Array.from({ length: 1_000 }, (_, index): Annotation => ({
@@ -101,6 +114,7 @@ afterEach(async () => {
 async function render(
   editingId: ReturnType<typeof annotationId> | null = null,
   activeId: ReturnType<typeof annotationId> | null = null,
+  readingId: ReturnType<typeof annotationId> | null = null,
 ): Promise<HTMLDivElement> {
   if (!host) {
     host = document.createElement("div");
@@ -108,7 +122,9 @@ async function render(
     root = createRoot(host);
   }
   await act(async () => {
-    root!.render(<AnnotationList {...props} editingId={editingId} activeId={activeId} />);
+    root!.render(
+      <AnnotationList {...props} editingId={editingId} activeId={activeId} readingId={readingId} />,
+    );
     await Promise.resolve();
   });
   return host;
@@ -145,5 +161,388 @@ describe("virtual annotation sidebar", () => {
       ({ id }) => id === "ann_950",
     );
     expect(virtual.scrollToIndex).toHaveBeenCalledWith(index, { align: "auto" });
+  });
+
+  it("navigates across unmounted cards with End/Home and keeps list positions", async () => {
+    const element = await render();
+    const first = element.querySelector<HTMLElement>('[role="listitem"]')!;
+    await act(async () => {
+      first.focus();
+      first.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
+      await Promise.resolve();
+    });
+    const last = element.querySelector<HTMLElement>('[aria-posinset="1000"]')!;
+    expect(document.activeElement).toBe(last);
+    expect(last.getAttribute("aria-setsize")).toBe("1000");
+    await act(async () => {
+      last.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(document.activeElement).toBe(first);
+  });
+
+  it("Tabs to the logical next item, not the next mounted window after pinned focus", async () => {
+    const element = await render();
+    const first = element.querySelector<HTMLElement>('[role="listitem"]')!;
+    await act(async () => {
+      first.querySelector("button")!.focus();
+      await Promise.resolve();
+    });
+    virtual.startIndex = 500;
+    virtual.endIndex = 503;
+    await render();
+    await act(async () => {
+      first
+        .querySelector("button")!
+        .dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(document.activeElement?.getAttribute("aria-posinset")).toBe("2");
+  });
+
+  it("can materialize all filtered cards for native browser Find and return to windowing", async () => {
+    const element = await render();
+    const toggle = switchNamed(element, "Include all annotations in page search");
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect(toggle.textContent).toContain("Search above covers all annotations");
+    await act(async () => {
+      toggle.click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll('[role="listitem"]')).toHaveLength(1000);
+    expect(toggle.textContent).toContain("Slower with long lists");
+    await act(async () => {
+      toggle.click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll('[role="listitem"]')).toHaveLength(4);
+    await act(async () => {
+      element.querySelector<HTMLInputElement>('input[type="search"]')!.focus();
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "f", ctrlKey: true, bubbles: true }),
+      );
+      await Promise.resolve();
+    });
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+  });
+});
+
+describe("following the reading position", () => {
+  it("highlights reading context but pauses automatic reveals on manual list interaction", async () => {
+    const values = browseAnnotations(annotations, "", "all", "document");
+    const element = await render(null, null, values[1]!.id);
+    expect(element.querySelector('[aria-current="location"]')?.getAttribute("aria-posinset")).toBe(
+      "2",
+    );
+    expect(virtual.scrollToIndex).toHaveBeenCalledWith(1, { align: "auto" });
+    await act(async () => {
+      element
+        .querySelector(".annotation-list")!
+        .dispatchEvent(new Event("wheel", { bubbles: true }));
+      await Promise.resolve();
+    });
+    virtual.scrollToIndex.mockClear();
+    await render(null, null, values[800]!.id);
+    expect(virtual.scrollToIndex).not.toHaveBeenCalledWith(800, { align: "auto" });
+    const follow = switchNamed(element, "Follow reading position");
+    expect(follow.getAttribute("aria-checked")).toBe("false");
+    await act(async () => {
+      follow.click();
+      await Promise.resolve();
+    });
+    expect(virtual.scrollToIndex).toHaveBeenCalledWith(800, { align: "auto" });
+    expect(follow.getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("offers Resume following when paused, without marking the Filter menu", async () => {
+    const values = browseAnnotations(annotations, "", "all", "document");
+    for (const readingId of [values[1]!.id, null]) {
+      const element = await render(null, null, readingId);
+      await act(async () => {
+        element
+          .querySelector(".annotation-list")!
+          .dispatchEvent(new Event("wheel", { bubbles: true }));
+        await Promise.resolve();
+      });
+      const trigger = element.querySelector(".annotation-filter-trigger")!;
+      expect(trigger.classList.contains("is-changed")).toBe(false);
+      const resume = [...element.querySelectorAll<HTMLButtonElement>("button")].find(
+        (button) => button.textContent === "Resume following",
+      )!;
+      expect(resume).toBeDefined();
+      virtual.scrollToIndex.mockClear();
+      await act(async () => {
+        resume.click();
+        await Promise.resolve();
+      });
+      if (readingId) {
+        expect(virtual.scrollToIndex).toHaveBeenCalledWith(1, { align: "auto" });
+      }
+      expect(element.textContent).not.toContain("Resume following");
+      expect(switchNamed(element, "Follow reading position").getAttribute("aria-checked")).toBe(
+        "true",
+      );
+    }
+  });
+});
+
+function switchNamed(element: HTMLElement, name: string): HTMLButtonElement {
+  return [...element.querySelectorAll<HTMLButtonElement>('[role="switch"]')].find((item) =>
+    item.textContent.startsWith(name),
+  )!;
+}
+
+const kinds: Annotation[] = [
+  { ...annotations[0]!, id: annotationId("highlight"), annotationType: "highlight" },
+  { ...annotations[1]!, id: annotationId("bookmark"), annotationType: "bookmark" },
+  { ...annotations[2]!, id: annotationId("comment"), annotationType: "note" },
+];
+async function mount(element: JSX.Element): Promise<HTMLDivElement> {
+  host = document.createElement("div");
+  document.body.append(host);
+  root = createRoot(host);
+  await act(async () => {
+    root!.render(element);
+    await Promise.resolve();
+  });
+  return host;
+}
+const renderKinds = (): Promise<HTMLDivElement> =>
+  mount(
+    <AnnotationList
+      {...props}
+      annotations={{ status: "ready", value: kinds }}
+      addMenu={<button type="button">Add</button>}
+    />,
+  );
+function choice(element: HTMLElement, label: string): HTMLButtonElement {
+  return [...element.querySelectorAll<HTMLButtonElement>(".annotation-filter-choice")].find(
+    (button) => button.textContent.startsWith(label),
+  )!;
+}
+
+describe("annotation Filter menu", () => {
+  it("puts search, one Filter menu and Add in a single control row", async () => {
+    const element = await renderKinds();
+    const row = element.querySelector(".annotation-tools")!;
+    expect(row.querySelector('input[type="search"]')).not.toBeNull();
+    expect(row.querySelector('summary[aria-label="Filter annotations"]')).not.toBeNull();
+    expect(row.lastElementChild?.textContent).toBe("Add");
+    // Nothing else sits between the control row and the cards.
+    expect(element.querySelector('input[type="checkbox"]')).toBeNull();
+    expect(element.textContent).not.toContain("Pause following");
+  });
+
+  it("offers Show and Order as radio groups with arrow keys and one tab stop", async () => {
+    const element = await renderKinds();
+    const groups = [...element.querySelectorAll('[role="radiogroup"]')];
+    expect(groups.map((group) => group.querySelector(".menu-label")?.textContent)).toEqual([
+      "Show",
+      "Colour",
+      "Order",
+    ]);
+    const all = choice(element, "All annotations");
+    expect(all.getAttribute("role")).toBe("radio");
+    expect(
+      [...groups[0]!.querySelectorAll('[role="radio"]')].filter((radio) =>
+        radio.matches('[tabindex="0"]'),
+      ),
+    ).toEqual([all]);
+    await act(async () => {
+      all.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(all.getAttribute("aria-checked")).toBe("false");
+    const next = groups[0]!.querySelector('[aria-checked="true"]');
+    expect(next).not.toBeNull();
+    expect(document.activeElement).toBe(next);
+  });
+
+  it("filters by type with counts, marks the trigger, and clears back to all", async () => {
+    const element = await renderKinds();
+    expect(choice(element, "All annotations").getAttribute("aria-checked")).toBe("true");
+    expect(choice(element, "Bookmarks").textContent).toBe("Bookmarks1");
+    await act(async () => {
+      choice(element, "Bookmarks").click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(1);
+    expect(element.querySelector('[data-annotation-id="bookmark"]')).not.toBeNull();
+    expect(choice(element, "Bookmarks").getAttribute("aria-checked")).toBe("true");
+    const trigger = element.querySelector(".annotation-filter-trigger")!;
+    expect(trigger.classList.contains("is-changed")).toBe(true);
+    expect(trigger.getAttribute("aria-label")).toBe("Filter annotations (changed)");
+    expect(element.querySelector('[role="status"]')?.textContent).toContain("1 of 3");
+    await act(async () => {
+      [...element.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Clear")!
+        .click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(3);
+    expect(trigger.classList.contains("is-changed")).toBe(false);
+  });
+});
+
+describe("annotation list editing", () => {
+  it("keeps the card being edited listed whatever the filters hide", async () => {
+    virtual.endIndex = 10;
+    const value = [
+      { ...kinds[0]!, id: annotationId("yellow") },
+      { ...kinds[0]!, id: annotationId("green"), color: "green" },
+    ];
+    const list = (editingId: ReturnType<typeof annotationId> | null): JSX.Element => (
+      <AnnotationList {...props} annotations={{ status: "ready", value }} editingId={editingId} />
+    );
+    const element = await mount(list(null));
+    await act(async () => {
+      choice(element, "Green").click();
+      await Promise.resolve();
+    });
+    const shown = (): (string | null)[] =>
+      [...element.querySelectorAll("[data-annotation-id]")].map((card) =>
+        card.getAttribute("data-annotation-id"),
+      );
+    expect(shown()).toEqual(["green"]);
+    await act(async () => {
+      root!.render(list(annotationId("yellow")));
+      await Promise.resolve();
+    });
+    expect(shown()).toEqual(expect.arrayContaining(["yellow", "green"]));
+    expect(shown()).toHaveLength(2);
+    expect(element.querySelector('[data-annotation-id="yellow"]')?.textContent).toBe("Editing");
+  });
+
+  it("tells the reader's composer when a card's own Edit begins, so Undo ends", async () => {
+    const onBeginEdit = vi.fn();
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{ status: "ready", value: [kinds[0]!] }}
+        onBeginEdit={onBeginEdit}
+      />,
+    );
+    expect(element.querySelector("[data-annotation-id]")).not.toBeNull();
+    await act(async () => {
+      cardEdit.current?.();
+      await Promise.resolve();
+    });
+    expect(onBeginEdit).toHaveBeenCalledExactlyOnceWith(kinds[0]);
+    expect(element.querySelector('[data-annotation-id="highlight"]')?.textContent).toBe("Editing");
+  });
+});
+
+describe("annotation Filter menu colours and order", () => {
+  it("filters by colour, named by meaning, and clears back to any colour", async () => {
+    virtual.endIndex = 10;
+    const collection = bindCollectionHighlights({
+      highlight_meanings: { green: "Evidence" },
+    });
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{
+          status: "ready",
+          value: [
+            { ...kinds[0]!, id: annotationId("yellow") },
+            { ...kinds[0]!, id: annotationId("green"), color: "green" },
+            { ...kinds[0]!, id: annotationId("unknown"), color: "Orange" },
+            { ...kinds[0]!, id: annotationId("hex"), color: "#ff8800" },
+            kinds[1]!,
+          ],
+        }}
+      />,
+    );
+    expect(choice(element, "Yellow").textContent).toBe("Yellow2");
+    expect(choice(element, "Green — Evidence").textContent).toBe("Green — Evidence1");
+    await act(async () => {
+      choice(element, "Green — Evidence").click();
+      await Promise.resolve();
+    });
+    expect(
+      [...element.querySelectorAll("[data-annotation-id]")].map((card) =>
+        card.getAttribute("data-annotation-id"),
+      ),
+    ).toEqual(["green"]);
+    expect(element.querySelector('[role="status"]')?.textContent).toContain("1 of 5");
+    await act(async () => {
+      [...element.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent === "Clear")!
+        .click();
+      await Promise.resolve();
+    });
+    expect(element.querySelectorAll("[data-annotation-id]")).toHaveLength(5);
+    expect(choice(element, "Any colour").getAttribute("aria-checked")).toBe("true");
+    collection.stop();
+  });
+
+  it("lists offered colours in the collection's order, and hidden ones only while used", async () => {
+    virtual.endIndex = 10;
+    const collection = bindCollectionHighlights({ highlight_colors: ["pink", "green"] });
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{
+          status: "ready",
+          value: [
+            { ...kinds[0]!, id: annotationId("yellow") },
+            { ...kinds[0]!, id: annotationId("green"), color: "green" },
+            kinds[1]!,
+          ],
+        }}
+      />,
+    );
+    const colours = [...element.querySelectorAll('[role="radiogroup"]')]
+      .find((group) => group.textContent.includes("Any colour"))!
+      .querySelectorAll('[role="radio"]');
+    expect([...colours].map((radio) => radio.textContent)).toEqual([
+      "Any colour",
+      "Pink0",
+      "Green1",
+      // Yellow is hidden, but highlights still have it, so it can still be found.
+      "Yellow1",
+    ]);
+    collection.stop();
+  });
+
+  it("hides the Colour choices when nothing has a colour", async () => {
+    const element = await mount(
+      <AnnotationList {...props} annotations={{ status: "ready", value: [kinds[1]!] }} />,
+    );
+    expect(element.textContent).not.toContain("Any colour");
+  });
+
+  it("changes order from the same menu and keeps it open while choosing", async () => {
+    const element = await renderKinds();
+    const details = element.querySelector<HTMLDetailsElement>(".annotation-filter-menu")!;
+    details.open = true;
+    await act(async () => {
+      choice(element, "Newest first").click();
+      await Promise.resolve();
+    });
+    expect(details.open).toBe(true);
+    expect(choice(element, "Newest first").getAttribute("aria-checked")).toBe("true");
+    expect(choice(element, "Document order").getAttribute("aria-checked")).toBe("false");
+    expect(
+      element.querySelector(".annotation-filter-trigger")!.classList.contains("is-changed"),
+    ).toBe(true);
+  });
+
+  it("offers the whole-book switch in the menu even before there are annotations", async () => {
+    const onChange = vi.fn();
+    const element = await mount(
+      <AnnotationList
+        {...props}
+        annotations={{ status: "ready", value: [] }}
+        wholeBook={{ value: false, onChange }}
+      />,
+    );
+    expect(element.textContent).toContain("No annotations yet");
+    expect(element.querySelector('input[type="search"]')).toBeNull();
+    await act(async () => {
+      switchNamed(element, "Show the whole book’s annotations").click();
+      await Promise.resolve();
+    });
+    expect(onChange).toHaveBeenCalledWith(true);
   });
 });

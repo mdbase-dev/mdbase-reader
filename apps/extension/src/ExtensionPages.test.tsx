@@ -36,6 +36,15 @@ it("offers a theme choice on the settings page, following the system by default"
   expect(html).toMatch(/<input type="radio" name="theme" checked="" value="system"\/>/u);
 });
 
+it("offers Citoid as an unchecked opt-in with the URL disclosure beside the control", () => {
+  stubManifest();
+  const html = renderToStaticMarkup(<OptionsApp />);
+  expect(html).toContain("Citations");
+  expect(html).toMatch(
+    /<label class="checkbox"><input type="checkbox"\/>Look up citations with Wikimedia’s Citoid service\. Sends the page address to Wikimedia\.<\/label>/u,
+  );
+});
+
 it("walks a new user through connecting, pinning, saving and highlighting", () => {
   stubManifest();
   const html = renderToStaticMarkup(<WelcomeApp />);

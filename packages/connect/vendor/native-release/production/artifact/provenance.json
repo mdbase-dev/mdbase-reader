@@ -40,12 +40,12 @@
     "clockOverride": false
   },
   "runtime": {
-    "sha256": "6984f87d98e29d9f99c6b07f7728f716d1f7b2e3585a74bcc2046ba259a8afab",
-    "bytes": 3676583,
-    "maxBytes": 3676583,
+    "sha256": "bd52c7b44360991b6e89c7f80e3ed4902e2b7e9def827ae4a63825ca98f8a8d1",
+    "bytes": 3682463,
+    "maxBytes": 3682463,
     "source": {
       "repository": "mdbase-dev/mdbase-next",
-      "commit": "725d72b2e43b2b744062e055e43feaeb41838399"
+      "commit": "b2264a626522413e090b3a480b6f49860fe1df46"
     },
     "qualification": "integrity-pinned, not separately signed"
   },

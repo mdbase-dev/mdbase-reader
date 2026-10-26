@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useMemo, useState } from "react";
 
 import { AnnotationDeletionLease } from "./annotation-deletion-lease.js";
@@ -46,9 +46,9 @@ export function useAnnotationDeletion(
       .then(async (locked) => {
         if (!locked) {
           throw new Error(
-            t({
+            translate({
               message:
-                "Resolve the save problem or finish the other editor's deletion check first.",
+                "Resolve the save problem or finish the other editor’s deletion check first.",
             }),
           );
         }
@@ -68,7 +68,7 @@ export function useAnnotationDeletion(
         owner.release();
         if (owner.isMounted()) {
           setProblem(
-            readerErrorMessage(reason, t({ message: "Could not check this annotation." })),
+            readerErrorMessage(reason, translate({ message: "Could not check this annotation." })),
           );
           setDeleteStatus("idle");
         }
@@ -91,7 +91,7 @@ export function useAnnotationDeletion(
         owner.release();
         if (owner.isMounted()) {
           setProblem(
-            readerErrorMessage(reason, t({ message: "Could not delete this annotation." })),
+            readerErrorMessage(reason, translate({ message: "Could not delete this annotation." })),
           );
           setDeleteStatus("idle");
           setDeletePlan(null);

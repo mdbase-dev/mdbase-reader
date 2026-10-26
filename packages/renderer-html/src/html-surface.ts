@@ -1,10 +1,12 @@
+import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { HtmlDocumentRuntime } from "./html-runtime.js";
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type { Annotation, AnnotationId, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReaderLocator,
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingSurface,
   SurfaceDocument,
   TextSelectionDraft,
@@ -39,6 +41,10 @@ export class HtmlReadingSurface implements ReadingSurface {
       this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
+      annotationRange: {
+        contains: (range, target) =>
+          Promise.resolve(this.#destroyed ? null : runtime.containsAnnotationRange(range, target)),
+      },
       textSelection: {
         selections: this.#selections,
         cleared: this.#cleared,
@@ -46,6 +52,7 @@ export class HtmlReadingSurface implements ReadingSurface {
       },
       motion: { motions: this.#motions },
       decorations: {
+        nearestAnnotation: () => runtime.nearestAnnotation(),
         setAnnotations: (annotations) => {
           runtime.setAnnotations(this.forThisDocument(annotations));
           return Promise.resolve();
@@ -66,6 +73,17 @@ export class HtmlReadingSurface implements ReadingSurface {
       },
       textExtraction: {
         extractText: () => Promise.resolve(runtime.extractText()),
+        extractSearchSegments: () =>
+          Promise.resolve([{ location: { kind: "html" }, text: runtime.extractText() }]),
+      },
+      searchNavigation: {
+        goToDestination: (destination) =>
+          Promise.resolve(
+            destination.location.kind === "html" &&
+              searchDestinationMatchesDocument(destination, this.document.document) &&
+              runtime.goToSearchQuote(destination.quote),
+          ),
+        clear: () => runtime.clearSearch(),
       },
       typography: {
         setTypography: (typography) => {
@@ -83,6 +101,10 @@ export class HtmlReadingSurface implements ReadingSurface {
           }
         : {}),
     };
+  }
+
+  public resolveReadingRange(range: DocumentRange): Promise<ReadingRangeResolution> {
+    return Promise.resolve(this.runtime.resolveReadingRange(range));
   }
 
   public currentLocation(): ReaderLocator {

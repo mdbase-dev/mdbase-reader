@@ -1,5 +1,5 @@
 import { msg } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { CitationIcon, HighlightIcon, NoteIcon } from "@mdbase-reader/ui";
 import { useRef, useState } from "react";
 
@@ -14,26 +14,25 @@ const tabs: readonly {
   readonly Icon: typeof NoteIcon;
 }[] = [
   { id: "highlights", label: msg`Highlights`, Icon: HighlightIcon },
-  {
-    id: "note",
-    label: msg({ message: "Note", context: "Source literature note tab" }),
-    Icon: NoteIcon,
-  },
+  { id: "note", label: msg`Literature note`, Icon: NoteIcon },
   { id: "citation", label: msg`Citation`, Icon: CitationIcon },
 ];
 
 /**
- * The same three views of a source as Reader's inspector, drawn the same way. "Note" is
- * Reader's "Literature note", shortened so all three names fit a side panel.
+ * The same three views of a source as Reader's inspector, drawn the same way. A narrow
+ * panel names only the open tab (see extension.css).
  */
 export function PanelTabs({
   tab,
   highlightCount,
+  noteAttention = false,
   onChange,
 }: {
   readonly tab: PanelTab;
-  /** Saved highlights on this page's source; null before the page is saved. */
+  /** Saved highlights on this page's source, counted once there are any. */
   readonly highlightCount: number | null;
+  /** The literature note waits on the reader, as in a conflict. */
+  readonly noteAttention?: boolean;
   readonly onChange: (tab: PanelTab) => void;
 }): React.JSX.Element {
   const { t, i18n } = useLingui();
@@ -80,8 +79,15 @@ export function PanelTabs({
         >
           <Icon />
           <span className="panel-tab-label">{i18n._(label)}</span>
-          {id === "highlights" && highlightCount !== null ? (
+          {id === "highlights" && highlightCount ? (
             <span className="panel-tab-count">{highlightCount}</span>
+          ) : null}
+          {id === "note" && noteAttention ? (
+            <span className="panel-tab-alert">
+              <span className="visually-hidden">
+                <Trans>, needs your attention</Trans>
+              </span>
+            </span>
           ) : null}
         </button>
       ))}

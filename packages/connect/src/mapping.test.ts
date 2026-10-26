@@ -102,6 +102,7 @@ describe("Connect contract mapping", () => {
       recordRevision: "record-rev-2",
       frontmatter: sourceFrontmatter,
     });
+    expect(sourceFromDocument(collectionId("reading"), record).cslProvenance).toBeUndefined();
   });
 
   it("normalizes independently addressable annotations", () => {
@@ -157,6 +158,48 @@ describe("Connect contract mapping", () => {
       },
     });
   });
+});
+
+describe("Connect citation provenance mapping", () => {
+  it("reads provenance beside CSL and drops malformed entries independently", () => {
+    const provenance = {
+      title: { value: "Crime and Punishment", source: "registry:doi.org" },
+      author: { value: [], source: "" },
+      issued: "invalid",
+    };
+    const frontmatter = { ...sourceFrontmatter, "csl-provenance": provenance };
+    const source = sourceFromDocument(collectionId("reading"), {
+      path: "sources/crime.md",
+      revision: "record-rev-2",
+      types: ["reader-source"],
+      frontmatter,
+      effectiveFrontmatter: frontmatter,
+      file: {},
+    });
+
+    expect(source.cslProvenance).toEqual({ title: provenance.title });
+    expect(source.citation).toEqual(sourceFrontmatter["csl"]);
+    expect(source.citationProblems).toBeUndefined();
+  });
+
+  it.each([null, "invalid", [], { title: { value: "Title" } }])(
+    "ignores malformed provenance %j without invalidating the citation",
+    (provenance) => {
+      const frontmatter = { ...sourceFrontmatter, "csl-provenance": provenance };
+      const source = sourceFromDocument(collectionId("reading"), {
+        path: "sources/crime.md",
+        revision: "record-rev-2",
+        types: ["reader-source"],
+        frontmatter,
+        effectiveFrontmatter: frontmatter,
+        file: {},
+      });
+
+      expect(source.cslProvenance).toEqual({});
+      expect(source.citation).toEqual(sourceFrontmatter["csl"]);
+      expect(source.citationProblems).toBeUndefined();
+    },
+  );
 });
 
 describe("Connect EPUB annotation mapping", () => {

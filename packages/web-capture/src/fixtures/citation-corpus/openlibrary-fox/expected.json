@@ -1,0 +1,15 @@
+{
+  "type": "book",
+  "title": "Fantastic Mr. Fox",
+  "author": [
+    {
+      "family": "Dahl",
+      "given": "Roald"
+    }
+  ],
+  "issued": {
+    "date-parts": [[1988, 10, 1]]
+  },
+  "publisher": "Puffin",
+  "URL": "https://openlibrary.org/books/OL7353617M/Fantastic_Mr._Fox"
+}

@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "86AP5PT8",
+      "version": 0,
+      "itemType": "conferencePaper",
+      "creators": [
+        {
+          "firstName": "Tianqi",
+          "lastName": "Chen",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Carlos",
+          "lastName": "Guestrin",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "Computer Science - Machine Learning",
+          "type": 1
+        }
+      ],
+      "title": "XGBoost: A Scalable Tree Boosting System",
+      "date": "2016-08-13",
+      "abstractNote": "Tree boosting is a highly effective and widely used machine learning method.",
+      "DOI": "10.1145/2939672.2939785",
+      "url": "http://arxiv.org/abs/1603.02754",
+      "extra": "arXiv:1603.02754 [cs.LG]",
+      "pages": "785–794",
+      "proceedingsTitle": "Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining",
+      "libraryCatalog": "arXiv.org",
+      "accessDate": "2026-10-23",
+      "shortTitle": "XGBoost"
+    }
+  ]
+}

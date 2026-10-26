@@ -55,6 +55,6 @@ describe("AnnotationComposer", () => {
     const markup = renderToStaticMarkup(<AnnotationComposer composer={composer("area")} />);
 
     expect(markup).toContain('class="annotation-composer is-area"');
-    expect(markup).toContain("New area annotation");
+    expect(markup).toContain("New area capture");
   });
 });

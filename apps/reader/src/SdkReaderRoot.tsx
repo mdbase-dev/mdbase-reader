@@ -8,14 +8,28 @@ import {
   type MdbaseApplicationConnection,
   type NativeReaderCollection,
 } from "@mdbase-reader/connect/native";
+import { BrowserStorage } from "@mdbase-reader/platform";
 import { useEffect, useState, type JSX, type ReactNode } from "react";
 
+import { createJournals } from "./create-journals.js";
+import { lazyFeature } from "./lazy-feature.js";
 import { readerCollectionApp, ReaderMdbaseContext } from "./reader-collections.js";
-import { ReaderWorkspace } from "./ReaderWorkspace.js";
 import "@mdbase-dev/ui/collections.css";
 import "./reader-collections.css";
 
+const ReaderWorkspace = lazyFeature(
+  async () => ({ default: (await import("./ReaderWorkspace.js")).ReaderWorkspace }),
+  "the reading workspace",
+);
+
 export type ReaderSdk = Mdbase;
+
+/** Where record creates are kept in this browser until the collection confirms them. */
+const createJournalsHere = createJournals(new BrowserStorage());
+
+function useClearCreatesOnSignOut(sdk: ReaderSdk): void {
+  useEffect(() => createJournalsHere.clearOnSignOut(sdk), [sdk]);
+}
 
 export interface ReaderNativeScope {
   readonly mdbase: Mdbase;
@@ -43,6 +57,7 @@ export function SdkReaderRoot({
   embedded = false,
   renderNative,
 }: SdkReaderRootProps): JSX.Element {
+  useClearCreatesOnSignOut(sdk);
   return (
     <ReaderMdbaseContext value={sdk}>
       <CollectionGate
@@ -79,7 +94,16 @@ function NativeScopeView({
   const [original] = useState(connection);
   const [collection, setCollection] = useState<NativeReaderCollection | null>(null);
   useEffect(() => {
-    const opened = nativeReaderCollection(original);
+    // The native gate does not need gateways/renderers while choosing or authorizing.
+    // Once ready, overlap workspace code with construction of its collection adapter.
+    if (!renderNative) {
+      ReaderWorkspace.preload();
+    }
+  }, [renderNative]);
+  useEffect(() => {
+    const opened = nativeReaderCollection(original, {
+      creates: createJournalsHere.journalFor(original.scope.account),
+    });
     let active = true;
     queueMicrotask(() => {
       if (active) {

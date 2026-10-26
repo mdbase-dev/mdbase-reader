@@ -201,17 +201,80 @@ describe("ConnectWorkspaceGateway writes and search", () => {
     );
     await gateway.library();
 
-    const updated = await gateway.saveSourceCitation(source, citation);
+    const loadedCitation = { ...citation, title: "Original" };
+    const updated = await gateway.saveSourceCitation(
+      { ...source, citation: loadedCitation },
+      citation,
+    );
 
     expect(updateCitation).toHaveBeenCalledWith({
       collectionId: source.collectionId,
       sourceId: source.id,
       citation,
+      expectedCitation: loadedCitation,
     });
     expect(updated.citation).toEqual(citation);
     expect((await gateway.library()).sources[0]?.citation).toEqual(citation);
   });
+});
 
+describe("ConnectWorkspaceGateway capture provenance", () => {
+  it("saves captured evidence with CSL, excluding generated IDs and stale or removed values", async () => {
+    const citation = {
+      id: "placeholder",
+      type: "book",
+      title: "Example",
+      author: [{ family: "Writer", given: "A" }],
+    };
+    const provenance = {
+      id: { value: "placeholder", source: "registry:isbn" },
+      type: { value: "book", source: "registry:isbn" },
+      title: { value: "Old title", source: "page:html" },
+      author: { value: [{ given: "A", family: "Writer" }], source: "registry:isbn" },
+      publisher: { value: "Removed", source: "page:html" },
+    };
+    const updateCitation = vi.fn<SourceRepository["updateCitation"]>().mockImplementation((input) =>
+      Promise.resolve({
+        ...source,
+        citation: input.citation,
+        ...(input.provenance !== undefined ? { cslProvenance: input.provenance } : {}),
+      }),
+    );
+    const gateway = new ConnectWorkspaceGateway(
+      {
+        list: vi.fn().mockResolvedValue({ items: [source] }),
+        updateCitation,
+      } as unknown as SourceRepository,
+      {} as AnnotationRepository,
+      { store: vi.fn() },
+      emptyImports(),
+      source.collectionId,
+      "Reading",
+      createReaderRuntimeServices(new MemoryStorage()),
+    );
+
+    // Connect records expose the loaded properties, including known absence of CSL.
+    const loaded = { ...source, properties: {} };
+    const saved = await gateway.saveNewSourceCitation(loaded, citation, provenance);
+    const expectedProvenance = { type: provenance.type, author: provenance.author };
+    expect(updateCitation).toHaveBeenCalledExactlyOnceWith({
+      collectionId: source.collectionId,
+      sourceId: source.id,
+      expectedCitation: null,
+      citation: { ...citation, id: expect.not.stringMatching(/^placeholder$/u) },
+      provenance: expectedProvenance,
+    });
+    expect(saved.cslProvenance).toEqual(expectedProvenance);
+    expect((await gateway.source(source.id))?.cslProvenance).toEqual(expectedProvenance);
+
+    await gateway.saveNewSourceCitation(loaded, citation, {});
+    expect(updateCitation).toHaveBeenLastCalledWith(
+      expect.objectContaining({ provenance: {}, expectedCitation: null }),
+    );
+  });
+});
+
+describe("ConnectWorkspaceGateway search and transclusion", () => {
   it("searches note text within the connected collection", async () => {
     const controller = new AbortController();
     const search = vi.fn().mockResolvedValue([{ sourceId: source.id, kinds: ["annotation"] }]);

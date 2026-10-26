@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { addDockTab, openDockTab, patchDockTab } from "./dockview-tab-commands.js";
+import { addDockTab, openDockTab, panelsForClose, patchDockTab } from "./dockview-tab-commands.js";
 import { createWorkspaceTab } from "./source-workspace-layout.js";
 
 import type { SourceId } from "@mdbase-reader/core";
@@ -8,6 +8,32 @@ import type { DockviewApi, DockviewGroupPanel } from "dockview-react";
 
 const source = "source-one" as SourceId;
 describe("Dockview session commands", () => {
+  it("awaits every dirty tab before returning a close batch, without accepting a Promise as consent", async () => {
+    const tabs = ["first", "second"].map((id) => ({
+      id,
+      params: { tab: { ...createWorkspaceTab(source), id, dirty: true } },
+    }));
+    const api = {
+      getPanel: (id: string) => tabs.find((panel) => panel.id === id),
+    } as unknown as DockviewApi;
+    let answer!: (value: boolean) => void;
+    const confirm = vi.fn(
+      () =>
+        new Promise<boolean>((resolve) => {
+          answer = resolve;
+        }),
+    );
+    const result = panelsForClose(api, ["first", "second"], confirm);
+    expect(confirm).toHaveBeenCalledTimes(1);
+    answer(true);
+    await Promise.resolve();
+    expect(confirm).toHaveBeenCalledTimes(2);
+    answer(false);
+    expect(await result).toBeNull();
+    expect(await panelsForClose(api, ["first", "second"], () => Promise.resolve(true))).toEqual(
+      tabs,
+    );
+  });
   it("keeps citation forms single-owner until they have a shared writer", () => {
     const tab = { ...createWorkspaceTab(source, "citation"), id: "reader:session:existing" };
     const existing = { id: tab.id, params: { tab }, api: { setActive: vi.fn(), moveTo: vi.fn() } };

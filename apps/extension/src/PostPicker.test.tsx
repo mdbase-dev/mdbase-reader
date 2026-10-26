@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { PostPicker } from "./PostPicker.js";
-import { withI18n } from "./testing/i18n.js";
+import { createRoot, withI18n } from "./testing/i18n.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { PostRef } from "@mdbase-reader/web-capture";
+import type { Root } from "react-dom/client";
 
 let host: HTMLDivElement;
 let root: Root;

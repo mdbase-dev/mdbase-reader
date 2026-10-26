@@ -1,9 +1,11 @@
+import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { ReadiumRuntime } from "./readium-runtime.js";
-import type { AnnotationId } from "@mdbase-reader/core";
+import type { AnnotationId, DocumentRange } from "@mdbase-reader/core";
 import type {
   ReadingMotion,
+  ReadingRangeResolution,
   ReadingSurface,
   ReaderLocator,
   SurfaceDocument,
@@ -48,6 +50,12 @@ export class ReadiumEpubSurface implements ReadingSurface {
       this.#annotationActivations.emit(annotationId),
     );
     this.capabilities = {
+      annotationRange: {
+        contains: (range, target) =>
+          this.#destroyed
+            ? Promise.resolve(null)
+            : (runtime.containsAnnotationRange?.(range, target) ?? Promise.resolve(null)),
+      },
       textSelection: {
         selections: this.#selections,
         cleared: this.#cleared,
@@ -56,6 +64,15 @@ export class ReadiumEpubSurface implements ReadingSurface {
       ...(runtime.onMotion ? { motion: { motions: this.#motions } } : {}),
       textExtraction: {
         extractText: (options) => runtime.extractText(options),
+        extractSearchSegments: (options) =>
+          runtime.extractSearchSegments?.(options) ?? Promise.resolve([]),
+      },
+      searchNavigation: {
+        goToDestination: (destination) =>
+          searchDestinationMatchesDocument(destination, this.document.document)
+            ? (runtime.goToSearchDestination?.(destination) ?? Promise.resolve(false))
+            : Promise.resolve(false),
+        clear: () => runtime.clearSearch?.(),
       },
       ...(runtime.contents && runtime.goToContents && runtime.contents().length > 0
         ? {
@@ -66,6 +83,7 @@ export class ReadiumEpubSurface implements ReadingSurface {
           }
         : {}),
       decorations: {
+        nearestAnnotation: () => runtime.nearestAnnotation?.() ?? null,
         setAnnotations: (annotations) => {
           runtime.setAnnotations(
             annotations.filter(
@@ -86,6 +104,18 @@ export class ReadiumEpubSurface implements ReadingSurface {
       annotationActivation: { activations: this.#annotationActivations },
       typography: { setTypography: (typography) => runtime.setTypography(typography) },
     };
+  }
+
+  public async resolveReadingRange(range: DocumentRange): Promise<ReadingRangeResolution> {
+    if (this.#destroyed) {
+      return { valid: false, message: "The EPUB surface has been destroyed." };
+    }
+    return (
+      this.#runtime.resolveReadingRange?.(range) ?? {
+        valid: false,
+        message: "This EPUB runtime cannot verify reading ranges.",
+      }
+    );
   }
 
   public currentLocation(): ReaderLocator {

@@ -1,8 +1,10 @@
-import { t } from "@lingui/core/macro";
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 
 import { environment } from "./environment.js";
+import { TechnicalDetails } from "./TechnicalDetails.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { ConnectionView } from "./connection-view.js";
@@ -249,6 +251,43 @@ function ConnectionControlsPanel({
 }
 
 /**
+ * In place of a form that cannot save yet: what it is for, and the step the connection
+ * controls above offer. Says nothing while mdbase is still opening.
+ */
+export function ConnectFirst({
+  controller: { snapshot },
+  purpose,
+}: {
+  readonly controller: Pick<ConnectionControls, "snapshot">;
+  /** What the form would do, completing "… to <purpose>." */
+  readonly purpose: string;
+}): React.JSX.Element | null {
+  if (snapshot.status === "opening" || snapshot.status === "ready") {
+    return null;
+  }
+  return <p className="tab-hint">{translate`${connectStep(snapshot.status)} to ${purpose}.`}</p>;
+}
+
+function connectStep(status: ConnectionView["status"]): string {
+  switch (status) {
+    case "waiting":
+      return translate({ message: "Finish signing in in the mdbase tab" });
+    case "choosing":
+      return translate({ message: "Choose a collection above" });
+    case "approval":
+      return translate({ message: "Approve access above" });
+    case "setup":
+      return translate({ message: "Set up this collection above" });
+    case "unchecked":
+      return translate({ message: "Check this collection above" });
+    case "problem":
+      return translate({ message: "Sort out the problem above" });
+    default:
+      return translate({ message: "Connect a collection above" });
+  }
+}
+
+/**
  * The kind of problem to report, if any. A page the tab shows but Reader cannot read is not
  * a failure: the panel says so quietly instead (see CaptureApp's UnreadablePage).
  */
@@ -257,6 +296,10 @@ function shownProblemKind(c: ExtensionCaptureController): ProblemKind | null {
   return !c.problem || (kind === "page" && !c.capture) ? null : kind;
 }
 
+/**
+ * A problem said plainly: what happened, what to do, and the one action that does it. The
+ * underlying message, which may name codes and internals, waits under Technical details.
+ */
 export function ConnectionProblem({
   controller: c,
 }: {
@@ -267,20 +310,14 @@ export function ConnectionProblem({
     return null;
   }
   const originDenied = /origin.*not allowed|origin_denied/iu.test(c.problem);
+  const summary = c.problemSummary ?? null;
   return (
     <section className="problem" role="alert">
       <strong>{problemTitle(c, kind)}</strong>
-      {c.saveAttempted && !c.source ? (
-        <p>
-          <Trans>Retry Save to check for an existing source before creating anything else.</Trans>
-        </p>
-      ) : null}
-      <p>{c.problem}</p>
-      {originDenied ? (
-        <details className="technical">
-          <summary>
-            <Trans>Technical details</Trans>
-          </summary>
+      <p>{summary ?? problemAdvice(c, kind)}</p>
+      <ProblemActions controller={c} kind={kind} />
+      <TechnicalDetails detail={summary === c.problem ? null : c.problem}>
+        {originDenied ? (
           <p>
             <Trans>
               Connect rejected this extension’s origin. Reload the current extension build and
@@ -288,23 +325,8 @@ export function ConnectionProblem({
               configuration; Reader will not bypass the origin check.
             </Trans>
           </p>
-        </details>
-      ) : null}
-      {kind === "page" ? (
-        <p>
-          <Trans>
-            Reload the page, then press the mdbase Reader toolbar button again. Some pages, such as
-            the Chrome Web Store and browser settings, cannot be read by extensions.
-          </Trans>
-        </p>
-      ) : (
-        <p>
-          <Trans>
-            Your selection and note are kept for this browser session, even if you close the panel.
-          </Trans>
-        </p>
-      )}
-      <ProblemActions controller={c} kind={kind} />
+        ) : null}
+      </TechnicalDetails>
     </section>
   );
 }
@@ -316,13 +338,17 @@ function ProblemActions({
   readonly controller: ExtensionCaptureController;
   readonly kind: NonNullable<ExtensionCaptureController["problemKind"]>;
 }): React.JSX.Element {
+  useLocale();
   // The SDK's own problem names its one way out; Review access would not help.
   const sdkProblem = c.snapshot.status === "problem" ? c.snapshot.problem : null;
   return (
     <div className="problem-actions">
       {kind === "save" ? (
+        // Saving again looks for what the last attempt saved before creating anything.
         <button type="button" disabled={c.busy} onClick={() => void c.save()}>
-          <Trans>Retry save</Trans>
+          {c.saveAttempted && !c.source
+            ? translate({ message: "Check again" })
+            : translate({ message: "Try again", context: "Reader interface" })}
         </button>
       ) : null}
       {kind === "page" ? null : sdkProblem?.action && sdkProblem.actionLabel ? (
@@ -335,7 +361,7 @@ function ProblemActions({
         </button>
       ) : kind === "connection" ? (
         <button type="button" disabled={c.busy} onClick={() => void c.retry()}>
-          <Trans>Retry connection</Trans>
+          <Trans context="Reader interface">Try again</Trans>
         </button>
       ) : null}
       {kind !== "page" && !sdkProblem ? (
@@ -353,11 +379,38 @@ function problemTitle(
 ): string {
   if (c.source) {
     return kind === "page"
-      ? t`Saved. This page could not be updated.`
-      : t`Source saved. This action did not finish.`;
+      ? translate({ message: "Saved, but this page couldn’t be updated" })
+      : translate({ message: "Saved, but the last change didn’t finish" });
   }
   if (c.saveAttempted) {
-    return t`Save not confirmed`;
+    return translate({ message: "We couldn’t confirm this saved" });
   }
-  return kind === "page" ? t`Reader cannot read this page` : t`Not connected`;
+  return kind === "page"
+    ? translate({ message: "Reader can’t read this page" })
+    : translate({ message: "We couldn’t reach your collection" });
+}
+
+/** What to do next, in plain words, when the problem itself is not worded for people. */
+function problemAdvice(
+  c: ExtensionCaptureController,
+  kind: NonNullable<ExtensionCaptureController["problemKind"]>,
+): string {
+  if (kind === "page") {
+    return translate({
+      message:
+        "Reload the page, then press the mdbase Reader toolbar button again. Browser pages and the Chrome Web Store can’t be read by extensions.",
+    });
+  }
+  if (c.saveAttempted && !c.source) {
+    return translate({
+      message:
+        "It may have saved. Check again: nothing is saved twice. Your selection and note are kept, even if you close the panel.",
+    });
+  }
+  return c.source
+    ? translate({ message: "Try it again. Everything already saved is safe." })
+    : translate({
+        message:
+          "Try again in a moment. Your selection and note are kept, even if you close the panel.",
+      });
 }

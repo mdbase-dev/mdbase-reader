@@ -22,32 +22,32 @@ export type NativeSignInSession = Pick<
   | "setForeground"
 >;
 export const signInCopy = Object.freeze({
-  get signIn(): string {
+  get signIn() {
     return t({ message: "Sign in", context: "Native sign-in" });
   },
-  get waiting(): string {
+  get waiting() {
     return t({ message: "Waiting for approval in the mdbase tab…", context: "Native sign-in" });
   },
-  get reopen(): string {
+  get reopen() {
     return t({ message: "Open the mdbase tab again", context: "Native sign-in" });
   },
-  get tabBlocked(): string {
+  get tabBlocked() {
     return t({ message: "Your browser blocked the sign-in tab.", context: "Native sign-in" });
   },
-  get openSignIn(): string {
+  get openSignIn() {
     return t({ message: "Open sign-in", context: "Native sign-in" });
   },
-  get interrupted(): string {
-    return t({ message: "Sign-in was interrupted. Please try again.", context: "Native sign-in" });
-  },
-  get signOut(): string {
-    return t({ message: "Sign out", context: "Native sign-in" });
-  },
-  get unavailable(): string {
+  get interrupted() {
     return t({
-      message: "Opening collections isn't available in this build yet.",
+      message: "Sign-in was interrupted. Please try again.",
       context: "Native sign-in",
     });
+  },
+  get signOut() {
+    return t({ message: "Sign out", context: "Native sign-in" });
+  },
+  get unavailable() {
+    return t`Opening collections isn’t available in this build yet.`;
   },
 });
 /** UI portal only. Navigation URI comes from the SDK. */

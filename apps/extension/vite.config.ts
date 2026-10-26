@@ -2,13 +2,15 @@ import { resolve } from "node:path";
 
 import { lingui } from "@lingui/vite-plugin";
 import react from "@vitejs/plugin-react";
-import { build, type Plugin } from "vite";
-import { defineConfig } from "vitest/config";
+import { build, defineConfig, type Plugin, type UserConfig } from "vite";
 
 import { extensionEnvironment, extensionManifest } from "./scripts/extension-manifest.mjs";
+import { extensionSdk } from "./scripts/extension-sdk.mjs";
 import { chromeLocales, chromeMessages, shellCatalogue } from "./scripts/localized-shell.mjs";
 
 const environment = extensionEnvironment();
+
+type SdkAliases = Awaited<ReturnType<typeof extensionSdk>>["aliases"];
 
 function manifest(): Plugin {
   return {
@@ -41,7 +43,7 @@ function manifest(): Plugin {
  * importScripts() only when a page may be saved (see src/page-status-loader.ts). Neither
  * includes the SDK, which runs in the offscreen host (src/offscreen.ts).
  */
-function serviceWorker(): Plugin {
+function serviceWorker(alias: SdkAliases): Plugin {
   const scripts = {
     background: "src/background.ts",
     "page-status": "src/page-status-worker.ts",
@@ -57,6 +59,7 @@ function serviceWorker(): Plugin {
           plugins: [lingui({ macroTransform: true })],
           root: import.meta.dirname,
           logLevel: "warn",
+          resolve: { alias },
           define: { __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment) },
           build: {
             target: "es2022",
@@ -91,40 +94,46 @@ function serviceWorker(): Plugin {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), lingui({ macroTransform: true }), manifest(), serviceWorker()],
-  test: { setupFiles: [resolve(import.meta.dirname, "../../scripts/test-i18n.mjs")] },
-  // The SDK starts its own module Worker from a module-relative URL; keep it out of
-  // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
-  optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },
-  worker: {
-    format: "es",
-    rolldownOptions: {
-      output: {
-        entryFileNames: "assets/[name]-[hash].js",
-        chunkFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash][extname]",
+export default defineConfig(async (): Promise<UserConfig> => {
+  // Verified before any SDK code runs; every canonical SDK import, including those from
+  // Connect and UI, resolves to this environment's original.
+  const sdk = await extensionSdk();
+  return {
+    plugins: [react(), lingui({ macroTransform: true }), manifest(), serviceWorker(sdk.aliases)],
+    ...{ test: { setupFiles: [resolve(import.meta.dirname, "../../scripts/test-i18n.mjs")] } },
+    resolve: { alias: sdk.aliases },
+    // The SDK starts its own module Worker from a module-relative URL; keep it out of
+    // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
+    optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },
+    worker: {
+      format: "es",
+      rolldownOptions: {
+        output: {
+          entryFileNames: "assets/[name]-[hash].js",
+          chunkFileNames: "assets/[name]-[hash].js",
+          assetFileNames: "assets/[name]-[hash][extname]",
+        },
       },
     },
-  },
-  define: { __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment) },
-  build: {
-    target: "es2022",
-    sourcemap: true,
-    outDir: "dist",
-    emptyOutDir: true,
-    rolldownOptions: {
-      input: {
-        capture: resolve(import.meta.dirname, "capture.html"),
-        options: resolve(import.meta.dirname, "options.html"),
-        welcome: resolve(import.meta.dirname, "welcome.html"),
-        offscreen: resolve(import.meta.dirname, "offscreen.html"),
-      },
-      output: {
-        entryFileNames: "assets/[name]-[hash].js",
-        chunkFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash][extname]",
+    define: { __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment) },
+    build: {
+      target: "es2022",
+      sourcemap: true,
+      outDir: "dist",
+      emptyOutDir: true,
+      rolldownOptions: {
+        input: {
+          capture: resolve(import.meta.dirname, "capture.html"),
+          options: resolve(import.meta.dirname, "options.html"),
+          welcome: resolve(import.meta.dirname, "welcome.html"),
+          offscreen: resolve(import.meta.dirname, "offscreen.html"),
+        },
+        output: {
+          entryFileNames: "assets/[name]-[hash].js",
+          chunkFileNames: "assets/[name]-[hash].js",
+          assetFileNames: "assets/[name]-[hash][extname]",
+        },
       },
     },
-  },
+  };
 });

@@ -33,15 +33,23 @@ interface FakeCollection {
   readonly sources: {
     readonly get: () => Promise<Source>;
     readonly updateBody: ReturnType<typeof vi.fn>;
+    readonly updateFields: ReturnType<typeof vi.fn>;
   };
   /** Another application edits the note. */
   edit(body: string): void;
+  /** Another application edits the source's title or tags. */
+  editFields(fields: Partial<Pick<Source, "title" | "tags">>): void;
 }
 
 /** A collection holding one source that refuses writes against a stale revision. */
 function fakeCollection(initial: Source): FakeCollection {
   let current = initial;
   let revision = 1;
+  const next = (changes: Partial<Source>): Source => {
+    revision += 1;
+    current = { ...current, ...changes, recordRevision: `r${String(revision)}` } as Source;
+    return current;
+  };
   const sources = {
     get: vi.fn(() => Promise.resolve(current)),
     updateBody: vi.fn(
@@ -49,10 +57,12 @@ function fakeCollection(initial: Source): FakeCollection {
         if (input.expectedRevision !== current.recordRevision) {
           return Promise.reject(new Error("The source changed before saving."));
         }
-        revision += 1;
-        current = source(input.body, `r${String(revision)}`);
-        return Promise.resolve(current);
+        return Promise.resolve(next({ body: input.body }));
       },
+    ),
+    // Like the repository's, it writes over whatever is current.
+    updateFields: vi.fn((input: { readonly fields: Partial<Source> }): Promise<Source> =>
+      Promise.resolve(next(input.fields)),
     ),
   };
   const collection = {
@@ -64,8 +74,10 @@ function fakeCollection(initial: Source): FakeCollection {
     collection,
     sources,
     edit(body: string): void {
-      revision += 1;
-      current = source(body, `r${String(revision)}`);
+      next({ body });
+    },
+    editFields(fields): void {
+      next(fields);
     },
   };
 }
@@ -161,20 +173,115 @@ it("does not overwrite a note edited in Reader while the panel was typing", asyn
   );
 });
 
-it("keeps saving the note after the panel changes the source's title", async () => {
+it("autosaves a changed title and tags with the note, and publishes the saved source", async () => {
+  const fake = fakeCollection(source("Body", "r1"));
+  const publish = vi.fn();
+  const session = new SourceNoteSession(
+    source("Body", "r1"),
+    fake.collection,
+    memoryStore(),
+    publish,
+  );
+  await session.start();
+
+  session.editDetails({ title: "[test] Renamed", tags: ["ml"] });
+  session.edit("Body, continued");
+  expect(session.getSnapshot()).toMatchObject({
+    state: "unsaved",
+    details: { title: "[test] Renamed", tags: ["ml"] },
+  });
+  await vi.advanceTimersByTimeAsync(1100);
+
+  expect(fake.sources.updateFields).toHaveBeenCalledWith(
+    expect.objectContaining({ fields: { title: "[test] Renamed", tags: ["ml"] } }),
+  );
+  // The note is written against the revision the fields write produced.
+  expect(fake.sources.updateBody).toHaveBeenLastCalledWith(
+    expect.objectContaining({ expectedRevision: "r2", body: "Body, continued" }),
+  );
+  expect(session.getSnapshot().state).toBe("saved");
+  expect(publish).toHaveBeenLastCalledWith(
+    expect.objectContaining({ title: "[test] Renamed", body: "Body, continued" }),
+  );
+});
+
+it("does not save a cleared title", async () => {
+  const fake = fakeCollection(source("Body", "r1"));
+  const session = new SourceNoteSession(source("Body", "r1"), fake.collection, memoryStore());
+  await session.start();
+  session.editDetails({ title: "  " });
+  await vi.advanceTimersByTimeAsync(1100);
+  expect(session.getSnapshot()).toMatchObject({
+    state: "saved",
+    details: { title: "[test] Source" },
+  });
+  expect(fake.sources.updateFields).not.toHaveBeenCalled();
+});
+
+it("takes in a title changed elsewhere while only the note is edited here", async () => {
   const fake = fakeCollection(source("Body", "r1"));
   const session = new SourceNoteSession(source("Body", "r1"), fake.collection, memoryStore());
   await session.start();
 
-  // A title save writes a new revision; the panel hands it to the note session.
-  fake.edit("Body");
-  session.accept(await fake.sources.get());
-  session.edit("Body, continued");
+  session.edit("Body, from the panel");
+  fake.editFields({ title: "[test] From Reader" });
+  await vi.advanceTimersByTimeAsync(3000);
+
+  expect(session.getSnapshot()).toMatchObject({
+    state: "saved",
+    body: "Body, from the panel",
+    details: { title: "[test] From Reader" },
+  });
+});
+
+it("asks when the title changed both here and elsewhere, showing their version", async () => {
+  const fake = fakeCollection(source("Body", "r1"));
+  const session = new SourceNoteSession(source("Body", "r1"), fake.collection, memoryStore());
+  await session.start();
+
+  session.editDetails({ title: "[test] Mine" });
+  fake.editFields({ title: "[test] Theirs" });
   await vi.advanceTimersByTimeAsync(1100);
 
+  expect(session.getSnapshot()).toMatchObject({
+    state: "conflict",
+    details: { title: "[test] Mine" },
+    remote: { title: "[test] Theirs" },
+  });
+  expect(fake.sources.updateFields).not.toHaveBeenCalled();
+
+  session.resolve("mine");
+  await vi.advanceTimersByTimeAsync(1100);
+  expect(fake.sources.updateFields).toHaveBeenCalledWith(
+    expect.objectContaining({ fields: { title: "[test] Mine" } }),
+  );
   expect(session.getSnapshot().state).toBe("saved");
-  expect(fake.sources.updateBody).toHaveBeenLastCalledWith(
-    expect.objectContaining({ expectedRevision: "r2" }),
+});
+
+it("keeps an unsaved title for a closed panel and saves it when the panel returns", async () => {
+  const store = memoryStore();
+  const fake = fakeCollection(source("Body", "r1"));
+  const first = new SourceNoteSession(source("Body", "r1"), fake.collection, store);
+  await first.start();
+  first.editDetails({ title: "[test] Kept" });
+  first.keepCopy();
+  await vi.advanceTimersByTimeAsync(300);
+  expect(store.drafts.get("c1 s1")).toMatchObject({
+    patch: { title: "[test] Kept" },
+    baseFrontmatter: { title: "[test] Source", tags: [] },
+  });
+
+  // A new panel, before the first one saved.
+  const fresh = fakeCollection(source("Body", "r1"));
+  const second = new SourceNoteSession(source("Body", "r1"), fresh.collection, store);
+  await second.start();
+  expect(second.getSnapshot()).toMatchObject({
+    restored: true,
+    details: { title: "[test] Kept" },
+  });
+  await vi.advanceTimersByTimeAsync(1100);
+  expect(fresh.sources.updateFields).toHaveBeenCalledWith(
+    expect.objectContaining({ fields: { title: "[test] Kept" } }),
   );
 });
 

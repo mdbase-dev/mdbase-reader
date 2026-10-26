@@ -1,7 +1,8 @@
-import { useLingui } from "@lingui/react/macro";
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { useState, type JSX } from "react";
 
-import { propertyValue } from "./library-columns.js";
+import { columnLabel, propertyColumn, propertyValue } from "./library-columns.js";
 import { editableText } from "./library-field-edit.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -21,7 +22,7 @@ export function LibraryFieldCellEditor({
   readonly onSave: (text: string) => Promise<void>;
   readonly onDone: () => void;
 }): JSX.Element {
-  const { t } = useLingui();
+  useLocale();
   const initial = editableText(propertyValue(source, fieldKey));
   const [text, setText] = useState(initial);
   const [saving, setSaving] = useState(false);
@@ -42,7 +43,7 @@ export function LibraryFieldCellEditor({
   return (
     <input
       className="library-field-editor"
-      aria-label={t`Edit ${fieldKey}`}
+      aria-label={translate`Edit ${columnLabel(propertyColumn(fieldKey))}`}
       value={text}
       disabled={saving}
       // eslint-disable-next-line jsx-a11y/no-autofocus -- editing begins by asking for this input.

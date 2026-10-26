@@ -87,7 +87,8 @@ is introduced. Writer's optional file-access consent remains a later SDK capabil
   - It renders the reading workspace only for the connection the gate hands over in
     phase `ready`, and disposes its adapters, never the borrowed client.
   - The header shows the shared `CollectionSwitcher`; unsaved edits are confirmed
-    before switching. Legacy `ConnectReader` keeps its own `CollectionPicker`.
+    before switching. The unused legacy connection screen has been removed; the
+    shared gate owns the live connection flow.
   - `apps/reader` depends on the same SDK cut as `packages/connect`, so app-ui's SDK
     peer resolves to it. The legacy native sign-in imports the release SDK819 archive
     under the alias `@mdbase-dev/sdk-legacy-729b5391`.

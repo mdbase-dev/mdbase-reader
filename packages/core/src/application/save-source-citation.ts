@@ -5,13 +5,20 @@ import { DomainError } from "../domain/errors.js";
 
 import type { SourceRepository } from "./ports.js";
 import type { CslItem } from "../domain/citation.js";
+import type { CslProvenance } from "../domain/csl-provenance.js";
 import type { Source, SourceSummary } from "../domain/source.js";
+
+export interface SaveSourceCitationOptions {
+  readonly provenance?: CslProvenance;
+  readonly expectedCitation?: unknown;
+}
 
 export async function saveSourceCitation(
   sources: SourceRepository,
   source: Source,
   library: readonly SourceSummary[],
   value: unknown,
+  options: SaveSourceCitationOptions = {},
 ): Promise<Source> {
   const validation = validateCslItem(value);
   if (!validation.valid) {
@@ -22,6 +29,8 @@ export async function saveSourceCitation(
     collectionId: source.collectionId,
     sourceId: source.id,
     citation: validation.item,
+    ...(options.provenance !== undefined ? { provenance: options.provenance } : {}),
+    ...("expectedCitation" in options ? { expectedCitation: options.expectedCitation } : {}),
   });
 }
 

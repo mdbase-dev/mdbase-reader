@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 
@@ -52,7 +53,7 @@ export function WorkspaceTabSwitcher({
         value={active?.id ?? ""}
         options={tabs.map((panel) => ({
           value: panel.id,
-          label: `${panel.title ?? ""}${panelTab(panel)?.dirty ? " — unsaved changes" : ""}`,
+          label: `${panel.title ?? ""}${panelTab(panel)?.dirty ? translate({ message: " — unsaved changes" }) : ""}`,
         }))}
         onChange={(id) => dock.activate(id)}
       />

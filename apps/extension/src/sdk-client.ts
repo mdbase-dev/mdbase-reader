@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { t as translate } from "@lingui/core/macro";
 
 import {
   deserializeError,
@@ -64,7 +64,7 @@ const helloIntervalMs = 250;
 const startTimeoutMs = 20_000;
 
 export function hostRestartedMessage(): string {
-  return t`mdbase restarted in the background. Check whether your last change was saved, then try again.`;
+  return translate`mdbase restarted in the background. Check whether your last change was saved, then try again.`;
 }
 
 /** One context's connection to the host: requests, snapshots and reconnection. */
@@ -96,7 +96,7 @@ class HostConnection {
 
   get snapshot(): MdbaseApplicationSnapshot {
     if (!this.#snapshot) {
-      throw new Error(t`mdbase has not started yet.`);
+      throw new Error(translate`mdbase has not started yet.`);
     }
     return this.#snapshot;
   }
@@ -112,7 +112,9 @@ class HostConnection {
       let hello: ReturnType<typeof setInterval> | undefined;
       const timeout = setTimeout(() => {
         clearInterval(hello);
-        reject(new Error(t`mdbase could not start in the background. Reload the extension.`));
+        reject(
+          new Error(translate`mdbase could not start in the background. Reload the extension.`),
+        );
       }, startTimeoutMs);
       this.#markConnected = () => {
         clearInterval(hello);
@@ -335,7 +337,9 @@ export async function createSdkClient(
     async assess(...args) {
       const answer = await connection.call({ app: true }, "assess", args);
       if (!isReadinessSnapshot(answer)) {
-        throw new Error("mdbase answered the readiness check with something else.");
+        throw new Error(
+          translate({ message: "mdbase answered the readiness check with something else." }),
+        );
       }
       return answer;
     },

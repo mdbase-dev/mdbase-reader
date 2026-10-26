@@ -3,13 +3,26 @@ import { signalMdbaseMark, useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activit
 import { useCallback, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { useCaptureTask } from "./use-capture-task.js";
+import { useChapterDoi } from "./use-chapter-doi.js";
 
+import type { ChapterDoiOffer } from "./chapter-doi.js";
 import type * as SourceAdditionFlow from "./source-addition-flow.js";
-import type { SourceAdditionOutcome, SourceAdditionServices } from "./source-addition-flow.js";
+import type {
+  SourceAdditionNotice,
+  SourceAdditionOutcome,
+  SourceAdditionServices,
+} from "./source-addition-flow.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
+import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { CitationCandidate, SourceId } from "@mdbase-reader/core";
 
 export interface WebCaptureFlow {
+  readonly chapterOffer: ChapterDoiOffer | null;
+  readonly bookOffer: CitationCandidate | null;
+  readonly confirmChapter: (bookId: SourceId) => Promise<void>;
+  readonly findChapterBook: (isbn?: string) => Promise<void>;
+  readonly saveChapterBook: () => Promise<void>;
   readonly status: "idle" | "capturing";
   /** What the current addition is doing, for a live status line. */
   readonly progress: string | null;
@@ -17,7 +30,13 @@ export interface WebCaptureFlow {
   /** A page could not be fetched but its citation was found; it can be saved on its own. */
   readonly offer: { readonly title: string; readonly reason: string } | null;
   /** A source was added with a problem worth reading before it opens. */
-  readonly notice: { readonly message: string; readonly sourceId: SourceId } | null;
+  readonly notice: {
+    readonly message: string;
+    readonly detail?: string;
+    readonly sourceId: SourceId;
+  } | null;
+  readonly canCancel: boolean;
+  readonly cancel: () => void;
   readonly capture: (input: string) => Promise<void>;
   readonly saveCitationOnly: () => Promise<void>;
   readonly openNoticed: () => void;
@@ -28,9 +47,11 @@ export interface WebCaptureFlow {
 export function useWebCapture(
   workspace: ReaderWorkspaceController,
   onImported: (sourceId: SourceId) => void,
+  gateway?: ReaderWorkspaceGateway,
 ): WebCaptureFlow {
-  const [status, setStatus] = useState<WebCaptureFlow["status"]>("idle");
-  const [progress, setProgress] = useState<string | null>(null);
+  const chapter = useChapterDoi(gateway, workspace, onImported);
+  const proposeChapter = chapter.propose;
+  const { status, progress, canCancel, cancel, begin } = useCaptureTask();
   const [error, setError] = useState<string | null>(null);
   const [offer, setOffer] = useState<{
     readonly candidate: CitationCandidate;
@@ -50,7 +71,10 @@ export function useWebCapture(
         flow: typeof SourceAdditionFlow,
       ) => Promise<SourceAdditionOutcome>,
     ): Promise<void> => {
-      setStatus("capturing");
+      const operation = begin();
+      if (!operation) {
+        return;
+      }
       setError(null);
       setOffer(null);
       setNotice(null);
@@ -60,17 +84,26 @@ export function useWebCapture(
           import("./source-addition-flow.js"),
           import("./source-addition-services.js"),
         ]);
+        operation.signal.throwIfAborted();
         const outcome = await work(
           readerSourceAdditionServices({
             workspace,
-            onStatus: setProgress,
+            chapterGateway: gateway,
+            signal: operation.signal,
+            onStatus: operation.onStatus,
+            onWriteStart: operation.onWriteStart,
             ...(recoveryInput.current === input
               ? { importOptions: { recoverExistingFiles: true } }
               : {}),
           }),
           flow,
         );
-        if (outcome.kind === "citation-only") {
+        if (!operation.isCurrent()) {
+          return;
+        }
+        if (outcome.kind === "chapter-offer") {
+          proposeChapter(outcome.offer);
+        } else if (outcome.kind === "citation-only") {
           setOffer({ candidate: outcome.candidate, url: input, reason: outcome.reason });
         } else if (outcome.kind === "not-added") {
           // The workspace reports why; the input is kept to recover the upload on retry.
@@ -80,27 +113,23 @@ export function useWebCapture(
           signalMdbaseMark("saved");
           recoveryInput.current = null;
           if (outcome.notices.length) {
-            setNotice({ message: outcome.notices.join(" "), sourceId: outcome.source.id });
+            setNotice(additionNotice(outcome.notices, outcome.source.id));
           } else {
             onImported(outcome.source.id);
           }
         }
       } catch (reason) {
-        signalMdbaseMark("error");
-        setError(readerErrorMessage(reason, t({ message: "Reader could not add that source." })));
+        if (operation.isCurrent()) {
+          signalMdbaseMark("error");
+          setError(readerErrorMessage(reason, t({ message: "Reader could not add that source." })));
+        }
       } finally {
-        setStatus("idle");
-        setProgress(null);
+        operation.finish();
       }
     },
-    [onImported, workspace],
+    [onImported, workspace, gateway, proposeChapter, begin],
   );
 
-  const capture = useCallback(
-    (input: string): Promise<void> =>
-      run(input, (services, flow) => flow.addSourceFromInput(input, services)),
-    [run],
-  );
   const saveCitationOnly = useCallback((): Promise<void> => {
     if (!offer) {
       return Promise.resolve();
@@ -110,20 +139,19 @@ export function useWebCapture(
   }, [offer, run]);
 
   return {
-    status,
+    chapterOffer: chapter.chapterOffer,
+    bookOffer: chapter.bookOffer,
+    confirmChapter: chapter.confirmChapter,
+    findChapterBook: chapter.findChapterBook,
+    saveChapterBook: chapter.saveChapterBook,
+    status: chapter.busy ? "capturing" : status,
     progress,
-    error: error ?? workspace.importError,
-    offer: offer
-      ? {
-          title:
-            typeof offer.candidate.citation["title"] === "string"
-              ? offer.candidate.citation["title"]
-              : offer.url,
-          reason: offer.reason,
-        }
-      : null,
+    error: error ?? chapter.error ?? workspace.importError,
+    offer: citationOffer(offer),
     notice,
-    capture,
+    canCancel: canCancel || chapter.canCancel,
+    cancel: chapter.busy ? chapter.cancel : cancel,
+    capture: (input) => run(input, (services, flow) => flow.addSourceFromInput(input, services)),
     saveCitationOnly,
     openNoticed: () => {
       if (notice) {
@@ -134,6 +162,34 @@ export function useWebCapture(
     clearError: () => {
       setError(null);
       setOffer(null);
+      proposeChapter(null);
     },
+  };
+}
+
+function citationOffer(
+  offer: { candidate: CitationCandidate; url: string; reason: string } | null,
+): WebCaptureFlow["offer"] {
+  return offer
+    ? {
+        title:
+          typeof offer.candidate.citation["title"] === "string"
+            ? offer.candidate.citation["title"]
+            : offer.url,
+        reason: offer.reason,
+      }
+    : null;
+}
+
+/** Notices read as one message; their underlying errors stay together in its details. */
+function additionNotice(
+  notices: readonly SourceAdditionNotice[],
+  sourceId: SourceId,
+): NonNullable<WebCaptureFlow["notice"]> {
+  const detail = notices.flatMap((notice) => notice.detail ?? []).join(" ");
+  return {
+    message: notices.map((notice) => notice.message).join(" "),
+    ...(detail ? { detail } : {}),
+    sourceId,
   };
 }

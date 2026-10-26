@@ -86,7 +86,7 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
 test("ALL installed SDK, multilingual UI candidate, protocol and peers match their archives (not native approval)", async () => {
   const repoRoot = process.cwd();
   const installerEvidence = [];
-  const sdkMembers = originalMembers("packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz");
+  const sdkMembers = originalMembers("packages/connect/vendor/sdk-e55d99c0-production-beta141.tgz");
   const uiArchive = "vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz";
   assert.equal(
     createHash("sha256")

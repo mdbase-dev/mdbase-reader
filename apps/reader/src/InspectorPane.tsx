@@ -1,18 +1,30 @@
 import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, type JSX } from "react";
 
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
-import { AnnotationPanelActions } from "./AnnotationPanelActions.js";
-import { CitationEditor } from "./CitationEditor.js";
+import { useAnnotationPanelActions } from "./AnnotationPanelActions.js";
+import { requestConfirmation } from "./confirmation.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
-import { SourceNoteEditor } from "./SourceNoteEditor.js";
+import { lazyFeature } from "./lazy-feature.js";
+import { publishSharedAnnotation } from "./shared-annotation-resource.js";
 
+import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { Annotation, HighlightColorKey, SourceId, SourceSummary } from "@mdbase-reader/core";
+
+const CitationEditor = lazyFeature(
+  async () => ({ default: (await import("./CitationEditor.js")).CitationEditor }),
+  "the citation editor",
+);
+const SourceNoteEditor = lazyFeature(
+  async () => ({ default: (await import("./SourceNoteEditor.js")).SourceNoteEditor }),
+  "the source note editor",
+);
 
 export type InspectorTab = "note" | "annotations" | "citation";
 
@@ -153,12 +165,14 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "note"}
-        title={t({ message: "Literature note", context: "InspectorPane interface" })}
+        title={translate({ message: "Source note" })}
+        onPointerEnter={SourceNoteEditor.preload}
+        onFocus={SourceNoteEditor.preload}
         onClick={() => onChange("note")}
       >
         <NoteIcon />{" "}
         <span className="inspector-tab-label">
-          <Trans>Literature note</Trans>
+          <Trans>Source note</Trans>
         </span>
       </button>
       <button
@@ -166,7 +180,9 @@ function InspectorTabs({
         role="tab"
         disabled={!enabled}
         aria-selected={tab === "citation"}
-        title={t({ message: "Citation", context: "InspectorPane interface" })}
+        title={translate({ message: "Citation", context: "InspectorPane status or action" })}
+        onPointerEnter={CitationEditor.preload}
+        onFocus={CitationEditor.preload}
         onClick={() => onChange("citation")}
       >
         <CitationIcon />{" "}
@@ -180,7 +196,7 @@ function InspectorTabs({
 
 function tabLabel(tab: InspectorTab): string {
   return tab === "note"
-    ? translate({ message: "Literature note", context: "InspectorPane status or action" })
+    ? translate({ message: "Source note" })
     : tab === "citation"
       ? translate({ message: "Citation", context: "InspectorPane status or action" })
       : translate({ message: "Annotations", context: "InspectorPane status or action" });
@@ -202,26 +218,12 @@ export function InspectorContent({
     [gateway],
   );
   return tab === "annotations" ? (
-    <div className="annotation-workspace">
-      <AnnotationPanelActions workspace={workspace} composer={composer} />
-      <AnnotationEditingContext value={gateway}>
-        <AnnotationList
-          key={
-            workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value.id : "loading"
-          }
-          annotations={workspace.annotations}
-          activeId={composer.activeAnnotationId}
-          transclusion={workspace.transclusion}
-          onUpdate={workspace.updateAnnotation}
-          onPlanDelete={workspace.planAnnotationDeletion}
-          onDelete={workspace.deleteAnnotation}
-          onOpen={composer.open}
-          editingId={composer.editingAnnotationId}
-          onCancelEdit={composer.stopEditing}
-          readFile={readFile}
-        />
-      </AnnotationEditingContext>
-    </div>
+    <AnnotationsTab
+      workspace={workspace}
+      composer={composer}
+      gateway={gateway}
+      readFile={readFile}
+    />
   ) : tab === "note" ? (
     <div className="note-editor">
       <SourceNoteEditor
@@ -234,4 +236,99 @@ export function InspectorContent({
   ) : (
     <CitationEditor workspace={workspace} />
   );
+}
+
+function AnnotationsTab({
+  workspace,
+  composer,
+  gateway,
+  readFile,
+}: Pick<InspectorPaneProps, "workspace" | "composer" | "gateway"> & {
+  readonly readFile: AnnotationFileReader;
+}): JSX.Element {
+  useLocale();
+  const actions = useAnnotationPanelActions({ workspace, composer, gateway });
+  const source = workspace.sourceRecord.status === "ready" ? workspace.sourceRecord.value : null;
+  const view = workspace.annotationView;
+  return (
+    <div className="annotation-workspace">
+      <AnnotationEditingContext value={gateway}>
+        <AnnotationList
+          key={source?.id ?? "loading"}
+          annotations={workspace.annotations}
+          currentSourceId={source?.id}
+          addMenu={actions.addMenu}
+          beforeList={
+            <>
+              {actions.composerPanel}
+              {view?.problem ? (
+                <p className="annotation-view-problem" role="status">
+                  {view.problem}
+                </p>
+              ) : null}
+            </>
+          }
+          wholeBook={
+            source?.partOf && view
+              ? { value: view.wholeBook, onChange: view.setWholeBook }
+              : undefined
+          }
+          owners={view?.sources}
+          onRecolor={recolorAnnotation(workspace.recolorAnnotation)}
+          onMoveOwner={
+            gateway.moveAnnotationOwner
+              ? async (annotation, owner) => {
+                  if (
+                    !(await requestConfirmation({
+                      title: translate`Move annotation to “${owner.title}”?`,
+                      message:
+                        "Its document target, selector, revision and note embeds will not change. The new source may not include this passage in its range.",
+                      confirmLabel: translate({ message: "Move annotation to source" }),
+                      cancelLabel: translate({ message: "Keep source" }),
+                    }))
+                  ) {
+                    return;
+                  }
+                  const fullOwner = await gateway.source(owner.id);
+                  if (!fullOwner) {
+                    throw new Error(
+                      translate({
+                        message: "The chosen source no longer exists. Choose another source.",
+                      }),
+                    );
+                  }
+                  if (!gateway.moveAnnotationOwner) {
+                    throw new Error(translate({ message: "Moving annotations is unavailable." }));
+                  }
+                  const updated = await gateway.moveAnnotationOwner(annotation, fullOwner);
+                  publishSharedAnnotation(gateway, annotation, updated);
+                }
+              : undefined
+          }
+          activeId={composer.activeAnnotationId}
+          readingId={composer.readingAnnotationId}
+          transclusion={workspace.transclusion}
+          onUpdate={workspace.updateAnnotation}
+          onPlanDelete={workspace.planAnnotationDeletion}
+          onDelete={workspace.deleteAnnotation}
+          onOpen={composer.open}
+          editingId={composer.editingAnnotationId}
+          onCancelEdit={composer.stopEditing}
+          // Undo would delete the comment about to be written.
+          onBeginEdit={(annotation) => composer.withdrawUndo(annotation.id)}
+          readFile={readFile}
+        />
+      </AnnotationEditingContext>
+    </div>
+  );
+}
+
+function recolorAnnotation(
+  recolor: ReaderSourceWorkspaceController["recolorAnnotation"],
+): ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | undefined {
+  return recolor
+    ? async (annotation, color) => {
+        await recolor(annotation, color);
+      }
+    : undefined;
 }

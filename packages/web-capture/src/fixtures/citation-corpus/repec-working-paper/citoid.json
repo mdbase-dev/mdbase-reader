@@ -1,0 +1,34 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "6CMDWCWE",
+      "version": 0,
+      "itemType": "journalArticle",
+      "creators": [
+        {
+          "firstName": "David G.",
+          "lastName": "Blanchflower",
+          "creatorType": "author"
+        },
+        {
+          "firstName": "Andrew J.",
+          "lastName": "Oswald",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [],
+      "title": "Happiness and the Human Development Index: The Paradox of Australia",
+      "url": "https://ideas.repec.org//p/nbr/nberwo/11416.html",
+      "abstractNote": "According to the well-being measure known as the U.N.",
+      "date": "2005-06",
+      "publicationTitle": "NBER Working Papers",
+      "publisher": "National Bureau of Economic Research, Inc",
+      "language": "en",
+      "libraryCatalog": "ideas.repec.org",
+      "accessDate": "2026-10-23",
+      "seriesTitle": "NBER Working Papers",
+      "shortTitle": "Happiness and the Human Development Index"
+    }
+  ]
+}

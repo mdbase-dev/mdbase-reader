@@ -24,9 +24,14 @@ export function useDocumentDecorations(
       return;
     }
     let active = true;
-    const activeAnnotation = annotations.value.find(({ id }) => id === activeAnnotationId) ?? null;
+    const compatible = annotations.value.filter(
+      ({ document }) =>
+        document?.fileId === surface.document.document.fileId &&
+        document.revision === surface.document.document.revision,
+    );
+    const activeAnnotation = compatible.find(({ id }) => id === activeAnnotationId) ?? null;
     void capability
-      .setAnnotations(annotations.value)
+      .setAnnotations(compatible)
       .then(() => (active ? capability.setActiveAnnotation(activeAnnotation) : undefined))
       .then(() => {
         if (active) {

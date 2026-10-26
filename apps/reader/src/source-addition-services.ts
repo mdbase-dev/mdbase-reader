@@ -2,13 +2,17 @@ import { postAddress, postFromUrl, socialPostImport } from "@mdbase-reader/web-c
 import { lookUpCitation } from "@mdbase-reader/web-capture/citation-lookup";
 
 import { readDocumentFileDetails } from "./document-details.js";
+import { documentClaims } from "./new-citation-provenance.js";
 import { fetchCapture } from "./web-capture-client.js";
 
 import type { SourceAdditionServices } from "./source-addition-flow.js";
 
 /** The live services behind adding a source: Reader's capture service, doi.org and Citoid. */
 export function readerSourceAdditionServices(
-  input: Pick<SourceAdditionServices, "workspace" | "onStatus" | "signal" | "importOptions">,
+  input: Pick<
+    SourceAdditionServices,
+    "workspace" | "onStatus" | "signal" | "importOptions" | "chapterGateway" | "onWriteStart"
+  >,
 ): SourceAdditionServices {
   const signal = input.signal ? { signal: input.signal } : {};
   return {
@@ -45,8 +49,12 @@ export function readerSourceAdditionServices(
         clientName: `mdbase-reader (${globalThis.location.origin})`,
         ...signal,
       }),
-    pdfIdentifiers: async (file) =>
-      (await readDocumentFileDetails({ name: "download.pdf", bytes: file.bytes }, input.signal))
-        .identifiers,
+    pdfIdentifiers: async (file) => {
+      const details = await readDocumentFileDetails(
+        { name: "download.pdf", bytes: file.bytes },
+        input.signal,
+      );
+      return { ...details.identifiers, claims: documentClaims(details, file.retrievedAt) };
+    },
   };
 }

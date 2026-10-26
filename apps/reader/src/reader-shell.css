@@ -1,3 +1,5 @@
+@import "./reader-tokens.css";
+
 /* Reader shell ---------------------------------------------------------------
    The application chrome: header, menus, Sources sidebar, library tab, source
    tools header and annotation browsing, document chrome, empty states, command
@@ -5,19 +7,17 @@
    components were removed, so add new rules here rather than overriding them.
    Annotation card bodies, editors and the composer body remain in reader.css.
 
-   Type scale: 11px meta, 12px controls, 13px body/list, 15px headings.
-   Monospace is reserved for keyboard shortcuts and file-format tags. */
+   Colours, type, space, radii and elevation come from reader-tokens.css.
+   The shell's UI sizes follow the token type scale (nothing below 12px);
+   monospace is reserved for keyboard shortcuts and file-format tags. */
 
 :root {
-  --sans: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
-  --serif: Georgia, "Times New Roman", serif;
-  --surface: var(--paper);
-  --ui-meta: 11px;
-  --ui-control: 12px;
-  --ui-body: 13px;
-  --ui-heading: 15px;
-  --ui-control-height: 30px;
-  --ui-radius: 6px;
+  --ui-meta: var(--text-xs);
+  --ui-control: var(--text-sm);
+  --ui-body: var(--text-md);
+  --ui-heading: var(--text-lg);
+  --ui-control-height: var(--control-h);
+  --ui-radius: var(--r-md);
   --mobile-source-control-height: 48px;
 }
 
@@ -28,12 +28,14 @@
   --control-font-size: var(--ui-control);
 }
 
-.reader-shell[data-density="comfortable"] {
-  --ui-meta: 12px;
-  --ui-control: 13px;
-  --ui-body: 14px;
-  --ui-heading: 16px;
-  --ui-control-height: 32px;
+/* Compact density tightens controls and body text but keeps the 12px floor. */
+.reader-shell[data-density="compact"] {
+  --ui-meta: var(--text-xs);
+  --ui-control: var(--text-xs);
+  --ui-body: var(--text-sm);
+  --ui-heading: 15px;
+  --ui-control-height: 30px;
+  --ui-radius: var(--r-sm);
 }
 
 /* Native controls do not inherit the page font on their own. */
@@ -52,16 +54,22 @@
   font-size: var(--ui-control);
 }
 
-/* Search fields show focus on their container, not on the bare input. */
+/* Search fields show the focus ring on their container, not on the bare input.
+   Bordered fields that are themselves the input take the same ring. */
 .reader-shell .navigator-search input:focus-visible,
 .reader-shell .library-search-field input:focus-visible,
-.reader-shell .annotation-search input:focus-visible,
+.reader-shell .annotation-search input:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+
 .reader-shell .capture-url-field input:focus-visible,
 .reader-shell .import-title-field input:focus-visible,
 .navigator-search:focus-within,
 .library-workspace-search:focus-within,
 .annotation-search:focus-within {
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 16%, transparent);
+  outline: 0;
+  box-shadow: var(--focus-ring);
 }
 
 /* Menus ------------------------------------------------------------------- */
@@ -92,10 +100,10 @@
   display: grid;
   gap: 1px;
   padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--paper);
-  box-shadow: 0 12px 32px -12px color-mix(in oklch, var(--ink) 28%, transparent);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--e-2);
   font-size: var(--ui-control);
 }
 
@@ -261,7 +269,7 @@
   gap: 12px;
   padding: 0 12px 0 10px;
   border-bottom: 1px solid var(--reader-hairline);
-  background: color-mix(in oklch, var(--paper) 98%, var(--canvas));
+  background: var(--canvas);
   transition: opacity var(--motion-quick) var(--ease-out);
 }
 
@@ -412,6 +420,10 @@
 
 .header-display-menu .reader-menu-panel {
   min-width: 280px;
+  /* The display choices can be taller than a laptop window. */
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .reader-header .header-reading-mode svg {
@@ -422,6 +434,13 @@
 .reader-header .header-reading-mode[aria-pressed="true"] {
   color: var(--action);
   background: color-mix(in oklch, var(--accent) 12%, transparent);
+}
+
+/* Unavailable without a document, but focusable so its description can be heard. */
+.reader-header .header-reading-mode[aria-disabled="true"] {
+  color: var(--faint);
+  background: transparent;
+  cursor: default;
 }
 
 .text-size-stepper {
@@ -1176,94 +1195,6 @@
   background: var(--paper);
 }
 
-/* Continue reading: up to three recent sources above the table. */
-
-.continue-reading {
-  margin: 16px 16px 10px;
-}
-
-.continue-reading h2 {
-  margin: 0 0 8px;
-  color: var(--muted);
-  font-size: var(--ui-meta);
-  font-weight: 600;
-}
-
-.continue-reading-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 8px;
-}
-
-.continue-reading-item {
-  min-width: 0;
-  display: grid;
-  gap: 10px;
-  padding: 11px 13px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--ink);
-  background: var(--paper);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color 120ms var(--ease),
-    box-shadow 120ms var(--ease);
-}
-
-.continue-reading-item:hover {
-  border-color: var(--line-strong);
-  box-shadow: 0 1px 2px color-mix(in oklch, var(--ink) 8%, transparent);
-}
-
-.continue-reading-title {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.continue-reading-title strong,
-.continue-reading-title small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.continue-reading-title strong {
-  overflow: visible;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  font-size: var(--ui-body);
-  font-weight: 650;
-}
-
-.continue-reading-title small {
-  color: var(--muted);
-  font-size: var(--ui-meta);
-}
-
-.continue-reading-state {
-  color: var(--muted);
-  font-size: var(--ui-meta);
-}
-
-.library-progress {
-  position: relative;
-  width: 100%;
-  height: 3px;
-  overflow: hidden;
-  border-radius: 2px;
-  background: var(--line);
-}
-
-.library-progress > i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: var(--accent);
-}
-
 /* Table: a sticky header over absolutely positioned, virtualized rows. */
 
 .library-table {
@@ -1381,7 +1312,7 @@
 
 .library-sort-indicator {
   color: var(--action);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
 .library-column-header[aria-sort="ascending"],
@@ -1569,23 +1500,6 @@
   white-space: nowrap;
 }
 
-.source-format-tag {
-  width: 38px;
-  flex: 0 0 auto;
-  padding: 3px 0;
-  border: 1px solid var(--reader-hairline);
-  border-radius: 4px;
-  color: var(--muted);
-  font: 600 9.5px/1 var(--mono);
-  letter-spacing: 0.02em;
-  text-align: center;
-  text-transform: uppercase;
-}
-
-.source-format-tag.is-note {
-  border-style: dashed;
-}
-
 .library-count,
 .library-table-row time {
   color: var(--ink-soft);
@@ -1669,11 +1583,6 @@
   border-color: var(--muted);
 }
 
-.library-status .library-progress {
-  grid-column: 1 / -1;
-  width: 72px;
-}
-
 /* Narrow panes: the table becomes a two-line list. */
 @container library (max-width: 620px) {
   .library-table-head {
@@ -1687,11 +1596,19 @@
 
   .library-table-row {
     /* Overrides the per-view column template set inline. */
-    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
   }
 
-  .library-table-row > span:not(.is-title, .is-status) {
+  .library-table-row > span:not(.is-title, .is-status, .is-actions) {
     display: none;
+  }
+
+  /* Without hover to reveal it, the row's More button stays; with hover, the menu is a
+     right-click away and the narrow row keeps its room. */
+  @media (hover: hover) {
+    .library-table-row > span.is-actions {
+      display: none;
+    }
   }
 
   .library-title-copy small {
@@ -1753,24 +1670,6 @@
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
-  }
-
-  .continue-reading {
-    margin-inline: 12px;
-  }
-
-  /* A swipeable row keeps the table in view on phones. */
-  .continue-reading-list {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(220px, 78%);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-
-  .continue-reading-item {
-    scroll-snap-align: start;
   }
 
   .library-table.has-creator-column .library-title-copy small {
@@ -2003,149 +1902,10 @@
   color: var(--danger);
 }
 
-/* Annotations that need no selection: whole-source comments and bookmarks. */
+/* Annotation type with a swatch, as in the Library's Annotations Type column. Scoped to grid
+   cells: Notes panel cards name their kind in their metadata line (notes-panel.css). */
 
-.annotation-panel-actions {
-  display: flex;
-  gap: 4px;
-  padding: 8px 12px 0;
-}
-
-.annotation-panel-actions > button {
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 9px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  color: var(--ink-soft);
-  background: var(--paper);
-  font: inherit;
-  font-size: var(--ui-meta);
-  cursor: pointer;
-}
-
-.annotation-panel-actions > button:hover:not(:disabled) {
-  color: var(--ink);
-  background: var(--hover);
-}
-
-.annotation-panel-actions > button:disabled {
-  color: var(--faint);
-  cursor: default;
-}
-
-.annotation-panel-actions svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* Annotation browsing: one row, with filter and order tucked into a menu. */
-
-.annotation-browser-controls {
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--reader-hairline);
-}
-
-.annotation-search {
-  height: var(--ui-control-height);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 2px 0 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius);
-  background: var(--paper);
-}
-
-.annotation-search:focus-within {
-  border-color: color-mix(in oklch, var(--accent) 60%, var(--line));
-}
-
-.annotation-search > svg {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-  color: var(--muted);
-}
-
-.annotation-search input {
-  min-width: 0;
-  flex: 1 1 auto;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  color: var(--ink);
-  background: transparent;
-}
-
-.annotation-search .reader-menu > summary {
-  position: relative;
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border-radius: 4px;
-  color: var(--muted);
-}
-
-.annotation-search .reader-menu > summary.is-active {
-  color: var(--accent);
-  background: color-mix(in oklch, var(--accent) 12%, transparent);
-}
-
-.annotation-search .reader-menu > summary svg {
-  width: 15px;
-  height: 15px;
-}
-
-.annotation-browser-controls small {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: var(--ui-meta);
-}
-
-.annotation-browser-controls small button,
-.annotation-browser-controls > button {
-  padding: 0;
-  border: 0;
-  color: var(--action);
-  background: transparent;
-  font: inherit;
-  font-size: var(--ui-meta);
-  cursor: pointer;
-}
-
-/* Annotation cards: readable labels instead of uppercase monospace. */
-
-.annotation-card header,
-.annotation-card footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--muted);
-  font-size: var(--ui-meta);
-}
-
-.annotation-card footer {
-  margin-top: 10px;
-}
-
-.annotation-card header small {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: var(--ui-meta);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.annotation-kind {
+[role="gridcell"].annotation-kind {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -2154,7 +1914,7 @@
   font-weight: 600;
 }
 
-.annotation-kind::before {
+[role="gridcell"].annotation-kind::before {
   content: "";
   width: 8px;
   height: 8px;
@@ -2162,81 +1922,24 @@
   background: var(--line-strong);
 }
 
-.annotation-kind.is-highlight::before {
-  background: oklch(80% 0.13 86);
+[role="gridcell"].annotation-kind.is-highlight::before {
+  background: var(--hl-ink, var(--ink-yellow));
 }
 
-.annotation-kind.is-note::before {
+[role="gridcell"].annotation-kind.is-note::before {
   background: var(--accent);
 }
 
-.annotation-kind.is-bookmark::before {
+[role="gridcell"].annotation-kind.is-bookmark::before {
   width: 7px;
   border-radius: 1px 1px 0 0;
   background: var(--ink-soft);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
 }
 
-.annotation-kind.is-area::before {
+[role="gridcell"].annotation-kind.is-area::before {
   border: 1px dashed var(--accent);
   background: transparent;
-}
-
-.annotation-card-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity var(--motion-quick) var(--ease-out);
-}
-
-.annotation-card:hover .annotation-card-actions,
-.annotation-card:focus-within .annotation-card-actions,
-.annotation-card.is-selected .annotation-card-actions {
-  opacity: 1;
-}
-
-.annotation-card-actions > button:not(.icon-button) {
-  min-height: 26px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 5px;
-  color: var(--muted);
-  background: transparent;
-  font: inherit;
-  font-size: var(--ui-meta);
-  cursor: pointer;
-}
-
-.annotation-card-actions > button:not(.icon-button):hover:not(:disabled) {
-  color: var(--ink);
-  background: var(--hover);
-}
-
-.annotation-card-actions > button:not(.icon-button):disabled {
-  color: var(--faint);
-  cursor: default;
-}
-
-.annotation-card-actions .icon-button {
-  width: 26px;
-  height: 26px;
-}
-
-.annotation-card-actions .icon-button svg {
-  width: 14px;
-  height: 14px;
-}
-
-@media (hover: none), (max-width: 680px) {
-  .annotation-card-actions {
-    opacity: 1;
-  }
-
-  .annotation-card-actions > button:not(.icon-button),
-  .annotation-card-actions .icon-button {
-    min-height: 40px;
-  }
 }
 
 @media (pointer: coarse) {
@@ -2506,7 +2209,7 @@
   border-radius: 8px;
   color: var(--muted);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--text-xs);
   cursor: pointer;
 }
 .mobile-source-views button svg {
@@ -2533,6 +2236,8 @@
    page does not move under the selection. */
 .mobile-source-views.is-selection {
   position: relative;
+  /* The colours float over the page above the bar, as the desktop toolbar does. */
+  z-index: 9;
   display: block;
 }
 .mobile-source-views.is-selection .selection-toolbar {
@@ -2556,7 +2261,7 @@
   padding: 0 4px;
   border-radius: 8px;
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 .mobile-source-views.is-selection .selection-toolbar > button:first-child {
   color: var(--action);
@@ -2571,6 +2276,27 @@
 }
 .mobile-source-views.is-selection .selection-toolbar-divider {
   display: none;
+}
+/* The colours float just above the bar, so the bar keeps its height and its labelled actions
+   keep their width; each swatch is a full touch target. */
+.mobile-source-views.is-selection .highlight-swatches {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  padding: 2px 4px;
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  transform: translateX(-50%);
+}
+.mobile-source-views.is-selection .highlight-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-full);
+}
+.mobile-source-views.is-selection .highlight-swatch > i {
+  width: 24px;
+  height: 24px;
 }
 .mobile-source-views.is-selection .selection-toolbar-status {
   position: absolute;
@@ -2649,7 +2375,7 @@
   border-radius: 999px;
   color: var(--muted);
   background: var(--hover);
-  font-size: 11px;
+  font-size: var(--text-xs);
   text-align: center;
 }
 
@@ -2721,7 +2447,7 @@
   align-self: end;
   justify-self: end;
   color: color-mix(in oklch, var(--format-color) 45%, transparent);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--serif);
   font-size: 40px;
   font-weight: 400;
   line-height: 1;
@@ -3201,6 +2927,27 @@
   margin: 0;
 }
 
+.capture-citation-fields {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.capture-citation-fields div {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr);
+  gap: 12px;
+}
+
+.capture-citation-fields dt {
+  color: var(--muted);
+}
+
+.capture-citation-fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .source-add-divider {
   position: relative;
   display: flex;
@@ -3380,10 +3127,6 @@
   border-radius: 5px;
   color: inherit;
   font: inherit;
-}
-
-.library-status.is-editable .library-progress {
-  margin-top: -2px;
 }
 
 .annotation-composer .annotation-textarea {
@@ -3605,6 +3348,7 @@
 }
 
 .library-bulk-field {
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3618,14 +3362,15 @@
   font: inherit;
 }
 
-.library-bulk-field input:first-child {
-  width: 110px;
+.library-bulk-field-key {
+  color: var(--muted);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 
-.library-bulk-field button {
-  height: 28px;
+.library-bulk-field > button,
+.library-bulk-field-trigger {
+  min-height: 28px;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -3633,6 +3378,31 @@
   background: var(--paper);
   font: inherit;
   cursor: pointer;
+}
+
+.library-bulk-field .reader-menu-panel {
+  top: auto;
+  bottom: calc(100% + 6px);
+  width: 260px;
+  max-width: calc(100vw - 48px);
+  max-height: min(420px, 50vh);
+  overflow-y: auto;
+}
+
+.library-bulk-field-trigger {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 680px) {
+  .library-bulk-field .reader-menu {
+    position: static;
+  }
+
+  .library-bulk-field .reader-menu.is-start > .reader-menu-panel {
+    left: 50%;
+    translate: -50% 0;
+  }
 }
 
 .library-bulk-field button[type="submit"]:not(:disabled) {
@@ -3761,13 +3531,227 @@
   align-items: center;
   gap: 2px;
   padding: 4px;
-  border-radius: 8px;
-  background: var(--paper);
-  box-shadow:
-    0 10px 28px -12px color-mix(in oklch, var(--ink) 40%, transparent),
-    0 0 0 1px var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  color: var(--text-1);
   pointer-events: auto;
   white-space: nowrap;
+}
+
+/* Each highlight colour names its wash and ink for whatever carries it: a swatch, a card, the
+   sweep after saving. A colour from another app sets the two inline instead. */
+[data-highlight-color] {
+  --hl: var(--hl-yellow);
+  --hl-ink: var(--ink-yellow);
+}
+[data-highlight-color="green"] {
+  --hl: var(--hl-green);
+  --hl-ink: var(--ink-green);
+}
+[data-highlight-color="blue"] {
+  --hl: var(--hl-blue);
+  --hl-ink: var(--ink-blue);
+}
+[data-highlight-color="pink"] {
+  --hl: var(--hl-pink);
+  --hl-ink: var(--ink-pink);
+}
+[data-highlight-color="purple"] {
+  --hl: var(--hl-purple);
+  --hl-ink: var(--ink-purple);
+}
+
+.highlight-swatches {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.highlight-swatch {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  cursor: pointer;
+}
+
+.highlight-swatch > i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--hl-ink);
+  /* The inner ring keeps the lightest inks visible on the raised surface. */
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--text-1) 12%, transparent);
+}
+
+.highlight-swatch.is-ringed > i {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--text-1) 12%, transparent),
+    0 0 0 2px var(--bg-raised),
+    0 0 0 3.5px var(--text-1);
+}
+
+.highlight-swatch:hover:not(:disabled),
+.highlight-swatch:focus-visible {
+  background: var(--bg-hover);
+}
+
+.highlight-swatch:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+@media (forced-colors: active) {
+  .highlight-swatch > i {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+  .highlight-swatch.is-ringed > i {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
+
+/* The ink sweep over a new highlight's passage; "Highlight saved · Undo" waits at the foot of
+   the document (.document-notices), clear of the text. */
+.highlight-sweep-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+}
+
+.highlight-sweep {
+  position: absolute;
+  border-radius: 2px;
+  background: linear-gradient(var(--hl), var(--hl)) no-repeat 0 0 / 0% 100%;
+  mix-blend-mode: multiply;
+  animation:
+    highlight-sweep 260ms var(--ease-out, ease-out) forwards,
+    highlight-sweep-settle 420ms ease 260ms forwards;
+}
+
+:root[data-theme="dark"] .highlight-sweep {
+  mix-blend-mode: normal;
+  opacity: 0.85;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .highlight-sweep {
+    mix-blend-mode: normal;
+    opacity: 0.85;
+  }
+}
+
+@keyframes highlight-sweep {
+  to {
+    background-size: 100% 100%;
+  }
+}
+
+@keyframes highlight-sweep-settle {
+  to {
+    opacity: 0;
+  }
+}
+
+.highlight-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 4px 0 8px;
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  pointer-events: auto;
+}
+
+.highlight-saved-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 4px;
+}
+
+.highlight-saved-check {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--success);
+  color: var(--bg-surface);
+}
+
+.highlight-saved-check svg {
+  width: 11px;
+  height: 11px;
+}
+
+.highlight-saved > button {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.highlight-saved > .highlight-saved-dismiss {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  padding: 0;
+  color: var(--text-3);
+}
+
+.highlight-saved-dismiss svg {
+  width: 13px;
+  height: 13px;
+}
+
+.highlight-saved > button:hover:not(:disabled),
+.highlight-saved > button:focus-visible {
+  background: var(--bg-hover);
+}
+
+.highlight-saved > .highlight-saved-dismiss:hover,
+.highlight-saved > .highlight-saved-dismiss:focus-visible {
+  color: var(--text-1);
+}
+
+@media (pointer: coarse) {
+  .highlight-saved {
+    height: 44px;
+  }
+  .highlight-saved > button {
+    height: 40px;
+  }
+  .highlight-saved > .highlight-saved-dismiss {
+    width: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .highlight-saved {
+    animation: composer-appear 160ms var(--ease) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight-sweep {
+    display: none;
+  }
 }
 
 .selection-toolbar-layer.is-anchored > .selection-toolbar {
@@ -3835,30 +3819,13 @@
 .selection-toolbar-status {
   padding: 0 8px 0 4px;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .selection-toolbar {
     animation: composer-appear 120ms var(--ease) both;
   }
-}
-
-.annotation-composer > p.annotation-new-selection {
-  margin: 8px 16px 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.annotation-new-selection button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--accent);
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
 }
 
 /* The consent popup's return window, shown while it closes. */

@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useRef, useState } from "react";
 
 import { bookmarkRequest } from "./annotation-composer-request.js";
+import { isAnnotationSaveCancelled } from "./annotation-ownership.js";
 import { readerErrorMessage } from "./errors.js";
 
 import type { Annotation, AnnotationCreationRequest, Source, SourceId } from "@mdbase-reader/core";
@@ -44,15 +45,17 @@ export function useBookmarkAction(input: {
       setProblem(null);
       void create(request)
         .then(onCreated)
-        .catch((reason: unknown) =>
-          setProblem({
-            sourceId: source.id,
-            message: readerErrorMessage(
-              reason,
-              t({ message: "Reader could not save this bookmark." }),
-            ),
-          }),
-        )
+        .catch((reason: unknown) => {
+          if (!isAnnotationSaveCancelled(reason)) {
+            setProblem({
+              sourceId: source.id,
+              message: readerErrorMessage(
+                reason,
+                t({ message: "Reader could not save this bookmark." }),
+              ),
+            });
+          }
+        })
         .finally(() => {
           busy.current = false;
           setBookmarking(false);

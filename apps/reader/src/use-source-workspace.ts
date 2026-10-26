@@ -23,7 +23,7 @@ export interface SourceWorkspaceOptions {
   readonly collectionKey: string;
   readonly sourceIndexComplete?: boolean;
   readonly selectSource: (sourceId: SourceId | null) => void;
-  readonly confirmDiscard?: (tab: WorkspaceTab) => boolean;
+  readonly confirmDiscard?: (tab: WorkspaceTab) => boolean | Promise<boolean>;
 }
 export interface SourceWorkspaceController extends SourceWorkspaceActions {
   readonly dock: ReaderDockWorkspace;

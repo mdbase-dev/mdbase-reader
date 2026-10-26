@@ -1,0 +1,61 @@
+{
+  "type": "article-journal",
+  "title": "ImageNet Large Scale Visual Recognition Challenge",
+  "author": [
+    {
+      "family": "Russakovsky",
+      "given": "Olga"
+    },
+    {
+      "family": "Deng",
+      "given": "Jia"
+    },
+    {
+      "family": "Su",
+      "given": "Hao"
+    },
+    {
+      "family": "Krause",
+      "given": "Jonathan"
+    },
+    {
+      "family": "Satheesh",
+      "given": "Sanjeev"
+    },
+    {
+      "family": "Ma",
+      "given": "Sean"
+    },
+    {
+      "family": "Huang",
+      "given": "Zhiheng"
+    },
+    {
+      "family": "Karpathy",
+      "given": "Andrej"
+    },
+    {
+      "family": "Khosla",
+      "given": "Aditya"
+    },
+    {
+      "family": "Bernstein",
+      "given": "Michael"
+    },
+    {
+      "family": "Berg",
+      "given": "Alexander C."
+    },
+    {
+      "family": "Fei-Fei",
+      "given": "Li"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2015, 4, 11]]
+  },
+  "container-title": "International Journal of Computer Vision",
+  "publisher": "Springer US",
+  "DOI": "10.1007/s11263-015-0816-y",
+  "URL": "https://link.springer.com/article/10.1007/s11263-015-0816-y"
+}

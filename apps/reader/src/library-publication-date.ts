@@ -5,7 +5,9 @@ export function publicationDateLabel(value: string | number | undefined): string
     return null;
   }
   const text = String(value).trim();
-  const match = /^(\d{4})(?:-(\d{1,2})(?:-(\d{1,2}))?)?$/u.exec(text);
+  // A recorded time of day is dropped: the column shows dates at their calendar granularity.
+  const match =
+    /^(\d{4})(?:-(\d{1,2})(?:-(\d{1,2})(?:[T ]\d{2}:[\d:.]+(?:Z|[+-][\d:]+)?)?)?)?$/u.exec(text);
   if (!match?.[1]) {
     return text || null;
   }

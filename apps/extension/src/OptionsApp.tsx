@@ -5,6 +5,7 @@ import { ReaderLanguageSetting } from "@mdbase-reader/i18n/react";
 import { useEffect } from "react";
 
 import { readerLibraryUrl } from "./capture-model.js";
+import { useCitoidEnabled } from "./citoid-setting.js";
 import { CollectionSection } from "./CollectionSection.js";
 import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { environment } from "./environment.js";
@@ -50,6 +51,12 @@ export function OptionsApp(): React.JSX.Element {
           </h2>
           <SiteAccessStatus />
         </section>
+        <section aria-labelledby="citations-heading">
+          <h2 id="citations-heading">
+            <Trans>Citations</Trans>
+          </h2>
+          <CitoidSetting />
+        </section>
         <section aria-labelledby="shortcuts-heading">
           <h2 id="shortcuts-heading">
             <Trans>Keyboard shortcuts</Trans>
@@ -70,6 +77,22 @@ export function OptionsApp(): React.JSX.Element {
         </section>
       </main>
     </div>
+  );
+}
+
+function CitoidSetting(): React.JSX.Element {
+  const [enabled, setEnabled] = useCitoidEnabled();
+  return (
+    <label className="checkbox">
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={(event) => setEnabled(event.target.checked)}
+      />
+      <Trans>
+        Look up citations with Wikimedia’s Citoid service. Sends the page address to Wikimedia.
+      </Trans>
+    </label>
   );
 }
 

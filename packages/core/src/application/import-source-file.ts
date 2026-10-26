@@ -4,6 +4,7 @@ import { DomainError } from "../domain/errors.js";
 
 import { detectDocumentFormat, mediaTypeFor } from "./source-document-format.js";
 import {
+  authorYearFromMetadata,
   normalizeOptionalText,
   normalizeTitle,
   safeFileName,
@@ -116,7 +117,7 @@ async function planSourceFileImport(
     title,
     kind: normalizeOptionalText(request.kind, 100) ?? (capture ? "webpage" : "document"),
     savedAt: dependencies.clock.now(),
-    ...sourceRecordPaths(title, sourceIdentity),
+    ...sourceRecordPaths(title, sourceIdentity, authorYearFromMetadata(request.metadata)),
     representations: archive ? [primary, archive] : [primary],
     ...authoredImportFields(request),
     ...(capture ? { capture } : {}),

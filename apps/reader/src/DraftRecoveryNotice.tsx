@@ -1,4 +1,6 @@
-import { Trans, useLingui } from "@lingui/react/macro";
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { JSX } from "react";
@@ -8,7 +10,7 @@ export function DraftRecoveryNotice({
 }: {
   readonly workspace: ReaderSourceWorkspaceController;
 }): JSX.Element | null {
-  const { t } = useLingui();
+  useLocale();
   const state = workspace.draftRecovery;
   if (!state) {
     return null;
@@ -21,7 +23,10 @@ export function DraftRecoveryNotice({
         </p>
       ) : null}
       {state.conflict ? (
-        <section className="draft-recovery" aria-label={t({ message: "Literature note conflict" })}>
+        <section
+          className="draft-recovery"
+          aria-label={translate({ message: "Source note conflict" })}
+        >
           <strong>
             <Trans>This note changed in the collection</Trans>
           </strong>

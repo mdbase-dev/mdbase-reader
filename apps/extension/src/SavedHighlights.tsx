@@ -1,9 +1,11 @@
 import { msg } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { memo, useMemo, useState } from "react";
 
-import { problemMessage } from "./capture-model.js";
+import { problemMessage, readerAnnotationUrl } from "./capture-model.js";
 import { displayQuote, highlightComment } from "./highlight-body.js";
+import { TechnicalDetails } from "./TechnicalDetails.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 import type { QuoteOutcome } from "./page-annotations.js";
@@ -16,37 +18,29 @@ export function SavedHighlights({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
-  const { t } = useLingui();
+  useLocale();
   const { revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight } = c;
   const actions = useMemo(
     () => ({ revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight }),
     [revealHighlight, updateHighlightComment, planHighlightDeletion, deleteHighlight],
   );
-  if (!c.source) {
+  const { source } = c;
+  if (!source) {
     return null;
   }
   const highlights = c.annotations.filter((annotation) => annotation.target?.quote);
   const hidden = c.projection ? c.projection.report.total - c.projection.report.shown : 0;
-  // A PDF keeps the list, and its Refresh, for highlights made in Reader meanwhile.
-  if (!highlights.length && !hidden && c.capture?.kind !== "pdf") {
+  // Highlights made in Reader meanwhile, as on a PDF, are read when the panel is shown again.
+  if (!highlights.length && !hidden) {
     return null;
   }
   return (
     <section className="saved-highlights" aria-labelledby="saved-highlights-heading">
       <div className="list-header">
+        {/* The Highlights tab already counts them. */}
         <h2 id="saved-highlights-heading">
-          <Trans>
-            Saved highlights {highlights.length ? <span>{highlights.length}</span> : null}
-          </Trans>
+          <Trans>Saved highlights</Trans>
         </h2>
-        <button
-          type="button"
-          className="text-button"
-          disabled={c.busy || c.refreshing}
-          onClick={() => void c.refreshHighlights()}
-        >
-          {c.refreshing ? t`Updating…` : t`Refresh`}
-        </button>
       </div>
       {hidden ? (
         <p className="hint">
@@ -61,6 +55,7 @@ export function SavedHighlights({
           <HighlightItem
             key={annotation.id}
             annotation={annotation}
+            readerUrl={readerAnnotationUrl(source, annotation)}
             outcome={c.projection?.outcomes.get(annotation.id) ?? null}
             busy={c.busy}
             navigated={c.navigated}
@@ -91,12 +86,15 @@ type HighlightActions = Pick<
 // Memoised: typing in the panel's drafts must not redraw every saved highlight.
 const HighlightItem = memo(function HighlightItem({
   annotation,
+  readerUrl,
   outcome,
   busy,
   navigated,
   actions: c,
 }: {
   readonly annotation: Annotation;
+  /** The source in Reader, opened at this passage. */
+  readonly readerUrl: string;
   readonly outcome: QuoteOutcome | null;
   readonly busy: boolean;
   readonly navigated: boolean;
@@ -175,12 +173,18 @@ const HighlightItem = memo(function HighlightItem({
           >
             <Trans>Delete</Trans>
           </button>
+          <a className="text-button" href={readerUrl} target="_blank" rel="noreferrer">
+            <Trans>Open in Reader</Trans>
+          </a>
         </div>
       ) : null}
       {problem ? (
-        <p className="item-problem" role="alert">
-          {problem}
-        </p>
+        <div className="item-problem" role="alert">
+          <p>
+            <Trans>That didn’t finish. Try again; your highlight is as it was.</Trans>
+          </p>
+          <TechnicalDetails detail={problem} />
+        </div>
       ) : null}
     </li>
   );

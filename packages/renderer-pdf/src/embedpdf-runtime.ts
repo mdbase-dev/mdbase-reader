@@ -1,33 +1,49 @@
 import { AnnotationPlugin } from "@embedpdf/plugin-annotation";
+import { SearchPlugin } from "@embedpdf/plugin-search";
 import { SelectionPlugin } from "@embedpdf/plugin-selection";
 import {
   CapturePlugin,
   DocumentManagerPlugin,
   ScrollPlugin,
   ViewportPlugin,
+  type EmbedPdfContainer,
   type PluginRegistry,
 } from "@embedpdf/react-pdf-viewer";
 import { t } from "@lingui/core/macro";
 
-import { createEmbedPdfAnnotationActivations } from "./embedpdf-annotation-activation.js";
+import {
+  createEmbedPdfAnnotationActivations,
+  observePagePresses,
+  type EmbedPdfAnnotationActivations,
+} from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
+import { createPdfPageNavigation } from "./pdf-page-navigation.js";
+import { createPdfSearch } from "./pdf-search.js";
 import { observePdfSelection, type PdfSelectionAdjustment } from "./pdf-selection-publication.js";
+import { createPdfViewportLocator, type PdfPageRect } from "./pdf-viewport-rect.js";
 
 import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
-import type { Annotation, AnnotationId } from "@mdbase-reader/core";
+import type {
+  Annotation,
+  AnnotationId,
+  SearchTextSegment,
+  SearchDestination,
+} from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
   EventSource,
   TextSelectionDraft,
   Unsubscribe,
+  ViewportRect,
 } from "@mdbase-reader/reading-surface";
 
 export { textSelectionToDraft } from "./pdf-selection-publication.js";
 
 export interface EmbedPdfRuntime {
   currentPageIndex(): number;
-  goToPage(pageIndex: number): void;
+  pageCount?(): Promise<number>;
+  goToPage(pageIndex: number): void | Promise<void>;
   beginAreaSelection(): void;
   cancelAreaSelection(): void;
   onPageChanged(listener: (pageIndex: number) => void): Unsubscribe;
@@ -38,8 +54,17 @@ export interface EmbedPdfRuntime {
   onTextSelected(listener: (selection: TextSelectionDraft) => void): Unsubscribe;
   onSelectionCleared?(listener: () => void): Unsubscribe;
   onAnnotationActivated(listener: (annotationId: AnnotationId) => void): Unsubscribe;
+  /** The reader let go of the selected highlight in the page, as by clicking empty page. */
+  onAnnotationDismissed?(listener: () => void): Unsubscribe;
+  /** Where the highlight activated last sits on screen, when the viewer can say. */
+  activationRect?(): ViewportRect | null;
   clearTextSelection(): void;
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
+  extractSearchSegments?(options?: {
+    readonly signal?: AbortSignal;
+  }): Promise<readonly SearchTextSegment[]>;
+  goToSearchDestination?(destination: SearchDestination): Promise<boolean>;
+  clearSearch?(): void;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
   destroy(): void;
@@ -65,6 +90,8 @@ export function captureEventToAreaSelection(event: CaptureAreaEvent): AreaSelect
 export function createEmbedPdfRuntime(
   registry: PluginRegistry,
   adjustments?: EventSource<PdfSelectionAdjustment>,
+  /** The viewer element, for measuring selections and highlights on screen. */
+  host?: () => EmbedPdfContainer | null,
 ): EmbedPdfRuntime {
   const capturePlugin = registry.getPlugin<CapturePlugin>(CapturePlugin.id);
   const scrollPlugin = registry.getPlugin<ScrollPlugin>(ScrollPlugin.id);
@@ -79,65 +106,62 @@ export function createEmbedPdfRuntime(
   const viewport = registry.getPlugin<ViewportPlugin>(ViewportPlugin.id)?.provides() ?? null;
   const selection = selectionPlugin.provides();
   const annotationCapability = annotationPlugin.provides();
-  const decorations = createPdfDecorationController(annotationCapability);
-  const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability);
+  const locate = host
+    ? createPdfViewportLocator(host, (page, rect) => scroll.getRectPositionForPage(page, rect))
+    : undefined;
+  const annotationActivations = createEmbedPdfAnnotationActivations(annotationCapability, locate);
+  // Subscribed first, so the decorations know of a click before Reader is told of it.
+  const decorations = createPdfDecorationController(annotationCapability, annotationActivations);
   const subscriptions = new Set<Unsubscribe>();
+  subscriptions.add(observePagePresses(host?.(), annotationActivations));
+  const getDocument = (signal?: AbortSignal): Promise<PdfDocumentObject> =>
+    registryPdfDocument(registry, signal);
+  const navigation = createPdfPageNavigation(registry, scroll, getDocument);
+
+  const searchRuntime = createPdfSearch({
+    engine: registry.getEngine(),
+    document: getDocument,
+    search: registry.getPlugin<SearchPlugin>(SearchPlugin.id)?.provides(),
+    scroll,
+  });
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
-    goToPage: (pageIndex) => scroll.scrollToPage({ pageNumber: pageIndex + 1 }),
+    pageCount: async () => (await getDocument()).pageCount,
+    goToPage: navigation.goToPage,
     beginAreaSelection: () => capture.enableMarqueeCapture(),
     cancelAreaSelection: () => capture.disableMarqueeCapture(),
     onPageChanged(listener) {
-      const unsubscribe = scroll.onPageChange((event) =>
-        listener(Math.max(0, event.pageNumber - 1)),
+      return trackSubscription(
+        subscriptions,
+        scroll.onPageChange((event) => listener(Math.max(0, event.pageNumber - 1))),
       );
-      subscriptions.add(unsubscribe);
-      return () => {
-        subscriptions.delete(unsubscribe);
-        unsubscribe();
-      };
     },
     ...(viewport
       ? {
-          onScrolled(listener: (scrollTop: number) => void) {
-            const unsubscribe = viewport.onScrollChange((event) =>
-              listener(event.scrollMetrics.scrollTop),
-            );
-            subscriptions.add(unsubscribe);
-            return () => {
-              subscriptions.delete(unsubscribe);
-              unsubscribe();
-            };
-          },
-          onViewportResized(listener: () => void) {
-            const unsubscribe = viewport.onViewportResize(() => listener());
-            subscriptions.add(unsubscribe);
-            return () => {
-              subscriptions.delete(unsubscribe);
-              unsubscribe();
-            };
-          },
+          onScrolled: (listener: (scrollTop: number) => void) =>
+            trackSubscription(
+              subscriptions,
+              viewport.onScrollChange((event) => listener(event.scrollMetrics.scrollTop)),
+            ),
+          onViewportResized: (listener: () => void) =>
+            trackSubscription(
+              subscriptions,
+              viewport.onViewportResize(() => listener()),
+            ),
         }
       : {}),
     onAreaSelected(listener) {
-      const unsubscribe = capture.onCaptureArea((event) =>
-        listener(captureEventToAreaSelection(event)),
+      return trackSubscription(
+        subscriptions,
+        capture.onCaptureArea((event) => listener(captureEventToAreaSelection(event))),
       );
-      subscriptions.add(unsubscribe);
-      return () => {
-        subscriptions.delete(unsubscribe);
-        unsubscribe();
-      };
     },
-    onTextSelected(listener) {
-      const unsubscribe = observePdfSelection(selection, listener, adjustments);
-      subscriptions.add(unsubscribe);
-      return () => {
-        subscriptions.delete(unsubscribe);
-        unsubscribe();
-      };
-    },
+    onTextSelected: (listener) =>
+      trackSubscription(
+        subscriptions,
+        observePdfSelection(selection, listener, adjustments, locate),
+      ),
     onSelectionCleared(listener) {
       const stopSelection = selection.onSelectionChange((event) => {
         if (event.selection === null) {
@@ -163,18 +187,21 @@ export function createEmbedPdfRuntime(
     onAnnotationActivated(listener) {
       return annotationActivations.subscribe(listener);
     },
+    onAnnotationDismissed(listener) {
+      return annotationActivations.subscribeDismissals(listener);
+    },
+    ...activationRect(annotationActivations, locate),
     clearTextSelection: () => selection.clear(),
     async extractText(options) {
-      const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
-      if (!manager) {
-        throw new Error(t({ message: "EmbedPDF did not initialize its document manager." }));
-      }
-      const document = await activePdfDocument(manager.provides(), options?.signal);
+      const document = await getDocument(options?.signal);
       return extractPdfDocumentText(registry.getEngine(), document, options?.signal);
     },
+    ...searchRuntime,
     setAnnotations: (annotations) => decorations.setAnnotations(annotations),
     setActiveAnnotation: (annotation) => decorations.setActiveAnnotation(annotation),
     destroy() {
+      navigation.destroy();
+      searchRuntime.clearSearch();
       decorations.destroy();
       annotationActivations.destroy();
       for (const unsubscribe of subscriptions) {
@@ -183,6 +210,25 @@ export function createEmbedPdfRuntime(
       subscriptions.clear();
     },
   };
+}
+
+function trackSubscription(subscriptions: Set<Unsubscribe>, stop: Unsubscribe): Unsubscribe {
+  subscriptions.add(stop);
+  return () => {
+    subscriptions.delete(stop);
+    stop();
+  };
+}
+
+function registryPdfDocument(
+  registry: PluginRegistry,
+  signal?: AbortSignal,
+): Promise<PdfDocumentObject> {
+  const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
+  if (!manager) {
+    return Promise.reject(new Error("EmbedPDF did not initialize its document manager."));
+  }
+  return activePdfDocument(manager.provides(), signal);
 }
 
 type DocumentManagerCapability = ReturnType<DocumentManagerPlugin["provides"]>;
@@ -264,4 +310,20 @@ function abortError(): DOMException {
 
 function abortReason(signal?: AbortSignal): Error {
   return signal?.reason instanceof Error ? signal.reason : abortError();
+}
+
+/** Measures the highlight activated last, when the viewer can be measured at all. */
+function activationRect(
+  activations: EmbedPdfAnnotationActivations,
+  locate: ((rects: readonly PdfPageRect[]) => ViewportRect | null) | undefined,
+): Pick<EmbedPdfRuntime, "activationRect"> {
+  if (!locate) {
+    return {};
+  }
+  return {
+    activationRect: () => {
+      const activated = activations.activatedRect();
+      return activated ? locate([activated]) : null;
+    },
+  };
 }

@@ -1,0 +1,21 @@
+{
+  "type": "article-journal",
+  "title": "Data reuse and the open data citation advantage",
+  "author": [
+    {
+      "family": "Piwowar",
+      "given": "Heather A."
+    },
+    {
+      "family": "Vision",
+      "given": "Todd J."
+    }
+  ],
+  "issued": {
+    "date-parts": [[2013, 10, 1]]
+  },
+  "container-title": "PeerJ",
+  "publisher": "PeerJ",
+  "DOI": "10.7717/peerj.175",
+  "URL": "https://peerj.com/articles/175/"
+}

@@ -1,9 +1,8 @@
-import { t } from "@lingui/core/macro";
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect } from "react";
 
 import { readerSourceUrl } from "./capture-model.js";
-import { connectionUnavailableMessage } from "./connection-view.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
 
@@ -14,17 +13,24 @@ export function saveReady(c: ExtensionCaptureController): boolean {
 
 /**
  * Why saving is unavailable, when the reader can do something about it. Busy and navigated
- * states say so elsewhere (the status line and the moved-page notice).
+ * states say so elsewhere (the status line and the moved-page notice), and an unconnected
+ * panel offers no Save at all (see `awaitingConnection`).
  */
 export function saveBlocker(c: ExtensionCaptureController): string | null {
-  if (c.busy || c.navigated) {
+  if (c.busy || c.navigated || c.snapshot.status !== "ready") {
     return null;
   }
-  if (c.snapshot.status !== "ready") {
-    // While mdbase starts or checks the collection there is nothing for the reader to do yet.
-    return c.snapshot.status === "opening" ? null : connectionUnavailableMessage(c.snapshot);
-  }
-  return c.draft.title.trim() ? null : t`Give the source a title under Note to save it.`;
+  return c.draft.title.trim()
+    ? null
+    : translate({ message: "Give the source a title under Literature note to save it." });
+}
+
+/**
+ * Not connected to a collection that can be saved into, and not just starting: the
+ * connection controls hold the one action, so nothing else offers a form or a Save.
+ */
+export function awaitingConnection(c: Pick<ExtensionCaptureController, "snapshot">): boolean {
+  return c.snapshot.status !== "ready" && c.snapshot.status !== "opening";
 }
 
 /**
@@ -68,12 +74,13 @@ export function SaveBar({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [ready, save, selection, source]);
-  if (!c.capture) {
+  if (!c.capture || (!source && awaitingConnection(c))) {
     return null;
   }
   const pdf = c.capture.kind === "pdf";
   if (source) {
-    // A PDF's highlighting happens in Reader, so that is the next step, not an aside.
+    // A PDF's highlighting happens in Reader, so that is the next step, not an aside. A
+    // saved page's link sits in the status line instead.
     return pdf ? (
       <a
         className="primary reader-link save-bar"
@@ -83,17 +90,7 @@ export function SaveBar({
       >
         <Trans>Open in Reader to highlight</Trans>
       </a>
-    ) : (
-      <p className="saved-line">
-        {c.status === "existing"
-          ? t`In this collection`
-          : t({ message: "Saved", context: "Reader save status" })}{" "}
-        ·{" "}
-        <a href={readerSourceUrl(source)} target="_blank" rel="noreferrer">
-          <Trans>Open in Reader</Trans>
-        </a>
-      </p>
-    );
+    ) : null;
   }
   return (
     <div className="save-bar">
@@ -122,13 +119,13 @@ export function modifierKey(): string {
 
 function submitLabel(c: ExtensionCaptureController): string {
   if (c.busy) {
-    return c.status === "saving" || c.progress ? t`Saving…` : t`Please wait…`;
+    return c.status === "saving" || c.progress ? translate`Saving…` : translate`Please wait…`;
   }
   return c.capture?.kind === "pdf"
-    ? t`Save PDF`
+    ? translate`Save PDF`
     : c.postPicker
-      ? t`Choose posts to save`
+      ? translate`Choose posts to save`
       : c.capture?.kind === "html" && c.capture.post
-        ? t`Save post`
-        : t`Save page`;
+        ? translate`Save post`
+        : translate`Save page`;
 }

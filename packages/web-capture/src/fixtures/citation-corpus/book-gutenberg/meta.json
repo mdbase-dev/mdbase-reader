@@ -1,0 +1,12 @@
+{
+  "url": "https://www.gutenberg.org/ebooks/1342",
+  "retrievedAt": "2026-10-23T10:34:19.548594+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://www.gutenberg.org/ebooks/1342 -> https://www.gutenberg.org/ebooks/1342. Captured 2026-10-23T10:34:19.548594+00:00; original 24938 bytes, reduced HTML 1493 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:39.542275+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fwww.gutenberg.org%2Febooks%2F1342. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: Project Gutenberg own About this eBook table identifies Austen, Jane, Title Pride and Prejudice and Release Date Jun 1, 1998. Cite ebook edition 1342, not the original 1813 print publication or its Sep 29 2026 last update. Publisher is Project Gutenberg as explicitly encoded in the Book microdata. The title excludes the appended by Jane Austen in the SEO heading.",
+    "Keep bibliographic Book microdata/RDFa rows and publisher structure; omit authority lifespan qualifiers in expected CSL names. No ISBN is asserted because this expectation concerns the ebook edition rather than a guessed historical print edition.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, title, author, issued, publisher; with recorded remotes: publisher. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

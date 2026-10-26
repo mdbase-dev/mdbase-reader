@@ -8,6 +8,8 @@ import type { QuoteSelector } from "@mdbase-reader/core";
 
 export interface StoredDraftState {
   readonly draft: CaptureDraft;
+  /** The page whose draft has finished restoring, before metadata may upgrade its title. */
+  readonly loadedFor: string | null;
   readonly setDraft: Dispatch<SetStateAction<CaptureDraft>>;
   /** True when unsaved text from an earlier panel was brought back. */
   readonly restored: boolean;
@@ -45,7 +47,16 @@ export function useStoredDraft(
         return;
       }
       if (stored) {
-        setDraft({ ...stored.draft, title: stored.draft.title || capture.pageTitle });
+        const title = stored.draft.titleEdited
+          ? stored.draft.title
+          : stored.draft.title || capture.pageTitle;
+        const automaticTitle = stored.draft.automaticTitle ?? capture.pageTitle;
+        setDraft({
+          ...stored.draft,
+          title,
+          automaticTitle,
+          titleEdited: stored.draft.titleEdited ?? title !== automaticTitle,
+        });
         if (!selection && stored.selection) {
           setSelection(stored.selection, stored.selectionPostId);
         }
@@ -54,6 +65,8 @@ export function useStoredDraft(
         setDraft((current) => ({
           ...(followed ? emptyDraft : current),
           title: (followed ? "" : current.title) || capture.pageTitle,
+          automaticTitle: capture.pageTitle,
+          titleEdited: !followed && Boolean(current.title) && current.title !== capture.pageTitle,
           highlight: Boolean(selection),
           color,
         }));
@@ -82,5 +95,5 @@ export function useStoredDraft(
     return () => clearTimeout(timer);
   }, [draft, loadedFor, page, selection, selectionPostId, tabId]);
 
-  return { draft, setDraft, restored };
+  return { draft, setDraft, restored, loadedFor };
 }

@@ -1,0 +1,220 @@
+{
+  "chromium": "149.0.7827.55",
+  "summary": [
+    {
+      "count": 300,
+      "mountMs": 46.3,
+      "renderMs": 34.1,
+      "typingMs": 32.1,
+      "scrollMs": 50.1,
+      "selectMs": 32,
+      "heapMiB": 17.78,
+      "heapDeltaMiB": 1.33,
+      "mountedCards": 8
+    },
+    {
+      "count": 1000,
+      "mountMs": 85.5,
+      "renderMs": 68.6,
+      "typingMs": 31.4,
+      "scrollMs": 95.8,
+      "selectMs": 36.8,
+      "heapMiB": 18.15,
+      "heapDeltaMiB": 1.35,
+      "mountedCards": 8
+    },
+    {
+      "count": 3000,
+      "mountMs": 63.8,
+      "renderMs": 52.4,
+      "typingMs": 32.2,
+      "scrollMs": 63.2,
+      "selectMs": 35.1,
+      "heapMiB": 19.15,
+      "heapDeltaMiB": 1.37,
+      "mountedCards": 8
+    }
+  ],
+  "samples": [
+    {
+      "count": 300,
+      "run": 0,
+      "mountMs": 574.8000001907349,
+      "renderMs": 50.50000190734863,
+      "typingMs": 32,
+      "scrollMs": 50.10000038146973,
+      "selectMs": 32,
+      "heapMiB": 17.78375244140625,
+      "heapDeltaMiB": 1.3352775573730469,
+      "mountedCards": 8
+    },
+    {
+      "count": 300,
+      "run": 1,
+      "mountMs": 44.90000057220459,
+      "renderMs": 34.099998474121094,
+      "typingMs": 32,
+      "scrollMs": 50.69999980926514,
+      "selectMs": 31.899999618530273,
+      "heapMiB": 17.778209686279297,
+      "heapDeltaMiB": 1.3295402526855469,
+      "mountedCards": 8
+    },
+    {
+      "count": 300,
+      "run": 2,
+      "mountMs": 46.29999923706055,
+      "renderMs": 34.099998474121094,
+      "typingMs": 32.09999942779541,
+      "scrollMs": 50.5,
+      "selectMs": 32,
+      "heapMiB": 17.778377532958984,
+      "heapDeltaMiB": 1.3297042846679688,
+      "mountedCards": 8
+    },
+    {
+      "count": 300,
+      "run": 3,
+      "mountMs": 57.69999980926514,
+      "renderMs": 43.30000305175781,
+      "typingMs": 32.09999942779541,
+      "scrollMs": 47.40000057220459,
+      "selectMs": 32.30000019073486,
+      "heapMiB": 17.78194808959961,
+      "heapDeltaMiB": 1.3333091735839844,
+      "mountedCards": 8
+    },
+    {
+      "count": 300,
+      "run": 4,
+      "mountMs": 44.30000019073486,
+      "renderMs": 32.29999828338623,
+      "typingMs": 32.10000038146973,
+      "scrollMs": 47.30000019073486,
+      "selectMs": 32.19999980926514,
+      "heapMiB": 17.778423309326172,
+      "heapDeltaMiB": 1.3297386169433594,
+      "mountedCards": 8
+    },
+    {
+      "count": 1000,
+      "run": 0,
+      "mountMs": 48.09999942779541,
+      "renderMs": 35.99999713897705,
+      "typingMs": 32.10000038146973,
+      "scrollMs": 54.30000019073486,
+      "selectMs": 32.20000076293945,
+      "heapMiB": 18.15100860595703,
+      "heapDeltaMiB": 1.3488349914550781,
+      "mountedCards": 8
+    },
+    {
+      "count": 1000,
+      "run": 1,
+      "mountMs": 55.19999980926514,
+      "renderMs": 42.49999713897705,
+      "typingMs": 32.19999980926514,
+      "scrollMs": 67.59999942779541,
+      "selectMs": 35.19999980926514,
+      "heapMiB": 18.150970458984375,
+      "heapDeltaMiB": 1.3488082885742188,
+      "mountedCards": 8
+    },
+    {
+      "count": 1000,
+      "run": 2,
+      "mountMs": 96.19999980926514,
+      "renderMs": 81.29999923706055,
+      "typingMs": 31.399999618530273,
+      "scrollMs": 95.80000019073486,
+      "selectMs": 36.80000019073486,
+      "heapMiB": 18.150596618652344,
+      "heapDeltaMiB": 1.3484573364257812,
+      "mountedCards": 8
+    },
+    {
+      "count": 1000,
+      "run": 3,
+      "mountMs": 85.5,
+      "renderMs": 68.59999942779541,
+      "typingMs": 25.600000381469727,
+      "scrollMs": 115,
+      "selectMs": 62,
+      "heapMiB": 18.158218383789062,
+      "heapDeltaMiB": 1.3560447692871094,
+      "mountedCards": 8
+    },
+    {
+      "count": 1000,
+      "run": 4,
+      "mountMs": 116.80000019073486,
+      "renderMs": 78.20000171661377,
+      "typingMs": 28.199999809265137,
+      "scrollMs": 119.40000057220459,
+      "selectMs": 62.90000057220459,
+      "heapMiB": 18.15728759765625,
+      "heapDeltaMiB": 1.3551139831542969,
+      "mountedCards": 8
+    },
+    {
+      "count": 3000,
+      "run": 0,
+      "mountMs": 127.20000076293945,
+      "renderMs": 92.89999675750732,
+      "typingMs": 38.5,
+      "scrollMs": 67.10000038146973,
+      "selectMs": 35.09999942779541,
+      "heapMiB": 19.15496063232422,
+      "heapDeltaMiB": 1.3671112060546875,
+      "mountedCards": 8
+    },
+    {
+      "count": 3000,
+      "run": 1,
+      "mountMs": 61.80000019073486,
+      "renderMs": 48.79999828338623,
+      "typingMs": 32.19999980926514,
+      "scrollMs": 50.80000019073486,
+      "selectMs": 34.79999923706055,
+      "heapMiB": 19.145172119140625,
+      "heapDeltaMiB": 1.360107421875,
+      "mountedCards": 8
+    },
+    {
+      "count": 3000,
+      "run": 2,
+      "mountMs": 63.80000019073486,
+      "renderMs": 52.40000057220459,
+      "typingMs": 32,
+      "scrollMs": 52.30000019073486,
+      "selectMs": 32.39999961853027,
+      "heapMiB": 19.152904510498047,
+      "heapDeltaMiB": 1.3678398132324219,
+      "mountedCards": 8
+    },
+    {
+      "count": 3000,
+      "run": 3,
+      "mountMs": 88.89999961853027,
+      "renderMs": 71.50000190734863,
+      "typingMs": 32.20000076293945,
+      "scrollMs": 63.19999980926514,
+      "selectMs": 36.80000019073486,
+      "heapMiB": 19.161563873291016,
+      "heapDeltaMiB": 1.3766746520996094,
+      "mountedCards": 8
+    },
+    {
+      "count": 3000,
+      "run": 4,
+      "mountMs": 62.90000057220459,
+      "renderMs": 48.80000114440918,
+      "typingMs": 31.800000190734863,
+      "scrollMs": 98.30000019073486,
+      "selectMs": 35.5,
+      "heapMiB": 19.150035858154297,
+      "heapDeltaMiB": 1.364959716796875,
+      "mountedCards": 8
+    }
+  ]
+}

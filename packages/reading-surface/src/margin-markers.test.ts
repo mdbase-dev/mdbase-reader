@@ -1,40 +1,43 @@
 // @vitest-environment happy-dom
-import { i18n } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
 import { annotationId } from "@mdbase-reader/core";
-import { afterEach, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 
 import { MarginMarkers } from "./margin-markers.js";
 
-let markers: MarginMarkers | undefined;
-afterEach(() => {
-  markers?.destroy();
-  i18n.activate("en");
-  document.body.replaceChildren();
-});
-
-it("updates existing marker tooltips on activation without translating document text", () => {
-  const passage = document.createElement("p");
-  passage.textContent = "User-authored passage";
-  document.body.append(passage);
-  const range = document.createRange();
-  range.selectNodeContents(passage);
-  vi.spyOn(range, "getClientRects").mockReturnValue([
-    new DOMRect(10, 10, 100, 20),
-  ] as unknown as DOMRectList);
-  markers = new MarginMarkers(document, () => undefined);
-  markers.set([{ id: annotationId("a"), range, hasNote: true }]);
-  const marker = (): Element | null => document.querySelector("[data-annotation]");
-  expect(marker()?.getAttribute("title")).toBe("Highlight with a note");
-  const descriptor = msg({
-    message: "Highlight with a note",
-    context: "Reading margin marker tooltip",
-  });
-  if (!descriptor.id) {
-    throw new Error("Expected generated message ID");
-  }
-  i18n.load("fr", { [descriptor.id]: "Surlignage avec une note" });
-  i18n.activate("fr");
-  expect(marker()?.getAttribute("title")).toBe("Surlignage avec une note");
-  expect(passage.textContent).toBe("User-authored passage");
+it("finds the nearest resolved passage using cached layout coordinates, including after reflow", () => {
+  document.body.innerHTML = "<p>First passage.</p><p>Second passage.</p>";
+  const markers = new MarginMarkers(document, vi.fn());
+  const layer = document.querySelector<HTMLElement>('[data-mdbase-reader="margin"]')!;
+  let scroll = 0;
+  vi.spyOn(layer, "getBoundingClientRect").mockImplementation(
+    () => ({ top: -scroll, left: 0 }) as DOMRect,
+  );
+  const range = (index: number, y: () => number): Range => {
+    const value = document.createRange();
+    value.selectNodeContents(document.querySelectorAll("p")[index]!);
+    vi.spyOn(value, "getClientRects").mockImplementation(
+      () =>
+        [
+          { top: y() - scroll, bottom: y() - scroll + 20, left: 20, height: 20 } as DOMRect,
+        ] as unknown as DOMRectList,
+    );
+    return value;
+  };
+  let secondTop = 1000;
+  const first = range(0, () => 20);
+  const second = range(1, () => secondTop);
+  markers.set([
+    { id: annotationId("first"), range: first, hasNote: false },
+    { id: annotationId("second"), range: second, hasNote: true },
+  ]);
+  const reads = vi.mocked(second.getClientRects).mock.calls.length;
+  expect(markers.nearest()).toBe("first");
+  scroll = 900;
+  expect(markers.nearest()).toBe("second");
+  expect(second.getClientRects).toHaveBeenCalledTimes(reads);
+  secondTop = 2000;
+  markers.layout();
+  expect(markers.nearest()).toBe("first");
+  markers.destroy();
+  expect(markers.nearest()).toBeNull();
 });

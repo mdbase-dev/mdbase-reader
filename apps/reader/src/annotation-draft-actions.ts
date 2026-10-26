@@ -1,4 +1,7 @@
+import { t as translate } from "@lingui/core/macro";
+
 import { saveSelection } from "./annotation-selection.js";
+import { requestConfirmation } from "./confirmation.js";
 
 import type { AnnotationLocalDraft } from "./annotation-drafts.js";
 import type { Annotation, AnnotationCreationRequest, Source } from "@mdbase-reader/core";
@@ -28,10 +31,14 @@ export function annotationEditorKeys(
   }
 }
 
-export function confirmAnnotationDiscard(message: string): boolean {
-  // Native confirmation works even when focus is inside a sandboxed reading frame.
-  // eslint-disable-next-line no-alert
-  return globalThis.confirm(message);
+export function confirmAnnotationDiscard(message: string): Promise<boolean> {
+  return requestConfirmation({
+    title: translate({ message: "Discard draft?" }),
+    message,
+    confirmLabel: translate({ message: "Discard draft" }),
+    cancelLabel: translate({ message: "Keep editing" }),
+    danger: true,
+  });
 }
 export async function saveAnnotationDraftToCollection(
   clear: () => void,

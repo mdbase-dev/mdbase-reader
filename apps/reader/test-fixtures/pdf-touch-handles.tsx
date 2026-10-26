@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 // Isolated, synthetic, dev-only fixture. No Connect account or library data involved.
 import {
   annotationId,
@@ -63,7 +65,7 @@ function Fixture(): React.JSX.Element {
   const surface = useRef<ReadingSurface | null>(null);
   const [draft, setDraft] = useState<TextSelectionDraft | null>(null);
   const [saved, setSaved] = useState("");
-  const [status, setStatus] = useState("Loading PDF");
+  const [status, setStatus] = useState(translate({ message: "Loading PDF" }));
   const ready = useCallback((value: ReadingSurface): void => {
     surface.current = value;
     value.capabilities.textSelection?.selections.subscribe(setDraft);
@@ -104,10 +106,15 @@ function Fixture(): React.JSX.Element {
           flexShrink: 0,
         }}
       >
-        <strong>PDF touch-handle prototype</strong> <span data-testid="status">{status}</span>
-        <div>Hold a word, release, then drag either blue handle.</div>
+        <strong>
+          <Trans>PDF touch-handle prototype</Trans>
+        </strong>{" "}
+        <span data-testid="status">{status}</span>
+        <div>
+          <Trans>Hold a word, release, then drag either blue handle.</Trans>
+        </div>
         <button type="button" disabled={!draft} onClick={save}>
-          Save highlight
+          <Trans>Save highlight</Trans>
         </button>
         <output data-testid="quote" style={{ display: "block", maxHeight: 40, overflow: "auto" }}>
           {draft?.target.quote.exact ?? ""}
@@ -120,7 +127,7 @@ function Fixture(): React.JSX.Element {
         <PdfViewerSurface
           document={document}
           onSurfaceReady={ready}
-          onDocumentReady={() => setStatus("Ready")}
+          onDocumentReady={() => setStatus(translate({ message: "Ready" }))}
           onDocumentError={setStatus}
         />
       </div>

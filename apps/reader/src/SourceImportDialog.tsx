@@ -1,7 +1,10 @@
 import { i18n } from "@lingui/core";
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useEffect, useRef, useState, type JSX } from "react";
+import { useRef, useState, type JSX } from "react";
+
+import { ModalDialog } from "./ModalDialog.js";
 
 import type { FileImportSuggestion } from "./file-import-suggestion.js";
 import type { SourceImportFlow } from "./use-source-import.js";
@@ -32,88 +35,86 @@ export function SourceImportDialog({
   const isFinalizing = importing && progress?.phase === "creating";
   const submit = (): void => onImport(title, useCitation && Boolean(suggestion?.citation));
 
-  useEffect(() => {
-    titleInput.current?.focus();
-    const close = (event: KeyboardEvent): void => {
-      if (event.key === "Escape" && !isFinalizing) {
-        onCancel();
-      }
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [isFinalizing, onCancel]);
-
   return (
-    <div className="import-backdrop" role="presentation">
-      <section
-        className="import-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reader-import-title"
+    <ModalDialog
+      className="import-dialog"
+      labelledBy="reader-import-title"
+      initialFocus={titleInput}
+      onDismiss={() => {
+        if (!isFinalizing) {
+          onCancel();
+        }
+      }}
+    >
+      <div className="import-dialog-heading">
+        <h2 id="reader-import-title">
+          <Trans>Add source</Trans>
+        </h2>
+        <p>
+          <Trans>The original file stays intact in your collection.</Trans>
+        </p>
+      </div>
+      <div className="import-file-summary">
+        <span className="import-format">{formatLabel(file)}</span>
+        <span>
+          <strong>{file.name}</strong>
+          <small>{formatBytes(file.size)}</small>
+        </span>
+      </div>
+      <label
+        className="import-title-field"
+        htmlFor="reader-import-source-title"
+        aria-label={t`Title`}
       >
-        <div className="import-dialog-heading">
-          <h2 id="reader-import-title">
-            <Trans>Add source</Trans>
-          </h2>
-          <p>
-            <Trans>The original file stays intact in your collection.</Trans>
-          </p>
-        </div>
-        <div className="import-file-summary">
-          <span className="import-format">{formatLabel(file)}</span>
-          <span>
-            <strong>{file.name}</strong>
-            <small>{formatBytes(file.size)}</small>
-          </span>
-        </div>
-        <label className="import-title-field">
-          <span>{t({ message: "Title", context: "SourceImportDialog interface" })}</span>
-          <input
-            className="mdbase-field"
-            ref={titleInput}
-            value={title}
-            disabled={importing}
-            onChange={(event) => setTypedTitle(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && title.trim()) {
-                submit();
-              }
-            }}
-          />
-        </label>
-        <FoundCitation
-          suggestion={suggestion}
-          checked={useCitation}
+        <span>
+          <Trans>Title</Trans>
+        </span>
+        <input
+          className="mdbase-field"
+          ref={titleInput}
+          id="reader-import-source-title"
+          value={title}
           disabled={importing}
-          onChange={setUseCitation}
+          onChange={(event) => setTypedTitle(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && title.trim()) {
+              submit();
+            }
+          }}
         />
-        {error ? (
-          <p className="import-error" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {importing ? <ImportProgress progress={progress} /> : null}
-        <div className="import-dialog-actions">
-          <button
-            className="connection-secondary"
-            type="button"
-            onClick={onCancel}
-            disabled={isFinalizing}
-          >
-            {isFinalizing
-              ? t({ message: "Finishing…", context: "SourceImportDialog interface" })
-              : importing
-                ? t({ message: "Stop import", context: "SourceImportDialog interface" })
-                : t({ message: "Cancel", context: "SourceImportDialog interface" })}
-          </button>
-          <ReaderButton disabled={importing || !title.trim()} onClick={submit}>
-            {importing
-              ? t({ message: "Importing…", context: "SourceImportDialog interface" })
-              : t({ message: "Add source", context: "SourceImportDialog interface" })}
-          </ReaderButton>
-        </div>
-      </section>
-    </div>
+      </label>
+      <FoundCitation
+        suggestion={suggestion}
+        checked={useCitation}
+        disabled={importing}
+        onChange={setUseCitation}
+      />
+      {error ? (
+        <p className="import-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+      {importing ? <ImportProgress progress={progress} /> : null}
+      <div className="import-dialog-actions">
+        <button
+          className="connection-secondary"
+          type="button"
+          onClick={onCancel}
+          disabled={isFinalizing}
+        >
+          {isFinalizing
+            ? translate({ message: "Finishing adding…" })
+            : importing
+              ? translate({ message: "Stop adding" })
+              : t({ message: "Cancel", context: "SourceImportDialog interface" })}
+        </button>
+        <ReaderButton disabled={importing || !title.trim()} onClick={submit}>
+          {importing
+            ? translate({ message: "Adding…" })
+            : t({ message: "Add source", context: "SourceImportDialog interface" })}
+        </ReaderButton>
+      </div>
+    </ModalDialog>
   );
 }
 
@@ -206,7 +207,7 @@ function ImportProgress({
     progress?.phase === "uploading"
       ? t`Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
       : progress?.phase === "recovering"
-        ? t`Checking files from the previous import`
+        ? translate({ message: "Checking previously added files" })
         : progress?.phase === "creating"
           ? t`Creating source record`
           : t`Checking file and library`;

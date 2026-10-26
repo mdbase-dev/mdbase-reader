@@ -1,0 +1,10 @@
+{
+  "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0000308",
+  "retrievedAt": "2026-10-23T06:15:11.526665+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0000308.",
+    "Date independently confirmed by the visible publication record and DOI/Citoid: citation_date uses a month name (Mar 21, 2007), which the current ISO-only parser misses.",
+    "Baseline extractScholarlyMetadata at d0c7061: 7/8 expected fields match; wrong or missing fields: issued. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

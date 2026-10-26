@@ -1,5 +1,41 @@
 import { cslName, type CslName } from "./csl-values.js";
 
+const maxValueDepth = 32;
+const maxValueWork = 4_096;
+const maxArrayValues = 128;
+
+interface ValueBudget {
+  remaining: number;
+}
+
+/** Bound nested arrays as well as graph enumeration; references themselves stay one-hop. */
+export function resolveJsonLdReferences(
+  value: unknown,
+  byId: ReadonlyMap<string, Readonly<Record<string, unknown>>>,
+  budget: ValueBudget = { remaining: maxValueWork },
+  depth = 0,
+): unknown {
+  if (depth > maxValueDepth || --budget.remaining < 0) {
+    return undefined;
+  }
+  if (Array.isArray(value)) {
+    const resolved: unknown[] = [];
+    for (const item of value.slice(0, maxArrayValues)) {
+      if (budget.remaining <= 0) {
+        break;
+      }
+      const candidate = resolveJsonLdReferences(item, byId, budget, depth + 1);
+      if (candidate !== undefined) {
+        resolved.push(candidate);
+      }
+    }
+    return resolved;
+  }
+  return isRecord(value) && typeof value["@id"] === "string" && Object.keys(value).length === 1
+    ? (byId.get(value["@id"]) ?? value)
+    : value;
+}
+
 export function jsonLdNode(
   document: Document,
   accepts: (type: string) => boolean,
@@ -12,9 +48,7 @@ export function jsonLdNode(
       continue;
     }
     const nodes = jsonLdNodes(parsed);
-    const found = nodes.find((node) =>
-      arrayValue(node["@type"]).some((type) => typeof type === "string" && accepts(type)),
-    );
+    const found = nodes.find((node) => schemaTypes(node).some(accepts));
     if (found) {
       return withReferencesResolved(found, nodes);
     }
@@ -33,66 +67,87 @@ function withReferencesResolved(
       return typeof id === "string" ? [[id, candidate] as const] : [];
     }),
   );
-  const resolved = (value: unknown): unknown =>
-    Array.isArray(value)
-      ? value.map(resolved)
-      : isRecord(value) && typeof value["@id"] === "string" && Object.keys(value).length === 1
-        ? (byId.get(value["@id"]) ?? value)
-        : value;
-  return { ...node, author: resolved(node["author"]), publisher: resolved(node["publisher"]) };
+  return {
+    ...node,
+    author: resolveJsonLdReferences(node["author"], byId),
+    publisher: resolveJsonLdReferences(node["publisher"], byId),
+  };
 }
 
-function jsonLdNodes(value: unknown, depth = 0): Readonly<Record<string, unknown>>[] {
-  if (depth > 4) {
+function jsonLdNodes(
+  value: unknown,
+  depth = 0,
+  budget: ValueBudget = { remaining: maxValueWork },
+): Readonly<Record<string, unknown>>[] {
+  if (depth > 4 || --budget.remaining < 0) {
     return [];
   }
   if (Array.isArray(value)) {
-    return value.flatMap((item) => jsonLdNodes(item, depth + 1));
+    const nodes: Readonly<Record<string, unknown>>[] = [];
+    for (const item of value) {
+      if (budget.remaining <= 0) {
+        break;
+      }
+      nodes.push(...jsonLdNodes(item, depth + 1, budget));
+    }
+    return nodes;
   }
   if (!isRecord(value)) {
     return [];
   }
-  return [value, ...jsonLdNodes(value["@graph"], depth + 1)];
+  return [value, ...jsonLdNodes(value["@graph"], depth + 1, budget)];
 }
 
 /** People become structured names; organisations and bylines such as "BBC News" stay whole. */
 export function jsonLdNames(value: unknown): CslName[] {
-  return arrayValue(value).flatMap((author): CslName[] => {
-    if (typeof author === "string") {
-      const name = cslName(author);
-      return name ? [name] : [];
-    }
-    const name = nameOf(author);
-    if (!name) {
-      return [];
-    }
-    const organisation =
-      isRecord(author) &&
-      arrayValue(author["@type"]).some(
-        (type) => type === "Organization" || type === "NewsMediaOrganization",
-      );
-    if (organisation) {
-      return [{ literal: name }];
-    }
-    const parsed = cslName(name);
-    return parsed ? [parsed] : [];
-  });
+  return arrayValue(value)
+    .slice(0, maxArrayValues)
+    .flatMap((author): CslName[] => {
+      if (typeof author === "string") {
+        const name = cslName(author);
+        return name ? [name] : [];
+      }
+      const name = nameOf(author);
+      if (!name) {
+        return [];
+      }
+      const organisation =
+        isRecord(author) &&
+        schemaTypes(author).some(
+          (type) => type === "Organization" || type === "NewsMediaOrganization",
+        );
+      if (organisation) {
+        return [{ literal: name }];
+      }
+      const parsed = cslName(name);
+      return parsed ? [parsed] : [];
+    });
 }
 
 export function nameOf(value: unknown): string | undefined {
-  const node = Array.isArray(value) ? (value as unknown[])[0] : value;
-  if (typeof node === "string") {
-    return node;
+  // Only one path is followed, so the depth cap is also a total work budget (and handles cycles).
+  let node = value;
+  for (let depth = 0; depth <= maxValueDepth; depth++) {
+    if (Array.isArray(node)) {
+      node = (node as unknown[])[0];
+      continue;
+    }
+    if (typeof node === "string") {
+      return node;
+    }
+    if (!isRecord(node)) {
+      return undefined;
+    }
+    const personal = [stringValue(node["givenName"]), stringValue(node["familyName"])].filter(
+      Boolean,
+    );
+    const name = stringValue(node["name"]) ?? (personal.length ? personal.join(" ") : undefined);
+    if (name) {
+      return name;
+    }
+    node = node["isPartOf"];
   }
-  if (!isRecord(node)) {
-    return undefined;
-  }
-  const personal = [stringValue(node["givenName"]), stringValue(node["familyName"])].filter(
-    Boolean,
-  );
-  return (
-    stringValue(node["name"]) ?? (personal.length ? personal.join(" ") : nameOf(node["isPartOf"]))
-  );
+  return undefined;
 }
 
 export function stringValue(value: unknown): string | undefined {
@@ -100,8 +155,17 @@ export function stringValue(value: unknown): string | undefined {
   return typeof candidate === "string" && candidate.trim() ? candidate.trim() : undefined;
 }
 
+/** Accept bare schema.org terms and their full HTTP(S) IRIs, never another vocabulary. */
+export function schemaTypes(node: Readonly<Record<string, unknown>>): string[] {
+  return arrayValue(node["@type"]).flatMap((type) =>
+    typeof type === "string"
+      ? [type.replace(/^https?:\/\/schema\.org\/([A-Za-z][A-Za-z0-9]*)$/u, "$1")]
+      : [],
+  );
+}
+
 export function arrayValue(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : value === undefined ? [] : [value];
+  return Array.isArray(value) ? value.slice(0, maxArrayValues) : value === undefined ? [] : [value];
 }
 
 export function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

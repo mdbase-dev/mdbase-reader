@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 
 import { annotationBodyContent } from "./annotation-body-content.js";
 import { annotationKindLabel } from "./annotation-kind.js";
+import { annotationLocationLabel } from "./passage-labels.js";
 
 import type { Annotation } from "@mdbase-reader/core";
 import type { WikiLinkCandidate } from "@mdbase-reader/markdown-editor";
@@ -14,11 +15,11 @@ export function annotationWikiCandidate(annotation: Annotation): WikiLinkCandida
     label:
       label.length > 0
         ? label
-        : (annotation.locator?.label ?? t({ message: "Untitled annotation" })),
+        : (annotationLocationLabel(annotation) ?? t({ message: "Untitled annotation" })),
     path: annotationWikiPath(annotation),
     kind: annotationKindLabel(annotation.annotationType).toLocaleLowerCase(),
     detail:
-      annotation.locator?.label ??
+      annotationLocationLabel(annotation) ??
       t({ message: "Whole source", context: "annotation wiki candidates" }),
     ...(quote ? { quote } : {}),
     ...(note ? { note } : {}),

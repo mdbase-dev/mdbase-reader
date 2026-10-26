@@ -1,0 +1,11 @@
+{
+  "url": "https://en.wikipedia.org/wiki/Australia",
+  "retrievedAt": "2026-10-23T06:14:09.511848+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://en.wikipedia.org/wiki/Australia.",
+    "Encyclopedia entry, not a generic Article. The Wikidata short description \"country\" is not the title. The footer/dateModified and Citoid agree on the revision date; datePublished is page creation, not this edition. Use the recorded oldid URL supplied by Citoid. No individually credited author is asserted.",
+    "Structured-metadata verification: the saved standard MediaWiki revision footer and Article dateModified both identify 20 October 2026; datePublished identifies initial creation in 2001. Retain the expected revision date, encyclopedia type and Citoid's recorded oldid URL. A generic wiki engine is not an encyclopedia declaration, and the saved HTML has no oldid/permalink evidence, so page-only type and URL remain unresolved without guessing.",
+    "Baseline extractScholarlyMetadata at d0c7061: 1/6 expected fields match; wrong or missing fields: type, title, issued, container-title, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

@@ -82,7 +82,7 @@ export function ImportDestination({
                     onError(message);
                   }
                 })
-                .catch(() => onError("Collection setup failed."));
+                .catch(() => onError(translate({ message: "Collection setup failed." })));
             }}
           >
             <Trans>Apply Reader collection setup</Trans>
@@ -102,7 +102,7 @@ export function ImportDestination({
                   onError(message);
                 }
               })
-              .catch(() => onError("Collection authorization failed."));
+              .catch(() => onError(translate({ message: "Collection authorization failed." })));
           }}
         >
           <Trans>Review collection access</Trans>

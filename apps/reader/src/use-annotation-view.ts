@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { t as translate } from "@lingui/core/macro";
 import { useEffect, useMemo, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -76,6 +76,8 @@ export function useAnnotationViewExecution(
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
+          // eslint-disable-next-line no-console
+          console.warn("Annotation view fell back to Reader filtering", reason);
           setResult({
             view,
             gateway,
@@ -83,7 +85,10 @@ export function useAnnotationViewExecution(
             execution: {
               paths: null,
               ready: true,
-              problem: annotationViewProblem(reason),
+              problem: translate({
+                message:
+                  "This view couldn’t be applied by mdbase, so Reader is filtering here instead.",
+              }),
             },
           });
         }
@@ -96,11 +101,6 @@ export function useAnnotationViewExecution(
   return result?.view === view && result.gateway === gateway && result.revision === revision
     ? result.execution
     : { paths: null, problem: null, ready: false };
-}
-
-function annotationViewProblem(reason: unknown): string {
-  const detail = readerErrorMessage(reason, t`mdbase could not run this view.`);
-  return t`${detail} Reader is applying its filters itself.`;
 }
 
 export interface SourceAnnotationsViewAction {
@@ -129,12 +129,14 @@ export function useSourceAnnotationsView(
         .then(({ path, created }) =>
           setMessage(
             created
-              ? t`Added ${path}. Run it with a source as its context in any mdbase tool.`
-              : t`Your collection already has it: ${path}.`,
+              ? translate`Added ${path}. Run it with a source as its context in any mdbase tool.`
+              : translate`Your collection already has it: ${path}.`,
           ),
         )
         .catch((reason: unknown) =>
-          setMessage(readerErrorMessage(reason, t({ message: "Reader could not add the view." }))),
+          setMessage(
+            readerErrorMessage(reason, translate({ message: "Reader could not add the view." })),
+          ),
         )
         .finally(() => setBusy(false));
     },

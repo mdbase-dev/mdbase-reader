@@ -1,57 +1,92 @@
-import { collectionId, sourceId } from "@mdbase-reader/core";
+import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
+import { collectionId, DomainError, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectSourceRepository } from "./source-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage, RecordDocument, UpdateInput } from "@mdbase-dev/connect";
+import type { Mock } from "vitest";
 
-const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
+const path = "sources/crime.md";
+const citation = { id: "dostoevsky2002", type: "book", title: "Crime and Punishment" };
+const provenance = { title: { value: citation.title, source: "page:html" } };
+const input = {
+  collectionId: collectionId("reading"),
+  sourceId: sourceId("src_01"),
+  citation,
 };
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
   return { ok: true, value, diagnostics: [] };
 }
 
-describe("Connect source citation metadata", () => {
-  it("persists validated CSL metadata with the source revision", async () => {
-    const path = "sources/crime.md";
-    const citation = { id: "dostoevsky2002", type: "book", title: "Crime and Punishment" };
-    const queryPages = vi.fn(() =>
-      singleQueryPage({
-        path,
-        effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
-        types: ["reader-source"],
-        file: {},
-      }),
-    );
-    const update = vi.fn(() =>
-      Promise.resolve(
-        success<RecordDocument>({
-          path,
-          revision: "rev-2",
-          types: ["reader-source"],
-          frontmatter: { id: "src_01", title: "Crime and Punishment", csl: citation },
-          effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment", csl: citation },
-          body: "Notes",
-          file: {},
-        }),
-      ),
-    );
-    const repository = new ConnectSourceRepository({
-      ...legacyAuthorityFeatures,
-      queryPages,
-      update,
-    } as unknown as ReaderConnectClient);
+function fixture(): {
+  repository: ConnectSourceRepository;
+  update: Mock<ReaderConnectClient["update"]>;
+  read: Mock<ReaderConnectClient["read"]>;
+  setCurrent: (record: RecordDocument) => void;
+} {
+  let current = document(
+    {
+      id: "src_01",
+      title: "Crime and Punishment",
+      csl: citation,
+      "csl-provenance": provenance,
+    },
+    "rev-1",
+  );
+  const queryPages = vi.fn(() =>
+    singleQueryPage({
+      path,
+      effectiveFrontmatter: current.effectiveFrontmatter,
+      types: ["reader-source"],
+      file: {},
+    }),
+  );
+  const update = vi.fn((request: UpdateInput) => {
+    const frontmatter = { ...current.frontmatter, ...request.patch };
+    for (const [key, value] of Object.entries(request.patch ?? {})) {
+      if (value === null) {
+        Reflect.deleteProperty(frontmatter, key);
+      }
+    }
+    current = document(frontmatter);
+    return Promise.resolve(success(current));
+  });
+  const read = vi.fn(() => Promise.resolve(success(current)));
+  const repository = new ConnectSourceRepository({
+    supportsAuthorityFeature: vi.fn(() => Promise.resolve(success(false))),
+    queryPages,
+    update,
+    read,
+  } as unknown as ReaderConnectClient);
+  return {
+    repository,
+    update,
+    read,
+    setCurrent: (record) => {
+      current = record;
+    },
+  };
+}
 
-    const updated = await repository.updateCitation({
-      collectionId: collectionId("reading"),
-      sourceId: sourceId("src_01"),
-      citation,
-    });
+function document(frontmatter: Record<string, unknown>, revision = "rev-2"): RecordDocument {
+  return {
+    path,
+    revision,
+    types: ["reader-source"],
+    frontmatter,
+    effectiveFrontmatter: frontmatter,
+    body: "Notes",
+    file: {},
+  };
+}
+
+describe("Connect source citation metadata", () => {
+  it("persists validated CSL without touching omitted provenance", async () => {
+    const { repository, update } = fixture();
+    const updated = await repository.updateCitation(input);
 
     expect(update).toHaveBeenCalledWith({
       path,
@@ -59,7 +94,345 @@ describe("Connect source citation metadata", () => {
       includeDocument: true,
     });
     expect(updated.citation).toEqual(citation);
+    expect(updated.cslProvenance).toEqual(provenance);
     expect(updated.recordRevision).toBe("rev-2");
+  });
+
+  it("writes CSL and provenance in one patch", async () => {
+    const { repository, update } = fixture();
+    const nextProvenance = { title: { value: citation.title, source: "registry:doi.org" } };
+    const updated = await repository.updateCitation({ ...input, provenance: nextProvenance });
+
+    expect(update).toHaveBeenCalledExactlyOnceWith({
+      path,
+      patch: { csl: citation, "csl-provenance": nextProvenance },
+      includeDocument: true,
+    });
+    expect(updated.citation).toEqual(citation);
+    expect(updated.cslProvenance).toEqual(nextProvenance);
+  });
+
+  it("removes the sibling key when provenance is explicitly empty", async () => {
+    const { repository, update } = fixture();
+    const updated = await repository.updateCitation({ ...input, provenance: {} });
+
+    expect(update).toHaveBeenCalledExactlyOnceWith({
+      path,
+      patch: { csl: citation, "csl-provenance": null },
+      includeDocument: true,
+    });
+    expect(updated.frontmatter).not.toHaveProperty("csl-provenance");
+    expect(updated.cslProvenance).toBeUndefined();
+    expect(updated.citation).toEqual(citation);
+  });
+});
+
+describe("Connect citation compare-and-save", () => {
+  it.each([undefined, null, { broken: true }])(
+    "can explicitly replace a removed or invalid baseline: %j",
+    async (expectedCitation) => {
+      const { repository, read, update, setCurrent } = fixture();
+      setCurrent(document({ id: "src_01", title: "Crime", csl: expectedCitation }, "rev-9"));
+      await repository.updateCitation({ ...input, expectedCitation });
+      expect(read).toHaveBeenCalledExactlyOnceWith({ path, includeDocument: true });
+      expect(update).toHaveBeenCalledWith(expect.objectContaining({ ifRevision: "rev-9" }));
+    },
+  );
+
+  it("does not confuse an expected absent citation with an unchecked write", async () => {
+    const { repository, update } = fixture();
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: undefined }),
+    ).rejects.toMatchObject({ code: "citation-changed-elsewhere" });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("compares CSL structurally and preconditions the write on the fresh revision", async () => {
+    const { repository, read, update, setCurrent } = fixture();
+    const author = [{ family: "Dostoevsky", given: "Fyodor" }];
+    setCurrent(document({ id: "src_01", title: "Crime", csl: { ...citation, author } }, "rev-7"));
+    const expectedCitation = {
+      author: [{ given: "Fyodor", family: "Dostoevsky" }],
+      title: citation.title,
+      type: citation.type,
+      id: citation.id,
+    };
+
+    const updated = await repository.updateCitation({
+      ...input,
+      expectedCitation,
+      provenance,
+    });
+
+    expect(read).toHaveBeenCalledExactlyOnceWith({ path, includeDocument: true });
+    expect(update).toHaveBeenCalledExactlyOnceWith({
+      path,
+      ifRevision: "rev-7",
+      patch: { csl: citation, "csl-provenance": provenance },
+      includeDocument: true,
+    });
+    expect(updated.citation).toEqual(citation);
+  });
+
+  it.each([{ ...citation, title: "Outside edit" }, { broken: true }, null, undefined])(
+    "refuses to overwrite a changed or removed citation: %j",
+    async (currentCitation) => {
+      const { repository, update, setCurrent } = fixture();
+      setCurrent(document({ id: "src_01", title: "Crime", csl: currentCitation }));
+      const saved = repository.updateCitation({ ...input, expectedCitation: citation });
+
+      await expect(saved).rejects.toBeInstanceOf(DomainError);
+      await expect(saved).rejects.toMatchObject({
+        code: "citation-changed-elsewhere",
+        currentCitation,
+      });
+      expect(update).not.toHaveBeenCalled();
+    },
+  );
+
+  it("reports current provenance leniently with an outside citation edit", async () => {
+    const { repository, update, setCurrent } = fixture();
+    const currentCitation = { ...citation, title: "Recaptured" };
+    const currentProvenance = {
+      title: { value: "Recaptured", source: "registry:doi.org" },
+      language: { value: "en", source: "user" },
+    };
+    setCurrent(
+      document({
+        id: "src_01",
+        title: "Crime",
+        csl: currentCitation,
+        "csl-provenance": { ...currentProvenance, publisher: { source: 42 } },
+      }),
+    );
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ currentCitation, currentProvenance });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, null, "broken"])("reports empty malformed provenance: %j", async (raw) => {
+    const { repository, setCurrent } = fixture();
+    setCurrent(document({ id: "src_01", csl: null, "csl-provenance": raw }));
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ currentCitation: null, currentProvenance: {} });
+  });
+
+  it.each([
+    ["no citation", undefined, null],
+    ["an invalid citation", { broken: true }, { broken: true }],
+  ])("guards a save over %s with the raw loaded value", async (_, csl, expectedCitation) => {
+    const { repository, update, setCurrent } = fixture();
+    setCurrent(document({ id: "src_01", title: "Crime", csl }, "rev-4"));
+
+    await repository.updateCitation({ ...input, expectedCitation });
+
+    expect(update.mock.calls[0]?.[0].ifRevision).toBe("rev-4");
+  });
+
+  it("refuses to save over a citation added elsewhere after loading none", async () => {
+    const { repository, update, setCurrent } = fixture();
+    setCurrent(document({ id: "src_01", title: "Crime", csl: citation }));
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: null }),
+    ).rejects.toMatchObject({ code: "citation-changed-elsewhere", currentCitation: citation });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("saves without a read or precondition when no baseline is supplied", async () => {
+    const { repository, read, update } = fixture();
+
+    await repository.updateCitation(input);
+
+    expect(read).not.toHaveBeenCalled();
+    expect(update.mock.calls[0]?.[0]).not.toHaveProperty("ifRevision");
+  });
+});
+
+describe("Connect citation revision races", () => {
+  it("rebases on unrelated frontmatter changes between the read and write", async () => {
+    const { repository, read, update, setCurrent } = fixture();
+    const reading = { status: "reading", position: { pdf: { page_index: 12 } } };
+    update.mockImplementationOnce(() => {
+      setCurrent(
+        document({ id: "src_01", title: "New source title", csl: citation, reading }, "rev-3"),
+      );
+      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+    });
+
+    const updated = await repository.updateCitation({
+      ...input,
+      expectedCitation: citation,
+      provenance,
+    });
+
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(update).toHaveBeenCalledTimes(2);
+    expect(update.mock.calls[0]?.[0].ifRevision).toBe("rev-1");
+    expect(update.mock.calls[1]?.[0]).toEqual({
+      path,
+      ifRevision: "rev-3",
+      patch: { csl: citation, "csl-provenance": provenance },
+      includeDocument: true,
+    });
+    expect(updated.frontmatter["reading"]).toEqual(reading);
+    expect(updated.title).toBe("New source title");
+  });
+
+  it("rechecks CSL after a revision conflict instead of overwriting an outside edit", async () => {
+    const { repository, read, update, setCurrent } = fixture();
+    const currentCitation = { ...citation, title: "Outside edit" };
+    update.mockImplementationOnce(() => {
+      setCurrent(document({ id: "src_01", title: "Crime", csl: currentCitation }, "rev-3"));
+      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+    });
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ code: "citation-changed-elsewhere", currentCitation });
+    expect(read).toHaveBeenCalledTimes(2);
+    expect(update).toHaveBeenCalledOnce();
+  });
+
+  it("bounds revision-conflict retries to three conditional writes", async () => {
+    const { repository, read, update } = fixture();
+    update.mockResolvedValue(connectFailure(connectProblem("concurrent_modification", "Changed")));
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ problem: { code: "concurrent_modification" } });
+    expect(read).toHaveBeenCalledTimes(4);
+    expect(update).toHaveBeenCalledTimes(3);
+    expect(update.mock.calls.every(([request]) => request.ifRevision === "rev-1")).toBe(true);
+  });
+
+  it("reports an outside citation edit even on the last permitted write", async () => {
+    const { repository, read, update, setCurrent } = fixture();
+    const currentCitation = { ...citation, title: "Outside edit" };
+    update.mockImplementation(() => {
+      if (update.mock.calls.length === 3) {
+        setCurrent(document({ id: "src_01", title: "Crime", csl: currentCitation }, "rev-4"));
+      }
+      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+    });
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ code: "citation-changed-elsewhere", currentCitation });
+    expect(read).toHaveBeenCalledTimes(4);
+    expect(update).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not retry other write failures or uncertain outcomes", async () => {
+    const { repository, read, update } = fixture();
+    update.mockResolvedValue(
+      connectFailure(
+        connectProblem("operation_outcome_unknown", "Uncertain", {
+          details: { request_id: "citation-request" },
+        }),
+      ),
+    );
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ problem: { code: "operation_outcome_unknown" } });
+    expect(read).toHaveBeenCalledOnce();
+    expect(update).toHaveBeenCalledOnce();
+  });
+
+  it("does not write when the current record cannot be read", async () => {
+    const { repository, read, update } = fixture();
+    read.mockResolvedValue(connectFailure(connectProblem("file_not_found", "Missing")));
+
+    await expect(
+      repository.updateCitation({ ...input, expectedCitation: citation }),
+    ).rejects.toMatchObject({ problem: { code: "file_not_found" } });
+    expect(update).not.toHaveBeenCalled();
+  });
+});
+
+describe("Connect preserves citation dismissals", () => {
+  const dismissal = {
+    rejected: [{ value: "Dismissed press", from: "user" }],
+  };
+
+  it.each([true, false])(
+    "preserves unknown dismissals on a provenance rewrite (guarded: %s)",
+    async (guarded) => {
+      const { repository, setCurrent, update } = fixture();
+      setCurrent(
+        document({
+          id: "src_01",
+          title: "Crime",
+          csl: citation,
+          "csl-provenance": { ...provenance, publisher: dismissal },
+        }),
+      );
+      const updated = await repository.updateCitation({
+        ...input,
+        provenance: {},
+        ...(guarded ? { expectedCitation: citation } : {}),
+      });
+      expect(update.mock.lastCall?.[0].patch?.["csl-provenance"]).toEqual({ publisher: dismissal });
+      expect(updated.cslProvenance).toEqual({ publisher: dismissal });
+      expect(updated.citation).toEqual(citation);
+    },
+  );
+
+  it("carries same-field dismissals onto a changed value without restoring old explanations", async () => {
+    const { repository, setCurrent } = fixture();
+    const rejected = [{ value: "Dismissed title", from: "user" }];
+    setCurrent(
+      document({
+        id: "src_01",
+        title: "Crime",
+        csl: citation,
+        "csl-provenance": {
+          title: { value: citation.title, source: "page:html", agreed: ["h1"], rejected },
+        },
+      }),
+    );
+    const updated = await repository.updateCitation({
+      ...input,
+      citation: { ...citation, title: "Accepted title" },
+      expectedCitation: citation,
+      provenance: { title: { value: "Accepted title", source: "registry:doi.org" } },
+    });
+    expect(updated.cslProvenance?.["title"]).toEqual({
+      value: "Accepted title",
+      source: "registry:doi.org",
+      rejected,
+    });
+  });
+
+  it("merges a provenance-only dismissal added during a guarded save race", async () => {
+    const { repository, update, setCurrent } = fixture();
+    update.mockImplementationOnce(() => {
+      setCurrent(
+        document(
+          {
+            id: "src_01",
+            title: "Crime",
+            csl: citation,
+            "csl-provenance": { publisher: dismissal },
+          },
+          "rev-3",
+        ),
+      );
+      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+    });
+    const updated = await repository.updateCitation({
+      ...input,
+      expectedCitation: citation,
+      provenance,
+    });
+    expect(update).toHaveBeenCalledTimes(2);
+    expect(update.mock.lastCall?.[0].ifRevision).toBe("rev-3");
+    expect(updated.cslProvenance).toEqual({ ...provenance, publisher: dismissal });
   });
 });
 

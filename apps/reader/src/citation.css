@@ -1,0 +1,571 @@
+/* Citation tab (docs/design/mockups/citation.html). The formatted citation leads, set in the
+   reading face; one status line carries the only filled button, Fix details; field evidence,
+   lookup and CSL-JSON wait in disclosures. Field-level editor styles stay in
+   citation-editor.css. Selectors are scoped to .citation-editor so they win regardless of the
+   order in which this lazily loaded sheet arrives. */
+
+.citation-editor {
+  grid-template-rows: minmax(0, 1fr) auto;
+  color: var(--text-2);
+  background: var(--bg-surface);
+}
+
+.citation-editor .citation-editor-body {
+  background: var(--bg-surface);
+}
+
+.citation-editor .citation-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+}
+
+/* Buttons --------------------------------------------------------------------------------- */
+
+.citation-editor .citation-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--control-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-strong-color);
+  border-radius: var(--r-md);
+  color: var(--text-1);
+  background: var(--bg-surface);
+  font: var(--weight-medium) var(--text-sm) / var(--lh-sm) var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease-out,
+    border-color var(--dur-fast) ease-out;
+}
+.citation-editor .citation-button:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--bg-hover);
+}
+.citation-editor .citation-button.is-primary {
+  border-color: transparent;
+  color: var(--on-accent);
+  background: var(--accent-color);
+}
+.citation-editor .citation-button.is-primary:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--accent-strong);
+}
+/* Save details stays focusable while unavailable, so focus survives a save. */
+.citation-editor .citation-button:disabled,
+.citation-editor .citation-button[aria-disabled="true"] {
+  border-color: var(--line-color);
+  color: var(--text-3);
+  background: var(--bg-sunken);
+  cursor: default;
+}
+.citation-editor .citation-button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.citation-editor .citation-icon-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  background: transparent;
+  cursor: pointer;
+}
+.citation-editor .citation-icon-button:hover {
+  color: var(--text-1);
+  background: var(--bg-hover);
+}
+.citation-editor .citation-icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* The formatted citation ------------------------------------------------------------------ */
+
+.citation-editor .citation-reference {
+  margin: 0;
+  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  border-radius: var(--r-lg);
+  background: var(--bg-raised);
+  box-shadow:
+    0 0 0 1px var(--line-color),
+    var(--e-1);
+}
+.citation-editor .citation-reference-text {
+  margin: 0;
+  /* A hanging indent, as in a reference list. */
+  padding-left: 1.4em;
+  text-indent: -1.4em;
+  color: var(--text-1);
+  font-family: var(--font-read);
+  font-size: var(--text-quote);
+  line-height: var(--lh-quote);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.citation-editor .citation-reference-text.is-pending {
+  color: var(--text-3);
+  font-style: italic;
+}
+.citation-editor .citation-reference-text[draggable="true"] {
+  cursor: grab;
+}
+.citation-editor .citation-reference-text[draggable="true"]:active {
+  cursor: grabbing;
+}
+.citation-editor .citation-reference-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line-color);
+}
+.citation-editor .citation-reference-actions .citation-button {
+  min-height: var(--control-h-sm);
+  margin-left: auto;
+  font-size: var(--text-xs);
+}
+.citation-editor .citation-quiet-select.mdbase-select {
+  max-width: 100%;
+  min-height: var(--control-h-sm);
+  height: var(--control-h-sm);
+  padding: 0 var(--sp-2);
+  border-color: transparent;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  background: transparent;
+  font-size: var(--text-sm);
+}
+.citation-editor .citation-quiet-select.mdbase-select:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--text-1);
+  background: var(--bg-hover);
+}
+.citation-editor .citation-quiet-select.mdbase-select:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--focus-ring);
+}
+
+/* Success is announced, not shown: the Copy button itself reads “Copied”. Failure is shown. */
+.citation-editor .citation-copy-status:not(.is-failed) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.citation-editor .citation-copy-status.is-failed {
+  margin: var(--sp-2) 0 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+/* The status line ------------------------------------------------------------------------- */
+
+.citation-editor .citation-health {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+}
+.citation-editor .citation-health > div {
+  display: grid;
+  flex: 1 1 14em;
+  gap: var(--sp-0-5);
+  min-width: 0;
+}
+.citation-editor .citation-health strong {
+  color: var(--text-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-strong);
+  line-height: var(--lh-sm);
+}
+.citation-editor .citation-health span {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+.citation-editor .citation-health.is-check {
+  background: var(--warning-soft);
+}
+.citation-editor .citation-health.is-invalid {
+  background: var(--danger-soft);
+}
+.citation-editor .citation-health.is-invalid span {
+  color: var(--danger-color);
+}
+.citation-editor .citation-health.is-complete {
+  padding-block: var(--sp-2);
+  box-shadow: inset 0 0 0 1px var(--line-color);
+}
+.citation-editor .citation-health.is-complete strong {
+  color: var(--text-2);
+  font-weight: var(--weight-medium);
+}
+
+/* The library's fields differ: a quiet notice under the status line. */
+.citation-editor .citation-summary > .citation-source-sync {
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-radius: var(--r-lg);
+  box-shadow: inset 0 0 0 1px var(--line-color);
+}
+
+/* Citation details ------------------------------------------------------------------------ */
+
+.citation-editor .citation-details {
+  margin-top: var(--sp-3);
+  padding: 0 var(--sp-1);
+}
+.citation-editor .citation-details h3 {
+  margin: 0 0 var(--sp-2);
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-sm);
+}
+.citation-editor .citation-details dl {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+}
+.citation-editor .citation-details dl > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--sp-3);
+}
+.citation-editor .citation-details dt {
+  color: var(--text-3);
+}
+.citation-editor .citation-details dd {
+  margin: 0;
+  color: var(--text-1);
+  overflow-wrap: anywhere;
+}
+.citation-editor .citation-details dd.is-empty {
+  color: var(--text-3);
+  font-style: italic;
+}
+.citation-editor .citation-needs-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-left: var(--sp-2);
+  color: var(--warning-text);
+  font-size: var(--text-xs);
+  font-style: normal;
+}
+.citation-editor .citation-needs-check::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+.citation-editor .citation-key {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-h-sm);
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  background: var(--bg-sunken);
+  cursor: pointer;
+}
+.citation-editor .citation-key:hover {
+  color: var(--text-1);
+}
+.citation-editor .citation-key code {
+  overflow: hidden;
+  font: var(--text-xs) / var(--lh-xs) var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.citation-editor .citation-key-status {
+  margin-left: var(--sp-2);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+.citation-editor .citation-key-status:empty {
+  display: none;
+}
+.citation-editor .citation-key svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: var(--text-3);
+}
+
+/* Disclosures ----------------------------------------------------------------------------- */
+
+.citation-editor .citation-disclosures {
+  margin-top: var(--sp-3);
+}
+.citation-editor .citation-disclosure {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--line-color);
+  color: var(--text-2);
+  background: transparent;
+  font-size: var(--text-sm);
+}
+.citation-editor .citation-disclosure:last-child {
+  border-bottom: 1px solid var(--line-color);
+}
+.citation-editor .citation-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 40px;
+  margin: 0;
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  cursor: pointer;
+  list-style: none;
+}
+.citation-editor .citation-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.citation-editor .citation-disclosure > summary::after {
+  content: none;
+}
+.citation-editor .citation-disclosure > summary:hover {
+  color: var(--text-1);
+}
+.citation-editor .citation-disclosure > summary svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--text-3);
+  transition: transform var(--dur-fast) ease-out;
+}
+.citation-editor .citation-disclosure[open] > summary svg {
+  transform: rotate(90deg);
+}
+.citation-editor .citation-disclosure > summary > span {
+  display: block;
+  min-width: 0;
+}
+.citation-editor .citation-disclosure > summary > small {
+  overflow: hidden;
+  min-width: 0;
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.citation-editor .citation-disclosure[open] {
+  padding-bottom: var(--sp-4);
+}
+.citation-editor .citation-disclosure > :not(summary) {
+  margin-inline: var(--sp-1);
+}
+.citation-editor .citation-disclosure-note,
+.citation-editor .citation-lookup-note {
+  margin-block: var(--sp-2) 0;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+.citation-editor .citation-provenance dl {
+  margin-top: var(--sp-1);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+.citation-editor .citation-provenance dt {
+  color: var(--text-3);
+}
+.citation-editor .citation-lookup form {
+  margin-top: var(--sp-1);
+}
+.citation-editor .citation-lookup form button {
+  border-color: var(--accent-color);
+  color: var(--on-accent);
+  background: var(--accent-color);
+}
+.citation-editor .citation-lookup form button:disabled {
+  border-color: var(--line-color);
+  color: var(--text-3);
+  background: var(--bg-sunken);
+}
+.citation-editor .citation-raw-editor .citation-json {
+  min-height: 280px;
+  margin-top: var(--sp-3);
+  overflow: hidden;
+  border-radius: var(--r-md);
+  box-shadow: inset 0 0 0 1px var(--line-color);
+  background: var(--bg-sunken);
+}
+.citation-editor .citation-raw-editor .citation-json .cm-editor {
+  background: var(--bg-sunken);
+}
+
+/* Fix details ----------------------------------------------------------------------------- */
+
+.citation-editor .citation-fix-head {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 48px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+  border-bottom: 1px solid var(--line-color);
+  background: var(--bg-surface);
+}
+.citation-editor .citation-fix-head h3 {
+  margin: 0;
+  color: var(--text-1);
+  font-size: var(--text-md);
+  font-weight: var(--weight-strong);
+  line-height: var(--lh-md);
+}
+.citation-editor .citation-fix-head > span {
+  margin-left: auto;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+.citation-editor .citation-fix > .citation-source-sync {
+  margin: var(--sp-3) var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--warning-soft);
+}
+.citation-editor .citation-json-blocked {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-3) var(--sp-4) 0;
+  padding: var(--sp-3);
+  border: 1px solid var(--line-color);
+  border-radius: var(--r-md);
+  background: var(--bg-sunken);
+}
+.citation-editor .citation-json-blocked p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+.citation-editor .citation-json-blocked strong {
+  color: var(--text-1);
+  font-size: var(--text-sm);
+}
+.citation-editor .citation-json-blocked .citation-button {
+  justify-self: start;
+}
+.citation-editor .citation-checks {
+  display: grid;
+  gap: var(--sp-1);
+  margin: var(--sp-3) var(--sp-4) 0;
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-8);
+  border-radius: var(--r-lg);
+  color: var(--text-1);
+  background: var(--warning-soft);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+}
+.citation-editor .citation-checks li::marker {
+  color: var(--warning-text);
+}
+
+/* Footer: the live preview and Save details ------------------------------------------------ */
+
+.citation-editor .citation-editor-footer {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--line-color);
+  background: var(--bg-surface);
+}
+.citation-editor .citation-preview-line {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-2);
+  font-family: var(--font-read);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow-wrap: anywhere;
+}
+.citation-editor .citation-footer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.citation-editor .citation-feedback {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+.citation-editor .citation-feedback .is-error {
+  color: var(--danger-color);
+}
+
+@container (min-width: 620px) {
+  .citation-editor .citation-summary {
+    padding: var(--sp-6) var(--sp-8);
+  }
+  .citation-editor .citation-reference-text {
+    max-width: 68ch;
+  }
+  .citation-editor .citation-editor-footer {
+    padding-inline: var(--sp-8);
+  }
+}
+
+@media (pointer: coarse) {
+  .citation-editor .citation-button,
+  .citation-editor .citation-reference-actions .citation-button,
+  .citation-editor .citation-icon-button,
+  .citation-editor .citation-quiet-select.mdbase-select,
+  .citation-editor .citation-key {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .citation-editor .citation-disclosure > summary {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .citation-editor .citation-button,
+  .citation-editor .citation-disclosure > summary svg {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .citation-editor .citation-button.is-primary {
+    border-color: ButtonText;
+  }
+  .citation-editor .citation-reference,
+  .citation-editor .citation-health {
+    border: 1px solid CanvasText;
+  }
+}

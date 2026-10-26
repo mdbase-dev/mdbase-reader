@@ -1,0 +1,945 @@
+{
+  "status": 200,
+  "body": {
+    "indexed": {
+      "date-parts": [[2026, 10, 15]],
+      "date-time": "2026-10-15T23:54:49Z",
+      "timestamp": 1792108489170,
+      "version": "4.4.0"
+    },
+    "reference-count": 69,
+    "publisher": "eLife Sciences Publications, Ltd",
+    "license": [
+      {
+        "start": {
+          "date-parts": [[2019, 7, 15]],
+          "date-time": "2019-07-15T00:00:00Z",
+          "timestamp": 1563148800000
+        },
+        "content-version": "vor",
+        "delay-in-days": 0,
+        "URL": "http://creativecommons.org/licenses/by/4.0/"
+      },
+      {
+        "start": {
+          "date-parts": [[2019, 7, 15]],
+          "date-time": "2019-07-15T00:00:00Z",
+          "timestamp": 1563148800000
+        },
+        "content-version": "am",
+        "delay-in-days": 0,
+        "URL": "http://creativecommons.org/licenses/by/4.0/"
+      },
+      {
+        "start": {
+          "date-parts": [[2019, 7, 15]],
+          "date-time": "2019-07-15T00:00:00Z",
+          "timestamp": 1563148800000
+        },
+        "content-version": "tdm",
+        "delay-in-days": 0,
+        "URL": "http://creativecommons.org/licenses/by/4.0/"
+      }
+    ],
+    "funder": [
+      {
+        "DOI": "10.13039/100008389",
+        "name": "Uddannelses- og Forskningsministeriet",
+        "doi-asserted-by": "publisher",
+        "award": ["6183-00001B"],
+        "award-info": [
+          {
+            "award-number": ["6183-00001B"]
+          }
+        ],
+        "id": [
+          {
+            "id": "10.13039/100008389",
+            "id-type": "DOI",
+            "asserted-by": "publisher"
+          }
+        ]
+      },
+      {
+        "DOI": "10.13039/501100002739",
+        "name": "Aarhus University Research Foundation",
+        "doi-asserted-by": "publisher",
+        "award": ["AUFF-2018-7-5"],
+        "award-info": [
+          {
+            "award-number": ["AUFF-2018-7-5"]
+          }
+        ],
+        "id": [
+          {
+            "id": "10.13039/501100002739",
+            "id-type": "DOI",
+            "asserted-by": "publisher"
+          }
+        ]
+      }
+    ],
+    "content-domain": {
+      "domain": ["elifesciences.org"],
+      "crossmark-restriction": false
+    },
+    "abstract": "<jats:p>A number of studies suggest that scientific papers with women in leading-author positions attract fewer citations than those with men in leading-author positions.",
+    "DOI": "10.7554/elife.45374",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [[2019, 7, 15]],
+      "date-time": "2019-07-15T08:00:20Z",
+      "timestamp": 1563177620000
+    },
+    "update-policy": "https://doi.org/10.7554/elife.45374",
+    "source": "Crossref",
+    "is-referenced-by-count": 69,
+    "title": "Gender variations in citation distributions in medicine are very small and due to self-citation and journal prestige",
+    "prefix": "10.7554",
+    "volume": "8",
+    "author": [
+      {
+        "ORCID": "https://orcid.org/0000-0003-2444-6210",
+        "authenticated-orcid": true,
+        "given": "Jens Peter",
+        "family": "Andersen",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "Danish Centre for Studies on Research and Research Policy, Aarhus University, Aarhus, Denmark"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0001-5556-0919",
+        "authenticated-orcid": true,
+        "given": "Jesper Wiborg",
+        "family": "Schneider",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Danish Centre for Studies on Research and Research Policy, Aarhus University, Aarhus, Denmark"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0001-6562-1228",
+        "authenticated-orcid": true,
+        "given": "Reshma",
+        "family": "Jagsi",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Department of Radiation Oncology, University of Michigan, Ann Arbor, United States"
+          },
+          {
+            "name": "Center for Bioethics and Social Sciences in Medicine, University of Michigan, Ann Arbor, United States"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0001-8759-7150",
+        "authenticated-orcid": true,
+        "given": "Mathias Wullum",
+        "family": "Nielsen",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Danish Centre for Studies on Research and Research Policy, Aarhus University, Aarhus, Denmark"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "4374",
+    "published-online": {
+      "date-parts": [[2019, 7, 15]]
+    },
+    "reference": [
+      {
+        "key": "bib1",
+        "doi-asserted-by": "publisher",
+        "first-page": "811",
+        "DOI": "10.1016/j.joi.2013.07.002",
+        "article-title": "Gender differences in research collaboration",
+        "volume": "7",
+        "author": "Abramo",
+        "year": "2013",
+        "journal-title": "Journal of Informetrics"
+      },
+      {
+        "key": "bib2",
+        "doi-asserted-by": "publisher",
+        "first-page": "628",
+        "DOI": "10.1002/asi.21486",
+        "article-title": "Are female researchers less cited? A large-scale study of Norwegian scientists",
+        "volume": "62",
+        "author": "Aksnes",
+        "year": "2011",
+        "journal-title": "Journal of the American Society for Information Science and Technology"
+      },
+      {
+        "key": "bib3",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1371/journal.pone.0176791",
+        "article-title": "Gender differences in scientific collaborations: Women are more egalitarian than men",
+        "volume": "12",
+        "author": "Araújo",
+        "year": "2017",
+        "journal-title": "PLOS ONE"
+      },
+      {
+        "key": "bib4",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1126/science.aam8109",
+        "article-title": "Looking inward at gender issues",
+        "volume": "355",
+        "author": "Berg",
+        "year": "2017",
+        "journal-title": "Science"
+      },
+      {
+        "key": "bib5",
+        "doi-asserted-by": "publisher",
+        "first-page": "93",
+        "DOI": "10.1007/s11192-009-0025-y",
+        "article-title": "Scientific output and impact of postdoctoral scientists: A gender perspective",
+        "volume": "83",
+        "author": "Borrego",
+        "year": "2010",
+        "journal-title": "Scientometrics"
+      },
+      {
+        "key": "bib6",
+        "doi-asserted-by": "publisher",
+        "first-page": "698",
+        "DOI": "10.1177/0001839217694358",
+        "article-title": "Pursuing quality: How search costs and uncertainty magnify gender-based double standards in a multistage evaluation process",
+        "volume": "62",
+        "author": "Botelho",
+        "year": "2017",
+        "journal-title": "Administrative Science Quarterly"
+      },
+      {
+        "key": "bib7",
+        "doi-asserted-by": "crossref",
+        "DOI": "10.3138/9781442659858",
+        "volume-title": "Lifting a Ton of Feathers: A Woman’s Guide for Survivng in the Academic World",
+        "author": "Caplan",
+        "year": "1993"
+      },
+      {
+        "key": "bib8",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1038/s41550-017-0141",
+        "article-title": "Quantitative evaluation of gender bias in astronomical publications from citation counts",
+        "volume": "1",
+        "author": "Caplar",
+        "year": "2017",
+        "journal-title": "Nature Astronomy"
+      },
+      {
+        "key": "bib9",
+        "doi-asserted-by": "publisher",
+        "first-page": "1009",
+        "DOI": "10.1089/154099903322643938",
+        "article-title": "A \"ton of feathers\": Gender discrimination in academic medical careers and how to manage it",
+        "volume": "12",
+        "author": "Carr",
+        "year": "2003",
+        "journal-title": "Journal of Women's Health"
+      },
+      {
+        "key": "bib10",
+        "doi-asserted-by": "publisher",
+        "first-page": "1",
+        "DOI": "10.3389/fpsyt.2018.00297",
+        "article-title": "A randomized trial of personalized cognitive-behavior therapy for alcohol use disorder in a public health clinic",
+        "volume": "9",
+        "author": "Coates",
+        "year": "2018",
+        "journal-title": "Frontiers in Psychiatry"
+      },
+      {
+        "key": "bib11",
+        "first-page": "277",
+        "volume-title": "The Outer Circle: Women in the Scientific Community",
+        "author": "Cole",
+        "year": "1991"
+      },
+      {
+        "key": "bib12",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1186/1472-6947-6-7",
+        "article-title": "A MEDLINE categorization algorithm",
+        "volume": "6",
+        "author": "Darmoni",
+        "year": "2006",
+        "journal-title": "BMC Medical Informatics and Decision Making"
+      },
+      {
+        "key": "bib13",
+        "article-title": "Tweedie: Evaluation of Tweedie exponential family models",
+        "author": "Dunn",
+        "year": "2017",
+        "unstructured": "Dunn PK. 2017. Tweedie: Evaluation of Tweedie exponential family models. https://cran.r-project.org/web/packages/tweedie."
+      },
+      {
+        "key": "bib14",
+        "doi-asserted-by": "publisher",
+        "first-page": "267",
+        "DOI": "10.1007/s11222-005-4070-y",
+        "article-title": "Series evaluation of Tweedie exponential dispersion model densities",
+        "volume": "15",
+        "author": "Dunn",
+        "year": "2005",
+        "journal-title": "Statistics and Computing"
+      },
+      {
+        "key": "bib15",
+        "doi-asserted-by": "publisher",
+        "first-page": "73",
+        "DOI": "10.1007/s11222-007-9039-6",
+        "article-title": "Evaluation of Tweedie exponential dispersion model densities by Fourier inversion",
+        "volume": "18",
+        "author": "Dunn",
+        "year": "2008",
+        "journal-title": "Statistics and Computing"
+      },
+      {
+        "key": "bib16",
+        "doi-asserted-by": "publisher",
+        "first-page": "899",
+        "DOI": "10.1177/1745691616663918",
+        "article-title": "Scientific eminence",
+        "volume": "11",
+        "author": "Eagly",
+        "year": "2016",
+        "journal-title": "Perspectives on Psychological Science"
+      },
+      {
+        "key": "bib17",
+        "volume-title": "She Figures, 2015: Gender in Research and Innovation, Statistics and Indicators",
+        "author": "European Commission",
+        "year": "2016",
+        "unstructured": "European Commission. 2016. European Commission. She Figures, 2015: Gender in Research and Innovation, Statistics and Indicators. https://ec.europa.eu/research/swafs/pdf/pub_gender_equality/she_figures_2015-final.pdf."
+      },
+      {
+        "key": "bib18",
+        "first-page": "235",
+        "volume-title": "Law, Punishment, and Social Control: Essays in Honor of Sheldon Messinger",
+        "author": "Freedman",
+        "year": "2003"
+      },
+      {
+        "key": "bib19",
+        "doi-asserted-by": "publisher",
+        "first-page": "1055",
+        "DOI": "10.1016/S0140-6736(10)60392-3",
+        "article-title": "Global operating theatre distribution and pulse oximetry supply: An estimation from reported data",
+        "volume": "376",
+        "author": "Funk",
+        "year": "2010",
+        "journal-title": "The Lancet"
+      },
+      {
+        "key": "bib20",
+        "doi-asserted-by": "publisher",
+        "first-page": "2865",
+        "DOI": "10.1002/sim.3107",
+        "article-title": "Scaling regression inputs by dividing by two standard deviations",
+        "volume": "27",
+        "author": "Gelman",
+        "year": "2008",
+        "journal-title": "Statistics in Medicine"
+      },
+      {
+        "key": "bib21",
+        "article-title": "Gender API - Determines the gender of a first name",
+        "author": "Gender API",
+        "year": "2016",
+        "unstructured": "Gender API. 2016. Gender API - Determines the gender of a first name. https://gender-api.com."
+      },
+      {
+        "key": "bib22",
+        "doi-asserted-by": "publisher",
+        "first-page": "135",
+        "DOI": "10.1002/ijop.12433",
+        "article-title": "Contemporary psychology and women: A gender analysis of the scientific production",
+        "volume": "54",
+        "author": "González-Álvarez",
+        "year": "2019",
+        "journal-title": "International Journal of Psychology"
+      },
+      {
+        "key": "bib23",
+        "doi-asserted-by": "publisher",
+        "first-page": "13",
+        "DOI": "10.1016/j.jss.2008.02.015",
+        "article-title": "Scientific impact of women in academic surgery",
+        "volume": "148",
+        "author": "Housri",
+        "year": "2008",
+        "journal-title": "Journal of Surgical Research"
+      },
+      {
+        "key": "bib24",
+        "volume-title": "Gender in the Global Research Landscape",
+        "author": "Huggett",
+        "year": "2017",
+        "unstructured": "Huggett S. 2017. Elsevier. Gender in the Global Research Landscape. https://www.elsevier.com/__data/assets/pdf_file/0008/265661/ElsevierGenderReport_final_for-web.pdf."
+      },
+      {
+        "key": "bib25",
+        "doi-asserted-by": "publisher",
+        "first-page": "218",
+        "DOI": "10.1001/jama.294.2.218",
+        "article-title": "Contradicted and initially stronger effects in highly cited clinical research",
+        "volume": "294",
+        "author": "Ioannidis",
+        "year": "2005",
+        "journal-title": "JAMA"
+      },
+      {
+        "key": "bib26",
+        "doi-asserted-by": "publisher",
+        "first-page": "281",
+        "DOI": "10.1056/NEJMsa053910",
+        "article-title": "The \"gender gap\" in authorship of academic medical literature: A 35-year perspective",
+        "volume": "355",
+        "author": "Jagsi",
+        "year": "2006",
+        "journal-title": "New England Journal of Medicine"
+      },
+      {
+        "key": "bib27",
+        "doi-asserted-by": "publisher",
+        "first-page": "804",
+        "DOI": "10.7326/0003-4819-151-11-200912010-00009",
+        "article-title": "Sex differences in attainment of independent funding by career development awardees",
+        "volume": "151",
+        "author": "Jagsi",
+        "year": "2009",
+        "journal-title": "Annals of Internal Medicine"
+      },
+      {
+        "key": "bib28",
+        "doi-asserted-by": "publisher",
+        "first-page": "108",
+        "DOI": "10.1001/jamainternmed.2018.4859",
+        "article-title": "Prevalence of sexual harassment in academic medicine",
+        "volume": "179",
+        "author": "Jenner",
+        "year": "2019",
+        "journal-title": "JAMA Internal Medicine"
+      },
+      {
+        "key": "bib29",
+        "doi-asserted-by": "publisher",
+        "first-page": "344-353",
+        "DOI": "10.7326/M13-0974",
+        "article-title": "Gender differences in time spent on parenting and domestic responsibilities by high-achieving young physician-researchers",
+        "volume": "160",
+        "author": "Jolly",
+        "year": "2014",
+        "journal-title": "Annals of Internal Medicine"
+      },
+      {
+        "key": "bib30",
+        "doi-asserted-by": "crossref",
+        "first-page": "127",
+        "DOI": "10.1111/j.2517-6161.1987.tb01685.x",
+        "article-title": "Exponential dispersion models",
+        "volume": "49",
+        "author": "Jørgensen",
+        "year": "1987",
+        "journal-title": "Journal of the Royal Statistical Society: Series B"
+      },
+      {
+        "key": "bib31",
+        "doi-asserted-by": "crossref",
+        "first-page": "491",
+        "DOI": "10.5465/amj.2007.25525577",
+        "article-title": "What causes a management article to be cited ?",
+        "volume": "50",
+        "author": "Judge",
+        "year": "2016",
+        "journal-title": "Acad Manag J"
+      },
+      {
+        "key": "bib32",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1177/2378023117738903",
+        "article-title": "Men set their own cites high: Gender and self-citation across fields and over time",
+        "volume": "3",
+        "author": "King",
+        "year": "2017",
+        "journal-title": "Socius: Sociological Research for a Dynamic World"
+      },
+      {
+        "key": "bib33",
+        "doi-asserted-by": "publisher",
+        "first-page": "483",
+        "DOI": "10.1007/s11192-011-0369-y",
+        "article-title": "Sex differences in research funding, productivity and impact: An analysis of Québec university professors",
+        "volume": "87",
+        "author": "Larivière",
+        "year": "2011",
+        "journal-title": "Scientometrics"
+      },
+      {
+        "key": "bib34",
+        "doi-asserted-by": "publisher",
+        "first-page": "211",
+        "DOI": "10.1038/504211a",
+        "article-title": "Bibliometrics: Global gender disparities in science",
+        "volume": "504",
+        "author": "Larivière",
+        "year": "2013",
+        "journal-title": "Nature"
+      },
+      {
+        "key": "bib35",
+        "volume-title": "The State of Women in Academic Medicine: The Pipeline and Pathways to Leadership 2013-2014",
+        "author": "Lautenberger",
+        "year": "2014"
+      },
+      {
+        "key": "bib36",
+        "article-title": "emmeans: Estimated marginal means, aka least-squares means",
+        "author": "Lenth",
+        "year": "2019",
+        "unstructured": "Lenth R. 2019. emmeans: Estimated marginal means, aka least-squares means. https://cran.r-project.org/web/packages/emmeans."
+      },
+      {
+        "key": "bib37",
+        "doi-asserted-by": "publisher",
+        "first-page": "1007",
+        "DOI": "10.1016/j.respol.2018.02.009",
+        "article-title": "The gender gap in early career transitions in the life sciences",
+        "volume": "47",
+        "author": "Lerchenmueller",
+        "year": "2018",
+        "journal-title": "Research Policy"
+      },
+      {
+        "key": "bib38",
+        "doi-asserted-by": "publisher",
+        "first-page": "880",
+        "DOI": "10.1161/CIRCULATIONAHA.117.032325",
+        "article-title": "Long-term analysis of sex differences in prestigious authorships in cardiovascular research supported by the National Institutes of Health",
+        "volume": "137",
+        "author": "Lerchenmüller",
+        "year": "2018",
+        "journal-title": "Circulation"
+      },
+      {
+        "key": "bib39",
+        "doi-asserted-by": "publisher",
+        "first-page": "159",
+        "DOI": "10.1093/sf/71.1.159",
+        "article-title": "Measures of sex differences in scientific productivity",
+        "volume": "71",
+        "author": "Long",
+        "year": "1992",
+        "journal-title": "Social Forces"
+      },
+      {
+        "key": "bib40",
+        "doi-asserted-by": "publisher",
+        "first-page": "889",
+        "DOI": "10.1017/S0020818313000209",
+        "article-title": "The gender citation gap in international relations",
+        "volume": "67",
+        "author": "Maliniak",
+        "year": "2013",
+        "journal-title": "International Organization"
+      },
+      {
+        "key": "bib41",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.7287/peerj.preprints.27638v2",
+        "article-title": "Use of the journal impact factor in academic review, promotion, and tenure evaluations",
+        "volume": "7",
+        "author": "McKiernan",
+        "year": "2019",
+        "journal-title": "PeerJ Preprints"
+      },
+      {
+        "key": "bib42",
+        "doi-asserted-by": "publisher",
+        "first-page": "262",
+        "DOI": "10.1093/scipol/scv038",
+        "article-title": "What determines researchers’ scientific impact? A case study of Quebec researchers",
+        "volume": "43",
+        "author": "Mirnezami",
+        "year": "2016",
+        "journal-title": "Science and Public Policy"
+      },
+      {
+        "key": "bib43",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1371/journal.pone.0195773",
+        "article-title": "Self-citation is the hallmark of productive authors, of any gender",
+        "volume": "13",
+        "author": "Mishra",
+        "year": "2018",
+        "journal-title": "PLOS ONE"
+      },
+      {
+        "key": "bib44",
+        "doi-asserted-by": "publisher",
+        "first-page": "16474",
+        "DOI": "10.1073/pnas.1211286109",
+        "article-title": "Science faculty's subtle gender biases favor male students",
+        "volume": "109",
+        "author": "Moss-Racusin",
+        "year": "2012",
+        "journal-title": "PNAS"
+      },
+      {
+        "key": "bib45",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1038/s41593-017-0052-6",
+        "article-title": "Promoting diversity in neuroscience",
+        "volume": "21",
+        "author": "Nature Neuroscience",
+        "year": "2018",
+        "journal-title": "Nature Neuroscience"
+      },
+      {
+        "key": "bib46",
+        "doi-asserted-by": "publisher",
+        "first-page": "2044",
+        "DOI": "10.1080/03075079.2015.1007945",
+        "article-title": "Gender inequality and research performance: Moving beyond individual-meritocratic explanations of academic advancement",
+        "volume": "41",
+        "author": "Nielsen",
+        "year": "2016",
+        "journal-title": "Studies in Higher Education"
+      },
+      {
+        "key": "bib47",
+        "doi-asserted-by": "publisher",
+        "first-page": "1213",
+        "DOI": "10.1016/j.joi.2017.09.005",
+        "article-title": "Gender and citation impact in management research",
+        "volume": "11",
+        "author": "Nielsen",
+        "year": "2017",
+        "journal-title": "Journal of Informetrics"
+      },
+      {
+        "key": "bib48",
+        "doi-asserted-by": "publisher",
+        "first-page": "791",
+        "DOI": "10.1038/s41562-017-0235-x",
+        "article-title": "One and a half million medical papers reveal a link between author gender and attention to gender and sex analysis",
+        "volume": "1",
+        "author": "Nielsen",
+        "year": "2017",
+        "journal-title": "Nature Human Behaviour"
+      },
+      {
+        "key": "bib49",
+        "article-title": "OECD statistics",
+        "author": "OECD",
+        "year": "2019",
+        "unstructured": "OECD. 2019. OECD statistics. https://stats.oecd.org/."
+      },
+      {
+        "key": "bib50",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.7554/eLife.34412",
+        "article-title": "Adequate statistical power in clinical trials is associated with the combination of a male first author and a female last author",
+        "volume": "7",
+        "author": "Otte",
+        "year": "2018",
+        "journal-title": "eLife"
+      },
+      {
+        "key": "bib51",
+        "doi-asserted-by": "publisher",
+        "first-page": "873",
+        "DOI": "10.1111/j.1365-2044.2011.06860.x",
+        "article-title": "An analysis of scholarly productivity in United States academic anaesthesiologists by citation bibliometrics",
+        "volume": "66",
+        "author": "Pagel",
+        "year": "2011",
+        "journal-title": "Anaesthesia"
+      },
+      {
+        "key": "bib52",
+        "doi-asserted-by": "publisher",
+        "first-page": "683",
+        "DOI": "10.1097/ALN.0000000000000737",
+        "article-title": "Scholarly productivity and National Institutes of Health funding of Foundation for Anesthesia Education and Research grant recipients: Insights from a bibliometric analysis",
+        "volume": "123",
+        "author": "Pagel",
+        "year": "2015",
+        "journal-title": "Anesthesiology"
+      },
+      {
+        "key": "bib53",
+        "article-title": "Overlapping: Estimation of overlapping in empirical distributions",
+        "author": "Pastore",
+        "year": "2018",
+        "unstructured": "Pastore M. 2018. Overlapping: Estimation of overlapping in empirical distributions. https://cran.r-project.org/web/packages/overlapping."
+      },
+      {
+        "key": "bib54",
+        "doi-asserted-by": "publisher",
+        "first-page": "201",
+        "DOI": "10.1007/s11606-012-2207-1",
+        "article-title": "Experiencing the culture of academic medicine: Gender matters, a national study",
+        "volume": "28",
+        "author": "Pololi",
+        "year": "2013",
+        "journal-title": "Journal of General Internal Medicine"
+      },
+      {
+        "key": "bib55",
+        "doi-asserted-by": "publisher",
+        "first-page": "e156",
+        "DOI": "10.7717/peerj-cs.156",
+        "article-title": "Comparison and benchmark of name-to-gender inference services",
+        "volume": "4",
+        "author": "Santamaría",
+        "year": "2018",
+        "journal-title": "PeerJ Computer Science"
+      },
+      {
+        "key": "bib56",
+        "doi-asserted-by": "publisher",
+        "first-page": "50",
+        "DOI": "10.1016/j.joi.2012.08.005",
+        "article-title": "Caveats for using statistical significance tests in research assessments",
+        "volume": "7",
+        "author": "Schneider",
+        "year": "2013",
+        "journal-title": "Journal of Informetrics"
+      },
+      {
+        "key": "bib57",
+        "doi-asserted-by": "publisher",
+        "first-page": "1175",
+        "DOI": "10.1001/jama.2015.8517",
+        "article-title": "Sex differences in institutional support for junior biomedical researchers",
+        "volume": "314",
+        "author": "Sege",
+        "year": "2015",
+        "journal-title": "JAMA"
+      },
+      {
+        "key": "bib58",
+        "doi-asserted-by": "crossref",
+        "first-page": "1",
+        "DOI": "10.18637/jss.v042.i07",
+        "article-title": "Multivariate and propensity score matching software with automated balance optimization: The matching package for R",
+        "volume": "42",
+        "author": "Sekhon",
+        "year": "2011",
+        "journal-title": "Journal of Statistical Software"
+      },
+      {
+        "key": "bib59",
+        "doi-asserted-by": "publisher",
+        "first-page": "955",
+        "DOI": "10.1007/s11192-011-0467-x",
+        "article-title": "Citation pattern and lifespan: A comparison of discipline, institution, and individual",
+        "volume": "89",
+        "author": "Slyder",
+        "year": "2011",
+        "journal-title": "Scientometrics"
+      },
+      {
+        "key": "bib60",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1371/journal.pone.0109195",
+        "article-title": "The scientific impact of nations: Journal placement and citation performance",
+        "volume": "9",
+        "author": "Smith",
+        "year": "2014",
+        "journal-title": "PLOS ONE"
+      },
+      {
+        "key": "bib61",
+        "doi-asserted-by": "publisher",
+        "first-page": "171",
+        "DOI": "10.1509/jmkg.71.3.171",
+        "article-title": "The quest for citations: Drivers of article impact",
+        "volume": "71",
+        "author": "Stremersch",
+        "year": "2007",
+        "journal-title": "Journal of Marketing"
+      },
+      {
+        "key": "bib62",
+        "doi-asserted-by": "publisher",
+        "first-page": "1",
+        "DOI": "10.1371/journal.pone.0000127",
+        "article-title": "Gender differences in publication output: Towards an unbiased metric of research performance",
+        "volume": "1",
+        "author": "Symonds",
+        "year": "2006",
+        "journal-title": "PLOS ONE"
+      },
+      {
+        "key": "bib63",
+        "doi-asserted-by": "publisher",
+        "first-page": "857",
+        "DOI": "10.1007/s11192-012-0712-y",
+        "article-title": "Gender differences in scientific productivity: A persisting phenomenon?",
+        "volume": "93",
+        "author": "van Arensbergen",
+        "year": "2012",
+        "journal-title": "Scientometrics"
+      },
+      {
+        "key": "bib64",
+        "doi-asserted-by": "publisher",
+        "first-page": "2033",
+        "DOI": "10.1016/j.socscimed.2011.04.016",
+        "article-title": "Scouting for talent: Appointment practices of women professors in academic medicine",
+        "volume": "72",
+        "author": "Van den Brink",
+        "year": "2011",
+        "journal-title": "Social Science & Medicine"
+      },
+      {
+        "key": "bib65",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1371/journal.pone.0062395",
+        "article-title": "Citation analysis may severely underestimate the impact of clinical research as compared to basic research",
+        "volume": "8",
+        "author": "van Eck",
+        "year": "2013",
+        "journal-title": "PLOS ONE"
+      },
+      {
+        "key": "bib66",
+        "doi-asserted-by": "publisher",
+        "first-page": "2419",
+        "DOI": "10.1002/asi.22708",
+        "article-title": "The Leiden ranking 2011/2012: Data collection, indicators, and interpretation",
+        "volume": "63",
+        "author": "Waltman",
+        "year": "2012",
+        "journal-title": "Journal of the American Society for Information Science and Technology"
+      },
+      {
+        "key": "bib67",
+        "doi-asserted-by": "publisher",
+        "first-page": "2378",
+        "DOI": "10.1002/asi.22748",
+        "article-title": "A new methodology for constructing a publication-level classification system of science",
+        "volume": "63",
+        "author": "Waltman",
+        "year": "2012",
+        "journal-title": "Journal of the American Society for Information Science and Technology"
+      },
+      {
+        "key": "bib68",
+        "doi-asserted-by": "publisher",
+        "first-page": "123",
+        "DOI": "10.15195/v4.a6",
+        "article-title": "Degrees of difference: Gender segregation of US doctorates by field and program prestige",
+        "volume": "4",
+        "author": "Weeden",
+        "year": "2017",
+        "journal-title": "Sociological Science"
+      },
+      {
+        "key": "bib69",
+        "volume-title": "Measures of Overlap of Income Distributions of White and Negro Families in the United States",
+        "author": "Weitzman",
+        "year": "1970"
+      }
+    ],
+    "container-title": "eLife",
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://cdn.elifesciences.org/articles/45374/elife-45374-v2.pdf",
+        "content-type": "application/pdf",
+        "content-version": "vor",
+        "intended-application": "text-mining"
+      },
+      {
+        "URL": "https://cdn.elifesciences.org/articles/45374/elife-45374-v2.xml",
+        "content-type": "application/xml",
+        "content-version": "vor",
+        "intended-application": "text-mining"
+      },
+      {
+        "URL": "https://elifesciences.org/articles/45374",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [[2024, 7, 20]],
+      "date-time": "2024-07-20T19:42:54Z",
+      "timestamp": 1721504574000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://elifesciences.org/articles/45374"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [[2019, 7, 15]]
+    },
+    "references-count": 69,
+    "alternative-id": ["10.7554/eLife.45374"],
+    "URL": "http://dx.doi.org/10.7554/eLife.45374",
+    "relation": {
+      "has-review": [
+        {
+          "id-type": "doi",
+          "id": "10.7554/eLife.45374.027",
+          "asserted-by": "object"
+        },
+        {
+          "id-type": "doi",
+          "id": "10.7554/eLife.45374.026",
+          "asserted-by": "object"
+        }
+      ]
+    },
+    "ISSN": ["2050-084X"],
+    "subject": [],
+    "published": {
+      "date-parts": [[2019, 7, 15]]
+    },
+    "article-number": "e45374"
+  }
+}

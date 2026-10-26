@@ -79,8 +79,10 @@ describe("user text is rendered literally", () => {
       />,
     );
     expect(container.querySelector(".capture-follow-up p")?.textContent).toContain(
-      `(<0/>), but it found the citation for “${markup}”`,
+      `but it found the citation for “${markup}”`,
     );
+    expect(container.querySelector(".capture-follow-up details")?.textContent).toContain("<0/>");
+    expect(container.querySelector(".capture-follow-up details b")).toBeNull();
   });
 
   it("shows a markup-shaped citekey literally in the row menu", async () => {

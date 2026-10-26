@@ -11,7 +11,7 @@ describe("bibliographyProblemSummary", () => {
         { kind: "invalid" },
         { kind: "duplicate" },
       ]),
-    ).toBe("2 without citations · 1 invalid record · 1 citekey collision");
+    ).toBe("2 without citations · 1 invalid record · 1 citation key conflict");
   });
 
   it("omits an empty problem summary", () => {

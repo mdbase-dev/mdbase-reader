@@ -1,3 +1,5 @@
+import { t as translate } from "@lingui/core/macro";
+
 import {
   collectionCommands,
   decodeArgs,
@@ -6,6 +8,7 @@ import {
   isClientMessage,
   isCollectionCommand,
   serializeError,
+  transferable,
   type CallTarget,
   type ClientMessage,
   type CollectionShape,
@@ -83,7 +86,10 @@ function resolveTarget(source: SdkHostSource, target: CallTarget, method: string
   }
   const current = source.currentCollection();
   if (current?.key !== target.key) {
-    throw refused("The collection connection changed. Try again.", "connection_retired");
+    throw refused(
+      translate({ message: "The collection connection changed. Try again." }),
+      "connection_retired",
+    );
   }
   const repository = (current.collection as unknown as Record<string, unknown>)[target.repository];
   const bound = member(repository, method);
@@ -105,7 +111,7 @@ export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): 
     post({
       kind: "snapshot",
       host: hostId,
-      snapshot: application.getSnapshot(),
+      snapshot: transferable(application.getSnapshot()),
       collection: current ? shapeOf(current.key, current.collection) : null,
     });
   };
@@ -139,7 +145,7 @@ export function serveSdk(link: SdkLink, source: SdkHostSource, hostId: string): 
         ...decodeArgs(message.args, controller.signal, onCallback),
       );
       try {
-        post({ ...reply, ok: true, value });
+        post({ ...reply, ok: true, value: transferable(value) });
       } catch (reason) {
         // The SDK's answer cannot cross the channel (it holds functions).
         post({ ...reply, ok: false, value: serializeError(reason) });

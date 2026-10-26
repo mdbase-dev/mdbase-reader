@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useState } from "react";
@@ -121,7 +122,7 @@ function AnnotationEditorActions({
       >
         {deleteStatus === "checking"
           ? t({ message: "Checking…", context: "AnnotationEditor interface" })
-          : t({ message: "Delete", context: "AnnotationEditor interface" })}
+          : translate({ message: "Delete annotation" })}
       </button>
       <AnnotationSaveState status={failed ? "failed" : shown} />
       {status === "unsaved" || status === "error" ? (
@@ -236,7 +237,12 @@ function AnnotationSaveState({ status }: { readonly status: string }): JSX.Eleme
   );
 }
 
-function AnnotationDeleteConfirmation({
+/** The plan names embedding notes by path; a note is known to the reader by its file name. */
+function noteTitle(path: string): string {
+  return (path.split("/").at(-1) ?? path).replace(/\.md$/iu, "");
+}
+
+export function AnnotationDeleteConfirmation({
   plan,
   deleting,
   onCancel,
@@ -256,11 +262,13 @@ function AnnotationDeleteConfirmation({
       {plan.brokenLinkPaths.length > 0 ? (
         <>
           <p>
-            <Trans>These notes embed it and will show a broken embed:</Trans>
+            <Trans>These notes embed this annotation and will show it as missing:</Trans>
           </p>
           <ul>
             {plan.brokenLinkPaths.map((path) => (
-              <li key={path}>{path}</li>
+              <li key={path} title={path}>
+                {noteTitle(path)}
+              </li>
             ))}
           </ul>
         </>
@@ -272,7 +280,7 @@ function AnnotationDeleteConfirmation({
         <button className="is-danger" type="button" disabled={deleting} onClick={onConfirm}>
           {deleting
             ? t({ message: "Deleting…", context: "AnnotationEditor interface" })
-            : t({ message: "Delete", context: "AnnotationEditor interface" })}
+            : translate({ message: "Delete annotation" })}
         </button>
       </div>
     </section>

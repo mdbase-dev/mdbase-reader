@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { moveMenuFocus, useMenuPopover } from "@mdbase-dev/ui/popover";
 import { useRef, useState, type CSSProperties, type JSX, type RefObject } from "react";
@@ -130,6 +131,7 @@ function CollectionItem({
   readonly disabled: boolean;
   readonly onChoose: (collectionId: string) => void;
 }): JSX.Element {
+  useLocale();
   const place = locationLabel(choice);
   return (
     <button

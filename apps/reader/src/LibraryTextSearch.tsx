@@ -1,13 +1,22 @@
-import { t as translate } from "@lingui/core/macro";
+import { plural, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useEffect, useId, useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { documentPassageLabel } from "./passage-labels.js";
 import { searchExcerpt, type SearchExcerpt } from "./search-passages.js";
+import { useIndexedDocumentSearch } from "./use-indexed-document-search.js";
 import { useOpenDocumentSearch } from "./use-open-document-search.js";
 
+import type { DocumentSearchHit } from "./use-indexed-document-search.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { SourceId, SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
+import type {
+  SearchDestination,
+  SourceId,
+  SourceSummary,
+  SourceTextSearchMatch,
+} from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export type LibrarySearchScope = "sources" | "notes" | "documents";
@@ -18,7 +27,11 @@ interface LibraryTextSearchProps {
   readonly sources: readonly SourceSummary[];
   readonly gateway: ReaderWorkspaceGateway;
   readonly surfaces: ReadonlyMap<string, ReadingSurface> | undefined;
-  readonly onOpen: (id: SourceId, view: "document" | "note" | "annotations") => void;
+  readonly onOpen: (
+    id: SourceId,
+    view: "document" | "note" | "annotations",
+    destination?: SearchDestination,
+  ) => void;
 }
 
 export function LibraryTextSearch({
@@ -39,6 +52,12 @@ export function LibraryTextSearch({
   } | null>(null);
   const [limit, setLimit] = useState(100);
   const documents = useOpenDocumentSearch(scope === "documents", sources, surfaces, normalized);
+  const indexed = useIndexedDocumentSearch(
+    scope === "documents",
+    normalized,
+    sources,
+    documents.matches,
+  );
   useEffect(() => {
     if (scope !== "notes" || normalized.length < 2) {
       return undefined;
@@ -54,14 +73,7 @@ export function LibraryTextSearch({
         })
         .catch((reason: unknown) => {
           if (!controller.signal.aborted) {
-            setResult({
-              query: normalized,
-              matches: [],
-              problem: readerErrorMessage(
-                reason,
-                translate({ message: "Text search failed. Change the query to retry." }),
-              ),
-            });
+            setResult(failedSearch(normalized, reason));
           }
         });
     }, 180);
@@ -76,59 +88,57 @@ export function LibraryTextSearch({
     normalized.length < 2
       ? []
       : sources.filter(({ id }) =>
-          scope === "documents" ? documents.matches.has(id) : noteMatches.has(id),
+          scope === "documents" ? indexed.matches.has(id) : noteMatches.has(id),
         );
   const problem = scope === "documents" ? documents.problem : current?.problem;
   return (
     <section className="library-text-search" aria-label={t({ message: "Text search results" })}>
       <p className="search-coverage" role="status">
         {scope === "documents"
-          ? documents.coverage
-          : t({
+          ? indexed.paused
+            ? translate({
+                message: "Saved-page indexing is paused. Open documents are still searched.",
+              })
+            : translate({
+                message:
+                  "Searches saved web pages and open documents. PDFs and EPUBs must be open.",
+              })
+          : translate({
               message:
-                "Searches literature notes and annotation text, not PDF, EPUB or saved-page contents.",
+                "Searches source notes and annotation text, not PDF, EPUB or saved-page contents.",
             })}
       </p>
+      {scope === "documents" ? (
+        <details className="search-coverage search-details">
+          <summary>
+            <Trans>Search details</Trans>
+          </summary>
+          <p>
+            {indexed.status} {documents.coverage}
+          </p>
+          <p>
+            <Trans>
+              Results open at the matching passage. If it cannot be found, use Find in the document.
+            </Trans>
+          </p>
+          <IndexPauseControl paused={indexed.paused} togglePause={indexed.togglePause} />
+        </details>
+      ) : null}
       {problem ? <p role="alert">{problem}</p> : null}
       <p role="status">{searchStatus(normalized, scope === "notes" && !current, visible.length)}</p>
-      {scope === "documents" ? (
-        <p className="search-coverage">
-          <Trans>Open a result, then use the document’s Find control to locate the passage.</Trans>
-        </p>
-      ) : null}
       <ul className="search-passage-list">
-        {visible.slice(0, limit).map((source) => {
-          const note = noteMatches.get(source.id);
-          const passage = note?.passages?.[0];
-          const excerpt =
-            scope === "documents"
-              ? documents.matches.get(source.id)
-              : passage
-                ? searchExcerpt(passage.text, normalized)
-                : null;
-          const view =
-            scope === "documents"
-              ? "document"
-              : passage?.kind === "annotation" || note?.kinds[0] === "annotation"
-                ? "annotations"
-                : "note";
-          return (
-            <li key={source.id}>
-              <button type="button" onClick={() => onOpen(source.id, view)}>
-                <strong>{source.title}</strong>
-                <small>
-                  {source.creators.join(", ")} ·{" "}
-                  {view === "document"
-                    ? t({ message: "Open document", context: "LibraryTextSearch interface" })
-                    : view === "note"
-                      ? t({ message: "Literature note", context: "LibraryTextSearch interface" })
-                      : t({ message: "Annotation text", context: "LibraryTextSearch interface" })}
-                </small>
-                {excerpt ? <Excerpt value={excerpt} /> : null}
-              </button>
-            </li>
-          );
-        })}
+        {visible.slice(0, limit).map((source) => (
+          <SearchResult
+            key={source.id}
+            source={source}
+            scope={scope}
+            query={normalized}
+            note={noteMatches.get(source.id)}
+            document={indexed.matches.get(source.id)}
+            destination={indexed.matches.get(source.id)?.destination}
+            onOpen={onOpen}
+          />
+        ))}
       </ul>
       {visible.length > limit ? (
         <button type="button" onClick={() => setLimit((value) => value + 100)}>
@@ -137,6 +147,94 @@ export function LibraryTextSearch({
       ) : null}
     </section>
   );
+}
+
+function SearchResult({
+  source,
+  scope,
+  query,
+  note,
+  document,
+  destination,
+  onOpen,
+}: {
+  readonly source: SourceSummary;
+  readonly scope: "notes" | "documents";
+  readonly query: string;
+  readonly note: SourceTextSearchMatch | undefined;
+  readonly document: DocumentSearchHit | undefined;
+  readonly destination: SearchDestination | undefined;
+  readonly onOpen: LibraryTextSearchProps["onOpen"];
+}): JSX.Element {
+  useLocale();
+  const passage = note?.passages?.[0];
+  const excerpt =
+    scope === "documents"
+      ? document?.excerpt
+      : passage
+        ? searchExcerpt(passage.text, query, { markdown: true })
+        : null;
+  const view =
+    scope === "documents"
+      ? "document"
+      : passage?.kind === "annotation" || note?.kinds[0] === "annotation"
+        ? "annotations"
+        : "note";
+  const descriptor = source.documents.find((file) =>
+    destination ? file.fileId === destination.document.fileId : file.file === document?.file,
+  );
+  const label =
+    view === "document"
+      ? documentPassageLabel(descriptor, destination, document?.file)
+      : view === "note"
+        ? translate({ message: "Source note" })
+        : translate({ message: "Annotation text" });
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onOpen(source.id, view, view === "document" ? destination : undefined)}
+      >
+        <strong>{source.title}</strong>
+        <small>{[source.creators.join(", "), label].filter(Boolean).join(" · ")}</small>
+        {excerpt ? <Excerpt value={excerpt} /> : null}
+      </button>
+    </li>
+  );
+}
+
+function IndexPauseControl({
+  paused,
+  togglePause,
+}: {
+  readonly paused: boolean;
+  readonly togglePause: (() => void) | undefined;
+}): JSX.Element | null {
+  useLocale();
+  if (!togglePause) {
+    return null;
+  }
+  return (
+    <button type="button" onClick={togglePause} aria-pressed={paused}>
+      {paused
+        ? translate({ message: "Resume library indexing" })
+        : translate({ message: "Pause library indexing" })}
+    </button>
+  );
+}
+
+function failedSearch(
+  query: string,
+  reason: unknown,
+): { query: string; matches: readonly SourceTextSearchMatch[]; problem: string } {
+  return {
+    query,
+    matches: [],
+    problem: readerErrorMessage(
+      reason,
+      translate({ message: "Text search failed. Change the query to retry." }),
+    ),
+  };
 }
 
 function Excerpt({ value }: { readonly value: SearchExcerpt }): JSX.Element {
@@ -156,5 +254,5 @@ function searchStatus(query: string, searching: boolean, count: number): string 
   if (searching) {
     return translate({ message: "Searching notes and annotations…" });
   }
-  return `${String(count)} matching ${count === 1 ? "source" : "sources"}`;
+  return plural(count, { one: "# matching source", other: "# matching sources" });
 }

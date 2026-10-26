@@ -48,7 +48,12 @@ describe("importSourceFile", () => {
       sourceId: "src_import",
       title: "manuscript final",
       recordPath: "sources/manuscript-final.md",
-      fallbackRecordPath: "sources/manuscript-final-import.md",
+      recordPathCandidates: [
+        "sources/manuscript-final.md",
+        "sources/manuscript-final-port.md",
+        "sources/manuscript-final-import.md",
+        "sources/src_import.md",
+      ],
       representations: [
         expect.objectContaining({
           role: "primary",

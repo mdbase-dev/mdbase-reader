@@ -1,0 +1,11 @@
+{
+  "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/january2024",
+  "retrievedAt": "2026-10-23T10:33:02.362258+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/january2024 -> https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/consumerpriceinflation/january2024. Captured 2026-10-23T10:33:02.362258+00:00; original 141482 bytes, reduced HTML 1378 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:22.017626+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Fwww.ons.gov.uk%2Feconomy%2Finflationandpriceindices%2Fbulletins%2Fconsumerpriceinflation%2Fjanuary2024. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: source page Cite this statistical bulletin explicitly says Office for National Statistics (ONS), released 14 February 2024, ONS website, statistical bulletin, Consumer price inflation, UK: January 2024. Its contact David Beckett is not the institutional author in that official citation, despite the Person author in JSON-LD. The complete release title includes January 2024, unlike the head title/headLine. Cite the release, not a January issue date or a continuously updated landing page.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: type, author; with recorded remotes: type, title, author. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

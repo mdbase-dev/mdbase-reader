@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 it("translates lazy tab descriptors without translating their stable identities", () => {
-  const note = msg({ message: "Note", context: "Source literature note tab" });
+  const note = msg`Literature note`;
   i18n.load("fr", { [note.id]: "Note de lecture" });
   i18n.activate("fr");
   const html = renderWithI18n(<PanelTabs tab="note" highlightCount={2} onChange={vi.fn()} />);
@@ -85,7 +85,7 @@ it("keeps injected PDF code serializable and returns a stable size code", async 
     Uint8Array,
     btoa,
   }) as typeof pagePdfBytes;
-  await expect(injected(4)).resolves.toEqual({ error: "too-large" });
+  await expect(injected(location.href, 4)).resolves.toEqual({ error: "too-large" });
 });
 
 it("never retries an oversized PDF based on translated error wording", async () => {

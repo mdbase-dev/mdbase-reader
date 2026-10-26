@@ -152,18 +152,7 @@ export const readerPdfUiSchema = {
   },
   modals: {},
   overlays: {},
-  selectionMenus: {
-    selection: {
-      id: "selection",
-      items: [
-        {
-          type: "command-button",
-          id: "reader-copy-selection",
-          commandId: "selection:copy",
-          variant: "icon",
-          categories: ["selection", "selection-copy"],
-        },
-      ],
-    },
-  },
+  // Reader's selection toolbar already offers copy. Hide only EmbedPDF's floating UI;
+  // keep the selection plugin/commands enabled for Ctrl+C, touch handles and area capture.
+  selectionMenus: {},
 } satisfies UISchema;

@@ -1,0 +1,53 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "key": "NDA7QC9Z",
+      "version": 0,
+      "itemType": "book",
+      "creators": [
+        {
+          "firstName": "Jane",
+          "lastName": "Austen",
+          "creatorType": "author"
+        }
+      ],
+      "tags": [
+        {
+          "tag": "England -- Fiction",
+          "type": 1
+        },
+        {
+          "tag": "Young women -- Fiction",
+          "type": 1
+        },
+        {
+          "tag": "Love stories",
+          "type": 1
+        },
+        {
+          "tag": "Sisters -- Fiction",
+          "type": 1
+        },
+        {
+          "tag": "Domestic fiction",
+          "type": 1
+        },
+        {
+          "tag": "Courtship -- Fiction",
+          "type": 1
+        },
+        {
+          "tag": "Social classes -- Fiction",
+          "type": 1
+        }
+      ],
+      "date": "1998-06-01",
+      "title": "Pride and Prejudice",
+      "language": "English",
+      "url": "https://www.gutenberg.org/ebooks/1342",
+      "libraryCatalog": "Project Gutenberg",
+      "accessDate": "2026-10-23"
+    }
+  ]
+}

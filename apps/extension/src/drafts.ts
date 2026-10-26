@@ -2,6 +2,8 @@ import { normalizedSourceUrl, type QuoteSelector } from "@mdbase-reader/core";
 
 import { highlightColors, type CaptureDraft, type HighlightColor } from "./save-capture.js";
 
+import type { JsonObject } from "@mdbase-reader/connect";
+
 /**
  * Unsaved text survives closing the panel, reloading the extension page or switching
  * tabs, for the rest of the browser session. `chrome.storage.session` stays in memory
@@ -49,6 +51,7 @@ export function saveDraft(tabId: number, url: string, value: StoredDraft): Promi
     !value.draft.note.trim() &&
     !value.draft.comment.trim() &&
     !value.draft.tags.trim() &&
+    !value.draft.titleEdited &&
     !value.selection;
   const write = empty
     ? chrome.storage.session.remove(key)
@@ -85,11 +88,14 @@ export function rememberColor(color: HighlightColor): void {
 /**
  * A saved source's literature note typed in the panel and not yet acknowledged by the
  * collection, with the text it was based on so a later restore can tell whether the
- * collection's copy moved on meanwhile. `requestId` names a write whose outcome is unknown.
+ * collection's copy moved on meanwhile. `patch` holds an edited title or tags, against the
+ * values in `baseFrontmatter`. `requestId` names a write whose outcome is unknown.
  */
 export interface NoteDraft {
   readonly body: string;
   readonly baseBody: string;
+  readonly patch?: JsonObject;
+  readonly baseFrontmatter?: JsonObject;
   readonly requestId?: string;
 }
 

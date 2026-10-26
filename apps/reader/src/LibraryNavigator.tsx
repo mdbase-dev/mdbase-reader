@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { filterSources } from "@mdbase-reader/core";
@@ -10,6 +11,7 @@ import {
   recentSources,
   sourceFormat,
 } from "./NavigatorSections.js";
+import { sourceCreatorsText, sourcesById } from "./source-creators.js";
 import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
 import { keyboardSourceIndex } from "./virtual-source-list.js";
 
@@ -61,12 +63,13 @@ export function LibraryNavigator({
   const openKey = openSources.map(({ id }) => id).join("\n");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const recent = useMemo(() => recentSources(sources, openSources), [openKey, sources]);
-  const rowProps = { selectedSourceId, onPreviewSource, onOpenSource, onOpenBeside };
+  const library = useMemo(() => sourcesById(sources), [sources]);
+  const rowProps = { library, selectedSourceId, onPreviewSource, onOpenSource, onOpenBeside };
   return (
     <aside
       id="reader-library-navigator"
       className="library-pane library-navigator"
-      aria-label={t({ message: "Library navigator", context: "LibraryNavigator interface" })}
+      aria-label={translate({ message: "Sources sidebar" })}
       aria-hidden={!open}
       inert={!open}
     >
@@ -115,6 +118,7 @@ export function LibraryNavigator({
             ) : (
               <NavigatorSourceList
                 sources={visibleSources}
+                library={library}
                 selectedSourceId={selectedSourceId}
                 resetKey={query}
                 onPreviewSource={onPreviewSource}
@@ -212,6 +216,7 @@ function NavigatorEmptySources({
 
 function NavigatorSourceList({
   sources,
+  library,
   selectedSourceId,
   resetKey,
   onPreviewSource,
@@ -219,6 +224,7 @@ function NavigatorSourceList({
   onOpenBeside,
 }: {
   readonly sources: readonly SourceSummary[];
+  readonly library: ReadonlyMap<SourceId, SourceSummary>;
   readonly selectedSourceId: SourceId | null;
   readonly resetKey: string;
   readonly onPreviewSource: (id: SourceId) => void;
@@ -292,8 +298,11 @@ function NavigatorSourceList({
                 <span>
                   <strong>{source.title}</strong>
                   <small>
-                    {source.creators.join(", ") ||
-                      t({ message: "Unknown creator", context: "LibraryNavigator interface" })}
+                    {sourceCreatorsText(
+                      source,
+                      library,
+                      t({ message: "Unknown creator", context: "LibraryNavigator interface" }),
+                    )}
                   </small>
                 </span>
               </button>

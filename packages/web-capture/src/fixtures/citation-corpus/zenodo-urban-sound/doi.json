@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "body": {
+    "type": "dataset",
+    "id": "https://doi.org/10.5281/zenodo.1203745",
+    "author": [
+      {
+        "family": "Salamon",
+        "given": "Justin"
+      },
+      {
+        "family": "Jacoby",
+        "given": "Christopher"
+      },
+      {
+        "family": "Bello",
+        "given": "Juan Pablo"
+      }
+    ],
+    "issued": {
+      "date-parts": [[2014, 11, 3]]
+    },
+    "abstract": "Please visit urbansounddataset.weebly.com for a detailed description.",
+    "DOI": "10.5281/ZENODO.1203745",
+    "publisher": "Zenodo",
+    "title": "Urbansound8K",
+    "URL": "https://zenodo.org/record/1203745",
+    "copyright": "Creative Commons Attribution-NonCommercial 4.0"
+  }
+}

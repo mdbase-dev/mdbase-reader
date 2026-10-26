@@ -18,37 +18,36 @@ export function useSelectionRouting(input: {
   readonly sourceId: SourceId | null;
   readonly surface: ReadingSurface | null;
   readonly buffer: AnnotationCreationBuffer;
-  readonly paused: boolean;
   readonly busy: RefObject<boolean>;
-  readonly offerSwitch: (value: ComposerSelection) => void;
   readonly compose: (value: ComposerSelection) => void;
   readonly highlight: (value: TextComposerSelection) => void;
   readonly showToolbar: (value: TextComposerSelection) => void;
 }): void {
   const { key, sourceId, surface } = input;
-  const route = (value: ComposerSelection): void => {
+  const route = async (value: ComposerSelection): Promise<void> => {
     const previous = input.buffer.get();
     const decision = selectionRoute({
       value,
       draft: previous,
-      paused: input.paused,
       busy: input.busy.current,
       instant: highlightOnSelect() === "instant",
     });
-    if (decision === "offer-switch") {
-      input.offerSwitch(value);
-    } else if (decision === "compose") {
+    if (decision === "compose") {
       input.compose(value);
     } else if (decision === "confirm-compose") {
       if (
-        confirmAnnotationDiscard(
+        (await confirmAnnotationDiscard(
           t({ message: "Discard the unfinished annotation comment and use this area?" }),
-        )
+        )) &&
+        // The route function is recreated every render; only a change of document matters.
+        target.current === `${key}|${String(sourceId)}` &&
+        input.buffer.get() === previous &&
+        !input.busy.current
       ) {
         input.compose(value);
       }
     } else if (value.kind === "text" && (decision === "highlight" || decision === "toolbar")) {
-      // An untouched comment gives way to the new selection; written words stay set aside.
+      // A capture nobody has written about gives way to new text; a written comment stays open.
       if (previous && !previous.body.trim()) {
         input.buffer.replace(null);
       }
@@ -56,8 +55,10 @@ export function useSelectionRouting(input: {
     }
   };
   const routeRef = useRef(route);
+  const target = useRef(`${key}|${String(sourceId)}`);
   useEffect(() => {
     routeRef.current = route;
+    target.current = `${key}|${String(sourceId)}`;
   });
   // Listen from the start: only the composer path needs the stored draft, and selections made
   // while it loads from device storage would otherwise be dropped.
@@ -65,6 +66,6 @@ export function useSelectionRouting(input: {
     if (!key) {
       return undefined;
     }
-    return subscribeToSelections(sourceId, surface, ({ value }) => routeRef.current(value));
+    return subscribeToSelections(sourceId, surface, ({ value }) => void routeRef.current(value));
   }, [key, sourceId, surface]);
 }

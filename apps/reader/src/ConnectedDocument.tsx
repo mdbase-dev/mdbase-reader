@@ -1,9 +1,15 @@
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useFeedback } from "@mdbase-dev/ui/feedback";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
 
 import { isEpub, isHtml, isPdf } from "./document-media.js";
+import {
+  EpubViewerSurface,
+  HtmlViewerSurface,
+  PdfViewerSurface,
+  preloadDocumentRenderer,
+} from "./document-renderers.js";
 import { DocumentMessage, RendererStage, type RendererState } from "./DocumentRendererStage.js";
 
 import type {
@@ -13,21 +19,6 @@ import type {
   SourceSummary,
 } from "@mdbase-reader/core";
 import type { ReadingSurface, SurfaceDocument } from "@mdbase-reader/reading-surface";
-
-const PdfViewerSurface = lazy(async () => {
-  const module = await import("@mdbase-reader/renderer-pdf");
-  return { default: module.PdfViewerSurface };
-});
-
-const EpubViewerSurface = lazy(async () => {
-  const module = await import("@mdbase-reader/renderer-epub");
-  return { default: module.EpubViewerSurface };
-});
-
-const HtmlViewerSurface = lazy(async () => {
-  const module = await import("@mdbase-reader/renderer-html");
-  return { default: module.HtmlViewerSurface };
-});
 
 export interface ConnectedDocumentProps {
   readonly repository: DocumentRepository;
@@ -96,6 +87,7 @@ function OpenConnectedDocument({
     let active = true;
     let opened: DocumentHandle | null = null;
     const controller = new AbortController();
+    preloadDocumentRenderer(stableDescriptor.mediaType, stableDescriptor.file);
     void repository
       .open(source.collectionId, stableDescriptor, { signal: controller.signal })
       .then((handle) => {

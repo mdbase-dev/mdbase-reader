@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { useEffect, useState, type JSX } from "react";
 
@@ -24,6 +25,7 @@ export function AnnotationImage({
   readonly image: AnnotationImageEmbed;
   readonly readFile: AnnotationFileReader;
 }): JSX.Element {
+  useLocale();
   const [state, setState] = useState<ImageState>({ status: "loading" });
   useEffect(() => {
     const request = new AbortController();

@@ -44,9 +44,19 @@ it("shows a feed picker with the viewport post preselected, without offering to 
   expect(html.match(/checked=""/gu)).toHaveLength(1);
 });
 
+const ready = {
+  status: "ready",
+  collectionId: "c1",
+  collections: [{ collectionId: "c1", displayName: "[test] Papers" }],
+} as unknown as ExtensionCaptureController["snapshot"];
+const signedOut = {
+  status: "signed_out",
+  collections: [],
+} as unknown as ExtensionCaptureController["snapshot"];
+
 function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTab): string {
   const controller = {
-    snapshot: { status: "signed_out", collections: [] },
+    snapshot: ready,
     capture: {
       kind: "html",
       pageTitle: "[test] Article",
@@ -67,25 +77,36 @@ function markup(changes: Partial<ExtensionCaptureController> = {}, tab?: PanelTa
     busy: false,
     annotations: [],
     setDraft: vi.fn(),
+    highlight: { colors: ["yellow", "green", "blue", "pink", "purple"], meanings: {} },
     knownTags: [],
-    note: { status: "idle", session: null, problem: null, load: vi.fn(), saveDetails: vi.fn() },
+    note: { status: "idle", session: null, problem: null, load: vi.fn() },
     ...changes,
   } as unknown as ExtensionCaptureController;
   return renderToStaticMarkup(
     <CaptureApp controller={controller} {...(tab ? { initialTab: tab } : {})} />,
   );
 }
-it("asks a new user only to connect, with editable metadata and no status noise", () => {
-  const html = markup({}, "note");
+it("asks a new user only to connect, with no forms that cannot save yet", () => {
+  const html = markup({ snapshot: signedOut }, "note");
   expect(html).toContain("Connect a collection");
   expect(html).toContain("Connect to mdbase LAB");
   expect(html).not.toContain("Connect another collection");
   expect(html).not.toContain("Choose a collection");
+  expect(html).toContain(
+    "Connect a collection above to give this page a title, tags and a literature note.",
+  );
+  expect(html).not.toContain('id="title"');
+  expect(html).not.toContain('id="note"');
+  expect(html).not.toContain("Save page");
+  expect(html).not.toContain("disabled");
+  expect(html).not.toContain("Not saved yet.");
+});
+it("offers the new source's title, tags and note once connected", () => {
+  const html = markup({}, "note");
   expect(html).toContain('id="title"');
   expect(html).toContain('id="tags"');
   expect(html).toContain('id="note"');
-  expect(html).not.toContain("Not saved yet.");
-  expect(html).not.toContain("Source saved in mdbase.");
+  expect(html).toContain("Save page");
 });
 it("picks among connected collections with Reader's select", () => {
   const html = markup({
@@ -114,23 +135,42 @@ it("links the brand to the Reader library on the selected collection", () => {
 });
 it("offers recovery even when initial registration fails", () => {
   const html = markup({ problem: "The request origin is not allowed." });
-  expect(html).toContain("Not connected");
-  expect(html).toContain("Retry connection");
+  expect(html).toContain("We couldn’t reach your collection");
+  expect(html).toContain("Try again in a moment.");
+  expect(html).toContain(">Try again<");
   expect(html).toContain("Review access");
+  // The underlying message waits behind a disclosure.
+  expect(html).toMatch(
+    /<details class="technical"><summary>Technical details<\/summary><p>The request origin is not allowed.<\/p>/u,
+  );
   expect(html).toContain("will not bypass the origin check");
 });
-it("does not claim an unknown write failed to persist", () => {
+it("says plainly that an unknown write may have saved, with jargon behind a disclosure", () => {
   const html = markup({ problem: "Outcome unknown", problemKind: "save", saveAttempted: true });
-  expect(html).toContain("Save not confirmed");
-  expect(html).toContain("check for an existing source");
-  expect(html).toContain("Retry save");
+  expect(html).toContain("We couldn’t confirm this saved");
+  expect(html).toContain("It may have saved. Check again: nothing is saved twice.");
+  expect(html).toContain(">Check again<");
+  expect(html).not.toMatch(/<strong>[^<]*Outcome unknown/u);
+  expect(html).toMatch(/Technical details<\/summary><p>Outcome unknown<\/p>/u);
+  expect(html).not.toContain("Save not confirmed");
   expect(html).not.toContain("Retry connection");
+});
+it("shows a problem the panel worded itself as it is", () => {
+  const plain = "Sign in to mdbase before saving.";
+  const html = markup({
+    problem: plain,
+    problemSummary: plain,
+    problemKind: "save",
+    saveAttempted: true,
+  });
+  expect(html).toContain(`<p>${plain}</p>`);
+  expect(html).not.toContain("Technical details");
 });
 it("does not offer Connect recovery when the page itself cannot be read", () => {
   const html = markup({ problem: "Cannot access this page", problemKind: "page" });
-  expect(html).toContain("Reader cannot read this page");
+  expect(html).toContain("Reader can’t read this page");
   expect(html).toContain("Reload the page");
-  expect(html).not.toContain("Retry connection");
+  expect(html).not.toContain("Try again");
   expect(html).not.toContain("Review access");
 });
 const savedSource = {
@@ -160,7 +200,7 @@ it("lists saved highlights and says which ones the page could not show", () => {
       ]),
     } as unknown as ExtensionCaptureController["projection"],
   });
-  expect(html).toMatch(/Saved highlights <span>3<\/span>/u);
+  expect(html).toContain(">Saved highlights</h2>");
   expect(html).toMatch(/Highlights<\/span><span class="panel-tab-count">3<\/span>/u);
   expect(html).toContain("shown passage");
   expect(html).toContain("My comment");
@@ -172,7 +212,13 @@ it("lists saved highlights and says which ones the page could not show", () => {
   expect(html).toContain("still in the saved copy");
   expect(html).not.toContain("A note without a quote");
   expect(html).toContain("collection=c1&amp;source=s1");
-  expect(html).toMatch(/Saved · <a[^>]*>Open in Reader/u);
+  // Each highlight opens Reader at its own passage.
+  expect(html).toMatch(
+    /href="[^"]*collection=c1&amp;source=s1&amp;annotation=a2"[^>]*>Open in Reader/u,
+  );
+  expect(html).toMatch(
+    /role="status"[^>]*><span>In your collection<\/span> · <a[^>]*>Open in Reader/u,
+  );
   // The passage is tinted in its colour; there is no hint while saved highlights show.
   expect(html).toMatch(/swatch-green"><button[^>]*><span class="highlight-mark">shown passage/u);
   expect(html).not.toContain("Select text on the page");
@@ -234,18 +280,33 @@ it("does not display stale write progress after a successful save", () => {
     refreshing: true,
     progress: { phase: "creating", completedBytes: 1, totalBytes: 1, fileIndex: 1, fileCount: 1 },
   });
-  expect(html).toContain("Source saved in mdbase.");
-  expect(html).toContain("Updating…");
-  expect(html).toContain("Saved · ");
+  expect(html).toMatch(/<span>Saved<\/span> · <a[^>]*>Open in Reader/u);
+  // Highlights are read again on return to the panel; there is no Refresh to press.
+  expect(html).not.toContain("Refresh");
   expect(html).not.toContain("Saving source record");
+});
+it("says a highlight saved once, in the status line with its way back", () => {
+  const html = markup({
+    status: "saved",
+    source: savedSource,
+    notice: "Highlight saved.",
+    undoable: { id: "a1" } as unknown as ExtensionCaptureController["undoable"],
+  });
+  expect(html).toMatch(
+    /<p class="page-status" role="status"[^>]*><span>Highlight saved.<\/span> · <a[^>]*>Open in Reader<\/a> · <button[^>]*>Undo<\/button><\/p>/u,
+  );
+  expect(html.match(/Open in Reader/gu)).toHaveLength(1);
+  expect(html).not.toContain("Saved to your collection");
+  // No count on the tab before there is anything to count.
+  expect(html).not.toContain("panel-tab-count");
 });
 it("labels recovery scans separately from duplicate checks", () => {
   const html = markup({
     busy: true,
     progress: { phase: "recovering", completedBytes: 0, totalBytes: 1, fileIndex: 0, fileCount: 1 },
   });
-  expect(html).toContain("Checking files from the previous save attempt");
-  expect(html).not.toContain("Checking for duplicates");
+  expect(html).toContain("Checking what the last attempt saved");
+  expect(html).not.toContain("already saved…");
 });
 it("labels a non-production build and links to settings", () => {
   const html = markup();
@@ -253,39 +314,61 @@ it("labels a non-production build and links to settings", () => {
   expect(html).toContain('title="Settings and shortcuts"');
   expect(html).toContain("Select text on the page to highlight it.");
 });
-it("saves a live selection by choosing its colour, with the page's own save set aside", () => {
-  const html = markup({
-    capture: {
-      kind: "html",
-      pageTitle: "[test] Article",
-      canonicalUrl: "https://example.com/",
-      selection: { exact: "a chosen passage" },
-    } as ExtensionCaptureController["capture"],
-    draft: {
-      title: "[test] Article",
-      tags: "",
-      note: "",
-      comment: "",
-      highlight: true,
-      color: "blue",
-      highlightTags: "",
-    },
-  });
+const selected = {
+  capture: {
+    kind: "html",
+    pageTitle: "[test] Article",
+    canonicalUrl: "https://example.com/",
+    selection: { exact: "a chosen passage" },
+  } as ExtensionCaptureController["capture"],
+  draft: {
+    title: "[test] Article",
+    tags: "",
+    note: "",
+    comment: "",
+    highlight: true,
+    color: "blue",
+    highlightTags: "",
+  },
+} satisfies Partial<ExtensionCaptureController>;
+it("saves a live selection with one Highlight action, its colour chosen beside it", () => {
+  const html = markup(selected);
   expect(html).toContain("a chosen passage");
-  expect(html).toContain("Save page and highlight");
-  // Each colour is a save action, not a toggle; the last-used one is only marked.
-  expect(html).not.toContain("aria-pressed");
+  // One primary action, in the device's colour; the colours only choose.
   expect(html).toMatch(
-    /class="swatch swatch-blue is-last" aria-keyshortcuts="3" title="Save in blue \(3, or Ctrl\+Enter\)"[^>]*>blue</u,
+    /<button type="button" class="primary highlight-button swatch-blue"[^>]*title="Highlight in blue \(Ctrl\+Enter\)"[^>]*>Highlight</u,
   );
-  expect(html).toMatch(/class="swatch swatch-yellow" aria-keyshortcuts="1"[^>]*>yellow</u);
+  expect(html).toContain('role="radiogroup" aria-label="Highlight colour"');
+  expect(html).toMatch(
+    /role="radio" data-color="blue" class="color-dot swatch-blue" aria-checked="true" aria-label="blue" aria-keyshortcuts="3" tabindex="0"/u,
+  );
+  expect(html).toMatch(/data-color="yellow"[^>]*aria-checked="false"[^>]*tabindex="-1"/u);
+  expect(html).toContain("Blue · Saves the page too");
   expect(html).toContain('aria-keyshortcuts="Escape"');
-  // Comment and tags wait behind one link, above the colours that save.
+  // Comment and tags wait behind one link, above the action.
   expect(html).not.toContain('id="highlight-tags"');
-  expect(html.indexOf("Add a comment or tags")).toBeLessThan(html.indexOf("swatch-yellow"));
+  expect(html.indexOf("Add a comment or tags")).toBeLessThan(html.indexOf("highlight-button"));
   // Saving only the page stays available, but not as the main action.
   expect(html).toMatch(/<button class="secondary" type="button"[^>]*>Save page</u);
-  expect(html).not.toContain("Save source and highlight");
+  expect(html).not.toContain("Save page and highlight");
+});
+it("offers only the collection's colours, in its order, with their meanings", () => {
+  const html = markup({
+    ...selected,
+    draft: { ...selected.draft, color: "yellow" },
+    highlight: { colors: ["pink", "blue"], meanings: { pink: "Question" } },
+  });
+  expect(html).not.toContain('data-color="yellow"');
+  expect(html).not.toContain('data-color="green"');
+  // Yellow, the device's colour, is hidden: the first offered colour is chosen instead.
+  expect(html).toMatch(
+    /data-color="pink" class="color-dot swatch-pink" aria-checked="true" aria-label="pink, Question" aria-keyshortcuts="1"/u,
+  );
+  expect(html).toMatch(
+    /data-color="blue" class="color-dot swatch-blue" aria-checked="false"[^>]*aria-keyshortcuts="2"/u,
+  );
+  expect(html.indexOf('data-color="pink"')).toBeLessThan(html.indexOf('data-color="blue"'));
+  expect(html).toContain("Pink · Question");
 });
 it("shows where a new source's citation comes from", () => {
   const html = markup(
@@ -300,6 +383,8 @@ it("shows where a new source's citation comes from", () => {
         },
         origin: "doi",
         doi: "10.1038/171737a0",
+        provenance: {},
+        outcomes: [],
       },
     },
     "citation",
@@ -309,6 +394,42 @@ it("shows where a new source's citation comes from", () => {
   expect(html).toContain("10.1038/171737a0");
   expect(html).toContain("From the DOI registry");
 });
+it("keeps the page preview visible while a quiet status reports the pending lookup", () => {
+  const html = markup(
+    {
+      citationPending: true,
+      citation: {
+        citation: { type: "webpage", title: "Page title" },
+        origin: "page",
+        provenance: {},
+        outcomes: [],
+      },
+    },
+    "citation",
+  );
+  expect(html).toContain("Page title");
+  expect(html).toContain('role="status"');
+  expect(html).toContain("Still looking for citation details… You can save now.");
+  expect(html).toContain("From the page’s metadata.");
+});
+
+it("labels Citoid evidence without showing provider failures as errors", () => {
+  const html = markup(
+    {
+      citation: {
+        citation: { type: "entry-encyclopedia", title: "Australia" },
+        origin: "citoid",
+        provenance: {},
+        outcomes: [],
+      },
+    },
+    "citation",
+  );
+  expect(html).toContain("Includes details from Wikimedia’s Citoid service.");
+  expect(html).not.toContain("did not answer");
+  expect(html).not.toContain("DOI record was unavailable");
+});
+
 it("saves PDFs without offering in-page highlighting", () => {
   const html = markup({
     capture: {
@@ -376,10 +497,14 @@ it("shows Reader's three source tabs, opening on Highlights", () => {
   const html = markup();
   expect(html).toContain('role="tablist"');
   expect(html).toMatch(/aria-selected="true"[^>]*>.*Highlights/u);
-  expect(html).toMatch(/aria-selected="false"[^>]*>.*Note/u);
+  expect(html).toMatch(/aria-selected="false"[^>]*>.*Literature note/u);
   expect(html).toMatch(/aria-selected="false"[^>]*>.*Citation/u);
   // No count before the page is saved: there is nothing to count yet.
   expect(html).not.toContain("panel-tab-count");
+  // The page and its save action sit in the fixed head; the tabs scroll in the body below.
+  expect(html).toMatch(
+    /<div class="panel-head">.*class="page-card".*Save page.*<\/div><div class="panel-body">.*role="tablist"/u,
+  );
   expect(html).not.toContain('id="title"');
   expect(html).toContain('<div class="tab-hint"><p>Select text on the page to highlight it.</p>');
   expect(html).toContain("<kbd>Esc</kbd> clears it");
@@ -402,9 +527,9 @@ it("asks for a title from the save action when the draft has none", () => {
     },
   });
   expect(html).toMatch(/<button class="primary" type="button" disabled=""/u);
-  expect(html).toContain("Give the source a title under Note");
+  expect(html).toContain("Give the source a title under Literature note");
 });
-it("edits a saved source's title and tags and opens its note", () => {
+it("opens a saved source's title, tags and note together", () => {
   const html = markup(
     {
       source: { ...savedSource, tags: ["ml", "vision"] } as ExtensionCaptureController["source"],
@@ -413,14 +538,12 @@ it("edits a saved source's title and tags and opens its note", () => {
         session: null,
         problem: null,
         load: vi.fn(),
-        saveDetails: vi.fn(),
       },
     },
     "note",
   );
-  expect(html).toMatch(/id="saved-title"[^>]*value="\[test\] Saved"/u);
-  expect(html).toMatch(/id="saved-tags"[^>]*value="ml, vision"/u);
-  // Nothing changed yet, so there is nothing to save.
+  // They autosave through one session, so none is editable until it opens.
+  expect(html).not.toContain('id="saved-title"');
   expect(html).not.toContain("Save title and tags");
   expect(html).toContain("Opening the literature note…");
   expect(html).toContain("Edit in Reader");
@@ -434,12 +557,11 @@ it("offers to retry when the saved note cannot be opened", () => {
         session: null,
         problem: "Request timed out",
         load: vi.fn(),
-        saveDetails: vi.fn(),
       },
     },
     "note",
   );
-  expect(html).toContain("Could not open the literature note.");
+  expect(html).toContain("We couldn’t open the literature note");
   expect(html).toContain("Request timed out");
   expect(html).toContain("Try again");
 });
@@ -464,6 +586,9 @@ it("shows a saved source's citation ready to copy", () => {
   expect(html).toContain("<p>Watson</p><p>1953</p>");
   expect(html).toContain("<code>watson1953</code>");
   expect(html).toContain("10.1038/171737a0");
+  // The formatted reference follows once citeproc loads; until then its details show.
+  expect(html).toContain("Formatting…");
+  expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Copy citation<\/button>/u);
   expect(html).toContain("Copy citekey");
   expect(html).toContain("Copy CSL-JSON");
 });
@@ -496,11 +621,12 @@ it("titles the page as it will be saved, not as the tab names it", () => {
   });
   expect(html).toContain("<h1>[test] Diphoton production</h1>");
 });
-it("says why a selected passage cannot be saved yet", () => {
+it("says what a selected passage needs before it can be saved, without a dead form", () => {
   const html = markup({
     snapshot: {
-      status: "signed_out",
-      collections: [],
+      status: "setup",
+      collectionId: "c1",
+      collections: [{ collectionId: "c1", displayName: "Papers" }],
     } as unknown as ExtensionCaptureController["snapshot"],
     capture: {
       kind: "html",
@@ -509,6 +635,15 @@ it("says why a selected passage cannot be saved yet", () => {
       selection: { exact: "a passage" },
     } as ExtensionCaptureController["capture"],
   });
-  expect(html).toContain("Sign in to mdbase before saving.");
-  expect(html).toMatch(/class="swatch swatch-yellow[^"]*"[^>]*disabled=""/u);
+  expect(html).toContain("Set up collection");
+  expect(html).toContain("Set up this collection above to highlight the selected passage.");
+  expect(html).not.toContain("highlight-button");
+  expect(html).not.toContain("Save page");
+});
+it("says a Reader page is Reader itself, with nothing to save", () => {
+  const html = markup({ capture: null, readerPage: true });
+  expect(html).toContain("<h1>This is mdbase Reader</h1>");
+  expect(html).toContain("Nothing to save here");
+  expect(html).not.toContain("Save page");
+  expect(html).not.toContain("Reader cannot read this page");
 });

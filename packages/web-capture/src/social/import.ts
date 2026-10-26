@@ -105,6 +105,7 @@ export async function socialPostImport(
       description: post.text.slice(0, 2_000),
     },
     scholarly: { citation: postCitation(post) },
+    claims: { claims: [] },
   };
 }
 

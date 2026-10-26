@@ -2,6 +2,7 @@ import { t as translate } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 
 import { PlusIcon } from "./icons.js";
+import { sourceCreatorsText } from "./source-creators.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
@@ -11,6 +12,7 @@ const recentLimit = 8;
 export function NavigatorShortList({
   label,
   sources,
+  library,
   selectedSourceId,
   onPreviewSource,
   onOpenSource,
@@ -18,6 +20,8 @@ export function NavigatorShortList({
 }: {
   readonly label: string;
   readonly sources: readonly SourceSummary[];
+  /** Every loaded source, so a chapter can be shown with its book's creators. */
+  readonly library: ReadonlyMap<SourceId, SourceSummary>;
   readonly selectedSourceId: SourceId | null;
   readonly onPreviewSource: (id: SourceId) => void;
   readonly onOpenSource: (id: SourceId) => void;
@@ -50,7 +54,7 @@ export function NavigatorShortList({
               </span>
               <span>
                 <strong>{source.title}</strong>
-                <small>{sourceDetail(source)}</small>
+                <small>{sourceDetail(source, library)}</small>
               </span>
             </button>
           </li>
@@ -80,13 +84,18 @@ export function recentSources(
   return [...opened, ...reading].slice(0, recentLimit);
 }
 
-function sourceDetail(source: SourceSummary): string {
-  const creators =
-    source.creators.join(", ") ||
-    translate({ message: "Unknown creator", context: "NavigatorSections status or action" });
+function sourceDetail(
+  source: SourceSummary,
+  library: ReadonlyMap<SourceId, SourceSummary>,
+): string {
+  const creators = sourceCreatorsText(
+    source,
+    library,
+    translate({ message: "Unknown creator", context: "NavigatorSections status or action" }),
+  );
   const progress = source.reading?.progress;
   return progress !== undefined && progress > 0 && progress < 1
-    ? `${creators} · ${String(Math.round(progress * 100))}%`
+    ? [creators, `${String(Math.round(progress * 100))}%`].filter(Boolean).join(" · ")
     : creators;
 }
 
@@ -121,8 +130,8 @@ export function NavigatorFooter({
         disabled={addingSource}
         aria-label={
           addingSource
-            ? t({ message: "Adding source", context: "NavigatorSections interface" })
-            : t({ message: "Add source", context: "NavigatorSections interface" })
+            ? t({ message: "Adding…", context: "NavigatorSections interface" })
+            : translate({ message: "Add source…" })
         }
         onClick={onAddSource}
       >
@@ -130,7 +139,7 @@ export function NavigatorFooter({
         <span>
           {addingSource
             ? t({ message: "Adding…", context: "NavigatorSections interface" })
-            : t({ message: "Add source", context: "NavigatorSections interface" })}
+            : translate({ message: "Add source…" })}
         </span>
       </button>
     </footer>

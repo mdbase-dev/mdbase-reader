@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
-import { locateTextQuote } from "./text-quote.js";
+import { locateSearchQuote, locateTextQuote } from "./text-quote.js";
 
 describe("locateTextQuote", () => {
   it("starts the range in the node where the quotation begins", () => {
@@ -10,6 +10,16 @@ describe("locateTextQuote", () => {
     expect(range?.startContainer.textContent).toBe("Patient attention and durable notes.");
     expect(range?.startOffset).toBe(0);
     expect(range?.toString()).toBe("Patient attention");
+  });
+
+  it("ends in the selected text node, not the following element at offset zero", () => {
+    document.body.innerHTML = "<section><p>Chapter text</p></section><h2>Next chapter</h2>";
+    for (const locate of [locateTextQuote, locateSearchQuote]) {
+      const range = locate(document.body, { exact: "Chapter text" });
+      expect(range?.endContainer).toBe(document.querySelector("p")!.firstChild);
+      expect(range?.endOffset).toBe("Chapter text".length);
+      expect(range?.toString()).toBe("Chapter text");
+    }
   });
 
   it("prefers the occurrence whose context matches", () => {

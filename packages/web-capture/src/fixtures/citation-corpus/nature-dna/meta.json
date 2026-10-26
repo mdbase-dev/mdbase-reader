@@ -1,0 +1,10 @@
+{
+  "url": "https://www.nature.com/articles/171737a0",
+  "retrievedAt": "2026-10-23T06:15:19.916923+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://www.nature.com/articles/171737a0?error=cookies_not_supported&code=4d3146cb-a713-42da-9837-3e657b66f5c6.",
+    "Use 25 April 1953 from the publication record, dc.date and JSON-LD, not the less precise Highwire publication month. Author surname capitalization is normalized in comparisons. Publisher follows the page imprint rather than the registry current legal entity. The cookie-check redirect still returned the article, not a bot wall.",
+    "Baseline extractScholarlyMetadata at d0c7061: 7/8 expected fields match; wrong or missing fields: issued. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

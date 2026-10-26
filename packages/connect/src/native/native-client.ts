@@ -2,6 +2,7 @@ import { connectSuccess } from "@mdbase-dev/connect/advanced";
 import { isMdbaseError, MdbaseError, uuidv7 } from "@mdbase-dev/sdk";
 
 import {
+  connectProblemFor,
   contractDocument,
   failure,
   fileMetadata,
@@ -20,7 +21,11 @@ import {
 
 import type {
   ReaderConnectClient,
+  ReaderCreatedRecord,
+  ReaderLocalRecord,
   ReaderCreateOptions,
+  ReaderCreateTracking,
+  ReaderMutationState,
   ReaderQueryPagesOptions,
 } from "../repository-client.js";
 import type {
@@ -49,6 +54,7 @@ import type {
   MdbaseClient,
   PlainValue,
   QueryResult as NativeQueryResult,
+  Receipt,
   RecordView,
   Write,
 } from "@mdbase-dev/sdk";
@@ -128,6 +134,51 @@ export function nativeReaderClient(
 class NativeRecords implements NativeReaderClient {
   readonly #lifetime = new AbortController();
   readonly #unknown = new Map<string, NativeMutation>();
+
+  /**
+   * A create can return while still `pending`: the log may refuse it later, when it reaches
+   * head, and "the local view drops the mutation" (`replica-client-api.md` §6). These read
+   * how it settled.
+   */
+  readonly createTracking: ReaderCreateTracking = {
+    receipt: async (mutationId, options = {}) => {
+      const signal = this.#scope(options.signal);
+      let receipt: Receipt;
+      try {
+        receipt = await this.client.receipt(mutationId, signal);
+      } catch (error) {
+        // `receipt(id)` fails `not_found` once the replica no longer keeps it (§6: at least
+        // 24 hours after it leaves `pending`), or when nothing was captured under that ID.
+        if (isMdbaseError(error, "not_found")) {
+          return { state: "missing" };
+        }
+        throw error;
+      }
+      this.#check(signal);
+      return mutationState(receipt);
+    },
+    recordAt: async (path, options = {}) => {
+      const signal = this.#scope(options.signal);
+      const record = await this.client.find({ path }, { effective: true }, signal);
+      this.#check(signal);
+      return record ? createdRecord(record) : null;
+    },
+    local: async (replicaId, options = {}) => {
+      const signal = this.#scope(options.signal);
+      const record = await this.client.find(replicaId, { effective: true, body: true }, signal);
+      this.#check(signal);
+      return record ? localRecord(record) : null;
+    },
+    caughtUp: () => {
+      const status = this.client.status;
+      return (
+        this.client.ledger.getSnapshot().restored && status.confirmedThrough >= status.headKnown
+      );
+    },
+    acknowledge: async (mutationId) => {
+      await this.client.ledger.acknowledge(mutationId);
+    },
+  };
 
   constructor(
     private readonly client: MdbaseClient,
@@ -275,15 +326,17 @@ class NativeRecords implements NativeReaderClient {
       if (input.ifRevision !== undefined) {
         throw unsupported("Conditional creates are not available natively.");
       }
-      const { intent } = options;
-      // With an intent the SDK derives the record ID, so a retry creates the same record;
+      const { intent, replicaId } = options;
+      // A caller-minted ID is sent as `CreateInput.id` and read back by it. Without one,
+      // an intent makes the SDK derive the record ID, so a retry creates the same record;
       // it is read back by its path.
       const record: NativeMutation["record"] | undefined =
-        intent === undefined
+        replicaId ??
+        (intent === undefined
           ? uuidv7()
           : input.path === undefined
             ? undefined
-            : { path: input.path };
+            : { path: input.path });
       if (record === undefined) {
         throw unsupported("A retryable create needs a path.");
       }
@@ -308,6 +361,20 @@ class NativeRecords implements NativeReaderClient {
           },
           (write) => this.client.create(fields, write),
           signal,
+          options.onReceipt &&
+            ((receipt) =>
+              options.onReceipt?.({
+                mutationId: receipt.mutation,
+                state: receipt.state === "confirmed" ? "confirmed" : "pending",
+                // A real replica's `pending` receipt carries no `records` (replica
+                // `submit.rs` `pending_receipt`; SDK `Write.records` falls back to
+                // `[]`), so the ID the caller minted is the one to trust.
+                ...(typeof record === "string"
+                  ? { record }
+                  : receipt.records?.[0]
+                    ? { record: receipt.records[0].id }
+                    : {}),
+              })),
         ),
       );
     });
@@ -476,6 +543,7 @@ class NativeRecords implements NativeReaderClient {
     { intent, ...target }: WriteTarget,
     submit: Submit,
     signal: AbortSignal,
+    observe?: (receipt: Receipt) => void,
   ): Promise<RecordDocument | null> {
     this.#check(signal);
     const identity = intent === undefined ? { mutationId: uuidv7() } : { intent };
@@ -498,7 +566,7 @@ class NativeRecords implements NativeReaderClient {
     }
     const mutation: NativeMutation = { mutationId, ...target };
     try {
-      return await this.#confirm(mutation, signal);
+      return await this.#confirm(mutation, signal, observe);
     } catch (error) {
       if (error instanceof Refused) {
         throw error;
@@ -519,8 +587,16 @@ class NativeRecords implements NativeReaderClient {
     }
   }
 
-  /** Settle a captured write: confirmed or saved on this device reads back; refused fails. */
-  async #confirm(mutation: NativeMutation, signal: AbortSignal): Promise<RecordDocument | null> {
+  /**
+   * Settle a captured write: confirmed or saved on this device reads back; refused fails.
+   * `observe` sees the receipt it settled on, which is still `pending` when the log has not
+   * decided within the wait.
+   */
+  async #confirm(
+    mutation: NativeMutation,
+    signal: AbortSignal,
+    observe?: (receipt: Receipt) => void,
+  ): Promise<RecordDocument | null> {
     this.#check(signal);
     // Still pending after the wait is saved on this device, not a failure.
     const receipt = await this.client
@@ -549,6 +625,7 @@ class NativeRecords implements NativeReaderClient {
         },
       );
     }
+    observe?.(receipt);
     if (mutation.operation === "delete") {
       return null;
     }
@@ -683,6 +760,48 @@ function patchChanges(input: Readonly<Record<string, unknown>>): {
   >;
   const unset = entries.filter(([, value]) => value === null).map(([key]) => key);
   return { patch, ...(unset.length > 0 ? { unset } : {}) };
+}
+
+function mutationState(receipt: Receipt): ReaderMutationState {
+  if (receipt.state === "rejected") {
+    return {
+      state: "rejected",
+      problem: connectProblemFor(
+        new MdbaseError(
+          receipt.problem ?? {
+            code: "conflict",
+            recovery: "resolve_conflict",
+            message: "The collection refused this change.",
+          },
+        ),
+      ),
+    };
+  }
+  return { state: receipt.state };
+}
+
+/**
+ * `record-state` (`replica-client-api.md` §3): `pending` means the local view includes
+ * unconfirmed changes, and `confirmed_seq` is the last log position that changed the
+ * record. A record some log position changed exists at head, so its create is confirmed
+ * even while later local edits are pending.
+ */
+function createdRecord(record: RecordView): ReaderCreatedRecord {
+  const fields = plain(record.effective ?? record.frontmatter);
+  return {
+    id: fields["id"],
+    confirmed: record.state.state === "confirmed" || record.state.confirmedSeq > 0,
+  };
+}
+
+function localRecord(record: RecordView): ReaderLocalRecord {
+  return {
+    ...createdRecord(record),
+    path: record.path,
+    // As written: what a create has to write again, without derived defaults.
+    frontmatter: plain(record.frontmatter),
+    ...(record.body === undefined ? {} : { body: record.body }),
+  };
 }
 
 function saved(document: RecordDocument | null): RecordDocument {

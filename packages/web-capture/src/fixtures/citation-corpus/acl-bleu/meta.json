@@ -1,0 +1,13 @@
+{
+  "url": "https://aclanthology.org/P02-1040/",
+  "retrievedAt": "2026-10-23T10:33:08.954844+00:00",
+  "notes": [
+    "Original reduced reproduction of fetched public HTML; retained citation metadata order/duplicates, canonical, HTML language, citation-related JSON-LD and relevant title/byline/date wrappers. Omitted prose, descriptions, images, references, styles, tracking and executable scripts. Raw downloads stay in gitignored .scratch/corpus/expand; helpers outside download directories ran with python3 -I. No downloaded content was executed.",
+    "Page HTTP status: 200. Requested and final URL: https://aclanthology.org/P02-1040/ -> https://aclanthology.org/P02-1040/. Captured 2026-10-23T10:33:08.954844+00:00; original 35758 bytes, reduced HTML 1720 bytes before formatting.",
+    "Recorded citoid HTTP 200 at 2026-10-23T10:37:34.098177+00:00; request https://en.wikipedia.org/api/rest_v1/data/citation/zotero/https%3A%2F%2Faclanthology.org%2FP02-1040%2F. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Recorded doi HTTP 200 at 2026-10-23T10:37:37.275530+00:00; request https://doi.org/10.3115/1073083.1073135. Raw response dialect retained; only long abstracts shortened to first sentence.",
+    "Ground truth: ACL Anthology own Cite (ACL), BibTeX and MODS displayed at https://aclanthology.org/P02-1040/ agree on the full title, four authors, July 2002, proceedings name, publisher and pages 311-318. Do not confuse author names with the proceedings editors Isabelle, Charniak and Lin.",
+    "The actually recorded DOI record is defective: title BLEU (subtitle contains the remainder), issued year 2001, page 311 only and a different container spelling. Publisher own citation takes precedence for the expected record. Preserve those provider defects to test the resolver rather than adapting ground truth to the registry.",
+    "Claims/resolver replay at 9128f240fb905807949f035d7ee0aae77f6a07cf: page-only wrong fields: container-title, publisher; with recorded remotes: title, issued, container-title, page. Pinned in citation-corpus-replay.test.ts; expected CSL was hand-catalogued independently before replay."
+  ]
+}

@@ -53,7 +53,7 @@ async function auditComposition(page, a, b) {
   const modulePath = `/@fs${realpathSync(new URL("../../../packages/markdown-editor/node_modules/@codemirror/view/dist/index.js", import.meta.url))}`;
   const composing = await page.evaluate(async (path) => {
     const { EditorView } = await import(path);
-    const nodes = globalThis.document.querySelectorAll('[aria-label="Source literature note"]');
+    const nodes = globalThis.document.querySelectorAll('[aria-label="Source note"]');
     const first = EditorView.findFromDOM(nodes[0]),
       second = EditorView.findFromDOM(nodes[1]);
     second.dispatch({ changes: { from: 0, insert: "Remote " }, userEvent: "input.type" });
@@ -93,8 +93,8 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
     .filter({ hasText: "[test] Research 0000" })
     .getAttribute("data-panel-id");
   await documentActions(documentId).getByLabel("More document actions", { exact: true }).click();
-  await page.getByRole("button", { name: "Literature note", exact: true }).click();
-  const notes = page.getByRole("textbox", { name: "Source literature note" });
+  await page.getByRole("button", { name: "Source note", exact: true }).click();
+  const notes = page.getByRole("textbox", { name: "Source note" });
   await expect(notes).toHaveCount(1);
   const first = await idOf(notes);
   await duplicate(first);
@@ -158,8 +158,9 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   await expect(offer).toBeVisible();
   await page.waitForTimeout(1200);
   await expect(offer).toBeVisible(); // selection alone is never autosaved as a new annotation
-  await offer.getByRole("button", { name: "Comment", exact: true }).click();
-  const creator = page.getByRole("region", { name: "Comment on highlight" });
+  await offer.getByRole("button", { name: "Comment on highlight", exact: true }).click();
+  // The highlight saves at once; its comment is written in its card's editor.
+  const creator = page.getByRole("group", { name: "Edit annotation" });
   const creatingText = creator.getByRole("textbox", { name: "Comment" });
   await creatingText.fill("[test] Latest");
   await creatingText.pressSequentially(" characters saved immediately");

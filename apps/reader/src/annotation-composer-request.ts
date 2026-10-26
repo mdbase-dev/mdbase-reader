@@ -1,13 +1,17 @@
-import { t } from "@lingui/core/macro";
-import { sourceLink } from "@mdbase-reader/core";
-
-import type {
-  AnnotationCreationRequest,
-  Locator,
-  PdfQuadPoints,
-  ReadingPosition,
-  Source,
+import { t as translate } from "@lingui/core/macro";
+import {
+  defaultHighlightColor,
+  sourceLink,
+  type AnnotationCreationRequest,
+  type HighlightColorKey,
+  type Locator,
+  type PdfQuadPoints,
+  type ReadingPosition,
+  type Source,
 } from "@mdbase-reader/core";
+
+import { humanPassageLabel } from "./passage-labels.js";
+
 import type {
   AreaSelectionDraft,
   ReaderLocator,
@@ -28,14 +32,16 @@ export function prepareAnnotationSelection(selection: ComposerSelection): void {
   }
 }
 
+/** A text selection saves as a highlight in `color`, a palette key; area captures have none. */
 export async function annotationRequest(
   source: Source,
   surface: ReadingSurface,
   selection: ComposerSelection,
   note: string,
+  color: HighlightColorKey = defaultHighlightColor,
 ): Promise<AnnotationCreationRequest> {
   if (selection.kind === "text") {
-    return textAnnotationRequest(source, surface, selection.value, note);
+    return textAnnotationRequest(source, surface, selection.value, note, color);
   }
   return areaAnnotationRequest(source, surface, selection.value, note);
 }
@@ -106,7 +112,9 @@ function positionLabel(position: ReadingPosition): Locator {
       : progression < 0.01
         ? "Start"
         : `${String(Math.round(progression * 100))}% through`;
-  return { label: [title, place].filter(Boolean).join(" · ") || "Saved position" };
+  return {
+    label: [title, place].filter(Boolean).join(" · ") || translate({ message: "Saved position" }),
+  };
 }
 
 function epubProgression(locator: Readonly<Record<string, unknown>>): number | undefined {
@@ -120,7 +128,7 @@ function epubProgression(locator: Readonly<Record<string, unknown>>): number | u
 
 function epubTitle(locator: Readonly<Record<string, unknown>>): string | undefined {
   const title = locator["title"];
-  return typeof title === "string" && title.trim() ? title.trim() : undefined;
+  return humanPassageLabel(typeof title === "string" ? title : undefined);
 }
 
 function textAnnotationRequest(
@@ -128,12 +136,13 @@ function textAnnotationRequest(
   surface: ReadingSurface,
   selection: TextSelectionDraft,
   note: string,
+  color: HighlightColorKey,
 ): AnnotationCreationRequest {
   return {
     ...annotationIdentity(source, surface),
     annotationType: "highlight",
     motivation: note.trim() ? "commenting" : "highlighting",
-    color: "yellow",
+    color,
     locator: locatorLabel(selection.locator),
     target: selection.target,
     tags: [],
@@ -148,7 +157,9 @@ async function areaAnnotationRequest(
   note: string,
 ): Promise<AnnotationCreationRequest> {
   if (selection.imageType !== "image/png") {
-    throw new Error(t`Reader cannot persist an area capture of type ${selection.imageType}.`);
+    throw new Error(
+      translate`Reader cannot persist an area capture of type ${selection.imageType}.`,
+    );
   }
   return {
     ...annotationIdentity(source, surface),
@@ -217,7 +228,12 @@ function locatorLabel(locator: ReaderLocator): Locator {
   if (locator.kind === "pdf") {
     return { label: `p. ${String(locator.pageIndex + 1)}` };
   }
-  return { label: locator.kind === "epub" ? "EPUB location" : locator.href };
+  return {
+    label:
+      locator.kind === "epub"
+        ? (epubTitle(locator.locator) ?? "EPUB")
+        : translate({ message: "Web page" }),
+  };
 }
 
 function quotationBody(quote: string, note: string): string {

@@ -3,14 +3,17 @@ import type {
   LibraryViewSaveRequest,
   MdbaseLibraryView,
 } from "./mdbase-library-views.js";
+import type { ReaderCreateFollowThrough, ReaderSettingsStore } from "@mdbase-reader/connect";
 import type {
   Annotation,
   AnnotationListOptions,
   AnnotationDeletionPlan,
   AnnotationCreationRequest,
+  CollectionFileReadOptions,
   ExportedCollectionFile,
   FileId,
   FileRevision,
+  DocumentRange,
   ReaderRequestOptions,
   ReadingPosition,
   ReadingStatus,
@@ -22,10 +25,14 @@ import type {
   SourceFileImportRequest,
   SourceRecordCreationRequest,
   SourceImportOptions,
+  PlannedSourcePart,
   SourceTextSearchMatch,
   CitationCandidate,
   CitationResolutionRequest,
+  SaveSourceCitationOptions,
+  CslProvenance,
 } from "@mdbase-reader/core";
+import type { CitationUpdateRequest, Claim } from "@mdbase-reader/web-capture/citation-updates";
 
 export interface ReaderLibrarySnapshot {
   readonly collectionName: string;
@@ -46,6 +53,10 @@ export interface ReaderWorkspaceGateway {
   library(options?: ReaderLibraryRequestOptions): Promise<ReaderLibrarySnapshot>;
   /** Notifies when sources changed outside this workspace, so the library reloads. */
   subscribeLibrary?: (listener: () => void) => () => void;
+  /** Saves kept on this device until the collection confirms them, and any that need the user. */
+  readonly createFollowThrough?: ReaderCreateFollowThrough | undefined;
+  /** The collection's Reader settings record, such as its file name templates. */
+  readonly settings?: ReaderSettingsStore | undefined;
   listLibraryViews(options?: ReaderRequestOptions): Promise<readonly MdbaseLibraryView[]>;
   executeLibraryView(
     view: MdbaseLibraryView,
@@ -59,10 +70,26 @@ export interface ReaderWorkspaceGateway {
   ): Promise<ReadonlySet<string>>;
   /** Adds the collection's "Annotations for this source" view unless it already has one. */
   ensureSourceAnnotationsView?(): Promise<{ readonly path: string; readonly created: boolean }>;
+  /** Local citation/parent changes refresh open chapter suggestion panels. */
+  subscribeCitationChanges?: (listener: () => void) => () => void;
   source(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
+  sourceParts?(id: SourceId, options?: ReaderRequestOptions): Promise<readonly SourceSummary[]>;
+  setSourcePartOf?(source: Source, parentId: SourceId | null): Promise<Source>;
+  setDocumentRange?(
+    source: Source,
+    documentFileId: FileId,
+    expectedDocumentRevision: FileRevision,
+    range: DocumentRange | null,
+  ): Promise<Source>;
   /** Bypass session caches when comparing revisions before a draft write. */
   refreshSource?(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
+  /** One bounded discovery/batch hydration for a set of owners. */
+  annotationsForSources?(
+    ids: ReadonlySet<SourceId>,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly Annotation[]>;
+  moveAnnotationOwner?(annotation: Annotation, owner: Source): Promise<Annotation>;
   annotationSourceIds?(options?: ReaderRequestOptions): Promise<readonly SourceId[]>;
   annotationCounts?(options?: ReaderRequestOptions): Promise<ReadonlyMap<SourceId, number>>;
   /** Every annotation in the collection, read-only, for the library's annotations view. */
@@ -70,6 +97,9 @@ export interface ReaderWorkspaceGateway {
   /** Counts change on membership mutations, not on source selection or body edits. */
   subscribeAnnotationCounts?: (listener: () => void) => () => void;
   annotationCountsRevision?: () => number;
+  /** Includes body changes without forcing library-count queries. */
+  subscribeAnnotationChanges?: (listener: () => void) => () => void;
+  annotationChangesRevision?: () => number;
   saveSourceBody(source: Source, body: string): Promise<Source>;
   /** Exact recovery of an interrupted source note write. Only a live connection offers it. */
   recoverSourceBody?(requestId: string): Promise<Source>;
@@ -77,7 +107,15 @@ export interface ReaderWorkspaceGateway {
   recoverAnnotationBody?(requestId: string): Promise<Annotation>;
   /** Whether an interrupted write is still durably pending. */
   mutationPending?(requestId: string): boolean;
-  saveSourceCitation(source: Source, citation: unknown): Promise<Source>;
+  saveSourceCitation(
+    source: Source,
+    citation: unknown,
+    options?: SaveSourceCitationOptions,
+  ): Promise<Source>;
+  citationClaims?(
+    request: CitationUpdateRequest,
+    options?: ReaderRequestOptions,
+  ): Promise<readonly Claim[]>;
   resolveCitation?(
     request: CitationResolutionRequest,
     options?: ReaderRequestOptions,
@@ -89,7 +127,7 @@ export interface ReaderWorkspaceGateway {
   readFile(
     file: string,
     expectedRevision?: FileRevision,
-    options?: ReaderRequestOptions,
+    options?: CollectionFileReadOptions,
   ): Promise<ExportedCollectionFile>;
   importSourceFile(
     request: Omit<SourceFileImportRequest, "collectionId">,
@@ -100,17 +138,21 @@ export interface ReaderWorkspaceGateway {
     request: Omit<SourceRecordCreationRequest, "collectionId">,
     options?: SourceImportOptions,
   ): Promise<Source>;
+  createSourcePart?(plan: PlannedSourcePart, options?: ReaderRequestOptions): Promise<Source>;
   attachSourceFile?(
     request: SourceFileAttachmentRequest,
     options?: SourceImportOptions,
   ): Promise<Source>;
-  /** Stores a found citation on a source, under a citekey no other source uses. */
+  /** Stores a found citation and its evidence; the locally generated citekey has no evidence. */
   saveNewSourceCitation?(
     source: Source,
     citation: Readonly<Record<string, unknown>>,
+    provenance?: CslProvenance,
   ): Promise<Source>;
   createAnnotation(request: AnnotationCreationRequest): Promise<Annotation>;
   updateAnnotation(annotation: Annotation, body: string): Promise<Annotation>;
+  /** Changes a highlight's colour, guarded by its revision; body and target are untouched. */
+  setAnnotationColor?(annotation: Annotation, color: string): Promise<Annotation>;
   refreshAnnotation?(annotation: Annotation): Promise<Annotation | null>;
   planAnnotationDeletion(annotation: Annotation): Promise<AnnotationDeletionPlan>;
   deleteAnnotation(annotation: Annotation, plan: AnnotationDeletionPlan): Promise<void>;
@@ -119,6 +161,7 @@ export interface ReaderWorkspaceGateway {
     source: Source,
     documentFileId: FileId,
     position: ReadingPosition,
+    progress?: number | null,
   ): Promise<Source>;
   /** Moves a source through its reading lifecycle, e.g. from queued to finished. */
   saveReadingStatus?(sourceId: SourceId, status: ReadingStatus): Promise<Source>;

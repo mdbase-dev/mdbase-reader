@@ -1,28 +1,123 @@
-/* Cards without a passage to jump to do not pretend to be links. */
-.annotation-card:not(.is-linked) {
+.annotation-owner-control {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding-block: 6px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.annotation-owner-control a {
+  color: var(--accent);
+}
+.annotation-owner-control label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.annotation-owner-control select {
+  max-width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+}
+/* The selection toolbar's source chip: "in Chapter 2 ▾", after the actions and quieter than
+   them. The select fills the chip so the whole of it opens the choice. */
+.annotation-source-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  max-width: 220px;
+  height: 24px;
+  margin-inline: var(--sp-1) 2px;
+  padding-inline: var(--sp-2) 0;
+  border-radius: var(--r-full);
+  background: var(--bg-sunken);
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  line-height: 1;
+}
+.annotation-source-chip:hover,
+.annotation-source-chip:focus-within {
+  background: var(--bg-hover);
+  color: var(--text-2);
+}
+.annotation-source-chip select {
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
+  padding: 0 22px 0 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  text-overflow: ellipsis;
+  appearance: none;
+  cursor: pointer;
+}
+.annotation-source-chip select:disabled {
   cursor: default;
 }
-
-/* The selected card and the passage share one colour, so the eye can match them. */
-.annotation-card.is-selected,
-.annotation-card.is-selected:hover {
-  position: relative;
-  margin-inline: -8px;
-  padding-inline: 8px;
-  /* sRGB, not OKLCH: interpolating hue would drift the tint toward the paper's blue. */
-  background: color-mix(in srgb, oklch(86% 0.12 86) 20%, var(--paper));
+.annotation-source-chip select:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
-
-.annotation-card.is-selected blockquote {
-  border-left-color: oklch(66% 0.13 76);
-  color: var(--ink);
+.annotation-source-chip:has(select:focus-visible) {
+  box-shadow: var(--focus-ring);
 }
-
+.annotation-source-chip svg {
+  position: absolute;
+  right: 7px;
+  width: 11px;
+  height: 11px;
+  pointer-events: none;
+}
 @media (forced-colors: active) {
-  .annotation-card.is-selected {
+  .annotation-source-chip {
+    border: 1px solid CanvasText;
+  }
+  .annotation-source-chip:has(select:focus-visible) {
     outline: 2px solid Highlight;
   }
 }
+/* A highlight from another source, or outside its chapter, says so on a quiet second line. */
+.selection-toolbar:has(> .annotation-source-line) {
+  flex-wrap: wrap;
+  max-width: min(480px, 100%);
+}
+.selection-toolbar > .annotation-source-line {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  padding: var(--sp-1) var(--sp-2) 2px;
+  white-space: normal;
+}
+.selection-toolbar > .annotation-source-line a {
+  color: var(--text-2);
+}
+.mobile-source-views.is-selection .selection-toolbar:has(> .annotation-source-chip),
+.mobile-source-views.is-selection .selection-toolbar:has(> .annotation-source-line) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-flow: row;
+}
+.mobile-source-views.is-selection .selection-toolbar > .annotation-source-chip,
+.mobile-source-views.is-selection .selection-toolbar > .annotation-source-line {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
+  max-width: 100%;
+  margin-block: var(--sp-1);
+}
+.mobile-source-views.is-selection:has(.annotation-source-chip),
+.mobile-source-views.is-selection:has(.selection-toolbar > .annotation-source-line) {
+  height: auto;
+}
+
 .annotation-draft-badge {
   margin-left: auto;
   color: var(--accent);
@@ -48,38 +143,48 @@
   box-shadow: 0 2px 8px #0002;
 }
 .annotation-return {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--bg-raised);
+  box-shadow: var(--e-2);
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 520;
   pointer-events: auto;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 8px 12px;
-  box-shadow: 0 2px 8px #0002;
+  cursor: pointer;
+}
+.annotation-return:hover {
+  background: var(--bg-hover);
+}
+/* Notices stack at the foot of the document, newest on top, so none covers another. */
+.document-notices {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 14px;
+  pointer-events: none;
+}
+/* A toolbar docked at the foot takes the place the notices use, so they stack above it, every
+   one still shown, reachable and announced: a save error is never hidden. The toolbar layer
+   reports its height on the canvas. */
+.document-canvas:has(> .selection-toolbar-layer.is-docked) > .document-notices {
+  padding-bottom: calc(14px + var(--docked-toolbar-height, 38px) + var(--sp-2));
+}
+.document-notices > .annotation-compose-error {
+  width: min(404px, 100%);
+  margin: 0;
+  pointer-events: auto;
 }
 .annotation-body-editor > small {
   display: block;
   margin: 8px 0;
-}
-.annotation-workspace {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-.annotation-workspace > .annotation-list {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
-.annotation-workspace .annotation-card,
-.annotation-workspace .annotation-card:hover,
-.annotation-workspace .annotation-card:has(.annotation-body-editor):hover {
-  margin-inline: 0;
-  padding: 14px 12px;
-  border-radius: 6px;
-}
-.annotation-workspace .annotation-card blockquote,
-.annotation-workspace .annotation-card > p {
-  font-size: 14px;
-  line-height: 1.55;
 }
 .annotation-textarea {
   display: block;
@@ -98,8 +203,9 @@
   line-height: 1.5;
 }
 .annotation-textarea:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 /* Editing: the quotation reads as the card's blockquote, the comment as a quiet field below. */
 .annotation-body-editor .annotation-textarea:not(.is-quote) {
@@ -117,7 +223,8 @@
   border-left: 2px solid oklch(70% 0.11 82);
   border-radius: 0;
   background: transparent;
-  color: var(--ink-soft);
+  color: var(--ink);
+  font-family: var(--serif);
   font-size: 13.5px;
   line-height: 1.52;
 }
@@ -131,7 +238,7 @@
 .annotation-quote-field small {
   padding-left: 16px;
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 .annotation-quote-field small button,
 .annotation-editor-actions .annotation-discard {
@@ -146,13 +253,13 @@
 }
 .annotation-editor-actions .annotation-discard {
   min-height: 0;
-  font-size: 11px;
+  font-size: var(--text-xs);
 }
 .annotation-save-state {
   flex: 1;
   min-width: 0;
   color: var(--faint);
-  font-size: 11px;
+  font-size: var(--text-xs);
   text-align: right;
 }
 .annotation-save-state.is-failed {

@@ -1,9 +1,11 @@
 import { t } from "@lingui/core/macro";
 
 import { DomainError } from "../domain/errors.js";
+import { sourceNotePaths } from "../domain/record-names.js";
 
 import type { SourceFileImportRequest, SourceImportMetadata } from "./ports.js";
 import type { SourceId } from "../domain/identity.js";
+import type { AuthorYear } from "../domain/record-names.js";
 
 export function webUrl(value: string): string {
   let url: URL;
@@ -106,28 +108,41 @@ export function safeFileStem(name: string): string {
 }
 
 /**
- * Where a new source note goes: a readable name from its title, and a fallback made unique by the
- * source ID for when that name is taken. The ID alone is used when the title yields no name.
+ * Where a new source note goes, from the naming rules in `domain/record-names.ts`: every path to
+ * try, in order, and the first of them. The record is created at the first one that is free.
  */
 export function sourceRecordPaths(
   title: string,
   id: SourceId,
-): { readonly recordPath: string; readonly fallbackRecordPath: string } {
-  const slug = title
-    .normalize("NFKC")
-    .toLocaleLowerCase()
-    .replace(/['\u2019]/gu, "")
-    .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
-    .replace(/^-+|-+$/gu, "");
-  const stem = Array.from(slug).slice(0, 60).join("").replace(/-+$/u, "");
-  if (!stem) {
-    return { recordPath: `sources/${id}.md`, fallbackRecordPath: `sources/${id}.md` };
-  }
-  const suffix = id.replace(/^src_/u, "").replace(/-/gu, "").slice(0, 8);
+  authorYear?: AuthorYear,
+): {
+  readonly recordPath: string;
+  readonly recordPathCandidates: readonly string[];
+} {
+  const recordPathCandidates = sourceNotePaths({ title, id, authorYear });
   return {
-    recordPath: `sources/${stem}.md`,
-    fallbackRecordPath: `sources/${stem}-${suffix}.md`,
+    recordPath: recordPathCandidates[0] ?? `sources/${id}.md`,
+    recordPathCandidates,
   };
+}
+
+/**
+ * The first author's family name and the publication year from import metadata, when both are
+ * present. An author written `Family, Given` gives the part before the comma; otherwise the last
+ * word is taken as the family name.
+ */
+export function authorYearFromMetadata(
+  metadata: SourceImportMetadata | undefined,
+): AuthorYear | undefined {
+  const author = metadata?.authors?.[0]?.trim();
+  const year = /(?<!\d)\d{4}(?!\d)/u.exec(metadata?.published ?? "")?.[0];
+  if (!author || !year) {
+    return undefined;
+  }
+  const family = author.includes(",")
+    ? author.slice(0, author.indexOf(","))
+    : (author.split(/\s+/u).at(-1) ?? author);
+  return family.trim() ? { family: family.trim(), year } : undefined;
 }
 
 export function titleFromFileName(name: string): string {

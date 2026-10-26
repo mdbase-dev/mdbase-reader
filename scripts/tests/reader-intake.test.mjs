@@ -7,15 +7,15 @@ import { intakeCopy } from "./helpers/reader-intake.mjs";
 import { loadOriginals, protectedHashes } from "../lib/native-originals.mjs";
 import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved-intake.mjs";
 import { assertExtensionManifests } from "../lib/reader-extension.mjs";
-test("Reader pins the original production eaa4 SDK with beta141 trust", async () => {
+test("Reader pins the production e55d99c0 SDK with beta141 trust", async () => {
   const vendor = "packages/connect/vendor/";
   const pin = JSON.parse(await readFile(vendor + "sdk-production-beta141.json", "utf8"));
   const archive = vendor + pin.artifact;
   const bytes = await readFile(archive);
-  assert.equal(pin.sourceCommit, "eaa4e697fc1198f32fc3714f377342a24c56d985");
+  assert.equal(pin.sourceCommit, "e55d99c0d986e5c17e0dabea0e43305d946190e9");
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "e64771a90bed2fb3837d4b65df8930fcd124d3059fcb0bcbaf9d64dbfb148205",
+    "f05837e4571a7e528d289dea6a9d2ee2e5c2e3a1e4f8f70fe772a8138e32f970",
   );
   for (const [owner, path] of [
     ["apps/reader", "../../" + archive],
@@ -62,7 +62,7 @@ test("production intake binds approved archive originals and the unchanged beta1
   });
   assert.equal(trust.environment, "production");
   assert.equal(trust.archives.sdk.members, 896);
-  assert.equal(trust.nativeAssets["runtime.wasm"].bytes, 3676583);
+  assert.equal(trust.nativeAssets["runtime.wasm"].bytes, 3682463);
   assert.equal(trust.release.source.version, "0.1.0-beta.141");
   assert.equal(trust.release.assetSha256, approvedProductionHashes.NATIVE_TRUST_ASSET_SHA256);
   assert.equal(trust.appOrigin, "https://reader.mdbase.dev");
@@ -85,7 +85,7 @@ test("production intake binds approved archive originals and the unchanged beta1
   );
   assert.equal(
     trust.packet.factsSha256,
-    "51bdf004a7f5a72a358b4534660b11f23196cb23a8d583138b75bbc284719617",
+    "a385fd90adce58c7d51da50f00142ec3970add6bea621af6893c9e63c0cc3fc0",
   );
 });
 test("native approval refuses the multilingual UI candidate against the approved production hashes", async () => {

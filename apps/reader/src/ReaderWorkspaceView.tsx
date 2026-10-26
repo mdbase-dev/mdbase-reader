@@ -1,29 +1,35 @@
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
-import { DeploymentUpdateNotice } from "./DeploymentUpdateNotice.js";
+import { useShellNotices } from "./CreateFollowThroughNotice.js";
 import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
 import { DockviewWorkspace } from "./DockviewWorkspace.js";
 import { useReaderFeedbackContext } from "./FeedbackRoot.js";
+import { bindHighlightSettings } from "./highlight-colors.js";
 import { importHref } from "./import-navigation.js";
 import { inspectorSourceForTab } from "./inspector-source.js";
 import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
+import { lazyFeature } from "./lazy-feature.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
-import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
+import { SearchPassageStatus } from "./SearchPassageStatus.js";
+import { SettingsPage, useSettingsPage } from "./SettingsPage.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
+import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
 import { useMediaQuery } from "./use-media-query.js";
 import { useReadingChrome } from "./use-reading-chrome.js";
+import { useSearchNavigation } from "./use-search-navigation.js";
 import {
   useWorkspaceShellPreferences,
   type WorkspaceShellPreferencesController,
@@ -92,6 +98,11 @@ interface PendingWorkspaceAnnotation {
   readonly sourceId: SourceId;
 }
 
+const LibraryWorkspace = lazyFeature(
+  async () => ({ default: (await import("./LibraryWorkspace.js")).LibraryWorkspace }),
+  "the library view",
+);
+
 /** Every open tab is listed; other groups show a few until the reader types. */
 const paletteShowsAll = ["Open tabs"];
 
@@ -119,9 +130,10 @@ export function ReaderWorkspaceView({
     [dock],
   );
   const pendingAnnotationRef = useRef<PendingWorkspaceAnnotation | null>(null);
+  const searchNavigation = useSearchNavigation(sourceWorkspace, model.surfaces);
   const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
-  const commands = commandsForView(model, () => dock.toggleSidebar("right"), {
+  const commands = useCommandsForView(model, () => dock.toggleSidebar("right"), {
     density: shell.value.density,
     setDensity: (density) => shell.update({ density }),
   });
@@ -144,6 +156,19 @@ export function ReaderWorkspaceView({
   const shellRef = useRef<HTMLDivElement>(null);
   useShellChrome(shellRef, model, mobile);
   const annotationCounts = useLibraryAnnotationCounts(model);
+  const notices = useShellNotices(
+    model.deploymentUpdateAvailable,
+    model.gateway.createFollowThrough,
+  );
+  const collectionSettings = model.gateway.settings;
+  // Every swatch, card and filter follows the collection's highlight colours, live.
+  useEffect(
+    () => (collectionSettings ? bindHighlightSettings(collectionSettings) : undefined),
+    [collectionSettings],
+  );
+  const settingsPage = useSettingsPage();
+  const beforeCollectionSwitch = (): Promise<boolean> =>
+    confirmCollectionSwitch(sourceWorkspace.layout, library.sources);
   const workbenchOwner = findWorkbenchOwner(
     sourceWorkspace.layout,
     inspectorSource?.id ?? null,
@@ -192,11 +217,12 @@ export function ReaderWorkspaceView({
       pendingAnnotationRef.current = null;
     }
   }, [composer, sourceWorkspace.activeTab, sourceWorkspace.layout.focusedPaneId]);
-  return (
+  const workspaceShell = (
     <div
       data-density={shell.value.density}
       ref={shellRef}
-      className={`reader-shell${model.deploymentUpdateAvailable ? " has-update" : ""}`}
+      className={`reader-shell${notices ? " has-update" : ""}`}
+      inert={settingsPage.open}
       {...fileDrop.handlers}
     >
       {fileDrop.active ? (
@@ -211,16 +237,14 @@ export function ReaderWorkspaceView({
           </div>
         </div>
       ) : null}
-      {model.deploymentUpdateAvailable ? <DeploymentUpdateNotice /> : null}
+      {notices}
       {model.focusMode ? <div className="reading-chrome-reveal" aria-hidden="true" /> : null}
       <ReaderHeader
         {...reading}
         density={shell.value.density}
         onChangeDensity={(density) => shell.update({ density })}
         collectionName={library.collectionName}
-        beforeCollectionSwitch={() =>
-          confirmCollectionSwitch(sourceWorkspace.layout, library.sources)
-        }
+        beforeCollectionSwitch={beforeCollectionSwitch}
         connectionState={connectionState}
         directAccess={model.directAccess}
         theme={model.theme}
@@ -232,8 +256,10 @@ export function ReaderWorkspaceView({
         inspectorAvailable={true}
         onToggleInspector={() => dock.toggleSidebar("right")}
         sourceBar={mobileSourceBar(model)}
+        onOpenSettings={settingsPage.show}
       />
       <main className="reader-main reader-dock-main">
+        <SearchPassageStatus message={searchNavigation.message} />
         <DockviewWorkspace
           navigator={
             <LibraryNavigator
@@ -322,7 +348,7 @@ export function ReaderWorkspaceView({
                 indexLoading={library.sourceIndex?.complete === false}
                 gateway={model.gateway}
                 surfaces={model.surfaces}
-                onOpenSourceView={(id, view) => sourceWorkspace.openView(id, view)}
+                onOpenSourceView={searchNavigation.open}
                 controller={model.libraryViews}
                 focused={focused}
                 onOpenView={(next) => sourceWorkspace.openLibrary(next.key, next.name)}
@@ -367,7 +393,7 @@ export function ReaderWorkspaceView({
               open={true}
               tab={shell.value.inspectorTab}
               source={inspectorSource}
-              paneLabel={`Pane ${String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === sourceWorkspace.activePane.id) + 1)}`}
+              paneLabel={translate`Pane ${String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === sourceWorkspace.activePane.id) + 1)}`}
               workspace={workspace}
               composer={composer}
               gateway={model.gateway}
@@ -375,7 +401,7 @@ export function ReaderWorkspaceView({
                 workbenchOwner
                   ? {
                       tab: shell.value.inspectorTab,
-                      paneLabel: `Pane ${String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === workbenchOwner.pane.id) + 1)}`,
+                      paneLabel: translate`Pane ${String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === workbenchOwner.pane.id) + 1)}`,
                       onOpen: () =>
                         sourceWorkspace.activateTab(workbenchOwner.tab.id, workbenchOwner.pane.id),
                     }
@@ -399,7 +425,7 @@ export function ReaderWorkspaceView({
         addition={sourceAddition}
         canChooseFile={Boolean(model.pickSourceFile)}
       />
-      <SourceRemovalDialog removal={model.sourceRemoval} />
+      <SourceRemovalDialog removal={model.sourceRemoval} sources={library.sources} />
       <CommandPalette
         label={t({ message: "Reader commands", context: "ReaderWorkspaceView interface" })}
         placeholder={t({ message: "Search sources and commands" })}
@@ -410,6 +436,33 @@ export function ReaderWorkspaceView({
         onClose={() => model.setCommandsOpen(false)}
       />
     </div>
+  );
+  return (
+    <>
+      {workspaceShell}
+      {settingsPage.open ? (
+        <SettingsPage
+          density={shell.value.density}
+          display={{
+            theme: model.theme,
+            onChangeTheme: model.changeTheme,
+            typography: shell.value.typography,
+            onChangeTypography: (typography) => shell.update({ typography }),
+            density: shell.value.density,
+            onChangeDensity: (density) => shell.update({ density }),
+            sidebarWhileReading: shell.value.sidebarWhileReading,
+            onChangeSidebarWhileReading: (value) => shell.update({ sidebarWhileReading: value }),
+          }}
+          gateway={model.gateway}
+          library={library.sources}
+          openSources={model.openSources}
+          collectionName={library.collectionName}
+          connectionState={connectionState}
+          beforeCollectionSwitch={beforeCollectionSwitch}
+          onClose={settingsPage.hide}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -482,10 +535,11 @@ function useLibraryAnnotationCounts(
   const sourceId =
     model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
   return useMemo(() => {
-    if (!sourceId || loaded.status !== "ready" || counts.get(sourceId) === loaded.value.length) {
+    if (!sourceId || loaded.status !== "ready") {
       return counts;
     }
-    return new Map(counts).set(sourceId, loaded.value.length);
+    const ownedCount = loaded.value.filter((annotation) => annotation.sourceId === sourceId).length;
+    return counts.get(sourceId) === ownedCount ? counts : new Map(counts).set(sourceId, ownedCount);
   }, [counts, loaded, sourceId]);
 }
 
@@ -558,7 +612,7 @@ function findWorkbenchOwner(
 // prettier-ignore
 function focusLibrarySearch(): void { globalThis.setTimeout(() => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(), 0); }
 
-function commandsForView(
+function useCommandsForView(
   model: ReaderWorkspaceViewModel,
   toggleInspector: () => void,
   display: {
@@ -566,12 +620,14 @@ function commandsForView(
     readonly setDensity: (density: "comfortable" | "compact") => void;
   },
 ): ReturnType<typeof readerCommands> {
+  const createSourceParts = useSourcePartCreation();
   return readerCommands({
     sources: model.library.sources,
     activeSource: model.source,
     workspace: model.sourceWorkspace,
     sourceExport: model.sourceExport,
     removeSource: model.sourceRemoval.request,
+    createSourceParts,
     bibliographyExport: model.bibliographyExport,
     focusMode: model.focusMode,
     bookmark: model.composer.canBookmark ? model.composer.bookmark : null,

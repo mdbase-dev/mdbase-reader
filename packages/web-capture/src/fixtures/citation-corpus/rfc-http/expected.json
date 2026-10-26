@@ -1,0 +1,25 @@
+{
+  "type": "report",
+  "title": "HTTP Semantics",
+  "editor": [
+    {
+      "family": "Fielding",
+      "given": "Roy T."
+    },
+    {
+      "family": "Nottingham",
+      "given": "Mark"
+    },
+    {
+      "family": "Reschke",
+      "given": "Julian"
+    }
+  ],
+  "issued": {
+    "date-parts": [[2022, 6]]
+  },
+  "publisher": "RFC Editor",
+  "number": "9110",
+  "DOI": "10.17487/RFC9110",
+  "URL": "https://www.rfc-editor.org/rfc/rfc9110.html"
+}

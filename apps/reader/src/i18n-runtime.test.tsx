@@ -8,10 +8,10 @@ import french from "@mdbase-reader/i18n/locales/fr";
 import italian from "@mdbase-reader/i18n/locales/it";
 import { ReaderI18nProvider, ReaderLanguageSetting } from "@mdbase-reader/i18n/react";
 import { act } from "react";
-import { createRoot } from "react-dom/client";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { readerCommandGroupLabel, type ReaderCommand } from "./reader-command-list.js";
+import { createRoot } from "./testing/i18n.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();

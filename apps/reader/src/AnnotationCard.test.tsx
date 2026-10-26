@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+/* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
 import {
   annotationId,
   collectionId,
@@ -6,10 +8,12 @@ import {
   sourceId,
   type Annotation,
 } from "@mdbase-reader/core";
+import { act, type JSX } from "react";
 import { expect, it, vi } from "vitest";
 
 import { AnnotationCard } from "./AnnotationCard.js";
-import { renderToStaticMarkup } from "./testing/i18n.js";
+import { bindCollectionHighlights } from "./highlight-settings.fixtures.js";
+import { createRoot, renderToStaticMarkup } from "./testing/i18n.js";
 
 const base: Annotation = {
   id: annotationId("unanchored-note"),
@@ -23,9 +27,14 @@ const base: Annotation = {
   path: "notes/test.md",
   recordRevision: recordRevision("sha256:test"),
 };
-function markup(annotation: Annotation): string {
-  return renderToStaticMarkup(
+function card(
+  annotation: Annotation,
+  onOpen = vi.fn(),
+  extra: Partial<Parameters<typeof AnnotationCard>[0]> = {},
+): JSX.Element {
+  return (
     <AnnotationCard
+      {...extra}
       annotation={annotation}
       editing={false}
       active={false}
@@ -41,10 +50,13 @@ function markup(annotation: Annotation): string {
       onSave={() => Promise.resolve(annotation)}
       onPlanDelete={() => Promise.reject(new Error("not used"))}
       onDelete={() => Promise.resolve()}
-      onOpen={vi.fn()}
+      onOpen={onOpen}
       readFile={() => Promise.reject(new Error("not used"))}
-    />,
+    />
   );
+}
+function markup(annotation: Annotation): string {
+  return renderToStaticMarkup(card(annotation));
 }
 it.each([undefined, { quote: { exact: "A quotation without coordinates" } }])(
   "omits navigation, without a warning, for notes without usable selectors",
@@ -56,23 +68,163 @@ it.each([undefined, { quote: { exact: "A quotation without coordinates" } }])(
     expect(html).toMatch(/<button[^>]*>Edit<\/button>/u);
   },
 );
-it("offers navigation for a note with a verified PDF passage", () => {
+it("uses a human HTML location in the inspector card and its tooltip", () => {
   const html = markup({
     ...base,
-    id: annotationId("anchored-note"),
-    target: {
-      quote: { exact: "Verified passage" },
-      pdf: {
-        pageIndex: 19,
-        coordinateSpace: {
-          profile: "embedpdf-selection-page-points-v1",
-          box: "crop",
-          origin: "top_left",
-        },
-        quadPoints: [[10, 20, 30, 20, 10, 40, 30, 40]],
-      },
-    },
+    locator: { label: "[[files/reader/src_19/page.html]]" },
+    target: { html: { css: "p" }, quote: { exact: "A passage" } },
   });
+  expect(html).toContain("Web page");
+  expect(html).not.toContain("files/reader");
+  expect(html).toContain('class="annotation-locator" title="Web page">Web page');
+});
+
+const linked: Annotation = {
+  ...base,
+  id: annotationId("anchored-note"),
+  target: {
+    quote: { exact: "Verified passage" },
+    pdf: {
+      pageIndex: 19,
+      coordinateSpace: {
+        profile: "embedpdf-selection-page-points-v1",
+        box: "crop",
+        origin: "top_left",
+      },
+      quadPoints: [[10, 20, 30, 20, 10, 40, 30, 40]],
+    },
+  },
+};
+
+it("offers navigation for a note with a verified PDF passage", () => {
+  const html = markup(linked);
   expect(html).toContain('aria-label="Show in document"');
   expect(html).toContain("is-linked");
+});
+
+it("opens a linked card on click, but not when the click ends selecting its text", async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  const onOpen = vi.fn();
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => root.render(card(linked, onOpen)));
+  const element = host.querySelector<HTMLElement>(".annotation-card")!;
+
+  document.getSelection()!.selectAllChildren(element);
+  element.click();
+  expect(onOpen).not.toHaveBeenCalled();
+
+  document.getSelection()!.removeAllRanges();
+  element.click();
+  expect(onOpen).toHaveBeenCalledTimes(1);
+
+  await act(async () => root.unmount());
+  host.remove();
+});
+
+it("names the source only when the list says it differs from the open one", () => {
+  const owners = [{ id: base.sourceId, title: "Chapter 2", documents: [] }] as never;
+  const render = (showSource: boolean): string =>
+    renderToStaticMarkup(card(base, vi.fn(), { owners, showSource }));
+  expect(render(false)).not.toContain("Source:");
+  expect(render(false)).not.toContain("Chapter 2");
+  expect(render(true)).toContain("Source: <a");
+  expect(render(true)).toContain("Chapter 2</a>");
+});
+
+it("marks a card outside its chapter's pages only when no heading groups it", () => {
+  const document = { fileId: "file", revision: "rev" } as never;
+  const owners = [
+    {
+      id: base.sourceId,
+      title: "Chapter 2",
+      documents: [{ ...(document as object), range: { kind: "pages", start: 0, end: 9 } }],
+    },
+  ] as never;
+  const outside: Annotation = { ...linked, document };
+  const render = (showLocation: boolean): string =>
+    renderToStaticMarkup(card(outside, vi.fn(), { owners, showLocation }));
+  expect(render(true)).toContain(">Outside chapter</small>");
+  expect(render(false)).not.toContain("Outside chapter");
+  expect(render(true)).not.toContain("still belongs to this chapter<");
+});
+
+it("leads with the quotation and leaves the location to a group heading", () => {
+  const highlight: Annotation = {
+    ...linked,
+    annotationType: "highlight",
+    locator: { label: "p. 20" },
+  };
+  const html = renderToStaticMarkup(card(highlight, vi.fn(), { showLocation: false }));
+  expect(html.indexOf("<blockquote>")).toBeLessThan(html.indexOf("<time"));
+  expect(html).not.toContain("annotation-locator");
+  // A highlight's kind is carried by its name and ink, not a label on every card.
+  expect(html).not.toContain('class="annotation-kind');
+  expect(html).toContain('aria-label="Highlight annotation"');
+});
+
+it("takes the highlight's colour for its bar and says it in words", async () => {
+  const highlight: Annotation = { ...linked, annotationType: "highlight", color: "green" };
+  expect(markup(highlight)).toContain('data-highlight-color="green"');
+  expect(markup({ ...highlight, color: "Orange" })).toContain('data-highlight-color="yellow"');
+  expect(markup({ ...highlight, color: "#ff8800" })).toContain("--hl-ink:#ff8800");
+  // Without a meaning the colour is named for screen readers only.
+  expect(markup(highlight)).toContain('<span class="sr-only">Green</span>');
+
+  const collection = bindCollectionHighlights({ highlight_meanings: { green: "Evidence" } });
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => root.render(card(highlight)));
+  const meaning = host.querySelector(".annotation-meta .annotation-meaning");
+  expect(meaning?.textContent).toBe("Evidence");
+  expect(meaning?.getAttribute("title")).toBe("Green — Evidence");
+  await act(async () => root.unmount());
+  host.remove();
+  collection.stop();
+});
+
+it("changes a highlight's colour from the More menu, even with one owner", async () => {
+  const highlight: Annotation = { ...linked, annotationType: "highlight", color: "blue" };
+  const onRecolor = vi.fn().mockResolvedValue(undefined);
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => root.render(card(highlight, vi.fn(), { onRecolor })));
+  const blue = host.querySelector(".annotation-card-colors [data-highlight-color='blue']");
+  expect(blue?.getAttribute("aria-pressed")).toBe("true");
+  await act(async () =>
+    host
+      .querySelector<HTMLButtonElement>(".annotation-card-colors [data-highlight-color='purple']")
+      ?.click(),
+  );
+  expect(onRecolor).toHaveBeenCalledExactlyOnceWith(highlight, "purple");
+  await act(async () => root.unmount());
+  host.remove();
+  // Notes have no colour to change, and without a way to recolour there is nothing to offer.
+  expect(markup(base)).not.toContain("annotation-card-colors");
+  expect(markup(highlight)).not.toContain("More actions");
+});
+
+it("keeps a hidden colour's highlight in its colour, with its meaning", async () => {
+  const collection = bindCollectionHighlights({
+    highlight_colors: ["green", "pink"],
+    highlight_meanings: { blue: "Definition" },
+  });
+  const highlight: Annotation = { ...linked, annotationType: "highlight", color: "blue" };
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  await act(async () => root.render(card(highlight, vi.fn(), { onRecolor: vi.fn() })));
+  const element = host.querySelector(`[data-annotation-id="${highlight.id}"]`);
+  expect(element?.getAttribute("data-highlight-color")).toBe("blue");
+  expect(host.querySelector(".annotation-meaning")?.textContent).toBe("Definition");
+  const offered = [
+    ...host.querySelectorAll<HTMLElement>(".annotation-card-colors .highlight-swatch"),
+  ];
+  expect(offered.map((swatch) => swatch.dataset["highlightColor"])).toEqual(["green", "pink"]);
+  await act(async () => root.unmount());
+  host.remove();
+  collection.stop();
 });

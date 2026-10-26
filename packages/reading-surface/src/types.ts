@@ -4,6 +4,9 @@ import type {
   AnnotationId,
   AnnotationTarget,
   DocumentTarget,
+  DocumentRange,
+  SearchDestination,
+  SearchTextSegment,
 } from "@mdbase-reader/core";
 
 export type SurfaceKind = "pdf" | "epub" | "html";
@@ -80,6 +83,8 @@ export interface AreaSelectionCapability {
 }
 
 export interface DecorationCapability {
+  /** Nearest resolved passage to the viewport's reading edge; never relocates the document. */
+  nearestAnnotation?(): AnnotationId | null;
   setAnnotations(annotations: readonly Annotation[]): Promise<void>;
   setActiveAnnotation(annotation: Annotation | null): Promise<void>;
 }
@@ -89,7 +94,16 @@ export interface AnnotationNavigationCapability {
 }
 
 export interface AnnotationActivationCapability {
+  /**
+   * The reader clicked a highlight in the document: once per click, including clicks on the
+   * highlight already active. Never Reader's own `setActiveAnnotation` coming back.
+   */
   readonly activations: EventSource<AnnotationId>;
+  /**
+   * The reader let go of the active highlight in the document itself, as by clicking empty page.
+   * Only renderers whose own selection shows the active highlight report this (PDF does).
+   */
+  readonly dismissals?: EventSource<null>;
   /** Where the most recently activated highlight sits on screen, when the renderer knows. */
   activationRect?(): ViewportRect | null;
 }
@@ -121,6 +135,9 @@ export interface TypographyCapability {
 
 export interface TextExtractionCapability {
   extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
+  extractSearchSegments?(options?: {
+    readonly signal?: AbortSignal;
+  }): Promise<readonly SearchTextSegment[]>;
 }
 
 /**
@@ -134,6 +151,10 @@ export interface ReadingMotionCapability {
 }
 
 export interface ReadingSurfaceCapabilities {
+  /** Exact containment against opened bytes. Null means unverified, never approximate. */
+  readonly annotationRange?: {
+    readonly contains: (range: DocumentRange, target: AnnotationTarget) => Promise<boolean | null>;
+  };
   readonly textSelection?: TextSelectionCapability;
   readonly motion?: ReadingMotionCapability;
   readonly areaSelection?: AreaSelectionCapability;
@@ -141,15 +162,38 @@ export interface ReadingSurfaceCapabilities {
   readonly annotationNavigation?: AnnotationNavigationCapability;
   readonly annotationActivation?: AnnotationActivationCapability;
   readonly textExtraction?: TextExtractionCapability;
+  /** Verifies exact revision and quotation before scrolling; never creates an annotation. */
+  readonly searchNavigation?: {
+    goToDestination(destination: SearchDestination): Promise<boolean>;
+    clear(): void;
+  };
   readonly contents?: ContentsCapability;
   readonly typography?: TypographyCapability;
 }
+
+/** Absolute coordinates; progress alone is relative to the validated source part. */
+export interface ReadingRangeLocation {
+  readonly position: "before" | "inside" | "after";
+  readonly atEnd: boolean;
+  /** Omitted when logical content progress cannot be measured reliably. */
+  readonly progress?: number;
+}
+
+export type ReadingRangeResolution =
+  | { readonly valid: false; readonly message: string }
+  | {
+      readonly valid: true;
+      readonly start: ReaderLocator;
+      measure(locator: ReaderLocator): ReadingRangeLocation | null;
+    };
 
 export interface ReadingSurface {
   readonly kind: SurfaceKind;
   readonly document: SurfaceDocument;
   readonly capabilities: ReadingSurfaceCapabilities;
   readonly locations: EventSource<ReaderLocator>;
+  /** Validates against loaded bytes, without navigating or restricting the renderer. */
+  resolveReadingRange?(range: DocumentRange): Promise<ReadingRangeResolution>;
   currentLocation(): ReaderLocator | null;
   goTo(locator: ReaderLocator): Promise<boolean>;
   destroy(): Promise<void>;

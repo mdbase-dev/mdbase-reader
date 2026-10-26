@@ -1,5 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
-import { useLingui } from "@lingui/react";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { sourceCitationDifferences, type Source } from "@mdbase-reader/core";
 import { useId, useState, type JSX } from "react";
@@ -25,7 +25,7 @@ function fields(): readonly {
     {
       key: "published",
       label: translate({ message: "Published", context: "SourceDetails fields" }),
-      placeholder: "2002, 2002-03 or 2002-03-01",
+      placeholder: translate({ message: "2002, 2002-03 or 2002-03-01" }),
     },
     { key: "url", label: "URL", placeholder: "https://" },
     {
@@ -49,7 +49,7 @@ export function SourceDetails({
   readonly controller: SourceFieldsController;
   readonly onOpenCitation?: () => void;
 }): JSX.Element {
-  useLingui();
+  useLocale();
   const differs =
     source.citation !== undefined &&
     sourceCitationDifferences(source.frontmatter, source.citation).length > 0;

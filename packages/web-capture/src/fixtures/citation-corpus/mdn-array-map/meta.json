@@ -1,0 +1,10 @@
+{
+  "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map",
+  "retrievedAt": "2026-10-23T06:14:26.480225+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map.",
+    "Use the article h1, not the navigation title or trailing JavaScript/MDN suffix. The visible footer credits MDN contributors and gives the last-modified date used for this mutable reference page.",
+    "Baseline extractScholarlyMetadata at d0c7061: 0/7 expected fields match; wrong or missing fields: type, title, author, issued, container-title, publisher, URL. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

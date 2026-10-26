@@ -47,7 +47,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
     .click();
   await tab.click();
   if (!(await tools.isVisible()))
-    await page.getByRole("button", { name: "Toggle right sidebar" }).click();
+    await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   // Reopening the sidebar remounts its locally selected editor. Establish the workbench's
   // ownership explicitly before testing transfer back, rather than assuming a hidden lease.
   await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
@@ -82,19 +82,17 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
   await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
   await tools.getByRole("button", { name: "Done", exact: true }).click();
   await expect(editor).toHaveCount(0);
-  await tools.getByRole("button", { name: "Add to literature note", exact: true }).first().click();
-  await expect(
-    tools.getByRole("button", { name: "In literature note", exact: true }),
-  ).toBeVisible();
+  await tools.getByRole("button", { name: "Insert into source note", exact: true }).first().click();
+  await expect(tools.getByRole("button", { name: "In source note", exact: true })).toBeVisible();
   await tools.getByRole("button", { name: "Edit", exact: true }).first().click();
-  await tools.getByRole("button", { name: "Delete", exact: true }).click();
+  await tools.getByRole("button", { name: "Delete annotation", exact: true }).click();
   await expect(tools.getByText("These notes embed it and will show a broken embed:")).toBeVisible();
   await expect(tools.getByText("sources/test_0000.md", { exact: true })).toBeVisible();
   await screenshot("annotation-linked-delete-warning");
   await tools.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(tools.locator(".annotation-card")).toHaveCount(2);
-  await tools.getByRole("button", { name: "Delete", exact: true }).click();
-  await tools.getByRole("button", { name: "Delete", exact: true }).click();
+  await tools.getByRole("button", { name: "Delete annotation", exact: true }).click();
+  await tools.getByRole("button", { name: "Delete annotation", exact: true }).click();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   await page.reload();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);

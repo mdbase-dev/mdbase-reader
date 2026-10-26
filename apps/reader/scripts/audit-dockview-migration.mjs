@@ -85,7 +85,7 @@ export async function auditDockviewMigration(page) {
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(1);
   // On a phone the sidebars have no header buttons while a source shows; shortcuts open them.
   await page.keyboard.press("Control+Backslash");
-  await expect(page.getByRole("complementary", { name: "Library navigator" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Sources sidebar" })).toBeVisible();
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(0);
   await page.keyboard.press("Control+Backslash");
   await page.setViewportSize({ width: 1440, height: 1000 });

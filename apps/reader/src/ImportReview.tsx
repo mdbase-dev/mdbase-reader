@@ -116,7 +116,7 @@ export function ImportConfirm({
   return (
     <section className="import-step" aria-labelledby="import-confirm-title">
       <h2 id="import-confirm-title">
-        <Trans>Confirm</Trans>
+        <Trans>Import into collection</Trans>
       </h2>
       <button type="button" disabled={busy || !!boundTarget} onClick={controller.inspect}>
         {t`Check destination: ${opened.collectionName}`}
@@ -194,7 +194,7 @@ export function ImportStatus({
       ) : null}
       {busy ? (
         <button type="button" onClick={controller.stop}>
-          <Trans>Stop safely</Trans>
+          <Trans>Stop import</Trans>
         </button>
       ) : null}
       {boundTarget ? (

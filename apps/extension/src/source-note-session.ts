@@ -1,10 +1,13 @@
 import { i18n } from "@lingui/core";
-import { msg, t } from "@lingui/core/macro";
+import { t as translate, msg } from "@lingui/core/macro";
 import {
   MdbaseRecordSession,
+  recordChanged,
   recordFailure,
+  recordMissing,
   recordOutcome,
   recordSuccess,
+  type JsonObject,
   type MdbaseRecordSessionState,
   type ReaderConnectedCollection,
 } from "@mdbase-reader/connect";
@@ -13,9 +16,17 @@ import { loadNoteDraft, saveNoteDraft, type NoteDraft } from "./drafts.js";
 
 import type { Source } from "@mdbase-reader/core";
 
+/** The source fields edited beside the note, as the session compares them. */
+export interface SourceDetails {
+  readonly title: string;
+  readonly tags: readonly string[];
+}
+
 export interface SourceNoteSnapshot {
   readonly state: MdbaseRecordSessionState;
   readonly body: string;
+  /** The title and tags with this panel's unsaved edits. */
+  readonly details: SourceDetails;
   /** The collection's copy this note was last saved against. */
   readonly source: Source;
   /** The collection's newer note, while `state` is `conflict`. */
@@ -61,6 +72,8 @@ export class SourceNoteSession {
     base: Source,
     collection: NoteCollection,
     private readonly store: NoteDraftStore = browserSession,
+    /** Each newer copy of the source this session saves or reads, for the rest of the panel. */
+    private readonly publish: (source: Source) => void = () => undefined,
   ) {
     this.#collectionId = collection.collectionId;
     this.#sourceId = base.id;
@@ -71,14 +84,43 @@ export class SourceNoteSession {
       {
         revision: (source) => source.recordRevision,
         body: (source) => source.body,
+        // Only these fields are compared, so an edit elsewhere to any other is never a conflict.
+        frontmatter: (source) => ({ title: source.title, tags: [...source.tags] }),
         write: async (expected, change) => {
           try {
+            let target = expected;
+            if (change.patch) {
+              // Field updates take no revision, so check first that nothing moved on. A change
+              // made between this read and the write is overwritten for these two fields only.
+              const current = await sources.get(collectionId, expected.id);
+              if (!current) {
+                return recordMissing();
+              }
+              if (current.recordRevision !== expected.recordRevision) {
+                return recordChanged(translate({ message: "The source changed before saving." }));
+              }
+              if (!sources.updateFields) {
+                throw new Error(
+                  translate({
+                    message: "This collection can’t edit a source’s title and tags here.",
+                  }),
+                );
+              }
+              target = await sources.updateFields({
+                collectionId,
+                sourceId: expected.id,
+                fields: change.patch,
+              });
+              if (change.body === undefined) {
+                return recordSuccess(target);
+              }
+            }
             return recordSuccess(
               await sources.updateBody({
                 collectionId,
-                sourceId: expected.id,
-                expectedRevision: expected.recordRevision,
-                body: change.body ?? expected.body,
+                sourceId: target.id,
+                expectedRevision: target.recordRevision,
+                body: change.body ?? target.body,
               }),
             );
           } catch (error) {
@@ -114,12 +156,17 @@ export class SourceNoteSession {
     if (draft.requestId && this.#pending(draft.requestId)) {
       this.#record.resumeRecovery(draft.requestId);
     }
-    if (draft.body === this.#record.snapshot.record.body) {
+    if (draft.body === this.#record.snapshot.record.body && !draft.patch) {
       this.#clearStored();
       return;
     }
     this.#restored = true;
-    this.#record.restore({ body: draft.body, baseBody: draft.baseBody });
+    this.#record.restore({
+      body: draft.body,
+      baseBody: draft.baseBody,
+      ...(draft.patch ? { patch: draft.patch } : {}),
+      ...(draft.baseFrontmatter ? { baseFrontmatter: draft.baseFrontmatter } : {}),
+    });
     // A restored draft that conflicts waits for a decision; otherwise it saves itself.
     if (this.#record.snapshot.state === "unsaved") {
       this.#record.autosave();
@@ -138,6 +185,19 @@ export class SourceNoteSession {
     }
     this.#restored = false;
     this.#record.setBody(body);
+  }
+
+  /** A changed title or tags, autosaved with the note. An empty title is not saved. */
+  editDetails(details: Partial<SourceDetails>): void {
+    const current = this.#snapshot.details;
+    const patch = detailsPatch(current, {
+      title: details.title?.trim() ? details.title : current.title,
+      tags: details.tags ?? current.tags,
+    });
+    if (patch) {
+      this.#restored = false;
+      this.#record.patchFrontmatter(patch);
+    }
   }
 
   /** Saves now instead of after the autosave pause. */
@@ -161,11 +221,6 @@ export class SourceNoteSession {
     }
   }
 
-  /** A source this panel wrote outside the note, such as its title or tags. */
-  accept(source: Source): void {
-    this.#record.accept(source);
-  }
-
   /** Writes the browser copy at once, for when the panel is about to close. */
   keepCopy(): void {
     if (this.#storeTimer !== undefined) {
@@ -179,23 +234,38 @@ export class SourceNoteSession {
     const next = this.#project();
     if (!this.#record.snapshot.dirty && next.state === "saved") {
       this.#clearStored();
-    } else if (next.body !== this.#snapshot.body || next.state !== this.#snapshot.state) {
+    } else if (
+      next.body !== this.#snapshot.body ||
+      next.details !== this.#snapshot.details ||
+      next.state !== this.#snapshot.state
+    ) {
       this.#scheduleStore();
     }
+    const published = next.source !== this.#snapshot.source;
     this.#snapshot = next;
     this.#emit();
+    if (published) {
+      this.publish(next.source);
+    }
   }
 
   #project(): SourceNoteSnapshot {
     const record = this.#record.snapshot;
+    const previous = this.#snapshot as SourceNoteSnapshot | undefined;
+    const details = sourceDetails(record.frontmatter);
     return {
       state: record.state,
       body: record.body,
+      // The same object while unchanged, so views comparing it redraw only on a change.
+      details:
+        previous?.details.title === details.title && sameTags(previous.details.tags, details.tags)
+          ? previous.details
+          : details,
       source: record.record,
       remote: record.remote,
       problem:
         record.state === "deleted"
-          ? t`This source is no longer in the collection. Your text is kept in this panel.`
+          ? translate`This source is no longer in the collection. Your text is kept in this panel.`
           : (record.problem?.message ?? null),
       restored: this.#restored,
       localProblem: this.#localProblem,
@@ -218,9 +288,12 @@ export class SourceNoteSession {
       return;
     }
     this.#stored = true;
+    const base = { title: record.record.title, tags: [...record.record.tags] };
+    const patch = detailsPatch(base, sourceDetails(record.frontmatter));
     const draft: NoteDraft = {
       body: record.body,
       baseBody: record.record.body,
+      ...(patch ? { patch, baseFrontmatter: base } : {}),
       ...(record.pendingRequestId ? { requestId: record.pendingRequestId } : {}),
     };
     this.store.save(this.#collectionId, this.#sourceId, draft).then(
@@ -251,4 +324,28 @@ export class SourceNoteSession {
   #emit(): void {
     this.#listeners.forEach((listener) => listener());
   }
+}
+
+function sourceDetails(frontmatter: JsonObject): SourceDetails {
+  const { title, tags } = frontmatter;
+  return {
+    title: typeof title === "string" ? title : "",
+    tags: Array.isArray(tags) ? tags.filter((tag) => typeof tag === "string") : [],
+  };
+}
+
+/** The fields of `to` that differ from `from`, or null when none do. */
+function detailsPatch(from: SourceDetails, to: SourceDetails): JsonObject | null {
+  const patch: JsonObject = {};
+  if (to.title !== from.title) {
+    patch["title"] = to.title;
+  }
+  if (!sameTags(to.tags, from.tags)) {
+    patch["tags"] = [...to.tags];
+  }
+  return Object.keys(patch).length ? patch : null;
+}
+
+function sameTags(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((tag, index) => tag === b[index]);
 }

@@ -6,9 +6,12 @@ import {
 } from "@mdbase-reader/core";
 
 import { citationAuthors } from "./csl-values.js";
-import { extractScholarlyMetadata, type ScholarlyMetadata } from "./scholarly-metadata.js";
+import { pageClaims } from "./page-claims.js";
+import { scholarlyMetadataFromClaims, type ScholarlyMetadata } from "./scholarly-metadata.js";
 import { socialPostImport } from "./social/import.js";
 import { adapterFor, postAddress } from "./social/index.js";
+
+import type { ClaimBatch } from "./claims.js";
 
 export const WEB_CAPTURE_EXTRACTOR = "defuddle@0.19.5";
 const fallbackExtractor = "mozilla-readability@0.6.0";
@@ -39,6 +42,7 @@ export interface WebCaptureImport {
   readonly capture: SourceCaptureProvenance;
   readonly metadata: SourceImportMetadata;
   readonly scholarly: ScholarlyMetadata;
+  readonly claims: ClaimBatch;
 }
 
 export interface LiveWebCapture extends CapturedWebDocument {
@@ -90,7 +94,7 @@ export async function webCaptureImport(
     };
     return socialPostImport(await adapter.extract(ref, socialDocument), capture);
   }
-  const parsed = options.document ?? parseHtml(capture.html);
+  const parsed = socialDocument;
   const canonicalUrl = new URL(capture.canonicalUrl);
   // Loaded on save only: opening the capture panel should not pay for extraction.
   const [{ article, extractor }, { prepareHtmlDocument }] = await Promise.all([
@@ -105,7 +109,8 @@ export async function webCaptureImport(
     article.language,
   );
   const stem = safeStem(canonicalUrl.hostname);
-  const scholarly = extractScholarlyMetadata(parsed, capture.canonicalUrl);
+  const claims = pageClaims(parsed, capture.canonicalUrl, capture.retrievedAt);
+  const scholarly = scholarlyMetadataFromClaims(claims);
   const metadata = captureMetadata(parsed, canonicalUrl, article);
   const scholarlyAuthors = scholarly.citation ? citationAuthors(scholarly.citation) : [];
   return {
@@ -125,6 +130,7 @@ export async function webCaptureImport(
     // Publisher tags list every author; an extractor's byline is often a single display string.
     metadata: scholarlyAuthors.length ? { ...metadata, authors: scholarlyAuthors } : metadata,
     scholarly,
+    claims,
   };
 }
 

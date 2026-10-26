@@ -14,7 +14,7 @@ const positions = ["left", "right"] as const;
 export function sidePanelTitle(id: string): string {
   return id === navigatorPanelId
     ? t({ message: "Sources", context: "dockview side panels" })
-    : t({ message: "Source", context: "dockview side panels" });
+    : t({ message: "Notes", context: "dockview side panels" });
 }
 function edgeGroup(api: DockviewApi, id: string, width: number): DockviewGroupPanel {
   const position = id === navigatorPanelId ? "left" : "right";

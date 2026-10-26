@@ -1,12 +1,14 @@
-import { plural } from "@lingui/core/macro";
+import { plural, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
-import { isEditableSourceField } from "@mdbase-reader/core";
-import { useId, useState, type JSX, type KeyboardEvent } from "react";
+import { isEditableSourceField, isRequiredSourceField } from "@mdbase-reader/core";
+import { useState, type JSX } from "react";
 
 import { CloseIcon } from "./icons.js";
-import { isPropertyKey } from "./library-columns.js";
-import { readingStatusOptions } from "./LibraryCells.js";
+import { columnLabel, isPropertyKey, propertyColumn } from "./library-columns.js";
+import { countLabel, readingStatusOptions } from "./LibraryCells.js";
+import { Menu } from "./Menu.js";
 
 import type { ReadingStatus, SourceSummary } from "@mdbase-reader/core";
 
@@ -17,6 +19,7 @@ export interface BulkStatusProgress {
   readonly done: number;
   readonly total: number;
   readonly failed: number;
+  readonly changed?: number;
 }
 
 /** Actions for several selected sources: reading status, opening, and exporting citations. */
@@ -26,6 +29,7 @@ export function LibraryBulkBar({
   onSetStatus,
   onSetField,
   propertyKeys = [],
+  properties = [],
   onOpen,
   onExport,
 }: {
@@ -43,6 +47,7 @@ export function LibraryBulkBar({
     progress: (value: BulkStatusProgress) => void,
   ) => Promise<void>;
   readonly propertyKeys?: readonly string[];
+  readonly properties?: readonly { readonly key: string; readonly label?: string }[];
   readonly onOpen: (sources: readonly SourceSummary[]) => void;
   readonly onExport: (sources: readonly SourceSummary[]) => void;
 }): JSX.Element {
@@ -94,9 +99,12 @@ export function LibraryBulkBar({
           <Trans>Set field…</Trans>
         </button>
       ) : null}
-      {onSetField && fieldForm ? (
+      {onSetField && fieldForm && !busy ? (
         <BulkFieldForm
+          key={selected.map(({ id }) => id).join("\n")}
+          count={selected.length}
           propertyKeys={propertyKeys}
+          properties={properties}
           onCancel={() => setFieldForm(false)}
           onApply={(key, value) => {
             setProgress({ done: 0, total: selected.length, failed: 0 });
@@ -109,14 +117,7 @@ export function LibraryBulkBar({
         <span className="library-bulk-progress" role="status">
           {busy
             ? t`Updating ${String(progress.done)} of ${String(progress.total)}…`
-            : progress.failed > 0
-              ? t({
-                  message: plural(progress.failed, {
-                    one: "# source could not be updated",
-                    other: "# sources could not be updated",
-                  }),
-                })
-              : t({ message: "Updated", context: "LibraryBulkBar interface" })}
+            : bulkProgressMessage(progress)}
         </span>
       ) : null}
       <button
@@ -132,69 +133,167 @@ export function LibraryBulkBar({
   );
 }
 
-/** One field and value to set on every selected source; an empty value removes the field. */
+function bulkProgressMessage(progress: BulkStatusProgress): string {
+  const changed = progress.changed ?? progress.done - progress.failed;
+  const updated = plural(changed, { one: "# source updated", other: "# sources updated" });
+  if (!progress.failed) {
+    return updated;
+  }
+  const failed = plural(progress.failed, {
+    one: "# source could not be updated",
+    other: "# sources could not be updated",
+  });
+  return translate`${updated}; ${failed}`;
+}
+
+/** Sets a value, or clears a field only after an explicit second step. */
 function BulkFieldForm({
+  count,
   propertyKeys,
+  properties,
   onApply,
   onCancel,
 }: {
+  readonly count: number;
   readonly propertyKeys: readonly string[];
+  readonly properties: readonly { readonly key: string; readonly label?: string }[];
   readonly onApply: (key: string, value: string) => void;
   readonly onCancel: () => void;
 }): JSX.Element {
   const { t } = useLingui();
   const [key, setKey] = useState("");
   const [value, setValue] = useState("");
-  const fieldListId = useId();
-  const valid = isPropertyKey(key) && isEditableSourceField(key);
-  const cancelOnEscape = (event: KeyboardEvent<HTMLInputElement>): void => {
-    if (event.key === "Escape") {
-      event.stopPropagation();
-      onCancel();
-    }
+  const [custom, setCustom] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const valid = count > 0 && isPropertyKey(key) && isEditableSourceField(key);
+  const label = columnLabel(propertyColumn(key), properties);
+  const chooseField = (field: string): void => {
+    setKey(field);
+    setConfirmClear(false);
   };
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape cancels from any control in the form.
     <form
       className="library-bulk-field"
       aria-label={t({ message: "Set a field on the selected sources" })}
       onSubmit={(event) => {
         event.preventDefault();
-        if (valid) {
+        if (valid && value.trim() && !confirmClear) {
           onApply(key, value);
         }
       }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.stopPropagation();
+          if (confirmClear) {
+            setConfirmClear(false);
+          } else {
+            onCancel();
+          }
+        }
+      }}
     >
-      <input
-        className="mdbase-field"
-        aria-label={t({ message: "Field", context: "LibraryBulkBar interface" })}
-        list={fieldListId}
-        value={key}
-        placeholder={t({ message: "field", context: "LibraryBulkBar interface" })}
-        spellCheck={false}
-        // eslint-disable-next-line jsx-a11y/no-autofocus -- the form exists only to take this entry.
-        autoFocus
-        onKeyDown={cancelOnEscape}
-        onChange={(event) => setKey(event.target.value.trim())}
+      <BulkFieldPicker
+        label={key ? label : translate({ message: "Choose field…" })}
+        propertyKeys={propertyKeys}
+        properties={properties}
+        onChoose={(field, isCustom) => {
+          setCustom(isCustom);
+          chooseField(field);
+        }}
       />
-      <datalist id={fieldListId}>
-        {propertyKeys.map((property) => (
-          <option key={property} value={property} />
-        ))}
-      </datalist>
-      <input
-        className="mdbase-field"
-        aria-label={t({ message: "Value (empty removes the field)" })}
-        value={value}
-        placeholder={t({ message: "value, or empty to remove" })}
-        onKeyDown={cancelOnEscape}
-        onChange={(event) => setValue(event.target.value)}
-      />
-      <button type="submit" disabled={!valid}>
-        <Trans>Apply</Trans>
-      </button>
+      {custom ? (
+        <input
+          className="mdbase-field"
+          aria-label={translate({ message: "Custom field key" })}
+          value={key}
+          placeholder={translate({ message: "e.g. csl.volume" })}
+          spellCheck={false}
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- custom entry was explicitly requested.
+          autoFocus
+          onChange={(event) => chooseField(event.target.value.trim())}
+        />
+      ) : key ? (
+        <code className="library-bulk-field-key">{key}</code>
+      ) : null}
+      {confirmClear ? (
+        <>
+          <span role="status">
+            <Trans>Clear </Trans>
+            {label} <Trans>from </Trans>
+            {countLabel(count, "source")}?
+          </span>
+          <button
+            type="button"
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- keep keyboard focus in the explicit confirmation step.
+            autoFocus
+            onClick={() => onApply(key, "")}
+          >{translate`Clear ${label}`}</button>
+          <button type="button" onClick={() => setConfirmClear(false)}>
+            <Trans>Keep field</Trans>
+          </button>
+        </>
+      ) : (
+        <>
+          <input
+            className="mdbase-field"
+            aria-label={translate({ message: "Value" })}
+            value={value}
+            placeholder={translate({ message: "New value" })}
+            onChange={(event) => setValue(event.target.value)}
+          />
+          <button type="submit" disabled={!valid || !value.trim()}>
+            <Trans>Apply</Trans>
+          </button>
+          <button
+            type="button"
+            disabled={!valid || isRequiredSourceField(key)}
+            onClick={() => setConfirmClear(true)}
+          >
+            <Trans>Clear field…</Trans>
+          </button>
+        </>
+      )}
       <button type="button" onClick={onCancel}>
         <Trans context="Reader action">Cancel</Trans>
       </button>
     </form>
+  );
+}
+
+function BulkFieldPicker({
+  label,
+  propertyKeys,
+  properties,
+  onChoose,
+}: {
+  readonly label: string;
+  readonly propertyKeys: readonly string[];
+  readonly properties: readonly { readonly key: string; readonly label?: string }[];
+  readonly onChoose: (key: string, custom: boolean) => void;
+}): JSX.Element {
+  useLocale();
+  return (
+    <Menu
+      label={translate({ message: "Choose field" })}
+      trigger={label}
+      triggerClassName="library-bulk-field-trigger"
+      align="start"
+    >
+      {[...new Set(propertyKeys)].filter(isEditableSourceField).map((property) => (
+        <button
+          key={property}
+          type="button"
+          className="library-property-choice"
+          onClick={() => onChoose(property, false)}
+        >
+          <span>{columnLabel(propertyColumn(property), properties)}</span>
+          <code>{property}</code>
+        </button>
+      ))}
+      <button type="button" onClick={() => onChoose("", true)}>
+        <Trans>Custom field…</Trans>
+      </button>
+    </Menu>
   );
 }

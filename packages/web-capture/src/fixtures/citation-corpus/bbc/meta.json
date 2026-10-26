@@ -1,0 +1,10 @@
+{
+  "url": "https://www.bbc.co.uk/news/articles/cwkgjz3dpyj6o",
+  "retrievedAt": "2026-10-23T06:14:45.716781+00:00",
+  "notes": [
+    "Original reduced reproduction of the captured HTML; article prose, descriptions, images, styles, tracking and executable scripts omitted. Citation metadata values are retained; JSON-LD keeps only citation-related properties.",
+    "Page HTTP status: 200. Final URL: https://www.bbc.co.uk/news/articles/cwkgjz3dpyj6o.",
+    "No individual byline on this fetched page; JSON-LD explicitly credits the BBC News organization. Original publication date is 22 October, not the 23 October modification date. Citoid has no author.",
+    "Baseline extractScholarlyMetadata at d0c7061: 7/7 expected fields match; wrong or missing fields: none. Cosmetic case/whitespace differences are ignored; absent expected fields are not scored."
+  ]
+}

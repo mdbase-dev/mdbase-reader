@@ -41,8 +41,9 @@ body:has(.mobile-source-views) .pwa-install {
   cursor: pointer;
 }
 .pwa-install button:focus-visible {
-  outline: 2px solid #3978e5;
+  outline: 2px solid transparent;
   outline-offset: 2px;
+  box-shadow: var(--focus-ring);
 }
 .pwa-install button:disabled {
   opacity: 0.5;

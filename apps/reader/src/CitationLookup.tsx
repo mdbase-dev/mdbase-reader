@@ -1,9 +1,13 @@
-import { i18n } from "@lingui/core";
-import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import { useMemo, useState, type JSX, type SyntheticEvent } from "react";
+import { t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { claimSourceLabel } from "@mdbase-reader/web-capture/citation-updates";
+import { useLayoutEffect, useRef, useState, type JSX, type SyntheticEvent } from "react";
 
-import { citationDifferences, displayCslValue } from "./citation-form-model.js";
-import { SearchIcon } from "./icons.js";
+import { cslFieldLabel, displayCslValue } from "./citation-form-model.js";
+import { citationSourceLabel } from "./citation-provenance.js";
+import { ChevronRightIcon } from "./icons.js";
+import { useSessionDisclosure } from "./use-session-choice.js";
 
 import type { CitationEditorController } from "./use-citation-editor.js";
 
@@ -16,21 +20,17 @@ export function CitationLookup({
 }): JSX.Element {
   const { t } = useLingui();
   const [query, setQuery] = useState(lookupSeed(citation));
+  const disclosure = useSessionDisclosure("citation.lookup");
   const submit = (event: SyntheticEvent<HTMLFormElement>): void => {
     event.preventDefault();
     editor.resolve(query);
   };
   return (
-    <details className="citation-lookup">
+    <details className="citation-lookup citation-disclosure" {...disclosure}>
       <summary>
-        <SearchIcon />
+        <ChevronRightIcon />
         <span>
-          <strong>
-            <Trans>Find citation details</Trans>
-          </strong>
-          <small>
-            <Trans>Search by DOI, ISBN, URL, or title</Trans>
-          </small>
+          <Trans>Look up by DOI, ISBN, URL or title</Trans>
         </span>
       </summary>
       <form onSubmit={submit}>
@@ -52,11 +52,16 @@ export function CitationLookup({
             : t({ message: "Find", context: "CitationLookup interface" })}
         </button>
       </form>
+      <p className="citation-lookup-note">
+        <Trans>
+          Lookup sends your search or source URL to metadata providers. Accepting changes only the
+          draft; Save details writes them to your collection.
+        </Trans>
+      </p>
       {!editor.resolutionAvailable ? (
         <p className="citation-lookup-note">
           <Trans>
-            Metadata lookup will be available when a resolver is connected. You can still edit and
-            format CSL locally.
+            Metadata lookup is unavailable here. You can still edit the citation details here.
           </Trans>
         </p>
       ) : null}
@@ -65,100 +70,111 @@ export function CitationLookup({
           {editor.resolutionError}
         </p>
       ) : null}
-      {editor.candidate ? (
-        <CitationMergeReview
-          key={`${editor.candidate.provenance.query}:${editor.candidate.provenance.retrievedAt}`}
-          citation={citation}
-          candidate={editor.candidate}
-          editor={editor}
-        />
-      ) : null}
+      {editor.resolutionStatus === "resolved" ? <CitationSuggestions editor={editor} /> : null}
     </details>
   );
 }
 
-function CitationMergeReview({
-  citation,
-  candidate,
+function CitationSuggestions({
   editor,
 }: {
-  readonly citation: Readonly<Record<string, unknown>>;
-  readonly candidate: NonNullable<CitationEditorController["candidate"]>;
   readonly editor: CitationEditorController;
 }): JSX.Element {
-  const { t } = useLingui();
-  const differences = useMemo(
-    () => citationDifferences(citation, candidate.citation),
-    [candidate, citation],
-  );
-  const [selected, setSelected] = useState<ReadonlySet<string>>(
-    () =>
-      new Set(differences.filter(({ current }) => current === undefined).map(({ field }) => field)),
-  );
+  useLocale();
+  const results = useRef<HTMLElement>(null);
+  const focusIndex = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (focusIndex.current === null) {
+      return;
+    }
+    const actions = results.current?.querySelectorAll<HTMLButtonElement>(
+      ".citation-review-actions button:first-child",
+    );
+    const target =
+      actions?.[Math.min(focusIndex.current, actions.length - 1)] ??
+      results.current?.querySelector<HTMLElement>("[data-citation-results-status]");
+    target?.focus();
+    focusIndex.current = null;
+  });
+  const review = (index: number, action: () => void): void => {
+    focusIndex.current = index;
+    action();
+  };
   return (
-    <div className="citation-merge-review">
-      <div className="citation-merge-heading">
-        <div>
-          <strong>
-            <Trans>Review found metadata</Trans>
-          </strong>
-          <span>
-            {candidate.provenance.provider} ·{" "}
-            {new Date(candidate.provenance.retrievedAt).toLocaleDateString(i18n.locale)}
-          </span>
-        </div>
-        <button type="button" onClick={editor.dismissCandidate}>
-          <Trans>Dismiss</Trans>
-        </button>
-      </div>
-      {differences.length ? (
-        <div className="citation-differences">
-          {differences.map((difference) => (
-            <label key={difference.field}>
-              <span className="sr-only">{t`Use found ${fieldLabel(difference.field)}`}</span>
-              <input
-                type="checkbox"
-                checked={selected.has(difference.field)}
-                onChange={() => setSelected(toggle(selected, difference.field))}
-              />
-              <span className="citation-difference-copy">
-                <strong>{fieldLabel(difference.field)}</strong>
+    <section
+      ref={results}
+      className="citation-suggestions"
+      aria-label={translate({ message: "Citation suggestions" })}
+      aria-live="polite"
+    >
+      {editor.suggestions.length ? (
+        <>
+          <header>
+            <strong tabIndex={-1} data-citation-results-status>
+              <Trans>Review found metadata</Trans>
+            </strong>
+            <button
+              type="button"
+              onClick={() =>
+                review(0, () =>
+                  editor.acceptSuggestions(new Set(editor.suggestions.map(({ field }) => field))),
+                )
+              }
+            >
+              <Trans>Accept all</Trans>
+            </button>
+          </header>
+          {editor.suggestions.map((suggestion, index) => (
+            <div className="citation-suggestion" key={suggestion.field}>
+              <strong>{cslFieldLabel(suggestion.field)}</strong>
+              <div className="citation-difference-copy">
                 <span>
-                  <small>{t({ message: "Current", context: "Current citation value" })}</small>
-                  <del>{displayCslValue(difference.current)}</del>
+                  <small>
+                    <Trans context="Reader interface">Current</Trans>
+                  </small>
+                  <del>{displayCslValue(suggestion.current)}</del>
                 </span>
                 <span>
-                  <small>{t({ message: "Found" })}</small>
-                  <ins>{displayCslValue(difference.candidate)}</ins>
+                  <small>
+                    <Trans>Proposed</Trans>
+                  </small>
+                  <ins>{displayCslValue(suggestion.proposed)}</ins>
                 </span>
-              </span>
-            </label>
+              </div>
+              <small>
+                {citationSourceLabel(
+                  [claimSourceLabel(suggestion.source), suggestion.evidence]
+                    .filter(Boolean)
+                    .join(" "),
+                )}
+              </small>
+              <div className="citation-review-actions">
+                <button
+                  type="button"
+                  aria-label={translate`Accept ${cslFieldLabel(suggestion.field)}`}
+                  onClick={() =>
+                    review(index, () => editor.acceptSuggestions(new Set([suggestion.field])))
+                  }
+                >
+                  <Trans>Accept</Trans>
+                </button>
+                <button
+                  type="button"
+                  aria-label={translate`Dismiss ${cslFieldLabel(suggestion.field)}`}
+                  onClick={() => review(index, () => editor.dismissSuggestion(suggestion.field))}
+                >
+                  <Trans>Dismiss</Trans>
+                </button>
+              </div>
+            </div>
           ))}
-        </div>
+        </>
       ) : (
-        <p className="citation-lookup-note">
-          <Trans>The found record matches this citation.</Trans>
+        <p className="citation-lookup-note" tabIndex={-1} data-citation-results-status>
+          <Trans>No suggestions to review. Manual edits and removed fields are kept.</Trans>
         </p>
       )}
-      {candidate.warnings.map((warning) => (
-        <p className="citation-lookup-error" key={warning}>
-          {warning}
-        </p>
-      ))}
-      <button
-        className="citation-apply-metadata"
-        type="button"
-        disabled={selected.size === 0}
-        onClick={() => editor.applyCandidate(selected)}
-      >
-        <Plural
-          value={selected.size}
-          _0="Apply selected details"
-          one="Apply # change"
-          other="Apply # changes"
-        />
-      </button>
-    </div>
+    </section>
   );
 }
 
@@ -170,18 +186,4 @@ function lookupSeed(citation: Readonly<Record<string, unknown>>): string {
     }
   }
   return "";
-}
-
-function toggle(values: ReadonlySet<string>, value: string): ReadonlySet<string> {
-  const updated = new Set(values);
-  if (updated.has(value)) {
-    updated.delete(value);
-  } else {
-    updated.add(value);
-  }
-  return updated;
-}
-
-function fieldLabel(field: string): string {
-  return field.replaceAll("-", " ").replace(/^./u, (letter) => letter.toLocaleUpperCase());
 }

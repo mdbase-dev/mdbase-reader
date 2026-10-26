@@ -1,18 +1,24 @@
-import { t } from "@lingui/core/macro";
-import { useLingui as useI18n } from "@lingui/react";
+import { t, t as translate } from "@lingui/core/macro";
+import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
+import { readerSourceUrl } from "./capture-model.js";
 import { CitationPanel } from "./CitationPanel.js";
-import { collectionName, ConnectionPanel, ConnectionProblem } from "./ConnectionPanel.js";
+import {
+  collectionName,
+  ConnectFirst,
+  ConnectionPanel,
+  ConnectionProblem,
+} from "./ConnectionPanel.js";
 import { useDiagnosticsShown } from "./diagnostics-setting.js";
 import { DiagnosticsPanel } from "./DiagnosticsPanel.js";
 import { ExtensionHeader } from "./ExtensionHeader.js";
 import { HighlightFields } from "./HighlightFields.js";
-import { NotePanel } from "./NotePanel.js";
+import { NotePanel, useNoteAttention } from "./NotePanel.js";
 import { PanelTabContent, PanelTabs, usePanelTab, type PanelTab } from "./PanelTabs.js";
 import { PostPicker } from "./PostPicker.js";
-import { SaveBar, saveReady } from "./SaveBar.js";
+import { awaitingConnection, SaveBar, saveReady } from "./SaveBar.js";
 import { SavedHighlights } from "./SavedHighlights.js";
 import { openSettings, useShortcuts } from "./shortcuts.js";
 
@@ -42,34 +48,40 @@ export function CaptureApp({
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [controller.busy]);
+  const noteAttention = useNoteAttention(controller.note.session);
   const highlightCount = controller.source
     ? controller.annotations.filter((annotation) => annotation.target?.quote).length
     : null;
   return (
     <main className="capture-shell">
-      <ExtensionHeader
-        collectionId={
-          controller.snapshot.status === "ready" ? controller.snapshot.collectionId : null
-        }
-        collection={
-          collection
-            ? {
-                name: collection,
-                expanded: collectionOpen,
-                onToggle: () => setCollectionOpen((open) => !open),
-              }
-            : null
-        }
-        onSettings={openSettings}
-      />
-      <ConnectionPanel
-        controller={controller}
-        compact
-        expanded={collectionOpen}
-        onDone={() => setCollectionOpen(false)}
-      />
-      {unreadable(controller) ? (
-        <>
+      {/* As in Reader's inspector, the page, its collection and its save action stay put
+          while the tabs below scroll. */}
+      <div className="panel-head">
+        <ExtensionHeader
+          collectionId={
+            controller.snapshot.status === "ready" ? controller.snapshot.collectionId : null
+          }
+          collection={
+            collection
+              ? {
+                  name: collection,
+                  expanded: collectionOpen,
+                  onToggle: () => setCollectionOpen((open) => !open),
+                }
+              : null
+          }
+          onSettings={openSettings}
+        />
+        {controller.readerPage ? (
+          <section className="page-card">
+            <h1>
+              <Trans>This is mdbase Reader</Trans>
+            </h1>
+            <p>
+              <Trans>Nothing to save here</Trans>
+            </p>
+          </section>
+        ) : unreadable(controller) ? (
           <section className="page-card">
             <h1>
               <Trans>Reader cannot read this page</Trans>
@@ -78,40 +90,54 @@ export function CaptureApp({
               <Trans>Nothing to save here</Trans>
             </p>
           </section>
-          <UnreadablePage controller={controller} />
-        </>
-      ) : (
-        <section className="page-card">
-          <h1>{pageTitle(controller)}</h1>
-          <p>
-            {controller.capture
-              ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? t` · PDF` : ""}`
-              : t`Waiting for the active tab`}
-          </p>
-          <SaveBar controller={controller} />
-          <PostPicker controller={controller} />
-        </section>
-      )}
-      <PanelStatus controller={controller} />
-      {controller.capture && !unreadable(controller) ? (
-        <>
-          <PanelTabs tab={tab} highlightCount={highlightCount} onChange={setTab} />
-          <PanelTabContent tab={tab}>
-            {tab === "highlights" ? (
-              <HighlightsPanel controller={controller} />
-            ) : tab === "note" ? (
-              <NotePanel controller={controller} />
-            ) : (
-              <CitationPanel controller={controller} />
-            )}
-          </PanelTabContent>
-        </>
-      ) : null}
-      {diagnostics ? (
-        <footer className="panel-footer">
-          <DiagnosticsPanel />
-        </footer>
-      ) : null}
+        ) : (
+          <section className="page-card">
+            <h1>{pageTitle(controller)}</h1>
+            <p>
+              {controller.capture
+                ? `${new URL(controller.capture.canonicalUrl).hostname}${controller.capture.kind === "pdf" ? translate({ message: " · PDF" }) : ""}`
+                : translate({ message: "Waiting for the active tab" })}
+            </p>
+            <PageStatus controller={controller} />
+            <SaveBar controller={controller} />
+          </section>
+        )}
+      </div>
+      <div className="panel-body">
+        <ConnectionPanel
+          controller={controller}
+          compact
+          expanded={collectionOpen}
+          onDone={() => setCollectionOpen(false)}
+        />
+        {unreadable(controller) ? <UnreadablePage controller={controller} /> : null}
+        <PostPicker controller={controller} />
+        <ConnectionProblem controller={controller} />
+        {controller.capture && !unreadable(controller) ? (
+          <>
+            <PanelTabs
+              tab={tab}
+              highlightCount={highlightCount}
+              noteAttention={noteAttention}
+              onChange={setTab}
+            />
+            <PanelTabContent tab={tab}>
+              {tab === "highlights" ? (
+                <HighlightsPanel controller={controller} />
+              ) : tab === "note" ? (
+                <NotePanel controller={controller} />
+              ) : (
+                <CitationPanel controller={controller} />
+              )}
+            </PanelTabContent>
+          </>
+        ) : null}
+        {diagnostics ? (
+          <footer className="panel-footer">
+            <DiagnosticsPanel />
+          </footer>
+        ) : null}
+      </div>
     </main>
   );
 }
@@ -121,6 +147,7 @@ export function CaptureApp({
  * one quiet line says how to make one, and only while there is nothing saved to show.
  */
 function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element {
+  useLocale();
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
   const saved = c.annotations.some((annotation) => annotation.target?.quote);
   return (
@@ -136,6 +163,15 @@ function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element 
             <Trans>Save the PDF, then open it there.</Trans>
           )}
         </p>
+      ) : awaitingConnection(c) ? (
+        <ConnectFirst
+          controller={c}
+          purpose={
+            selection
+              ? translate({ message: "highlight the selected passage" })
+              : translate({ message: "highlight this page" })
+          }
+        />
       ) : selection ? (
         <fieldset
           className="tab-section"
@@ -145,14 +181,14 @@ function HighlightsPanel({ controller: c }: ControllerProps): React.JSX.Element 
           <HighlightFields controller={c} ready={saveReady(c)} />
         </fieldset>
       ) : saved ? null : (
-        <HighlightHint />
+        <HighlightHint colors={c.highlight.colors.length} />
       )}
       <SavedHighlights controller={c} />
     </>
   );
 }
 
-/** The title the source has, or will be saved with: the Note tab's title, not the tab's. */
+/** The title the source has, or will be saved with: the Literature note tab's title, not the browser tab's. */
 function pageTitle(c: ExtensionCaptureController): string {
   if (c.source) {
     return c.source.title;
@@ -169,7 +205,7 @@ function unreadable(c: ExtensionCaptureController): boolean {
 }
 
 /** Before the first highlight: how to make one, and the keys that make it quick. */
-function HighlightHint(): React.JSX.Element {
+function HighlightHint({ colors }: { readonly colors: number }): React.JSX.Element {
   const shortcut = useShortcuts()?.find((value) => value.name === "save-highlight")?.keys;
   return (
     <div className="tab-hint">
@@ -178,9 +214,17 @@ function HighlightHint(): React.JSX.Element {
       </p>
       <ul className="hint-keys">
         <li>
-          <Trans>
-            <kbd>1</kbd>–<kbd>5</kbd> save the selection in a colour; <kbd>Esc</kbd> clears it
-          </Trans>
+          <kbd>1</kbd>
+          {colors > 1 ? (
+            <>
+              –<kbd>{colors}</kbd>
+            </>
+          ) : null}{" "}
+          <Trans>highlight the selection in that colour at once; </Trans>
+          <kbd>
+            <Trans context="Reader interface">Esc</Trans>
+          </kbd>{" "}
+          <Trans>clears it</Trans>
         </li>
         {shortcut ? (
           <li>
@@ -237,36 +281,43 @@ function UnreadablePage({ controller: c }: ControllerProps): React.JSX.Element {
 }
 
 /**
- * One place for what is happening: a problem with its recovery, or else the single most
- * relevant status line. Says nothing while the panel is simply waiting.
+ * The page's one status line, under its title: what is happening, or else whether it is
+ * saved, with the way into Reader and Undo for a highlight just made. A problem says what
+ * happened itself, below the card, so the line then keeps only its actions. Says nothing
+ * while the panel is simply waiting.
  */
-function PanelStatus({ controller: c }: ControllerProps): React.JSX.Element {
-  useI18n();
+function PageStatus({ controller: c }: ControllerProps): React.JSX.Element {
   const message = c.problem ? null : statusMessage(c);
+  // A saved PDF's next step is the Save bar's own Open in Reader to highlight.
+  const link = c.source && c.capture?.kind !== "pdf" ? readerSourceUrl(c.source) : null;
+  const parts = [
+    message ? <span key="message">{message}</span> : null,
+    link ? (
+      <a key="link" href={link} target="_blank" rel="noreferrer">
+        <Trans>Open in Reader</Trans>
+      </a>
+    ) : null,
+    c.undoable && !c.busy ? (
+      <button
+        key="undo"
+        type="button"
+        className="inline-link"
+        onClick={() => void c.undoHighlight()}
+      >
+        <Trans context="Reader interface">Undo</Trans>
+      </button>
+    ) : null,
+  ].filter((part) => part !== null);
   return (
-    <>
-      <ConnectionProblem controller={c} />
-      {/* The live region stays mounted so screen readers announce what appears in it. */}
-      <div className="save-status" role="status" aria-live="polite">
-        {message ? (
-          <p>
-            {message}
-            {c.undoable && !c.busy ? (
-              <>
-                {" "}
-                <button
-                  type="button"
-                  className="inline-link"
-                  onClick={() => void c.undoHighlight()}
-                >
-                  <Trans context="Reader action">Undo</Trans>
-                </button>
-              </>
-            ) : null}
-          </p>
-        ) : null}
-      </div>
-    </>
+    // The live region stays mounted so screen readers announce what appears in it.
+    <p className="page-status" role="status" aria-live="polite">
+      {parts.map((part, index) => (
+        <Fragment key={part.key}>
+          {index ? " · " : null}
+          {part}
+        </Fragment>
+      ))}
+    </p>
   );
 }
 
@@ -284,11 +335,14 @@ function statusMessage(c: ExtensionCaptureController): string | null {
   if (c.notice) {
     return c.notice;
   }
-  if (c.status === "saved") {
-    return t`Source saved in mdbase.`;
+  if (c.source) {
+    return c.status === "saved" ? "Saved" : translate({ message: "In your collection" });
   }
-  if (c.saveAttempted && !c.source && !c.busy) {
-    return t`Save not confirmed. Retry to check its outcome.`;
+  if (c.saveAttempted && !c.busy) {
+    return translate({
+      message:
+        "We couldn’t confirm this saved. Saving again checks first, so nothing is saved twice.",
+    });
   }
   return c.draftRestored ? t`Restored your unsaved note from earlier.` : null;
 }
@@ -296,17 +350,19 @@ function statusMessage(c: ExtensionCaptureController): string | null {
 function importProgressMessage(p: ExtensionCaptureController["progress"]): string | null {
   switch (p?.phase) {
     case "uploading": {
-      const fileIndex = p.fileIndex;
-      const fileCount = p.fileCount;
-      const percent = p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0;
-      return t`Uploading file ${fileIndex} of ${fileCount} · ${percent}%`;
+      const percent = String(
+        p.totalBytes ? Math.round((p.completedBytes / p.totalBytes) * 100) : 0,
+      );
+      return p.fileCount > 1
+        ? translate`Uploading file ${p.fileIndex} of ${p.fileCount} · ${percent}%`
+        : translate`Uploading the page · ${percent}%`;
     }
     case "recovering":
-      return t`Checking files from the previous save attempt…`;
+      return translate({ message: "Checking what the last attempt saved…" });
     case "creating":
-      return t`Saving source record…`;
+      return translate({ message: "Saving the page…" });
     case "checking":
-      return t`Checking for duplicates…`;
+      return translate({ message: "Checking whether it’s already saved…" });
     default:
       return null;
   }

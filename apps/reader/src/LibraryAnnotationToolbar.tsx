@@ -257,20 +257,8 @@ function annotationTypeOptions(): SelectItems<AnnotationFilter["type"]> {
         context: "LibraryAnnotationToolbar annotationTypeOptions",
       }),
     },
-    {
-      value: "area",
-      label: translate({
-        message: "Areas",
-        context: "LibraryAnnotationToolbar annotationTypeOptions",
-      }),
-    },
-    {
-      value: "note",
-      label: translate({
-        message: "Comments",
-        context: "LibraryAnnotationToolbar annotationTypeOptions",
-      }),
-    },
+    { value: "area", label: translate`Area captures` },
+    { value: "note", label: translate`Source comments` },
     {
       value: "bookmark",
       label: translate({

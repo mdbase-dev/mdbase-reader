@@ -1,6 +1,5 @@
+import { formatCitation } from "@mdbase-reader/ui/citation";
 import { describe, expect, it } from "vitest";
-
-import { formatCitation } from "./citation-renderer.js";
 
 describe("CSL citation rendering", () => {
   it("uses Italian CSL terms, not silent English fallback", async () => {
