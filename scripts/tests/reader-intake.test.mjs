@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
+import { intakeCopy } from "./helpers/reader-intake.mjs";
 import { loadOriginals, protectedHashes } from "../lib/native-originals.mjs";
 import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved-intake.mjs";
 import { assertExtensionManifests } from "../lib/reader-extension.mjs";
@@ -51,12 +52,13 @@ test("actual staging extension has exact log and no native loopback", async () =
 });
 test("live hashes have no repository/candidate fallback", () =>
   assert.throws(() => protectedHashes({}), /four protected/));
-test("production intake binds installed originals and the unchanged beta141 packet", async () => {
+test("production intake binds approved archive originals and the unchanged beta141 packet", async (t) => {
+  const root = await intakeCopy("production");
+  t.after(() => rm(root, { recursive: true, force: true }));
   const trust = await loadOriginals({
     target: "production",
-    repoRoot: process.cwd(),
+    repoRoot: root,
     hashes: approvedProductionHashes,
-    installed: true,
   });
   assert.equal(trust.environment, "production");
   assert.equal(trust.archives.sdk.members, 896);
@@ -84,6 +86,19 @@ test("production intake binds installed originals and the unchanged beta141 pack
   assert.equal(
     trust.packet.factsSha256,
     "51bdf004a7f5a72a358b4534660b11f23196cb23a8d583138b75bbc284719617",
+  );
+});
+test("native approval refuses the multilingual UI candidate against the approved production hashes", async () => {
+  // The i18n archive is intentionally not release-qualified. Passing local
+  // archive/installation checks must never silently grant native approval.
+  await assert.rejects(
+    loadOriginals({
+      target: "production",
+      repoRoot: process.cwd(),
+      hashes: approvedProductionHashes,
+      installed: true,
+    }),
+    /ui protected archive hash mismatch/,
   );
 });
 test("production still refuses staging protected hashes", async () => {

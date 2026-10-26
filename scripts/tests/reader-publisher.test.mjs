@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, mkdir, readFile, writeFile, rm, cp, realpath } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile, rm, realpath } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { intakeCopy } from "./helpers/reader-intake.mjs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
@@ -81,11 +83,18 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
   ])
     await assert.rejects(assertCurrentHead(env, async () => Response.json(value)));
 });
-test("ALL production eaa4 installed SDK/UI/protocol/peers match original packages", async () => {
+test("ALL installed SDK, multilingual UI candidate, protocol and peers match their archives (not native approval)", async () => {
   const repoRoot = process.cwd();
   const installerEvidence = [];
   const sdkMembers = originalMembers("packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz");
-  const uiMembers = originalMembers("vendor/mdbase-dev-ui-dev-b2d7c464.tgz");
+  const uiArchive = "vendor/mdbase-dev-ui-0.1.0-beta.141-a36fa009.tgz";
+  assert.equal(
+    createHash("sha256")
+      .update(await readFile(uiArchive))
+      .digest("hex"),
+    "e7199463d7f4d282cfd6f5f16e71dc1aa1029330a634f43112ae5b2f63dea7a0",
+  );
+  const uiMembers = originalMembers(uiArchive);
   const protocolMembers = originalMembers(
     "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
   );
@@ -106,7 +115,20 @@ test("ALL production eaa4 installed SDK/UI/protocol/peers match original package
     "packages/markdown-editor",
   ]) {
     const uiRoot = await realpath(`${owner}/node_modules/@mdbase-dev/ui`);
-    await assertInstalledOriginals(uiRoot, uiMembers, "installed UI differs");
+    // pnpm links the i18n peer's CLI into this candidate package. Like the
+    // separately classified YAML wrapper, this single tooling file is not an
+    // archive original or native-approval evidence. No blanket .bin exclusion.
+    const shimPath = "node_modules/.bin/mdbase-i18n";
+    const shim = await readFile(join(uiRoot, shimPath));
+    const installedUiMembers = [
+      ...uiMembers,
+      {
+        path: shimPath,
+        bytes: shim.length,
+        sha256: createHash("sha256").update(shim).digest("hex"),
+      },
+    ].sort((a, b) => (a.path < b.path ? -1 : 1));
+    await assertInstalledOriginals(uiRoot, installedUiMembers, "installed UI candidate differs");
     await assertInstalledOriginals(
       await realpath(join(uiRoot, "../sdk")),
       sdkMembers,
@@ -121,7 +143,7 @@ test("ALL production eaa4 installed SDK/UI/protocol/peers match original package
     { ...options, protocol: true, originalSdkRoot: sdkRoot, originalSdkMembers: sdkMembers },
   );
   assert.equal(sdkMembers.length, 896);
-  assert.equal(uiMembers.length, 81);
+  assert.equal(uiMembers.length, 93);
   assert.equal(protocolMembers.length, 67);
   assert.ok(installerEvidence.some((r) => r.package === "protocol"));
   assert.ok(installerEvidence.length > 0);
@@ -134,7 +156,7 @@ test("ALL production eaa4 installed SDK/UI/protocol/peers match original package
     assert.equal(r.path, "node_modules/.bin/yaml");
   }
   console.log(
-    "Production eaa4 installed original-package comparison (NOT native admission)",
+    "Installed archive comparison including multilingual UI candidate (NOT native admission)",
     JSON.stringify(installerEvidence),
   );
 });
@@ -218,45 +240,6 @@ test("successful checks restore only the known generated extension manifest befo
     await rm(fixture, { recursive: true, force: true });
   }
 });
-async function intakeCopy() {
-  const root = await mkdtemp(join(tmpdir(), "reader-intake-data-"));
-  const paths = [
-    "package.json",
-    "pnpm-lock.yaml",
-    "apps/reader/package.json",
-    "apps/extension/package.json",
-    "packages/ui/package.json",
-    "packages/markdown-editor/package.json",
-    "packages/connect/package.json",
-    "packages/connect/vendor/native-release",
-    "packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
-    "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
-    "vendor/mdbase-dev-ui-dev-b2d7c464.tgz",
-    "vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
-  ];
-  for (const p of paths) {
-    await mkdir(join(root, p, ".."), { recursive: true });
-    await cp(join(process.cwd(), p), join(root, p), { recursive: true });
-  }
-  // Historical staging regressions use staging pins, not main's production SDK.
-  for (const path of [
-    "apps/reader/package.json",
-    "packages/connect/package.json",
-    "pnpm-lock.yaml",
-  ]) {
-    const bytes = await readFile(join(root, path), "utf8");
-    await writeFile(
-      join(root, path),
-      bytes
-        .replaceAll("sdk-eaa4e697-production-beta141.tgz", "sdk-dev-eaa4e697-staging.tgz")
-        .replaceAll(
-          "sha512-8N1ZcxMinDMyWaQdmxmmu+7/vp0+UdEF7EXw/swCqcS9gFcIQrtL9r2dwKhkdHrnrGJ5qTjS8+3LHVD8yA6CDg==",
-          "sha512-OZcexDhkjwROq0pSf/rSV1aU9H2AArhB5S2/UQU4ZTYMqJz7mpOhSFznZKSjDh6nb4EVROvBS926O3+HUePbjA==",
-        ),
-    );
-  }
-  return root;
-}
 test("historical staging fixture still accepts its original SDK and packet", async () => {
   const root = await intakeCopy();
   try {
