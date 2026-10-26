@@ -1,5 +1,4 @@
 // Isolated, synthetic, dev-only fixture. No Connect account or library data involved.
-import { ReaderI18nProvider } from "@mdbase-reader/i18n/react";
 import {
   annotationId,
   collectionId,
@@ -8,6 +7,7 @@ import {
   fileRevision,
   sourceId,
 } from "@mdbase-reader/core";
+import { ReaderI18nProvider } from "@mdbase-reader/i18n/react";
 import { PdfViewerSurface } from "@mdbase-reader/renderer-pdf";
 import { useCallback, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
