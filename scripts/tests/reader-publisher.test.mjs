@@ -87,12 +87,12 @@ test("ALL installed SDK, multilingual UI candidate, protocol and peers match the
   const repoRoot = process.cwd();
   const installerEvidence = [];
   const sdkMembers = originalMembers("packages/connect/vendor/sdk-eaa4e697-production-beta141.tgz");
-  const uiArchive = "vendor/mdbase-dev-ui-0.1.0-beta.141-a36fa009.tgz";
+  const uiArchive = "vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz";
   assert.equal(
     createHash("sha256")
       .update(await readFile(uiArchive))
       .digest("hex"),
-    "e7199463d7f4d282cfd6f5f16e71dc1aa1029330a634f43112ae5b2f63dea7a0",
+    "1230707f2ba9545a041f2a9325ab5e2d25ed001885ebc0369d836e00b19d30f0",
   );
   const uiMembers = originalMembers(uiArchive);
   const protocolMembers = originalMembers(
@@ -143,7 +143,7 @@ test("ALL installed SDK, multilingual UI candidate, protocol and peers match the
     { ...options, protocol: true, originalSdkRoot: sdkRoot, originalSdkMembers: sdkMembers },
   );
   assert.equal(sdkMembers.length, 896);
-  assert.equal(uiMembers.length, 93);
+  assert.equal(uiMembers.length, 94);
   assert.equal(protocolMembers.length, 67);
   assert.ok(installerEvidence.some((r) => r.package === "protocol"));
   assert.ok(installerEvidence.length > 0);
