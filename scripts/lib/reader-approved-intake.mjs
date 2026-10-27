@@ -11,6 +11,6 @@ export const approvedHashes = Object.freeze({
 // Production beta141 packet with the #964 runtime; staging remains a historical fixture.
 export const approvedProductionHashes = Object.freeze({
   ...approvedHashes,
-  NATIVE_SDK_SHA256: "f05837e4571a7e528d289dea6a9d2ee2e5c2e3a1e4f8f70fe772a8138e32f970",
+  NATIVE_SDK_SHA256: "a9e6abc0bc8062f1603aa0fb9bf239a4932bee08b8d5e63c4526412479299334",
   NATIVE_TRUST_ASSET_SHA256: "7912e40838213e60b65848350d319a48019021317b112e3326429b250f0133d7",
 });

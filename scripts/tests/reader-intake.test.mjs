@@ -7,15 +7,15 @@ import { intakeCopy } from "./helpers/reader-intake.mjs";
 import { loadOriginals, protectedHashes } from "../lib/native-originals.mjs";
 import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved-intake.mjs";
 import { assertExtensionManifests } from "../lib/reader-extension.mjs";
-test("Reader pins the production e55d99c0 SDK with beta141 trust", async () => {
+test("Reader pins the production dce61ff5 SDK with beta141 trust", async () => {
   const vendor = "packages/connect/vendor/";
   const pin = JSON.parse(await readFile(vendor + "sdk-production-beta141.json", "utf8"));
   const archive = vendor + pin.artifact;
   const bytes = await readFile(archive);
-  assert.equal(pin.sourceCommit, "e55d99c0d986e5c17e0dabea0e43305d946190e9");
+  assert.equal(pin.sourceCommit, "dce61ff53fcfaf649e9e4152239d0f3d1e0972da");
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "f05837e4571a7e528d289dea6a9d2ee2e5c2e3a1e4f8f70fe772a8138e32f970",
+    "a9e6abc0bc8062f1603aa0fb9bf239a4932bee08b8d5e63c4526412479299334",
   );
   for (const [owner, path] of [
     ["apps/reader", "../../" + archive],
@@ -85,7 +85,7 @@ test("production intake binds approved archive originals and the unchanged beta1
   );
   assert.equal(
     trust.packet.factsSha256,
-    "a385fd90adce58c7d51da50f00142ec3970add6bea621af6893c9e63c0cc3fc0",
+    "8e36f94c01d6f918390e89638c6f0757a7d5b74a6aaa6cfff14545cf47b29899",
   );
 });
 test("native approval refuses the multilingual UI candidate against the approved production hashes", async () => {

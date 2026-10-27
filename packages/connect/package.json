@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@mdbase-dev/connect": "0.1.0-beta.125",
-    "@mdbase-dev/sdk": "file:vendor/sdk-e55d99c0-production-beta141.tgz",
+    "@mdbase-dev/sdk": "file:vendor/sdk-dce61ff5-production-beta141.tgz",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
     "knap": "0.6.0",
