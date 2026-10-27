@@ -17,6 +17,6 @@
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/renderer-html": "workspace:*",
     "@mozilla/readability": "0.6.0",
-    "defuddle": "0.19.5"
+    "defuddle": "0.19.6"
   }
 }

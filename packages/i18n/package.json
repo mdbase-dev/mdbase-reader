@@ -13,13 +13,13 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@lingui/core": "6.9.0",
-    "@lingui/react": "6.9.0",
+    "@lingui/core": "6.10.1",
+    "@lingui/react": "6.10.1",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz",
     "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz",
-    "react": "^19.2.8"
+    "react": "^19.3.1"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.3.0"
   }
 }

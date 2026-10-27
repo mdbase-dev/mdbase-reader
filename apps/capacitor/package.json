@@ -13,7 +13,7 @@
     "@capacitor/core": "latest",
     "@capacitor/filesystem": "latest",
     "@capacitor/preferences": "latest",
-    "@lingui/core": "6.9.0",
+    "@lingui/core": "6.10.1",
     "@mdbase-reader/platform": "workspace:*"
   },
   "devDependencies": {
