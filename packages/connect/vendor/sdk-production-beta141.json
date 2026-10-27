@@ -1,11 +1,11 @@
 {
   "schema": "tnapp/production-sdk-original/1",
-  "source": "e55d99c0d986e5c17e0dabea0e43305d946190e9",
-  "sourceTree": "6fed01b5dabb1bbb884f92e027401c6bdc50e8f0",
-  "archive": "sdk-e55d99c0-production-beta141.tgz",
-  "bytes": 4463916,
-  "sha256": "f05837e4571a7e528d289dea6a9d2ee2e5c2e3a1e4f8f70fe772a8138e32f970",
-  "sri": "sha512-0d4C1KnztaiGjKYhb1tZ7zhRZ8fNw5GdhqD6mng3iDYlQiyEuFySjEgf0yZE19mT/8McHoFpqo58Xh6TF/NfkQ==",
+  "source": "dce61ff53fcfaf649e9e4152239d0f3d1e0972da",
+  "sourceTree": "310b5ac88039a30049fc1278463bac88eeab74e4",
+  "archive": "sdk-dce61ff5-production-beta141.tgz",
+  "bytes": 4464317,
+  "sha256": "a9e6abc0bc8062f1603aa0fb9bf239a4932bee08b8d5e63c4526412479299334",
+  "sri": "sha512-qBmdxJVMeKh3nv4lWl6fOcwurW57BjxBESQHyhSpcFvgLCTBzpZwFayRXoCilIYC9H9tZXc7L+DhwelmEgxlzA==",
   "members": 896,
   "environment": "production",
   "trust": {
@@ -71,7 +71,7 @@
   "newNativeOrHelperBuild": true,
   "clockOverride": false,
   "registryPublication": false,
-  "sourceCommit": "e55d99c0d986e5c17e0dabea0e43305d946190e9",
-  "artifact": "sdk-e55d99c0-production-beta141.tgz",
+  "sourceCommit": "dce61ff53fcfaf649e9e4152239d0f3d1e0972da",
+  "artifact": "sdk-dce61ff5-production-beta141.tgz",
   "version": "0.0.0"
 }

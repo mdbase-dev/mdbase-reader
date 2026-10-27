@@ -395,7 +395,7 @@ export async function loadOriginals({
   const factsSha256 =
     target === "staging"
       ? "d54aef71521ab3561bd9a81cd1303410a3fde29f8fbd35a1e0041e58d0569de3"
-      : "a385fd90adce58c7d51da50f00142ec3970add6bea621af6893c9e63c0cc3fc0";
+      : "8e36f94c01d6f918390e89638c6f0757a7d5b74a6aaa6cfff14545cf47b29899";
   requireValue(hash(factsBytes) === factsSha256, "approved target facts missing/mismatched");
   const facts = JSON.parse(factsBytes); // independent facts pin BEFORE parsing
   const sdk = archives.sdk,
