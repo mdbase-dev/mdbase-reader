@@ -1,5 +1,6 @@
 import {
   dateTime,
+  outsideArticleAttribute,
   type SourceCaptureProvenance,
   type SourceImportMetadata,
   type SocialPost,
@@ -96,18 +97,16 @@ export async function webCaptureImport(
   }
   const parsed = socialDocument;
   const canonicalUrl = new URL(capture.canonicalUrl);
+  const page = numberedPage(parsed);
   // Loaded on save only: opening the capture panel should not pay for extraction.
   const [{ article, extractor }, { prepareHtmlDocument }] = await Promise.all([
-    extractArticle(parsed, capture.canonicalUrl),
+    extractArticle(page, capture.canonicalUrl),
     import("@mdbase-reader/renderer-html"),
   ]);
   const title = normalizedText(article.title, 300) ?? captureTitle(parsed, canonicalUrl.hostname);
-  const readable = articleDocument(
-    parsed,
-    article.content || parsed.body.innerHTML,
-    title,
-    article.language,
-  );
+  const readable =
+    pageDocument(page, article.content, title, article.language) ??
+    articleDocument(parsed, article.content || parsed.body.innerHTML, title, article.language);
   const stem = safeStem(canonicalUrl.hostname);
   const claims = pageClaims(parsed, capture.canonicalUrl, capture.retrievedAt);
   const scholarly = scholarlyMetadataFromClaims(claims);
@@ -216,6 +215,115 @@ function serializeDocument(document: Document): string {
 
 function parseHtml(html: string): Document {
   return new DOMParser().parseFromString(html, "text/html");
+}
+
+const pageNodeAttribute = "data-reader-page-node";
+/**
+ * Outside the article only selectable text is kept: it is there to be found, not shown.
+ * Hidden elements and those the renderer drops cannot be selected on the live page.
+ */
+const unselectableElements =
+  "img, picture, video, audio, canvas, svg, source, track, map, script, style, noscript, template, iframe, object, embed, input, textarea, select, [hidden], [aria-hidden='true']";
+
+/** A copy of the page whose elements are numbered, so extraction can be traced back to them. */
+function numberedPage(parsed: Document): Document {
+  const page = parsed.cloneNode(true) as Document;
+  [...page.body.querySelectorAll("*")].forEach((element, index) =>
+    element.setAttribute(pageNodeAttribute, String(index)),
+  );
+  return page;
+}
+
+/**
+ * The whole page, with what extraction left out marked as outside the article rather than
+ * removed. A passage selected anywhere on the live page can then be found in the saved
+ * copy, while Reader shows the same article as before. Null when the extracted content
+ * cannot be traced back to the page.
+ */
+function pageDocument(
+  page: Document,
+  content: string,
+  title: string,
+  extractedLanguage?: string | null,
+): string | null {
+  const extracted = new Set(
+    Array.from(content.matchAll(/data-reader-page-node="(\d+)"/gu), (match) => match[1]),
+  );
+  if (!extracted.size) {
+    return null;
+  }
+  const body = page.body.cloneNode(true) as HTMLElement;
+  for (const element of outsideArticle(body, extracted)) {
+    keepTextOnly(element);
+  }
+  for (const element of body.querySelectorAll(`[${pageNodeAttribute}]`)) {
+    element.removeAttribute(pageNodeAttribute);
+  }
+  const language = firstText([page.documentElement.lang, extractedLanguage], 100);
+  return `<!doctype html><html${language ? ` lang="${escapeAttribute(language)}"` : ""}><head><meta charset="utf-8"><title>${escapeText(title)}</title></head><body>${body.innerHTML}</body></html>`;
+}
+
+/** The outermost parts of the page that extraction left out, including loose wrapper text. */
+function outsideArticle(body: HTMLElement, extracted: ReadonlySet<string | undefined>): Element[] {
+  const elements = [...body.querySelectorAll("*")];
+  const isExtracted = (element: Element): boolean =>
+    extracted.has(element.getAttribute(pageNodeAttribute) ?? "");
+  const shown = new Set<Element>([body]);
+  for (const element of elements.filter(isExtracted)) {
+    for (let node: Element | null = element; node && !shown.has(node); node = node.parentElement) {
+      shown.add(node);
+    }
+  }
+  const outside: Element[] = [];
+  for (const element of [body, ...elements]) {
+    if (!shown.has(element)) {
+      if (element.parentElement && shown.has(element.parentElement)) {
+        outside.push(element);
+      }
+    } else if (!isExtracted(element)) {
+      // A wrapper shown only because the article is inside it: its own text is outside.
+      outside.push(...wrappedText(element));
+    }
+  }
+  return outside;
+}
+
+function wrappedText(element: Element): Element[] {
+  return [...element.childNodes].flatMap((child) => {
+    if (child.nodeType !== Node.TEXT_NODE || !child.textContent?.trim()) {
+      return [];
+    }
+    const span = element.ownerDocument.createElement("span");
+    child.replaceWith(span);
+    span.append(child);
+    return [span];
+  });
+}
+
+/** Reduces page text outside the article to its selectable text, or removes it if none. */
+function keepTextOnly(element: Element): void {
+  if (element.matches(unselectableElements)) {
+    element.remove();
+    return;
+  }
+  for (const unselectable of element.querySelectorAll(unselectableElements)) {
+    unselectable.remove();
+  }
+  for (const node of [element, ...element.querySelectorAll("*")]) {
+    for (const { name } of [...node.attributes]) {
+      node.removeAttribute(name);
+    }
+  }
+  for (const node of [...element.querySelectorAll("*")].reverse()) {
+    if (!node.textContent.trim()) {
+      node.remove();
+    }
+  }
+  if (element.textContent.trim()) {
+    element.setAttribute(outsideArticleAttribute, "");
+  } else {
+    element.remove();
+  }
 }
 
 function articleDocument(

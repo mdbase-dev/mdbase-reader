@@ -1,4 +1,4 @@
-import { highlightPalette } from "@mdbase-reader/core";
+import { highlightPalette, outsideArticleAttribute } from "@mdbase-reader/core";
 
 import { annotationHighlightCss } from "./html-css-highlights.js";
 
@@ -23,6 +23,9 @@ const blockedElements = [
 /** Controls whose content is still part of the text: kept as plain containers. */
 const unwrappedElements = ["form", "button"] as const;
 
+/** Set on page text outside the article while a highlight or search result in it is shown. */
+export const outsideArticleRevealedAttribute = "data-reader-revealed";
+
 const urlAttributes = ["href", "src", "poster", "action", "formaction", "xlink:href"] as const;
 
 /** Shared with background indexing: omit exactly the renderer's blocked content. */
@@ -30,8 +33,28 @@ export function extractArchivedHtmlText(source: string): string {
   return htmlDocumentText(parseHtmlDocument(source));
 }
 
+/** The article's text, for search: page text kept outside the article is left out. */
 export function htmlDocumentText(document: Document): string {
-  return document.body.textContent;
+  if (!document.body.querySelector(`[${outsideArticleAttribute}]`)) {
+    return document.body.textContent;
+  }
+  let text = "";
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: (node) =>
+        node.nodeType === Node.TEXT_NODE
+          ? NodeFilter.FILTER_ACCEPT
+          : (node as Element).hasAttribute(outsideArticleAttribute)
+            ? NodeFilter.FILTER_REJECT
+            : NodeFilter.FILTER_SKIP,
+    },
+  );
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    text += (node as Text).data;
+  }
+  return text;
 }
 
 function parseHtmlDocument(source: string): Document {
@@ -47,7 +70,15 @@ export function prepareHtmlDocument(source: string): string {
   const parsed = parseHtmlDocument(source);
   // Removing these would drop text the original page shows, such as a page wrapped in a form.
   for (const element of parsed.querySelectorAll(unwrappedElements.join(","))) {
-    element.replaceWith(...element.childNodes);
+    if (element.hasAttribute(outsideArticleAttribute)) {
+      // The span keeps the marker that hides this page text.
+      const span = parsed.createElement("span");
+      span.setAttribute(outsideArticleAttribute, "");
+      span.append(...element.childNodes);
+      element.replaceWith(span);
+    } else {
+      element.replaceWith(...element.childNodes);
+    }
   }
   for (const element of parsed.querySelectorAll("*")) {
     sanitizeAttributes(element);
@@ -97,6 +128,9 @@ function readerStyle(document: Document): HTMLStyleElement {
     html { scroll-behavior: smooth; }
     body { max-width: 46rem; margin: 0 auto; padding: 5rem 3rem 9rem; font: 18px/1.72 Georgia, 'Times New Roman', serif; }
     main, article { display: block; }
+    /* Page text outside the article: kept so highlights made on the live page are found. */
+    [${outsideArticleAttribute}]:not([${outsideArticleRevealedAttribute}]) { display: none; }
+    [${outsideArticleRevealedAttribute}] { color: color-mix(in srgb, currentColor 72%, transparent); }
     .social-post > header h1 { font-size: 2rem; margin-bottom: .5rem; }
     .social-post header, .social-post time, .social-post figcaption, .social-post footer { font: .85em/1.5 ui-sans-serif, system-ui, sans-serif; color: color-mix(in srgb, currentColor 72%, transparent); }
     .post-part { margin-block: 2rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }

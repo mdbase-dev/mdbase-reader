@@ -2,7 +2,12 @@
 // @vitest-environment-options {"settings":{"disableIframePageLoading":true}}
 import { readFileSync } from "node:fs";
 
-import { htmlSelectionDraft, locateHtmlTarget } from "@mdbase-reader/renderer-html";
+import { matchTextQuote, outsideArticleAttribute } from "@mdbase-reader/core";
+import {
+  htmlDocumentText,
+  htmlSelectionDraft,
+  locateHtmlTarget,
+} from "@mdbase-reader/renderer-html";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import * as pageClaimModule from "./page-claims.js";
@@ -26,6 +31,7 @@ const capture = (
 const fixture = (name: string): string => readFileSync(`src/fixtures/${name}.html`, "utf8");
 const readingDocument = (bytes: Uint8Array): Document =>
   new DOMParser().parseFromString(new TextDecoder().decode(bytes), "text/html");
+const outside = `[${outsideArticleAttribute}]`;
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -75,8 +81,14 @@ describe("web capture extraction", () => {
       language: "en-AU",
       site: "Example Review",
     });
-    expect(readable).toContain("durable reading material");
-    expect(readable).not.toContain("Recommended unrelated story");
+    const reading = readingDocument(result.bytes);
+    expect(htmlDocumentText(reading)).toContain("durable reading material");
+    // Kept so a highlight made there is found, but not shown or searched as the article.
+    expect(reading.querySelector(outside)?.textContent).toContain("Account Pricing");
+    expect([...reading.querySelectorAll(outside)].map((element) => element.textContent)).toContain(
+      "Recommended unrelated story",
+    );
+    expect(htmlDocumentText(reading)).not.toContain("Recommended unrelated story");
     expect(readable).not.toContain("<script");
     expect(archive).toBe(html);
   });
@@ -126,10 +138,20 @@ describe("web capture extraction", () => {
       );
       const readable = readingDocument(result.bytes);
       expect(result.capture.extractor).toBe(WEB_CAPTURE_EXTRACTOR);
-      expect(readable.querySelector("script, nav, aside, iframe")).toBeNull();
+      expect(readable.querySelector("script, iframe")).toBeNull();
+      // Page furniture is kept as text outside the article, never shown as part of it.
+      for (const furniture of readable.querySelectorAll("nav, aside")) {
+        expect(furniture.closest(outside)).not.toBeNull();
+        expect(
+          furniture.querySelector("*:not(a, span, li, ul, ol, p, div, strong, em, b, i)"),
+        ).toBeNull();
+      }
       expect(readable.querySelector('[http-equiv="Content-Security-Policy"]')).not.toBeNull();
       document.body.innerHTML = readable.body.innerHTML;
-      const paragraph = document.querySelector("article p");
+      // The page's own structure is kept; the article is whatever is not marked outside it.
+      const paragraph = [...document.querySelectorAll("p")].find(
+        (element) => !element.closest(outside) && element.textContent.trim(),
+      );
       if (!paragraph) {
         throw new Error("Fixture paragraph is missing.");
       }
@@ -156,6 +178,51 @@ describe("web capture extraction", () => {
       }
     },
   );
+});
+
+describe("page text outside the article", () => {
+  const page = `<!doctype html><html lang="en"><head><title>Field notes</title></head><body>
+    <header><a href="/">Example Times</a><button><svg><path d="M0"/></svg>Menu</button></header>
+    <main><article><h1>Field notes</h1>
+      <p>This substantial opening paragraph gives the extractor enough evidence to recognise the article body.</p>
+      <p>The second paragraph continues the article with durable reading material for the saved copy.</p>
+      <aside class="pullquote" style="color:red"><img src="a.png">A sidebar passage the reader selected on the live page.</aside>
+      <p>The closing paragraph keeps the article long enough to be extracted as the central content.</p>
+    </article></main>
+    <footer><p>Comments: a reader wrote that the field notes were helpful.</p><div hidden>Never shown</div></footer>
+  </body></html>`;
+
+  it("keeps every selectable passage findable while showing only the article", async () => {
+    const result = await webCaptureImport(capture(page));
+    const reading = readingDocument(result.bytes);
+    const full = reading.body.textContent;
+    const shown = htmlDocumentText(reading);
+    for (const selected of [
+      "A sidebar passage the reader selected on the live page.",
+      "a reader wrote that the field notes were helpful",
+      "durable reading material",
+    ]) {
+      const match = matchTextQuote(full, { exact: selected });
+      expect(match && !match.ambiguous).toBe(true);
+    }
+    expect(shown).toContain("durable reading material");
+    expect(shown).not.toContain("A sidebar passage");
+    expect(shown).not.toContain("helpful");
+    expect(full).not.toContain("Never shown");
+    for (const element of reading.querySelectorAll(outside)) {
+      expect(element.querySelector("img, svg, [class], [style]")).toBeNull();
+    }
+  });
+
+  it("keeps the marker when the renderer unwraps buttons", async () => {
+    const result = await webCaptureImport(capture(page));
+    const reading = readingDocument(result.bytes);
+    expect(reading.querySelector("button")).toBeNull();
+    const menu = [...reading.querySelectorAll(outside)].find((element) =>
+      element.textContent.includes("Menu"),
+    );
+    expect(menu).toBeDefined();
+  });
 });
 
 describe("offline capture extraction", () => {

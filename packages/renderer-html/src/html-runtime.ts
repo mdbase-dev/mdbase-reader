@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { outsideArticleAttribute } from "@mdbase-reader/core";
 import {
   MarginMarkers,
   forwardApplicationShortcut,
@@ -14,7 +15,7 @@ import {
   setAnnotationHighlights,
   setCssHighlight,
 } from "./html-css-highlights.js";
-import { htmlDocumentText } from "./html-document.js";
+import { htmlDocumentText, outsideArticleRevealedAttribute } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
 import {
@@ -82,6 +83,9 @@ export class HtmlDocumentRuntime {
   readonly #stopPalette: Unsubscribe;
   #destroyed = false;
   #annotationRanges: readonly { readonly annotation: Annotation; readonly range: Range }[] = [];
+  /** Ranges whose page text outside the article is shown, and the current search result. */
+  #revealed: readonly Range[] = [];
+  #searchRange: Range | null = null;
 
   public constructor(frame: HTMLIFrameElement, href: string) {
     const document = frame.contentDocument;
@@ -199,6 +203,7 @@ export class HtmlDocumentRuntime {
     if (!range || !element) {
       return false;
     }
+    this.#reveal(range);
     this.#motion.settle("jump");
     scrollHtmlElement(this.#view, element, "center");
     return true;
@@ -209,6 +214,8 @@ export class HtmlDocumentRuntime {
       const range = annotation.target ? this.#targets.locate(annotation.target) : null;
       return range ? [{ annotation, range }] : [];
     });
+    this.#revealed = this.#annotationRanges.map(({ range }) => range);
+    this.#showRevealed();
     setAnnotationHighlights(
       this.#view,
       this.#annotationRanges.map(({ annotation, range }) => ({ color: annotation.color, range })),
@@ -246,6 +253,10 @@ export class HtmlDocumentRuntime {
 
   public clearSearch(): void {
     setCssHighlight(this.#view, "reader-search-passage", []);
+    if (this.#searchRange) {
+      this.#searchRange = null;
+      this.#showRevealed();
+    }
   }
 
   public goToSearchQuote(quote: QuoteSelector): boolean {
@@ -255,6 +266,8 @@ export class HtmlDocumentRuntime {
       return false;
     }
     setCssHighlight(this.#view, "reader-search-passage", [range]);
+    this.#searchRange = range;
+    this.#showRevealed();
     const element = parentElement(range.startContainer);
     if (!element) {
       return false;
@@ -267,6 +280,40 @@ export class HtmlDocumentRuntime {
     });
     this.#frame.focus();
     return true;
+  }
+
+  /** Shows page text outside the article that a highlight or search result sits in. */
+  #reveal(range: Range): void {
+    if (!this.#revealed.includes(range)) {
+      this.#revealed = [...this.#revealed, range];
+      this.#showRevealed();
+    }
+  }
+
+  #showRevealed(): void {
+    const shown = new Set<Element>();
+    for (const range of [...this.#revealed, ...(this.#searchRange ? [this.#searchRange] : [])]) {
+      for (const node of [range.startContainer, range.endContainer]) {
+        for (
+          let outside = parentElement(node)?.closest(`[${outsideArticleAttribute}]`);
+          outside;
+          outside = outside.parentElement?.closest(`[${outsideArticleAttribute}]`)
+        ) {
+          shown.add(outside);
+        }
+      }
+    }
+    for (const element of this.#document.body.querySelectorAll(
+      `[${outsideArticleRevealedAttribute}]`,
+    )) {
+      if (!shown.has(element)) {
+        element.removeAttribute(outsideArticleRevealedAttribute);
+      }
+    }
+    for (const element of shown) {
+      element.setAttribute(outsideArticleRevealedAttribute, "");
+    }
+    this.#markers.layout();
   }
 
   public extractText(): string {
@@ -287,6 +334,7 @@ export class HtmlDocumentRuntime {
     this.#reflow?.disconnect();
     this.#markers.destroy();
     this.#targets.destroy();
+    this.#searchRange = null;
     this.clearSearch();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
@@ -389,7 +437,8 @@ function parentElement(node: Node): Element | null {
 
 function headingElements(document: Document): HTMLElement[] {
   return [...document.body.querySelectorAll<HTMLElement>("h1, h2, h3")].filter(
-    (heading) => heading.textContent.trim() !== "",
+    (heading) =>
+      heading.textContent.trim() !== "" && !heading.closest(`[${outsideArticleAttribute}]`),
   );
 }
 

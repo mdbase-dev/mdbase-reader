@@ -9017,8 +9017,12 @@ msgid "This note changed in the collection"
 msgstr "Esta nota mudou na coleção"
 
 #: apps/extension/src/save-capture.ts
-msgid "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
-msgstr "Este trecho está ausente ou é ambíguo na cópia salva. A fonte foi salva, mas o destaque não. Abra a cópia salva no Reader para selecioná-lo lá."
+msgid "This passage appears more than once in the saved copy. Select a longer passage and highlight it again."
+msgstr "Este trecho aparece mais de uma vez na cópia salva. Selecione um trecho maior e destaque-o novamente."
+
+#: apps/extension/src/save-capture.ts
+msgid "This passage is not in the saved copy, which may be older than this page. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
+msgstr "Este trecho não está na cópia salva, que pode ser anterior a esta página. A fonte foi salva, mas o destaque não. Abra a cópia salva no Reader para selecioná-lo lá."
 
 #: apps/extension/src/page-capture.ts
 msgid "This PDF is larger than {maximumMb} MB. Download it and import the file in Reader."

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
-import { extractArchivedHtmlText, prepareHtmlDocument } from "./html-document.js";
+import { extractArchivedHtmlText, htmlDocumentText, prepareHtmlDocument } from "./html-document.js";
 
 describe("prepareHtmlDocument", () => {
   it("shares background index text with the rendered document, without executing markup", () => {
@@ -42,5 +42,26 @@ describe("prepareHtmlDocument", () => {
     expect(prepared).not.toContain("<form");
     expect(prepared).not.toContain("<button");
     expect(prepared).not.toContain("https://bad.example");
+  });
+});
+
+describe("page text outside the article", () => {
+  const source = `<body><nav data-reader-outside=""><button data-reader-outside="">Menu</button>Sections</nav>
+    <article><h1>Essay</h1><p>The article itself.</p></article>
+    <footer data-reader-outside=""><h2>Comments</h2><p>A comment worth keeping.</p></footer></body>`;
+
+  it("is hidden by Reader's stylesheet and left out of search text, but kept in the document", () => {
+    const prepared = prepareHtmlDocument(source);
+    const rendered = new DOMParser().parseFromString(prepared, "text/html");
+    expect(rendered.querySelector("button")).toBeNull();
+    expect(
+      [...rendered.querySelectorAll("[data-reader-outside]")].map((element) => element.textContent),
+    ).toEqual(["MenuSections", "Menu", "CommentsA comment worth keeping."]);
+    expect(rendered.body.textContent).toContain("A comment worth keeping.");
+    expect(extractArchivedHtmlText(source).trim()).toBe("EssayThe article itself.");
+    expect(htmlDocumentText(rendered).replace(/\s+/gu, "")).toBe("EssayThearticleitself.");
+    expect(prepared).toContain(
+      "[data-reader-outside]:not([data-reader-revealed]) { display: none; }",
+    );
   });
 });

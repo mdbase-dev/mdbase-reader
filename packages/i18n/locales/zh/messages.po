@@ -9017,8 +9017,12 @@ msgid "This note changed in the collection"
 msgstr "此笔记在集合中已更改"
 
 #: apps/extension/src/save-capture.ts
-msgid "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
-msgstr "该段落在已保存的副本中缺失或有歧义。来源已保存，但高亮未保存。请在 Reader 中打开已保存的副本，并在那里选择它。"
+msgid "This passage appears more than once in the saved copy. Select a longer passage and highlight it again."
+msgstr "此段落在已保存的副本中出现了不止一次。请选择更长的段落，然后再次高亮。"
+
+#: apps/extension/src/save-capture.ts
+msgid "This passage is not in the saved copy, which may be older than this page. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
+msgstr "已保存的副本中没有此段落，该副本可能早于此页面。来源已保存，但高亮未保存。请在 Reader 中打开已保存的副本并在其中选择。"
 
 #: apps/extension/src/page-capture.ts
 msgid "This PDF is larger than {maximumMb} MB. Download it and import the file in Reader."

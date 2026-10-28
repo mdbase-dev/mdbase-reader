@@ -9017,8 +9017,12 @@ msgid "This note changed in the collection"
 msgstr "컬렉션에서 이 노트가 변경되었습니다"
 
 #: apps/extension/src/save-capture.ts
-msgid "This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
-msgstr "이 구절이 저장된 사본에 없거나 모호합니다. 출처는 저장되었지만 하이라이트는 저장되지 않았습니다. Reader에서 저장된 사본을 열어 직접 선택해 주세요."
+msgid "This passage appears more than once in the saved copy. Select a longer passage and highlight it again."
+msgstr "이 구절은 저장된 사본에 두 번 이상 나타납니다. 더 긴 구절을 선택하고 다시 하이라이트하세요."
+
+#: apps/extension/src/save-capture.ts
+msgid "This passage is not in the saved copy, which may be older than this page. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there."
+msgstr "이 구절은 저장된 사본에 없습니다. 사본이 이 페이지보다 오래되었을 수 있습니다. 소스는 저장되었지만 하이라이트는 저장되지 않았습니다. Reader에서 저장된 사본을 열어 그곳에서 선택하세요."
 
 #: apps/extension/src/page-capture.ts
 msgid "This PDF is larger than {maximumMb} MB. Download it and import the file in Reader."
