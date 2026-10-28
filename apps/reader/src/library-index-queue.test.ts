@@ -2,7 +2,11 @@ import { fileId, fileRevision } from "@mdbase-reader/core";
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
 
-import { libraryHtmlReadLimit, runLibraryIndexQueue } from "./library-index-queue.js";
+import {
+  libraryHtmlReadLimit,
+  libraryIndexedDocuments,
+  runLibraryIndexQueue,
+} from "./library-index-queue.js";
 import { LibraryTextIndex } from "./library-text-index.js";
 import { LibraryTextStore } from "./library-text-store.js";
 
@@ -143,4 +147,33 @@ describe("serial idle library indexing", () => {
       `${JSON.stringify({ documents: 500, textCharacters: text.length, indexingMs, queryMs, heartbeats, yields })}\n`,
     );
   }, 15000);
+});
+
+describe("libraryIndexedDocuments", () => {
+  it("leaves out a web page's archive when its readable copy is indexed", () => {
+    const readable = file("readable");
+    const archive = { ...file("archive"), role: "archive" };
+    const pdf = { ...file("paper"), file: "paper.pdf", mediaType: "application/pdf" };
+    const onlyArchive = { ...file("only-archive"), role: "archive" };
+    expect(
+      libraryIndexedDocuments([
+        { documents: [readable, archive] },
+        { documents: [pdf, { ...archive, fileId: fileId("pdf-archive") }] },
+        { documents: [onlyArchive] },
+        { documents: [readable] },
+      ]).map((document) => document.fileId),
+    ).toEqual(["readable", "paper", "pdf-archive", "only-archive"]);
+  });
+
+  it("drops archives already in the index", async () => {
+    const options = fixture();
+    const archive = { ...file("archive"), role: "archive" };
+    await runLibraryIndexQueue({ ...options, files: [file(), archive] });
+    expect(await options.client.reconcile([file(), archive], false)).toEqual(["file", "archive"]);
+    await runLibraryIndexQueue({
+      ...options,
+      files: libraryIndexedDocuments([{ documents: [file(), archive] }]),
+    });
+    expect(await options.client.reconcile([file(), archive], false)).toEqual(["file"]);
+  });
 });

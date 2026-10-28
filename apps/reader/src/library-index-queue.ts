@@ -32,6 +32,28 @@ export function libraryFileRevisionKey(file: {
   return JSON.stringify([file.fileId, file.revision]);
 }
 
+/**
+ * The documents library search reads. A web page's archive is the unprocessed snapshot:
+ * its readable copy holds the same text, with navigation and other page furniture marked,
+ * so indexing the archive only finds pages by their menus and footers.
+ */
+export function libraryIndexedDocuments(
+  sources: readonly { readonly documents: readonly DocumentDescriptor[] }[],
+): DocumentDescriptor[] {
+  const files = new Map<string, DocumentDescriptor>();
+  for (const { documents } of sources) {
+    const readable = documents.some(
+      (document) => document.role !== "archive" && isHtml(document.mediaType, document.file),
+    );
+    for (const document of documents) {
+      if (!(readable && document.role === "archive")) {
+        files.set(document.fileId, document);
+      }
+    }
+  }
+  return [...files.values()];
+}
+
 /** One read/extraction/write in flight. Storage errors escape to disable this session's index. */
 export async function runLibraryIndexQueue(options: LibraryIndexQueueOptions): Promise<void> {
   const { client, files, complete, signal, attempted, report, gateway, idle, extract } = options;
