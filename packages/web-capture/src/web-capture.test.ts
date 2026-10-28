@@ -212,6 +212,15 @@ describe("page text outside the article", () => {
     for (const element of reading.querySelectorAll(outside)) {
       expect(element.querySelector("img, svg, [class], [style]")).toBeNull();
     }
+    // Loose text beside elements gets its own element, so Reader can show one part at a time.
+    const header = [...reading.querySelectorAll(outside)].find((element) =>
+      element.textContent.includes("Example Times"),
+    );
+    expect(
+      [...(header?.childNodes ?? [])].filter(
+        (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+      ),
+    ).toEqual([]);
   });
 
   it("keeps the marker when the renderer unwraps buttons", async () => {

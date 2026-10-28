@@ -23,7 +23,10 @@ const blockedElements = [
 /** Controls whose content is still part of the text: kept as plain containers. */
 const unwrappedElements = ["form", "button"] as const;
 
-/** Set on page text outside the article while a highlight or search result in it is shown. */
+/**
+ * Set on page text outside the article while a highlight or search result in it is shown:
+ * `all` on the block holding it, `path` on the hidden elements around that block.
+ */
 export const outsideArticleRevealedAttribute = "data-reader-revealed";
 
 const urlAttributes = ["href", "src", "poster", "action", "formaction", "xlink:href"] as const;
@@ -70,10 +73,13 @@ export function prepareHtmlDocument(source: string): string {
   const parsed = parseHtmlDocument(source);
   // Removing these would drop text the original page shows, such as a page wrapped in a form.
   for (const element of parsed.querySelectorAll(unwrappedElements.join(","))) {
-    if (element.hasAttribute(outsideArticleAttribute)) {
-      // The span keeps the marker that hides this page text.
+    if (element.closest(`[${outsideArticleAttribute}]`)) {
+      // Outside the article, its text keeps an element of its own (and the marker), so
+      // Reader can hide or show it.
       const span = parsed.createElement("span");
-      span.setAttribute(outsideArticleAttribute, "");
+      if (element.hasAttribute(outsideArticleAttribute)) {
+        span.setAttribute(outsideArticleAttribute, "");
+      }
       span.append(...element.childNodes);
       element.replaceWith(span);
     } else {
@@ -130,7 +136,8 @@ function readerStyle(document: Document): HTMLStyleElement {
     main, article { display: block; }
     /* Page text outside the article: kept so highlights made on the live page are found. */
     [${outsideArticleAttribute}]:not([${outsideArticleRevealedAttribute}]) { display: none; }
-    [${outsideArticleRevealedAttribute}] { color: color-mix(in srgb, currentColor 72%, transparent); }
+    [${outsideArticleRevealedAttribute}="path"] > :not([${outsideArticleRevealedAttribute}]) { display: none; }
+    [${outsideArticleAttribute}][${outsideArticleRevealedAttribute}] { color: color-mix(in srgb, currentColor 72%, transparent); }
     .social-post > header h1 { font-size: 2rem; margin-bottom: .5rem; }
     .social-post header, .social-post time, .social-post figcaption, .social-post footer { font: .85em/1.5 ui-sans-serif, system-ui, sans-serif; color: color-mix(in srgb, currentColor 72%, transparent); }
     .post-part { margin-block: 2rem; padding-top: 1.5rem; border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent); }

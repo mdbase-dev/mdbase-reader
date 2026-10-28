@@ -319,11 +319,17 @@ function keepTextOnly(element: Element): void {
       node.remove();
     }
   }
-  if (element.textContent.trim()) {
-    element.setAttribute(outsideArticleAttribute, "");
-  } else {
+  if (!element.textContent.trim()) {
     element.remove();
+    return;
   }
+  // Reader shows only the part around a highlight, so loose text needs its own element.
+  for (const node of [element, ...element.querySelectorAll("*")]) {
+    if (node.children.length) {
+      wrappedText(node);
+    }
+  }
+  element.setAttribute(outsideArticleAttribute, "");
 }
 
 function articleDocument(

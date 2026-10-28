@@ -290,16 +290,28 @@ export class HtmlDocumentRuntime {
     }
   }
 
+  /**
+   * Shows the part of the page around each revealed range, not the whole hidden region:
+   * a highlight in a site's menu shows its menu item, not the whole masthead.
+   */
   #showRevealed(): void {
-    const shown = new Set<Element>();
+    const shown = new Map<Element, "path" | "all">();
     for (const range of [...this.#revealed, ...(this.#searchRange ? [this.#searchRange] : [])]) {
-      for (const node of [range.startContainer, range.endContainer]) {
-        for (
-          let outside = parentElement(node)?.closest(`[${outsideArticleAttribute}]`);
-          outside;
-          outside = outside.parentElement?.closest(`[${outsideArticleAttribute}]`)
-        ) {
-          shown.add(outside);
+      let block = parentElement(range.commonAncestorContainer);
+      while (block?.parentElement && inlineElement(block)) {
+        block = block.parentElement;
+      }
+      if (!block?.closest(`[${outsideArticleAttribute}]`)) {
+        continue;
+      }
+      shown.set(block, "all");
+      for (
+        let node = block.parentElement;
+        node?.closest(`[${outsideArticleAttribute}]`);
+        node = node.parentElement
+      ) {
+        if (!shown.has(node)) {
+          shown.set(node, "path");
         }
       }
     }
@@ -310,8 +322,8 @@ export class HtmlDocumentRuntime {
         element.removeAttribute(outsideArticleRevealedAttribute);
       }
     }
-    for (const element of shown) {
-      element.setAttribute(outsideArticleRevealedAttribute, "");
+    for (const [element, extent] of shown) {
+      element.setAttribute(outsideArticleRevealedAttribute, extent);
     }
     this.#markers.layout();
   }
@@ -429,6 +441,37 @@ function scrollProgression(document: Document): number {
   const root = scrollingRoot(document);
   const extent = root.scrollHeight - root.clientHeight;
   return extent > 0 ? Math.max(0, Math.min(1, root.scrollTop / extent)) : 0;
+}
+
+const inlineElements = new Set([
+  "a",
+  "abbr",
+  "b",
+  "bdi",
+  "bdo",
+  "cite",
+  "code",
+  "data",
+  "dfn",
+  "em",
+  "i",
+  "kbd",
+  "mark",
+  "q",
+  "s",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "time",
+  "u",
+  "var",
+]);
+
+function inlineElement(element: Element): boolean {
+  return inlineElements.has(element.localName);
 }
 
 function parentElement(node: Node): Element | null {

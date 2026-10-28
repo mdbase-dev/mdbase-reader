@@ -9,7 +9,8 @@ import type { Annotation } from "@mdbase-reader/core";
 
 const page = prepareHtmlDocument(`<body><article><h1>Essay</h1><h2>Method</h2>
   <p>The article itself, which is always shown.</p></article>
-  <aside data-reader-outside=""><h2>Related</h2><p>A sidebar passage highlighted on the live page.</p></aside></body>`);
+  <aside data-reader-outside=""><h2>Related</h2><p>A sidebar passage highlighted on the live page.</p></aside>
+  <header data-reader-outside=""><ul><li><a>World news</a></li><li><a>Middle East</a></li></ul><span>Sign in</span></header></body>`);
 
 function runtime(): { runtime: HtmlDocumentRuntime; document: Document } {
   const frame = document.createElement("iframe");
@@ -41,10 +42,23 @@ describe("HtmlDocumentRuntime page text outside the article", () => {
     expect(aside?.hasAttribute("data-reader-revealed")).toBe(false);
 
     reader.setAnnotations([highlight("A sidebar passage highlighted")]);
-    expect(aside?.hasAttribute("data-reader-revealed")).toBe(true);
+    expect(aside?.getAttribute("data-reader-revealed")).toBe("path");
+    expect(frame.querySelector("aside p")?.getAttribute("data-reader-revealed")).toBe("all");
+    expect(frame.querySelector("aside h2")?.hasAttribute("data-reader-revealed")).toBe(false);
 
     reader.setAnnotations([highlight("always shown")]);
     expect(aside?.hasAttribute("data-reader-revealed")).toBe(false);
+    reader.destroy();
+  });
+
+  it("shows only the menu item a highlight is in, not the whole menu", () => {
+    const { runtime: reader, document: frame } = runtime();
+    reader.setAnnotations([highlight("Middle East")]);
+    const items = [...frame.querySelectorAll("header li")];
+    expect(items.map((item) => item.getAttribute("data-reader-revealed"))).toEqual([null, "all"]);
+    expect(frame.querySelector("header")?.getAttribute("data-reader-revealed")).toBe("path");
+    expect(frame.querySelector("header ul")?.getAttribute("data-reader-revealed")).toBe("path");
+    expect(frame.querySelector("header > span")?.hasAttribute("data-reader-revealed")).toBe(false);
     reader.destroy();
   });
 
