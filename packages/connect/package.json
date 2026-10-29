@@ -18,6 +18,6 @@
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
     "knap": "0.6.0",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   }
 }
