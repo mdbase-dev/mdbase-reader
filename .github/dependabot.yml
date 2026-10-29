@@ -9,6 +9,9 @@ updates:
     ignore:
       - dependency-name: "@callumalpass/mdbase"
       - dependency-name: "@mdbase-dev/*"
+      # typescript-eslint does not support TypeScript 7 yet; lint cannot run on it.
+      - dependency-name: "typescript"
+        versions: [">= 7"]
     groups:
       npm-development:
         dependency-type: development
