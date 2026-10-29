@@ -29,3 +29,9 @@ export interface DocumentTarget {
   readonly file: string;
   readonly revision: FileRevision;
 }
+
+/**
+ * Marks page text that a saved web copy keeps but does not show as part of the article.
+ * Keeping it means any passage selected on the live page can still be found in the copy.
+ */
+export const outsideArticleAttribute = "data-reader-outside";

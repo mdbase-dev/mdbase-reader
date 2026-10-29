@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { outsideArticleAttribute } from "@mdbase-reader/core";
 import {
   MarginMarkers,
   forwardApplicationShortcut,
@@ -14,7 +15,7 @@ import {
   setAnnotationHighlights,
   setCssHighlight,
 } from "./html-css-highlights.js";
-import { htmlDocumentText } from "./html-document.js";
+import { htmlDocumentText, outsideArticleRevealedAttribute } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
 import {
@@ -82,6 +83,9 @@ export class HtmlDocumentRuntime {
   readonly #stopPalette: Unsubscribe;
   #destroyed = false;
   #annotationRanges: readonly { readonly annotation: Annotation; readonly range: Range }[] = [];
+  /** Ranges whose page text outside the article is shown, and the current search result. */
+  #revealed: readonly Range[] = [];
+  #searchRange: Range | null = null;
 
   public constructor(frame: HTMLIFrameElement, href: string) {
     const document = frame.contentDocument;
@@ -199,6 +203,7 @@ export class HtmlDocumentRuntime {
     if (!range || !element) {
       return false;
     }
+    this.#reveal(range);
     this.#motion.settle("jump");
     scrollHtmlElement(this.#view, element, "center");
     return true;
@@ -209,6 +214,8 @@ export class HtmlDocumentRuntime {
       const range = annotation.target ? this.#targets.locate(annotation.target) : null;
       return range ? [{ annotation, range }] : [];
     });
+    this.#revealed = this.#annotationRanges.map(({ range }) => range);
+    this.#showRevealed();
     setAnnotationHighlights(
       this.#view,
       this.#annotationRanges.map(({ annotation, range }) => ({ color: annotation.color, range })),
@@ -246,6 +253,10 @@ export class HtmlDocumentRuntime {
 
   public clearSearch(): void {
     setCssHighlight(this.#view, "reader-search-passage", []);
+    if (this.#searchRange) {
+      this.#searchRange = null;
+      this.#showRevealed();
+    }
   }
 
   public goToSearchQuote(quote: QuoteSelector): boolean {
@@ -255,6 +266,8 @@ export class HtmlDocumentRuntime {
       return false;
     }
     setCssHighlight(this.#view, "reader-search-passage", [range]);
+    this.#searchRange = range;
+    this.#showRevealed();
     const element = parentElement(range.startContainer);
     if (!element) {
       return false;
@@ -267,6 +280,52 @@ export class HtmlDocumentRuntime {
     });
     this.#frame.focus();
     return true;
+  }
+
+  /** Shows page text outside the article that a highlight or search result sits in. */
+  #reveal(range: Range): void {
+    if (!this.#revealed.includes(range)) {
+      this.#revealed = [...this.#revealed, range];
+      this.#showRevealed();
+    }
+  }
+
+  /**
+   * Shows the part of the page around each revealed range, not the whole hidden region:
+   * a highlight in a site's menu shows its menu item, not the whole masthead.
+   */
+  #showRevealed(): void {
+    const shown = new Map<Element, "path" | "all">();
+    for (const range of [...this.#revealed, ...(this.#searchRange ? [this.#searchRange] : [])]) {
+      let block = parentElement(range.commonAncestorContainer);
+      while (block?.parentElement && inlineElement(block)) {
+        block = block.parentElement;
+      }
+      if (!block?.closest(`[${outsideArticleAttribute}]`)) {
+        continue;
+      }
+      shown.set(block, "all");
+      for (
+        let node = block.parentElement;
+        node?.closest(`[${outsideArticleAttribute}]`);
+        node = node.parentElement
+      ) {
+        if (!shown.has(node)) {
+          shown.set(node, "path");
+        }
+      }
+    }
+    for (const element of this.#document.body.querySelectorAll(
+      `[${outsideArticleRevealedAttribute}]`,
+    )) {
+      if (!shown.has(element)) {
+        element.removeAttribute(outsideArticleRevealedAttribute);
+      }
+    }
+    for (const [element, extent] of shown) {
+      element.setAttribute(outsideArticleRevealedAttribute, extent);
+    }
+    this.#markers.layout();
   }
 
   public extractText(): string {
@@ -287,6 +346,7 @@ export class HtmlDocumentRuntime {
     this.#reflow?.disconnect();
     this.#markers.destroy();
     this.#targets.destroy();
+    this.#searchRange = null;
     this.clearSearch();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
@@ -383,13 +443,45 @@ function scrollProgression(document: Document): number {
   return extent > 0 ? Math.max(0, Math.min(1, root.scrollTop / extent)) : 0;
 }
 
+const inlineElements = new Set([
+  "a",
+  "abbr",
+  "b",
+  "bdi",
+  "bdo",
+  "cite",
+  "code",
+  "data",
+  "dfn",
+  "em",
+  "i",
+  "kbd",
+  "mark",
+  "q",
+  "s",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "time",
+  "u",
+  "var",
+]);
+
+function inlineElement(element: Element): boolean {
+  return inlineElements.has(element.localName);
+}
+
 function parentElement(node: Node): Element | null {
   return node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
 }
 
 function headingElements(document: Document): HTMLElement[] {
   return [...document.body.querySelectorAll<HTMLElement>("h1, h2, h3")].filter(
-    (heading) => heading.textContent.trim() !== "",
+    (heading) =>
+      heading.textContent.trim() !== "" && !heading.closest(`[${outsideArticleAttribute}]`),
   );
 }
 

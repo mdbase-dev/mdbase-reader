@@ -362,9 +362,14 @@ export class CaptureWriter {
       );
     }
     const match = matchTextQuote(text, selection);
-    if (!match || match.ambiguous) {
+    if (!match) {
       throw new Error(
-        t`This passage is missing or ambiguous in the saved copy. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there.`,
+        t`This passage is not in the saved copy, which may be older than this page. The source is saved, but the highlight is not. Open the saved copy in Reader to select it there.`,
+      );
+    }
+    if (match.ambiguous) {
+      throw new Error(
+        t`This passage appears more than once in the saved copy. Select a longer passage and highlight it again.`,
       );
     }
     // Stored as the saved copy reads, which is where Reader anchors it.

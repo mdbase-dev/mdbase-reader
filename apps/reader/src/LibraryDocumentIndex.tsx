@@ -3,7 +3,11 @@ import { createContext, useContext, useEffect, useState, type JSX, type ReactNod
 
 import { archivedHtmlTextExtractor } from "./document-text-extraction.js";
 import { LibraryIndexIdle } from "./library-index-idle.js";
-import { runLibraryIndexQueue, type LibraryIndexProgress } from "./library-index-queue.js";
+import {
+  libraryIndexedDocuments,
+  runLibraryIndexQueue,
+  type LibraryIndexProgress,
+} from "./library-index-queue.js";
 import { LibraryTextClient } from "./library-text-client.js";
 
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -103,13 +107,8 @@ export function LibraryDocumentIndex({
         await session.idle.wait(controller.signal);
         const extract = await archivedHtmlTextExtractor();
         controller.signal.throwIfAborted();
-        const files = new Map(
-          library.sources.flatMap((source) =>
-            source.documents.map((file) => [file.fileId, file] as const),
-          ),
-        );
         await runLibraryIndexQueue({
-          files: [...files.values()],
+          files: libraryIndexedDocuments(library.sources),
           complete: library.sourceIndex?.complete !== false,
           client: session.client,
           gateway,
