@@ -2,13 +2,13 @@ import purify from "dompurify";
 
 /** Keep embedded images static and self-contained before putting them back in a data URL. */
 export function sanitizedSvgImage(value: string): string | null {
-  const match = /^data:image\/svg\+xml(?:;charset=utf-8|;utf8)?(;base64)?,([\s\S]*)$/iu.exec(value);
+  const match = /^data:image\/svg\+xml((?:;[^,]*)?),([\s\S]*)$/iu.exec(value);
   if (!match || !purify.isSupported) {
     return null;
   }
   try {
-    const payload = decodeURIComponent(match[2] ?? "");
-    const source = match[1]
+    const payload = decodeURIComponent((match[2] ?? "").replace(/%(?![\da-f]{2})/giu, "%25"));
+    const source = /(?:^|;)base64(?:;|$)/iu.test(match[1] ?? "")
       ? new TextDecoder("utf-8", { fatal: true }).decode(
           Uint8Array.from(atob(payload), (character) => character.charCodeAt(0)),
         )
@@ -22,7 +22,7 @@ export function sanitizedSvgImage(value: string): string | null {
       return null;
     }
     // Only the root is kept; source doctypes and processing instructions never reach the image.
-    const clean = purify.sanitize(new XMLSerializer().serializeToString(parsed.documentElement), {
+    const clean = purify.sanitize(parsed.documentElement, {
       USE_PROFILES: { svg: true, svgFilters: true },
       ADD_TAGS: ["use"],
       FORBID_TAGS: ["style", "animate", "animatemotion", "animatetransform", "set", "discard"],
@@ -44,10 +44,15 @@ function sanitizeSvgReferences(svg: Element): void {
   for (const element of [svg, ...svg.querySelectorAll("*")]) {
     for (const attribute of [...element.attributes]) {
       // Presentation attributes can also load resources; permit only local fragment paints.
+      const references = attribute.value.replace(/url\(\s*(['"]?)#[\w.-]+\1\s*\)/giu, "");
+      const embeddedRaster =
+        element.localName === "image" &&
+        /^data:image\/(?:png|gif|jpeg|webp|avif);base64,/iu.test(attribute.value);
       if (
-        (attribute.localName === "href" && !attribute.value.trim().startsWith("#")) ||
-        (/\\|url\s*\(/iu.test(attribute.value) &&
-          !/^url\(\s*(['"]?)#[\w.-]+\1\s*\)$/iu.test(attribute.value))
+        (attribute.localName === "href" &&
+          !attribute.value.trim().startsWith("#") &&
+          !embeddedRaster) ||
+        /\\|url\s*\(/iu.test(references)
       ) {
         element.removeAttribute(attribute.name);
       }

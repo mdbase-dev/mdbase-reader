@@ -80,6 +80,40 @@ describe("sanitizedSvgImage", () => {
     expect(svg.querySelectorAll("use")[1]?.getAttribute("fill")).toBe('url("#g")');
   });
 
+  it.each([';charset="utf-8"', ";charset=US-ASCII", ";utf8", ""])(
+    "accepts %s parameters and literal percent signs as Chrome does",
+    (parameters) => {
+      const source = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="100%"/></svg>';
+      const svg = decodedImage(sanitizedSvgImage(`data:image/svg+xml${parameters},${source}`));
+      expect(svg.querySelector("rect")?.getAttribute("width")).toBe("100%");
+    },
+  );
+
+  it("keeps embedded raster images and local paint fallbacks, while rejecting external fallbacks", () => {
+    const raster = "data:image/png;base64,iVBORw0KGgo=";
+    const source = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <image xlink:href="${raster}"/><image href="https://bad.example/image.png"/>
+      <rect fill="url(#missing) blue"/><circle fill="url(#missing) url(https://bad.example/paint)"/>
+    </svg>`;
+    const svg = decodedImage(sanitizedSvgImage(`data:image/svg+xml,${encodeURIComponent(source)}`));
+    expect(svg.querySelectorAll("image")[0]?.getAttribute("xlink:href")).toBe(raster);
+    expect(svg.querySelectorAll("image")[1]?.hasAttribute("href")).toBe(false);
+    expect(svg.querySelector("rect")?.getAttribute("fill")).toBe("url(#missing) blue");
+    expect(svg.querySelector("circle")?.hasAttribute("fill")).toBe(false);
+  });
+
+  it("removes responsive image candidates so they cannot bypass SVG sanitization", () => {
+    const url = `data:image/svg+xml,${encodeURIComponent(drawing)}`;
+    const html = new DOMParser().parseFromString(
+      prepareHtmlDocument(
+        `<picture><source srcset="${url}"><img src="${url}" srcset="${url}"></picture>`,
+      ),
+      "text/html",
+    );
+    expect(html.querySelector("[srcset]")).toBeNull();
+    decodedImage(html.querySelector("img")!.getAttribute("src"));
+  });
+
   it("is stable across capture and rendering passes and keeps the restrictive document CSP", () => {
     const once = prepareHtmlDocument(
       `<img src="data:image/svg+xml,${encodeURIComponent(drawing)}">`,

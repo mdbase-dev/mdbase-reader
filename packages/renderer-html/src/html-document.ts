@@ -61,7 +61,7 @@ export function prepareHtmlDocument(source: string): string {
 function sanitizeAttributes(element: Element): void {
   for (const attribute of [...element.attributes]) {
     const name = attribute.name.toLocaleLowerCase();
-    if (name.startsWith("on") || name === "srcdoc" || name === "style") {
+    if (name.startsWith("on") || name === "srcdoc" || name === "srcset" || name === "style") {
       element.removeAttribute(attribute.name);
     }
   }
