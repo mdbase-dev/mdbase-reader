@@ -8,7 +8,10 @@ import {
 } from "react";
 
 import { readerErrorMessage } from "./errors.js";
-import { sharedAnnotationResource } from "./shared-annotation-resource.js";
+import {
+  revalidateSharedAnnotations,
+  sharedAnnotationResource,
+} from "./shared-annotation-resource.js";
 import { startReaderStartupTiming } from "./startup-timing.js";
 
 import type { SelectedValue } from "./selected-resource.js";
@@ -47,6 +50,20 @@ export function useSelectedSourceResources(
       resource?.load();
     }
   }, [resource, source, sourceId]);
+  useEffect(() => {
+    // Returning to Reader is when changes made in another tab or app become relevant.
+    const revalidate = (): void => {
+      if (document.visibilityState === "visible") {
+        revalidateSharedAnnotations(gateway);
+      }
+    };
+    document.addEventListener("visibilitychange", revalidate);
+    window.addEventListener("focus", revalidate);
+    return () => {
+      document.removeEventListener("visibilitychange", revalidate);
+      window.removeEventListener("focus", revalidate);
+    };
+  }, [gateway]);
   useEffect(() => {
     if (!sourceId) {
       return;

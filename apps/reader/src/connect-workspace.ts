@@ -464,6 +464,22 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return annotations;
   }
 
+  forgetAnnotations(): void {
+    this.#annotationCacheEpoch += 1;
+    for (const annotations of this.#annotationsBySource.values()) {
+      for (const { path } of annotations) {
+        if (path) {
+          this.annotationsRepository.invalidateRecord?.(path);
+        }
+      }
+    }
+    this.#annotationsBySource.clear();
+    // Without an index, counts come from the cache just cleared; keep them until sources reload.
+    if (this.annotationsRepository.annotationCountsBySource) {
+      this.#countsChanged();
+    }
+  }
+
   annotationCounts(options: ReaderRequestOptions = {}): Promise<ReadonlyMap<SourceId, number>> {
     return (
       this.annotationsRepository.annotationCountsBySource?.(this.collectionId, options) ??

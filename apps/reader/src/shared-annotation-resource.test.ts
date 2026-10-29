@@ -9,6 +9,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  revalidateSharedAnnotations,
   SharedAnnotationResource,
   sharedAnnotationResource,
 } from "./shared-annotation-resource.js";
@@ -80,5 +81,59 @@ describe("shared annotation resources", () => {
     resource.load();
     await Promise.resolve();
     expect(resource.getSnapshot()?.value.status).toBe("ready");
+  });
+  it("revalidates shown sources with annotations saved elsewhere, once per return", async () => {
+    const annotations = vi.fn(() => Promise.resolve([record("a")]));
+    const forgetAnnotations = vi.fn();
+    const gateway = { annotations, forgetAnnotations } as unknown as ReaderWorkspaceGateway;
+    const shown = sharedAnnotationResource(gateway, source);
+    const hidden = sharedAnnotationResource(gateway, sourceId("other"));
+    const unsubscribe = shown.subscribe(() => undefined);
+    shown.load();
+    hidden.load();
+    await Promise.resolve();
+    annotations.mockResolvedValueOnce([record("a"), record("from-extension")]);
+
+    revalidateSharedAnnotations(gateway, 10_000);
+    revalidateSharedAnnotations(gateway, 10_500);
+    await Promise.resolve();
+
+    expect(forgetAnnotations).toHaveBeenCalledOnce();
+    // Only the source a view shows queries now; the other waits until one mounts.
+    expect(annotations).toHaveBeenCalledTimes(3);
+    expect(shown.getSnapshot()).toEqual({
+      sourceId: source,
+      value: { status: "ready", value: [record("a"), record("from-extension")] },
+    });
+    hidden.load();
+    expect(annotations).toHaveBeenCalledTimes(4);
+    unsubscribe();
+  });
+  it("keeps edits made while a revalidation is in flight", async () => {
+    let finish!: (records: readonly Annotation[]) => void;
+    const annotations = vi.fn((): Promise<readonly Annotation[]> => Promise.resolve([record("a")]));
+    const resource = new SharedAnnotationResource(
+      { annotations } as unknown as ReaderWorkspaceGateway,
+      source,
+    );
+    const unsubscribe = resource.subscribe(() => undefined);
+    resource.load();
+    await Promise.resolve();
+    annotations.mockReturnValueOnce(
+      new Promise<readonly Annotation[]>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    resource.reload();
+    resource.reload();
+    resource.set({ sourceId: source, value: { status: "ready", value: [record("a", "Edited")] } });
+    finish([record("a"), record("b")]);
+    await Promise.resolve();
+    expect(annotations).toHaveBeenCalledTimes(2);
+    expect(resource.getSnapshot()).toEqual({
+      sourceId: source,
+      value: { status: "ready", value: [record("a", "Edited"), record("b")] },
+    });
+    unsubscribe();
   });
 });

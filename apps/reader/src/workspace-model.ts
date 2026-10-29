@@ -84,6 +84,8 @@ export interface ReaderWorkspaceGateway {
   /** Bypass session caches when comparing revisions before a draft write. */
   refreshSource?(id: SourceId, options?: ReaderRequestOptions): Promise<Source | null>;
   annotations(id: SourceId, options?: ReaderRequestOptions): Promise<readonly Annotation[]>;
+  /** Drops cached annotations, which other apps such as the browser extension may have changed. */
+  forgetAnnotations?(): void;
   /** One bounded discovery/batch hydration for a set of owners. */
   annotationsForSources?(
     ids: ReadonlySet<SourceId>,
