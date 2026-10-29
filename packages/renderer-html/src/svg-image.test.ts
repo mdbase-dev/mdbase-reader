@@ -49,7 +49,6 @@ describe("sanitizedSvgImage", () => {
     "data:image/svg+xml;base64,!!!!",
     "data:image/svg+xml,%3Csvg",
     "data:image/svg+xml,%3Chtml/%3E",
-    `data:image/svg+xml,${encodeURIComponent('<!DOCTYPE svg [<!ENTITY x "boom">]><svg xmlns="http://www.w3.org/2000/svg">&x;</svg>')}`,
     "https://bad.example/image.svg",
     "data:text/html,<svg/>",
   ])("rejects malformed or non-SVG input: %s", (url) => {
@@ -59,6 +58,26 @@ describe("sanitizedSvgImage", () => {
       "text/html",
     );
     expect(html.querySelector("img")?.hasAttribute("src")).toBe(false);
+  });
+
+  it("preserves non-breaking spaces, local reuse and quoted paints without the source doctype", () => {
+    const source = `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs><rect id="shape" width="30" height="30"/><linearGradient id="g"><stop stop-color="blue"/></linearGradient></defs>
+        <use href="#shape" fill="url('#g')"/><use xlink:href="#shape" fill='url("#g")'/>
+        <text aria-label="a\u00a0b">a\u00a0b</text>
+      </svg>`;
+    const svg = decodedImage(
+      sanitizedSvgImage(`data:image/svg+xml;utf8,${encodeURIComponent(source)}`),
+    );
+    expect(svg.doctype).toBeNull();
+    expect(svg.querySelector("text")?.textContent).toBe("a\u00a0b");
+    expect(svg.querySelector("text")?.getAttribute("aria-label")).toBe("a\u00a0b");
+    expect(svg.querySelectorAll("use")).toHaveLength(2);
+    expect(svg.querySelectorAll("use")[0]?.getAttribute("href")).toBe("#shape");
+    expect(svg.querySelectorAll("use")[1]?.getAttribute("xlink:href")).toBe("#shape");
+    expect(svg.querySelectorAll("use")[0]?.getAttribute("fill")).toBe("url('#g')");
+    expect(svg.querySelectorAll("use")[1]?.getAttribute("fill")).toBe('url("#g")');
   });
 
   it("is stable across capture and rendering passes and keeps the restrictive document CSP", () => {

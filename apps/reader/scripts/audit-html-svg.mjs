@@ -42,10 +42,10 @@ try {
         const { prepareHtmlDocument } = await import(moduleUrl);
         let source = fixture;
         for (let pass = 0; pass < passes; pass++) source = prepareHtmlDocument(source);
-        const frame = document.createElement("iframe");
+        const frame = globalThis.document.createElement("iframe");
         frame.sandbox = "allow-same-origin";
         frame.title = "HTML reading document";
-        document.body.replaceChildren(frame);
+        globalThis.document.body.replaceChildren(frame);
         await new Promise((resolveLoad) => {
           frame.onload = resolveLoad;
           frame.srcdoc = source;

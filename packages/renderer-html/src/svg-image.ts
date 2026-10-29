@@ -2,8 +2,8 @@ import purify from "dompurify";
 
 /** Keep embedded images static and self-contained before putting them back in a data URL. */
 export function sanitizedSvgImage(value: string): string | null {
-  const match = /^data:image\/svg\+xml(?:;charset=utf-8)?(;base64)?,([\s\S]*)$/iu.exec(value);
-  if (!match) {
+  const match = /^data:image\/svg\+xml(?:;charset=utf-8|;utf8)?(;base64)?,([\s\S]*)$/iu.exec(value);
+  if (!match || !purify.isSupported) {
     return null;
   }
   try {
@@ -15,29 +15,31 @@ export function sanitizedSvgImage(value: string): string | null {
       : payload;
     const parsed = new DOMParser().parseFromString(source, "image/svg+xml");
     if (
-      parsed.doctype ||
       parsed.querySelector("parsererror") ||
       parsed.documentElement.localName !== "svg" ||
       parsed.documentElement.namespaceURI !== "http://www.w3.org/2000/svg"
     ) {
       return null;
     }
+    // Only the root is kept; source doctypes and processing instructions never reach the image.
     const clean = purify.sanitize(new XMLSerializer().serializeToString(parsed.documentElement), {
       USE_PROFILES: { svg: true, svgFilters: true },
+      ADD_TAGS: ["use"],
       FORBID_TAGS: ["style", "animate", "animatemotion", "animatetransform", "set", "discard"],
-      FORBID_ATTR: ["style", "href", "xlink:href"],
+      FORBID_ATTR: ["style"],
+      RETURN_DOM_FRAGMENT: true,
     });
-    const sanitized = new DOMParser().parseFromString(clean, "image/svg+xml");
-    const svg = sanitized.documentElement;
-    if (svg.localName !== "svg" || sanitized.querySelector("parsererror")) {
+    const svg = clean.firstElementChild;
+    if (svg?.localName !== "svg") {
       return null;
     }
     for (const element of [svg, ...svg.querySelectorAll("*")]) {
       for (const attribute of [...element.attributes]) {
         // Presentation attributes can also load resources; permit only local fragment paints.
         if (
-          /\\|url\s*\(/iu.test(attribute.value) &&
-          !/^url\(\s*#[\w.-]+\s*\)$/iu.test(attribute.value)
+          (attribute.localName === "href" && !attribute.value.trim().startsWith("#")) ||
+          (/\\|url\s*\(/iu.test(attribute.value) &&
+            !/^url\(\s*(['"]?)#[\w.-]+\1\s*\)$/iu.test(attribute.value))
         ) {
           element.removeAttribute(attribute.name);
         }
