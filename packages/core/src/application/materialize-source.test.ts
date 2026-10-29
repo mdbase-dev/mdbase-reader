@@ -81,7 +81,7 @@ describe("materializeSource", () => {
 
   it("uses a readable title fallback when CSL data is absent", () => {
     const { citation, ...uncitedSource } = source;
-    void citation;
+    expect(citation).toBeDefined();
     const result = materializeSource({ ...uncitedSource, body: "![[ann_01]]" }, [annotation], []);
 
     expect(result.markdown).toContain("> — Crime and Punishment, p. 16");

@@ -49,7 +49,9 @@ async function main() {
     try {
       const entries = await readdir(targetRoot);
       if (entries.length > 0 && !resumePartialImport) {
-        throw new Error(`Refusing to populate non-empty unmarked target: ${targetRoot}`);
+        throw new Error(`Refusing to populate non-empty unmarked target: ${targetRoot}`, {
+          cause: error,
+        });
       }
     } catch (error) {
       if (error?.code !== "ENOENT") {

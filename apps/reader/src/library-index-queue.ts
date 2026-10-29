@@ -83,12 +83,11 @@ export async function runLibraryIndexQueue(options: LibraryIndexQueueOptions): P
           throw new Error("Saved page exceeds the background extraction limit.");
         }
         text = extract(result.bytes);
-      } catch (reason) {
+      } catch {
         signal.throwIfAborted();
         skipped++;
         attempted.add(key);
         // File failures don't prevent the rest of the library from being indexed.
-        void reason;
       }
       if (text !== undefined) {
         await idle(signal);

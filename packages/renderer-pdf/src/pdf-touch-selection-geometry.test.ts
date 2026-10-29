@@ -1,4 +1,4 @@
-import { transformPosition, transformSize } from "@embedpdf/models";
+import { Rotation, transformPosition, transformSize } from "@embedpdf/models";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -27,7 +27,7 @@ describe("touch selection geometry", () => {
     expect(rangeFromEndpoints(fixed, fixed)).toEqual({ start: fixed, end: fixed });
   });
 
-  it.each([0, 1, 2, 3])(
+  it.each([Rotation.Degree0, Rotation.Degree90, Rotation.Degree180, Rotation.Degree270])(
     "round-trips client coordinates at rotation %i and different zoom levels",
     (angle) => {
       const rotation = angle;

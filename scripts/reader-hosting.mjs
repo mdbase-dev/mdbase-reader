@@ -30,6 +30,8 @@ if (command === "upload-config") {
       path,
       JSON.stringify({ failed: true, evidence: error.safeEvidence ?? null }, null, 2),
     );
-    throw Error("Reader hosting metadata refused; safe failure evidence preserved");
+    throw Error("Reader hosting metadata refused; safe failure evidence preserved", {
+      cause: error,
+    });
   }
 } else throw Error("Unknown hosting command");

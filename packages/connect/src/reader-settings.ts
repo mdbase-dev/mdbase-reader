@@ -122,6 +122,8 @@ export async function refineReaderSettings(
     const template = settings.stored[key];
     const problem = template === undefined ? undefined : await nameTemplateProblem(template);
     if (problem) {
+      // No enum is involved; typescript-eslint 8.72 misreads the literal-union key as one.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment
       values[key] = readerSettingsDefinition.fields[key].default;
       stored.delete(key);
       warnings.push({ field: key, message: `${problem}. Reader's default is used meanwhile.` });

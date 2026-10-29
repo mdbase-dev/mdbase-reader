@@ -217,6 +217,8 @@ class TouchSelectionHandles {
       }
       const distance = rectDistance(point, rect);
       if (!closest || distance < closest.distance) {
+        // Two quarter-turn counts summed mod 4 are a quarter-turn count.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment
         closest = { page, rect, rotation: (object.rotation + doc.rotation) % 4, distance };
       }
     }
