@@ -83,18 +83,30 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
   ])
     await assert.rejects(assertCurrentHead(env, async () => Response.json(value)));
 });
-test("ALL installed SDK, multilingual UI candidate, protocol and peers match their archives (not native approval)", async () => {
+test("ALL installed SDK, npm UI candidate, protocol and peers match original members (not native approval)", async () => {
   const repoRoot = process.cwd();
   const installerEvidence = [];
   const sdkMembers = originalMembers("packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz");
-  const uiArchive = "vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz";
-  assert.equal(
-    createHash("sha256")
-      .update(await readFile(uiArchive))
-      .digest("hex"),
-    "1230707f2ba9545a041f2a9325ab5e2d25ed001885ebc0369d836e00b19d30f0",
-  );
-  const uiMembers = originalMembers(uiArchive);
+  // Generated from npm's integrity-verified beta.147 archive, not from the
+  // installation being tested. Keep this offline fixture separate from native
+  // approval: publishing to npm does not approve a native release intake.
+  const ui = JSON.parse(await readFile("scripts/tests/fixtures/ui-npm-members.json", "utf8"));
+  const lock = parseYaml(await readFile("pnpm-lock.yaml", "utf8"));
+  assert.equal(ui.name, "@mdbase-dev/ui");
+  assert.equal(ui.version, "0.1.0-beta.147");
+  assert.equal(lock.packages[`${ui.name}@${ui.version}`].resolution.integrity, ui.integrity);
+  for (const owner of [
+    "apps/reader",
+    "apps/extension",
+    "packages/i18n",
+    "packages/ui",
+    "packages/markdown-editor",
+  ]) {
+    const pkg = JSON.parse(await readFile(`${owner}/package.json`, "utf8"));
+    assert.equal(pkg.dependencies[ui.name], ui.version);
+    assert.equal(lock.importers[owner].dependencies[ui.name].specifier, ui.version);
+  }
+  const uiMembers = ui.members;
   const protocolMembers = originalMembers(
     "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
   );
@@ -111,6 +123,7 @@ test("ALL installed SDK, multilingual UI candidate, protocol and peers match the
   for (const owner of [
     "apps/reader",
     "apps/extension",
+    "packages/i18n",
     "packages/ui",
     "packages/markdown-editor",
   ]) {

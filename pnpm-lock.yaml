@@ -45,8 +45,8 @@ importers:
         specifier: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
         version: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
       '@mdbase-dev/i18n':
-        specifier: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.0))(@lingui/react@6.10.1(@babel/core@7.29.0)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.0))(@lingui/react@6.10.1(@babel/core@7.29.0)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-reader/i18n':
         specifier: workspace:0.1.0-beta.0
         version: link:packages/i18n
@@ -118,8 +118,8 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@7.29.7)
       '@mdbase-dev/i18n':
-        specifier: file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-reader/platform':
         specifier: workspace:*
         version: link:../../packages/platform
@@ -139,8 +139,8 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@7.29.7)(react@19.3.1)
       '@mdbase-dev/i18n':
-        specifier: file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/sdk':
         specifier: file:../../packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz
         version: file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz
@@ -151,8 +151,8 @@ importers:
         specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz
         version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz'
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -209,8 +209,8 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@7.29.7)(react@19.3.1)
       '@mdbase-dev/i18n':
-        specifier: file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/sdk':
         specifier: file:../../packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz
         version: file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz
@@ -224,8 +224,8 @@ importers:
         specifier: file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz
         version: '@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz'
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -347,11 +347,11 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@7.29.7)(react@19.3.1)
       '@mdbase-dev/i18n':
-        specifier: file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -396,11 +396,11 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@7.29.7)
       '@mdbase-dev/i18n':
-        specifier: file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -578,11 +578,11 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@7.29.7)
       '@mdbase-dev/i18n':
-        specifier: file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
-        specifier: file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz
-        version: file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.147
+        version: 0.1.0-beta.147(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1598,9 +1598,8 @@ packages:
   '@mdbase-dev/connect@0.1.0-beta.125':
     resolution: {integrity: sha512-vEH4NQfu3dBQgMw0YQxG7LDtOOLxDyxET4DQhrWuHqtgr9qoch/H0QLzel9tFSqkyH+QWxuvW3Bet6ae1+qVyQ==}
 
-  '@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz':
-    resolution: {integrity: sha512-noqot4VcwqkZn72+ugQm7Xbe6k+q9fz3WcTP3tcHIXuWO+DMEXNEeq6kuGQnCISSCywVLxrn+shd89i1hpBSFw==, tarball: file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz}
-    version: 0.1.0-beta.141
+  '@mdbase-dev/i18n@0.1.0-beta.147':
+    resolution: {integrity: sha512-6WlBrS1hsiT2sppyAHHSLrr18fknqkm6xZsCy7YIFZHR0z5MMRA5oSl5UOMmGjkNr5Ji81ISpcmgZXVjDM5EJg==}
     hasBin: true
     peerDependencies:
       '@lingui/core': 6.9.0
@@ -1633,9 +1632,9 @@ packages:
     version: 0.0.0
     engines: {node: '>=20'}
 
-  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz':
-    resolution: {integrity: sha512-9MPzTYYGmYg2umpfaOMlaK2Y2e4tgdMNLozgcuJxW+VtLJcCAIGZ9iI5o/JjzRe9BC443veYzVmAbGxnDuF/EA==, tarball: file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz}
-    version: 0.1.0-beta.141
+  '@mdbase-dev/ui@0.1.0-beta.147':
+    resolution: {integrity: sha512-BslLGNFzNSzQX8Uvhoj7NvtvG0Y1ea/jLhXU+NQlqTb/58CX4m3xeV+ambV7acuzD7zcKr54USEd10SU4ncyQA==}
+    version: 0.1.0-beta.147
     peerDependencies:
       '@codemirror/view': ^6.0.0
       '@lingui/core': 6.9.0
@@ -5587,7 +5586,7 @@ snapshots:
     dependencies:
       '@mdbase-dev/connect-protocol': 0.1.0-beta.125
 
-  '@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.0))(@lingui/react@6.10.1(@babel/core@7.29.0)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)':
+  '@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.0))(@lingui/react@6.10.1(@babel/core@7.29.0)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)':
     dependencies:
       '@lingui/cli': 6.9.0(rolldown@1.2.15)
       '@lingui/conf': 6.9.0
@@ -5603,7 +5602,7 @@ snapshots:
       - rolldown
       - supports-color
 
-  '@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)':
+  '@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)':
     dependencies:
       '@lingui/cli': 6.9.0(rolldown@1.2.15)
       '@lingui/conf': 6.9.0
@@ -5643,13 +5642,13 @@ snapshots:
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
 
-  '@mdbase-dev/ui@file:vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@mdbase-dev/ui@0.1.0-beta.147(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@file:packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@fontsource-variable/atkinson-hyperlegible-next': 5.3.0
       '@fontsource/azeret-mono': 5.3.0
       '@lingui/core': 6.10.1(@babel/core@7.29.7)
       '@lingui/react': 6.10.1(@babel/core@7.29.7)(react@19.3.1)
-      '@mdbase-dev/i18n': file:vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+      '@mdbase-dev/i18n': 0.1.0-beta.147(@lingui/core@6.10.1(@babel/core@7.29.7))(@lingui/react@6.10.1(@babel/core@7.29.7)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       react: 19.3.1
     optionalDependencies:
       '@codemirror/view': 6.43.15

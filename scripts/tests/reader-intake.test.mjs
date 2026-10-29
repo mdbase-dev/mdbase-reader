@@ -88,9 +88,9 @@ test("production intake binds approved archive originals and the unchanged beta1
     "8e36f94c01d6f918390e89638c6f0757a7d5b74a6aaa6cfff14545cf47b29899",
   );
 });
-test("native approval refuses the multilingual UI candidate against the approved production hashes", async () => {
-  // The i18n archive is intentionally not release-qualified. Passing local
-  // archive/installation checks must never silently grant native approval.
+test("native approval refuses the npm UI candidate without an approved file intake", async () => {
+  // npm installation is intentionally not native-release qualification. Passing
+  // member checks must never silently grant native approval.
   await assert.rejects(
     loadOriginals({
       target: "production",
@@ -98,7 +98,7 @@ test("native approval refuses the multilingual UI candidate against the approved
       hashes: approvedProductionHashes,
       installed: true,
     }),
-    /ui protected archive hash mismatch/,
+    /@mdbase-dev\/ui must remain a file pin/,
   );
 });
 test("production still refuses staging protected hashes", async () => {
