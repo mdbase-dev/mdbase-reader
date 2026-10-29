@@ -33,20 +33,24 @@ export function sanitizedSvgImage(value: string): string | null {
     if (svg?.localName !== "svg") {
       return null;
     }
-    for (const element of [svg, ...svg.querySelectorAll("*")]) {
-      for (const attribute of [...element.attributes]) {
-        // Presentation attributes can also load resources; permit only local fragment paints.
-        if (
-          (attribute.localName === "href" && !attribute.value.trim().startsWith("#")) ||
-          (/\\|url\s*\(/iu.test(attribute.value) &&
-            !/^url\(\s*(['"]?)#[\w.-]+\1\s*\)$/iu.test(attribute.value))
-        ) {
-          element.removeAttribute(attribute.name);
-        }
-      }
-    }
+    sanitizeSvgReferences(svg);
     return `data:image/svg+xml,${encodeURIComponent(new XMLSerializer().serializeToString(svg))}`;
   } catch {
     return null;
+  }
+}
+
+function sanitizeSvgReferences(svg: Element): void {
+  for (const element of [svg, ...svg.querySelectorAll("*")]) {
+    for (const attribute of [...element.attributes]) {
+      // Presentation attributes can also load resources; permit only local fragment paints.
+      if (
+        (attribute.localName === "href" && !attribute.value.trim().startsWith("#")) ||
+        (/\\|url\s*\(/iu.test(attribute.value) &&
+          !/^url\(\s*(['"]?)#[\w.-]+\1\s*\)$/iu.test(attribute.value))
+      ) {
+        element.removeAttribute(attribute.name);
+      }
+    }
   }
 }
