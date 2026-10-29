@@ -34,6 +34,8 @@ jobs:
         run: pnpm --filter @mdbase-reader/app exec playwright install --with-deps chromium
       - name: Verify PDF gestures and mobile highlight persistence
         run: pnpm --filter @mdbase-reader/app test:pdf-touch
+      - name: Verify imported SVG rendering in the HTML sandbox
+        run: pnpm --filter @mdbase-reader/app test:html-svg
       - name: Verify private feedback with sample data and intercepted delivery
         env:
           VITE_MDBASE_FEEDBACK_URL: http://127.0.0.1:8891/v1/feedback

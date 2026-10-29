@@ -1,6 +1,7 @@
 import { highlightPalette } from "@mdbase-reader/core";
 
 import { annotationHighlightCss } from "./html-css-highlights.js";
+import { sanitizedSvgImage } from "./svg-image.js";
 
 const blockedElements = [
   "script",
@@ -66,6 +67,13 @@ function sanitizeAttributes(element: Element): void {
   }
   for (const name of urlAttributes) {
     const value = element.getAttribute(name)?.trim();
+    if (name === "src" && element.localName === "img" && value) {
+      const svg = sanitizedSvgImage(value);
+      if (svg) {
+        element.setAttribute(name, svg);
+        continue;
+      }
+    }
     if (value && !safeResource(name, value)) {
       element.removeAttribute(name);
     }

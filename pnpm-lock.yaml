@@ -494,6 +494,9 @@ importers:
       '@mdbase-reader/reading-surface':
         specifier: workspace:*
         version: link:../reading-surface
+      dompurify:
+        specifier: ^3.4.17
+        version: 3.4.17
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -2437,6 +2440,9 @@ packages:
 
   electron-to-chromium@1.5.403:
     resolution: {integrity: sha512-MQsYmdaLzvaCX5j+ZZBr5Fm6uCCnPQcRtlvmvRlWqrXy+BH2O4ffXIAScF+JQznQWB9brWp4lSD9Z4yNmaf2BA==}
+
+  dompurify@3.4.17:
+    resolution: {integrity: sha512-B/pSlYVHQ58kqISD/yDjuJ1yfzI34m1gF4lAod2bwSRhiN4K5Cl3H8Af7hqB2PmTL911tdEudnnXn5FnhRoz0w==}
 
   electron@44.9.0:
     resolution: {integrity: sha512-boP8zA5OIoMGYe3uWP4IqB1VJNoEzdHYgcBaVYnd1DBv5TogwXkbM4yJGSfNmYCzalVQ5J3TAIbaKOY+ILTnyg==}
@@ -6157,6 +6163,10 @@ snapshots:
       gopd: 1.2.0
 
   electron-to-chromium@1.5.403: {}
+
+  dompurify@3.4.17:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
 
   electron@44.9.0:
     dependencies:
