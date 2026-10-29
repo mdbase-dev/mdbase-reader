@@ -71,9 +71,9 @@ function serviceWorker(alias: SdkAliases): Plugin {
             rolldownOptions: {
               input: resolve(import.meta.dirname, entry),
               // Vite's preload helper mentions import.meta; with modulePreload off it is unused.
-              onwarn(warning, warn) {
-                if (warning.code !== "EMPTY_IMPORT_META") {
-                  warn(warning);
+              onLog(level, log, handler) {
+                if (log.code !== "EMPTY_IMPORT_META") {
+                  handler(level, log);
                 }
               },
               // Core's modules only declare things; let the small worker bundle take

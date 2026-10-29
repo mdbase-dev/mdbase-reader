@@ -59,7 +59,13 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
         "@codemirror/view",
       ],
     },
-    ...{ test: { setupFiles: [new URL("../../scripts/test-i18n.mjs", import.meta.url).pathname] } },
+    ...{
+      test: {
+        setupFiles: [new URL("../../scripts/test-i18n.mjs", import.meta.url).pathname],
+        // happy-dom 21 leaves iframes without documents unless page loading is enabled.
+        environmentOptions: { happyDOM: { settings: { enableIframePageLoading: true } } },
+      },
+    },
     // The SDK starts its own module Worker from a module-relative URL; keep it out of
     // dev pre-bundling so that URL still names the SDK's files, and emit ES workers.
     optimizeDeps: { exclude: ["@mdbase-dev/sdk"] },

@@ -154,7 +154,7 @@ let parsedDevice: { readonly raw: string | null; readonly value: HighlightMeanin
 export function deviceHighlightMeanings(): HighlightMeanings {
   const raw = read(deviceMeaningsKey);
   if (raw !== parsedDevice.raw) {
-    let value: unknown = {};
+    let value: unknown;
     try {
       value = raw ? JSON.parse(raw) : {};
     } catch {

@@ -66,7 +66,7 @@ export function useMdbaseLibraryViews(
           t({ message: "Reader could not save this library view." }),
         );
         setProblem(message);
-        throw new Error(message);
+        throw new Error(message, { cause: reason });
       } finally {
         setSaving(false);
       }

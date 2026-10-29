@@ -6,6 +6,8 @@
  * documents exist, so nothing has to be announced: a port from the panel would not survive
  * the worker being stopped, and reconnecting it would keep waking the worker.
  */
+// The literal, unlike chrome.runtime.ContextType.SIDE_PANEL, needs no runtime enum object.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment
 const sidePanel = "SIDE_PANEL" as chrome.runtime.ContextType;
 
 export async function panelShowsTab(tabId: number): Promise<boolean> {

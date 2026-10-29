@@ -33,7 +33,7 @@ if (process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_ACCOUNT_ID)
   throw Error("Unprivileged build must not receive Cloudflare credentials");
 const installerEvidence = [];
 let plan, key, inputEvidence;
-let target = "staging";
+let target;
 if (mode === "local-qualification") {
   if (
     !input ||

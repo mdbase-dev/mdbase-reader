@@ -329,6 +329,7 @@ export async function confirmChapterPlans(
     } catch (error) {
       throw new Error(
         `${String(index)} of ${String(plans.length)} chapters created. You can retry without creating duplicates. ${error instanceof Error ? error.message : translate({ message: "Could not create the chapter." })}`,
+        { cause: error },
       );
     }
   }

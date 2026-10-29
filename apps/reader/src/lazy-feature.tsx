@@ -1,7 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Component, lazy, Suspense, useMemo, useState } from "react";
+import { Component, lazy, Suspense, useState } from "react";
 
 import type { ComponentType, JSX, ReactNode } from "react";
 
@@ -20,14 +20,16 @@ export function lazyFeature<Props extends object>(
   };
   function Feature(props: Props): JSX.Element {
     useLocale();
-    const [attempt, retry] = useState(0);
-    const Surface = useMemo(() => {
-      // React.lazy remembers rejections; a retry needs a fresh lazy identity.
-      void attempt;
-      return lazy(load);
-    }, [attempt]);
+    // React.lazy remembers rejections; a retry needs a fresh lazy identity.
+    const [{ attempt, Surface }, setFeature] = useState(() => ({
+      attempt: 0,
+      Surface: lazy(load),
+    }));
+    const retry = (): void => {
+      setFeature((current) => ({ attempt: current.attempt + 1, Surface: lazy(load) }));
+    };
     return (
-      <FeatureBoundary key={attempt} label={label} retry={() => retry((value) => value + 1)}>
+      <FeatureBoundary key={attempt} label={label} retry={retry}>
         <Suspense fallback={<p role="status">{translate`Loading ${label}…`}</p>}>
           <Surface {...props} />
         </Suspense>
