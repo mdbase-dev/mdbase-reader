@@ -1,9 +1,22 @@
-// @vitest-environment happy-dom
+// @vitest-environment jsdom
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { extractArchivedHtmlText, prepareHtmlDocument } from "./html-document.js";
 
 describe("prepareHtmlDocument", () => {
+  it("retains the embedded SVG image from the production import fixture", () => {
+    const source = readFileSync(resolve(import.meta.dirname, "fixtures/imported-svg.html"), "utf8");
+    const rendered = new DOMParser().parseFromString(prepareHtmlDocument(source), "text/html");
+    const image = rendered.querySelector("img");
+    expect(image?.getAttribute("src")).toMatch(/^data:image\/svg\+xml,/u);
+    expect(image?.getAttribute("alt")).toBe("Test image");
+    expect(rendered.querySelector("td")?.textContent).toBe("Alpha");
+    expect(rendered.querySelector("code")?.textContent).toBe("const example = 42;");
+    expect(rendered.body.textContent).toContain("Unicode: café 漢字 🐨");
+  });
   it("shares background index text with the rendered document, without executing markup", () => {
     const source =
       "<head><title>Not body text</title><style>secret style</style></head><body><form><p>CAFÉ 世界文学</p><button>definition</button></form><script>secret script</script><textarea>secret input</textarea></body>";
