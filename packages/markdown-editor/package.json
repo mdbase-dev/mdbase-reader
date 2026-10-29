@@ -11,23 +11,23 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.20.3",
-    "@codemirror/commands": "^6.10.1",
+    "@codemirror/autocomplete": "^6.20.4",
+    "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/lang-markdown": "^6.5.0",
-    "@codemirror/language": "^6.12.1",
+    "@codemirror/language": "^6.13.1",
     "@codemirror/lint": "^6.9.7",
-    "@codemirror/search": "^6.7.1",
-    "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.43.8",
-    "@lezer/highlight": "^1.2.3",
-    "@lingui/core": "6.9.0",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
+    "@lingui/core": "6.10.1",
     "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz",
     "@mdbase-reader/core": "workspace:*",
-    "react": "^19.2.8"
+    "react": "^19.3.1"
   },
   "devDependencies": {
-    "@types/react": "^19.2.14"
+    "@types/react": "^19.3.0"
   }
 }

@@ -156,6 +156,7 @@ export async function createReadiumRuntime(input: {
       }
     },
     timelineItemChanged: () => undefined,
+    viewportChanged: () => undefined,
     tap: () => false,
     click: () => false,
     zoom: () => undefined,

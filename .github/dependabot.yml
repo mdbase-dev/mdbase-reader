@@ -12,6 +12,9 @@ updates:
       # typescript-eslint does not support TypeScript 7 yet; lint cannot run on it.
       - dependency-name: "typescript"
         versions: [">= 7"]
+      # dockview-react 8.5.0 leaves Reader's mobile Library panel blank (audit-reader, PDF touch).
+      - dependency-name: "dockview-react"
+        versions: [">= 8.5.0"]
     groups:
       npm-development:
         dependency-type: development

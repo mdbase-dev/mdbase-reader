@@ -24,7 +24,7 @@ export function readiumSelectionToDraft(input: {
         href: stableEpubHref(input.targetFrameSrc, input.publicationBaseUrl),
         type: "application/xhtml+xml",
       };
-  const cfi = input.cfi ?? input.locator?.locations.fragments[0];
+  const cfi = input.cfi ?? input.locator?.locations.fragments?.[0];
   const prefix = input.prefix ?? input.locator?.text?.before;
   const suffix = input.suffix ?? input.locator?.text?.after;
   return {

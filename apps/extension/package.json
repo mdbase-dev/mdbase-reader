@@ -16,8 +16,8 @@
     "@mdbase-dev/sdk": "file:../../packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz",
     "@mdbase-dev/sdk-lab": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz",
     "@mdbase-dev/sdk-staging": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
-    "@lingui/core": "6.9.0",
-    "@lingui/react": "6.9.0",
+    "@lingui/core": "6.10.1",
+    "@lingui/react": "6.10.1",
     "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz",
     "@mdbase-reader/i18n": "workspace:*",
     "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz",
@@ -26,13 +26,13 @@
     "@mdbase-reader/platform": "workspace:*",
     "@mdbase-reader/ui": "workspace:*",
     "@mdbase-reader/web-capture": "workspace:*",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.4",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "latest",
     "vite": "latest"
   }
