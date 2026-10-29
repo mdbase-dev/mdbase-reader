@@ -22,8 +22,8 @@
     "@codemirror/view": "^6.43.15",
     "@lezer/highlight": "^1.2.5",
     "@lingui/core": "6.10.1",
-    "@mdbase-dev/i18n": "file:../../vendor/mdbase-dev-i18n-0.1.0-beta.141-24e9f5d0.tgz",
-    "@mdbase-dev/ui": "file:../../vendor/mdbase-dev-ui-0.1.0-beta.141-24e9f5d0.tgz",
+    "@mdbase-dev/i18n": "0.1.0-beta.147",
+    "@mdbase-dev/ui": "0.1.0-beta.147",
     "@mdbase-reader/core": "workspace:*",
     "react": "^19.3.1"
   },

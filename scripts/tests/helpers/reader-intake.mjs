@@ -4,7 +4,8 @@
 import { createHash } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { join } from "node:path";
+import { parse as parseYaml } from "yaml";
 
 export const approvedUiArchive = "vendor/mdbase-dev-ui-dev-b2d7c464.tgz";
 const sri = (bytes) => `sha512-${createHash("sha512").update(bytes).digest("base64")}`;
@@ -13,10 +14,9 @@ export async function intakeCopy(target = "staging") {
   const root = await mkdtemp(join(tmpdir(), "reader-intake-data-"));
   try {
     const app = JSON.parse(await readFile("apps/reader/package.json", "utf8"));
-    const uiArchive = relative(
-      process.cwd(),
-      resolve("apps/reader", app.dependencies["@mdbase-dev/ui"].slice("file:".length)),
-    );
+    const uiVersion = app.dependencies["@mdbase-dev/ui"];
+    const lock = parseYaml(await readFile("pnpm-lock.yaml", "utf8"));
+    const uiIntegrity = lock.packages[`@mdbase-dev/ui@${uiVersion}`].resolution.integrity;
     const sdk = JSON.parse(
       await readFile("packages/connect/vendor/sdk-production-beta141.json", "utf8"),
     );
@@ -41,8 +41,11 @@ export async function intakeCopy(target = "staging") {
       await cp(path, join(root, path), { recursive: true });
     }
     const replacements = [
-      [uiArchive, approvedUiArchive],
-      [sri(await readFile(uiArchive)), sri(await readFile(approvedUiArchive))],
+      [`@mdbase-dev/ui@${uiVersion}`, `@mdbase-dev/ui@file:${approvedUiArchive}`],
+      [
+        `resolution: {integrity: ${uiIntegrity}}`,
+        `resolution: {integrity: ${sri(await readFile(approvedUiArchive))}, tarball: file:${approvedUiArchive}}`,
+      ],
     ];
     if (target === "staging") {
       replacements.push(
@@ -53,6 +56,20 @@ export async function intakeCopy(target = "staging") {
     for (const path of paths.filter((path) => /(?:package\.json|pnpm-lock\.yaml)$/.test(path))) {
       let bytes = await readFile(join(root, path), "utf8");
       for (const [from, to] of replacements) bytes = bytes.replaceAll(from, to);
+      if (path.endsWith("package.json")) {
+        const pkg = JSON.parse(bytes);
+        if (pkg.dependencies?.["@mdbase-dev/ui"]) {
+          pkg.dependencies["@mdbase-dev/ui"] = `file:../../${approvedUiArchive}`;
+        }
+        bytes = JSON.stringify(pkg, null, 2) + "\n";
+      } else {
+        // Only disposable historical UI importer entries become file pins;
+        // the current npm i18n version and every protected hash stay untouched.
+        bytes = bytes.replace(
+          /('@mdbase-dev\/ui':\n {8}specifier: )[^\n]+\n {8}version: [^(\n]+/g,
+          `$1file:../../${approvedUiArchive}\n        version: file:${approvedUiArchive}`,
+        );
+      }
       await writeFile(join(root, path), bytes);
     }
     return root;
