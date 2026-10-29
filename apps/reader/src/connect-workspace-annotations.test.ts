@@ -166,6 +166,38 @@ describe("ConnectWorkspaceGateway annotation mutations", () => {
   });
 });
 
+describe("ConnectWorkspaceGateway external annotation changes", () => {
+  it("reads a source's annotations again after forgetting them", async () => {
+    const invalidateRecord = vi.fn();
+    const annotationCountsBySource = vi.fn();
+    const { gateway, listForSource } = annotationGateway({
+      invalidateRecord,
+      annotationCountsBySource,
+    });
+    const listener = vi.fn();
+    gateway.subscribeAnnotationCounts(listener);
+    await gateway.annotations(source.id);
+    const saved = { ...annotation, id: annotationId("ann_02"), path: "annotations/ann_02.md" };
+    listForSource.mockResolvedValueOnce([annotation, saved]);
+
+    gateway.forgetAnnotations();
+
+    expect(invalidateRecord).toHaveBeenCalledWith(annotation.path);
+    expect(listener).toHaveBeenCalledOnce();
+    await expect(gateway.annotations(source.id)).resolves.toEqual([annotation, saved]);
+    expect(listForSource).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps cache-derived counts when no index can recount them", async () => {
+    const { gateway } = annotationGateway({});
+    const listener = vi.fn();
+    gateway.subscribeAnnotationCounts(listener);
+    await gateway.annotations(source.id);
+    gateway.forgetAnnotations();
+    expect(listener).not.toHaveBeenCalled();
+  });
+});
+
 function annotationGateway(repository: Partial<AnnotationRepository>): {
   readonly gateway: ConnectWorkspaceGateway;
   readonly listForSource: ReturnType<typeof vi.fn>;

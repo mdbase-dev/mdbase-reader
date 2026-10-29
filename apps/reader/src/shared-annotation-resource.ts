@@ -49,6 +49,16 @@ export class SharedAnnotationResource {
     this.snapshot = next;
     this.listeners.forEach((listener) => listener());
   };
+  /** Queries again now if a view shows this source, otherwise when one next mounts. */
+  reload = (): void => {
+    if (this.overlay) {
+      return; // a query is already in flight
+    }
+    this.started = false;
+    if (this.listeners.size > 0) {
+      this.load();
+    }
+  };
   load = (): void => {
     if (this.started) {
       return;
@@ -135,6 +145,25 @@ export function publishSharedAnnotation(
   }
 }
 
+const revalidatedAt = new WeakMap<ReaderWorkspaceGateway, number>();
+/**
+ * Re-reads annotations other apps may have written meanwhile, such as highlights saved from the
+ * browser extension. Every mounted view asks; one pass serves them all.
+ */
+export function revalidateSharedAnnotations(
+  gateway: ReaderWorkspaceGateway,
+  now = Date.now(),
+): void {
+  const last = revalidatedAt.get(gateway);
+  if (last !== undefined && now - last < 2_000) {
+    return;
+  }
+  revalidatedAt.set(gateway, now);
+  gateway.forgetAnnotations?.();
+  for (const resource of resources.get(gateway)?.values() ?? []) {
+    resource.reload();
+  }
+}
 export function sharedAnnotationResource(
   gateway: ReaderWorkspaceGateway,
   id: SourceId,
