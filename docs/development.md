@@ -93,8 +93,9 @@ For a build without an upload, use `pnpm --filter @mdbase-reader/app build:lab`.
 sets both the Reader manifest origin and Vite environment; setting only `MDBASE_ENV` on an arbitrary
 `vite build` is not a substitute for the complete deployment environment.
 
-Reader installs the original eaa4e697 SDK archives side by side: canonical `@mdbase-dev/sdk`
-(production beta141), `@mdbase-dev/sdk-lab`, and `@mdbase-dev/sdk-staging`. Vite aliases every public
+Reader installs three SDK originals side by side: canonical `@mdbase-dev/sdk` (the published
+production beta149 SDK, built at Connect 4443fd15 with beta141 trust), and the eaa4e697
+`@mdbase-dev/sdk-lab` and `@mdbase-dev/sdk-staging`. Vite aliases every public
 canonical SDK export to the selected original, including imports originating in Connect and UI;
 the separate legacy SDK alias is untouched. The offline-shell adapter comes from that same original.
 The browser extension installs the same three originals and selects and verifies one the same way
@@ -103,7 +104,8 @@ packaged trust; other shells are unaffected. The native
 publisher's original-package authentication and admission gates remain separate and unchanged.
 
 `packages/connect/vendor/sdk-{lab,staging}-eaa4e697.json` record hashes and embedded producer provenance;
-production retains `sdk-production-beta141.json`. Before build hooks execute, verification checks
+production uses `sdk-production-beta149.json`, which records the publication workflow run and the
+bundled protocol member. Native approval stays bound to the historical `sdk-production-beta141.json`. Before build hooks execute, verification checks
 the archive SHA-256 and length, every installed original member, and the SDK's actual packaged
 release environment and Connect origin against the deployment table. Missing archives/installations,
 unknown or conflicting selectors, changed bytes, and environment/origin mismatches fail closed.

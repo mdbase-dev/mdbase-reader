@@ -17,11 +17,17 @@ export async function intakeCopy(target = "staging") {
     const uiVersion = app.dependencies["@mdbase-dev/ui"];
     const lock = parseYaml(await readFile("pnpm-lock.yaml", "utf8"));
     const uiIntegrity = lock.packages[`@mdbase-dev/ui@${uiVersion}`].resolution.integrity;
-    const sdk = JSON.parse(
+    const liveSdk = JSON.parse(
+      await readFile("packages/connect/vendor/sdk-production-beta149.json", "utf8"),
+    );
+    const approvedSdk = JSON.parse(
       await readFile("packages/connect/vendor/sdk-production-beta141.json", "utf8"),
     );
-    const productionSdk = `packages/connect/vendor/${sdk.artifact}`;
+    const currentSdk = `packages/connect/vendor/${liveSdk.artifact}`;
+    // Native approval stays bound to the historical beta141 original.
+    const productionSdk = `packages/connect/vendor/${approvedSdk.artifact}`;
     const stagingSdk = "packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz";
+    const intakeSdk = target === "staging" ? stagingSdk : productionSdk;
     const paths = [
       "package.json",
       "pnpm-lock.yaml",
@@ -31,7 +37,7 @@ export async function intakeCopy(target = "staging") {
       "packages/markdown-editor/package.json",
       "packages/connect/package.json",
       "packages/connect/vendor/native-release",
-      target === "staging" ? stagingSdk : productionSdk,
+      intakeSdk,
       "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
       approvedUiArchive,
       "vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
@@ -47,12 +53,10 @@ export async function intakeCopy(target = "staging") {
         `resolution: {integrity: ${sri(await readFile(approvedUiArchive))}, tarball: file:${approvedUiArchive}}`,
       ],
     ];
-    if (target === "staging") {
-      replacements.push(
-        [productionSdk.split("/").at(-1), stagingSdk.split("/").at(-1)],
-        [sri(await readFile(productionSdk)), sri(await readFile(stagingSdk))],
-      );
-    }
+    replacements.push(
+      [currentSdk.split("/").at(-1), intakeSdk.split("/").at(-1)],
+      [sri(await readFile(currentSdk)), sri(await readFile(intakeSdk))],
+    );
     for (const path of paths.filter((path) => /(?:package\.json|pnpm-lock\.yaml)$/.test(path))) {
       let bytes = await readFile(join(root, path), "utf8");
       for (const [from, to] of replacements) bytes = bytes.replaceAll(from, to);

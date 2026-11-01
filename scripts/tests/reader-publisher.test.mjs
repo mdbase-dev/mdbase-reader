@@ -86,14 +86,17 @@ test("last current HEAD rejects moved branch even if source remains ancestor", a
 test("ALL installed SDK, npm UI candidate, protocol and peers match original members (not native approval)", async () => {
   const repoRoot = process.cwd();
   const installerEvidence = [];
-  const sdkMembers = originalMembers("packages/connect/vendor/sdk-dce61ff5-production-beta141.tgz");
-  // Generated from npm's integrity-verified beta.147 archive, not from the
+  const sdk = JSON.parse(
+    await readFile("packages/connect/vendor/sdk-production-beta149.json", "utf8"),
+  );
+  const sdkMembers = originalMembers(`packages/connect/vendor/${sdk.artifact}`);
+  // Generated from npm's integrity-verified beta.149 archive, not from the
   // installation being tested. Keep this offline fixture separate from native
   // approval: publishing to npm does not approve a native release intake.
   const ui = JSON.parse(await readFile("scripts/tests/fixtures/ui-npm-members.json", "utf8"));
   const lock = parseYaml(await readFile("pnpm-lock.yaml", "utf8"));
   assert.equal(ui.name, "@mdbase-dev/ui");
-  assert.equal(ui.version, "0.1.0-beta.147");
+  assert.equal(ui.version, "0.1.0-beta.149");
   assert.equal(lock.packages[`${ui.name}@${ui.version}`].resolution.integrity, ui.integrity);
   for (const owner of [
     "apps/reader",
@@ -155,14 +158,14 @@ test("ALL installed SDK, npm UI candidate, protocol and peers match original mem
     "installed protocol differs",
     { ...options, protocol: true, originalSdkRoot: sdkRoot, originalSdkMembers: sdkMembers },
   );
-  assert.equal(sdkMembers.length, 896);
-  assert.equal(uiMembers.length, 94);
+  assert.equal(sdkMembers.length, 900);
+  assert.equal(uiMembers.length, 96);
   assert.equal(protocolMembers.length, 67);
   assert.ok(installerEvidence.some((r) => r.package === "protocol"));
   assert.ok(installerEvidence.length > 0);
   for (const r of installerEvidence) {
-    assert.equal(r.originalSdkMembers, 896);
-    assert.equal(r.originalPackageMembers, r.package === "sdk" ? 896 : 67);
+    assert.equal(r.originalSdkMembers, 900);
+    assert.equal(r.originalPackageMembers, r.package === "sdk" ? 900 : 67);
     assert.equal(r.totalInstalledFiles, r.originalPackageMembers + 1);
     assert.equal(r.originalYamlMembers, 233);
     assert.equal(r.manager, "pnpm@10.7.0");

@@ -2,23 +2,25 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile, rm } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { intakeCopy } from "./helpers/reader-intake.mjs";
 import { loadOriginals, protectedHashes } from "../lib/native-originals.mjs";
 import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved-intake.mjs";
 import { assertExtensionManifests } from "../lib/reader-extension.mjs";
-test("Reader pins the production dce61ff5 SDK with beta141 trust", async () => {
+test("Reader pins the published beta149 SDK with beta141 trust", async () => {
   const vendor = "packages/connect/vendor/";
-  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta141.json", "utf8"));
+  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta149.json", "utf8"));
   const archive = vendor + pin.artifact;
   const bytes = await readFile(archive);
-  assert.equal(pin.sourceCommit, "dce61ff53fcfaf649e9e4152239d0f3d1e0972da");
+  assert.equal(pin.sourceCommit, "4443fd15c4a591e46538eae24cf8425708e6a7f0");
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "a9e6abc0bc8062f1603aa0fb9bf239a4932bee08b8d5e63c4526412479299334",
+    "e573c3c2df74076a868e8422ec4e6cf233ede3007806757a03000aed865dedb6",
   );
   for (const [owner, path] of [
     ["apps/reader", "../../" + archive],
+    ["apps/extension", "../../" + archive],
     ["packages/connect", "vendor/" + pin.artifact],
   ]) {
     const pkg = JSON.parse(await readFile(owner + "/package.json", "utf8"));
@@ -37,6 +39,8 @@ test("Reader pins the production dce61ff5 SDK with beta141 trust", async () => {
     "7912e40838213e60b65848350d319a48019021317b112e3326429b250f0133d7",
   );
   const provenance = JSON.parse(member("native/provenance.json"));
+  assert.equal(provenance.schema, "mdbase-sdk/npm-publication/1");
+  assert.equal(provenance.commit, pin.sourceCommit);
   assert.equal(provenance.environment, "production");
   assert.deepEqual(provenance.trust, pin.trust);
 });
@@ -88,9 +92,10 @@ test("production intake binds approved archive originals and the unchanged beta1
     "8e36f94c01d6f918390e89638c6f0757a7d5b74a6aaa6cfff14545cf47b29899",
   );
 });
-test("native approval refuses the npm UI candidate without an approved file intake", async () => {
+test("native approval refuses the published SDK and npm UI without an approved file intake", async () => {
   // npm installation is intentionally not native-release qualification. Passing
-  // member checks must never silently grant native approval.
+  // member checks must never silently grant native approval. The beta149 SDK
+  // is refused first; the historical-intake tests cover the UI file pin.
   await assert.rejects(
     loadOriginals({
       target: "production",
@@ -98,6 +103,18 @@ test("native approval refuses the npm UI candidate without an approved file inta
       hashes: approvedProductionHashes,
       installed: true,
     }),
+    /sdk protected archive hash mismatch/,
+  );
+});
+test("native approval refuses an npm UI beside the approved SDK", async (t) => {
+  const root = await intakeCopy("production");
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const path = join(root, "apps/reader/package.json");
+  const pkg = JSON.parse(await readFile(path, "utf8"));
+  pkg.dependencies["@mdbase-dev/ui"] = "0.1.0-beta.149";
+  await writeFile(path, JSON.stringify(pkg, null, 2) + "\n");
+  await assert.rejects(
+    loadOriginals({ target: "production", repoRoot: root, hashes: approvedProductionHashes }),
     /@mdbase-dev\/ui must remain a file pin/,
   );
 });

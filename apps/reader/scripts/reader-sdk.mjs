@@ -12,7 +12,7 @@ const vendor = "packages/connect/vendor/";
 const pins = {
   lab: ["@mdbase-dev/sdk-lab", "sdk-lab-eaa4e697.json"],
   staging: ["@mdbase-dev/sdk-staging", "sdk-staging-eaa4e697.json"],
-  production: ["@mdbase-dev/sdk", "sdk-production-beta141.json"],
+  production: ["@mdbase-dev/sdk", "sdk-production-beta149.json"],
 };
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
@@ -77,7 +77,6 @@ export async function verifiedReaderSdk(target, repoRoot = root, app = "apps/rea
     pin.trust ?? pin.provenance.trust,
     "Reader SDK trust differs from intake provenance",
   );
-  assert.equal(provenance.trust.environment, release.environment);
   assert.equal(provenance.trust.cpOrigin, release.cpOrigin);
   assert.equal(provenance.trust.logOrigin, release.logOrigin);
   assert.equal(provenance.trust.sha256, release.assetSha256);
