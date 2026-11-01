@@ -103,7 +103,7 @@ test("pending review causes no upload or cancellation", async () => {
 test("polls async uploads before publishing", async () => {
   const m = mock([
     status,
-    { itemId, uploadState: "IN_PROGRESS" },
+    { itemId, uploadState: "IN_PROGRESS", crxVersion: "0.3.0" },
     { lastAsyncUploadState: "IN_PROGRESS" },
     { lastAsyncUploadState: "SUCCEEDED" },
     { itemId, state: "PENDING_REVIEW" },
@@ -120,6 +120,25 @@ test("polls async uploads before publishing", async () => {
     "PENDING_REVIEW",
   );
   assert.equal(waits, 2);
+});
+
+test("slow upload cannot submit an unknown or mismatching version", async () => {
+  for (const crxVersion of [undefined, "0.2.9"]) {
+    const mocked = mock([
+      status,
+      { itemId, uploadState: "IN_PROGRESS", crxVersion },
+      {
+        lastAsyncUploadState: "SUCCEEDED",
+        publishedItemRevisionStatus: { distributionChannels: [{ crxVersion: "0.3.0" }] },
+      },
+    ]);
+    await assert.rejects(
+      publishWebstore({ ...options, ...mocked, sleep: async () => {} }),
+      /crxVersion is unknown|version does not match/u,
+    );
+    assert.equal(mocked.calls.length, 3);
+    assert.ok(!mocked.calls.some((call) => call.url.endsWith(":publish")));
+  }
 });
 
 test("failed upload never publishes", async () => {

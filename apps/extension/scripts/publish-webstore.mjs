@@ -95,8 +95,11 @@ export async function publishWebstore({
     throw new Error(
       `Upload did not complete successfully (${state}). Inspect the dashboard before retrying.`,
     );
-  if (uploaded.crxVersion && uploaded.crxVersion !== version)
-    throw new Error("Uploaded version does not match release.");
+  if (!uploaded.crxVersion)
+    throw new Error(
+      "Upload completed but its crxVersion is unknown. CWS v2 fetchStatus exposes no uploaded-draft version; do not submit without verification. Inspect the dashboard. No automatic mutation retry.",
+    );
+  if (uploaded.crxVersion !== version) throw new Error("Uploaded version does not match release.");
   const result = await request("submission", `v2/${name}:publish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

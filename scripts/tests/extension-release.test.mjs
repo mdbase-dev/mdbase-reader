@@ -5,11 +5,20 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { releasePlan, tagSnapshot, versionParts } from "../extension-release.mjs";
+import {
+  releasePlan,
+  tagSnapshot,
+  versionParts,
+  zipHash,
+  submissionBaseline,
+  storeReady,
+} from "../extension-release.mjs";
 
 function fixture(context) {
-  const cwd = mkdtempSync(join(tmpdir(), "reader-extension-train-"));
-  context.after(() => rmSync(cwd, { recursive: true, force: true }));
+  const directory = mkdtempSync(join(tmpdir(), "reader-extension-train-"));
+  context.after(() => rmSync(directory, { recursive: true, force: true }));
+  const cwd = join(directory, "repo");
+  mkdirSync(cwd);
   const git = (...args) =>
     execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   const write = (path, text) => {
@@ -19,154 +28,225 @@ function fixture(context) {
   const commit = () => {
     git("add", ".");
     git("commit", "-m", "fixture");
+    git("update-ref", "refs/remotes/origin/main", "HEAD");
+  };
+  const zip = (name, version, content = "original", extra = {}) => {
+    const root = join(directory, name);
+    mkdirSync(root);
+    writeFileSync(
+      join(root, "manifest.json"),
+      JSON.stringify({ name: "mdbase Reader", manifest_version: 3, version, ...extra }),
+    );
+    writeFileSync(join(root, "main.js"), content);
+    const archive = join(directory, `${name}.zip`);
+    execFileSync("zip", ["-q", archive, "main.js", "manifest.json"], { cwd: root });
+    return archive;
   };
   git("init", "-b", "main");
   git("config", "user.name", "Fixture");
   git("config", "user.email", "fixture@example.invalid");
-  write(
-    "apps/extension/package.json",
-    '{"name":"extension","version":"0.5.0","dependencies":{"sdk":"1.0.0"}}\n',
-  );
-  write("apps/extension/src/main.ts", "original");
+  write("apps/extension/package.json", '{"name":"extension","version":"0.5.0"}\n');
   commit();
   git("tag", "extension-v0.5.0");
-  return { cwd, git, write, commit };
+  const baseline = { tag: "extension-v0.5.0", source: git("rev-parse", "HEAD"), runId: 1 };
+  const baselineZip = zip("baseline", "0.5.0");
+  return {
+    cwd,
+    directory,
+    git,
+    write,
+    commit,
+    zip,
+    baseline,
+    baselineZip,
+    plan: (candidate, selected = baseline) => releasePlan(cwd, selected, candidate, baselineZip),
+  };
 }
 
-test("unchanged, docs-only and unrelated app changes do not release", (context) => {
+test("ZIP fingerprint ignores version, timestamps and container order, not shipping bytes", (context) => {
   const repo = fixture(context);
-  assert.equal(releasePlan(repo.cwd).changed, false);
-  repo.write("docs/guide.md", "new docs");
-  repo.write("apps/zotero-exporter/src/main.ts", "new exporter");
-  repo.commit();
-  assert.equal(releasePlan(repo.cwd).changed, false);
-});
-
-test("extension, SDK, lock and shared build inputs release once", (context) => {
-  for (const path of [
-    "apps/extension/src/main.ts",
-    "packages/connect/sdk.ts",
-    "pnpm-lock.yaml",
-    "apps/reader/mdbase/types/source.md",
-  ]) {
-    const repo = fixture(context);
-    repo.write(path, "changed");
-    repo.commit();
-    const plan = releasePlan(repo.cwd);
-    assert.equal(plan.version, "0.5.1");
-    const main = repo.git("rev-parse", "main");
-    const snapshot = tagSnapshot(repo.cwd, plan);
-    assert.notEqual(snapshot, main);
-    assert.equal(repo.git("rev-parse", "main"), main);
-    assert.equal(repo.git("diff", "--name-only", "main", plan.tag), "apps/extension/package.json");
-    repo.git("switch", "main");
-    assert.equal(releasePlan(repo.cwd).changed, false);
-    repo.write(path, "changed again");
-    repo.commit();
-    assert.equal(releasePlan(repo.cwd).version, "0.5.2");
-  }
-});
-
-test("SDK-only repin is a shipped change; preserves explicit higher versions", (context) => {
-  const repo = fixture(context);
-  const path = join(repo.cwd, "apps/extension/package.json");
-  const manifest = JSON.parse(readFileSync(path, "utf8"));
-  manifest.dependencies.sdk = "1.0.1";
-  repo.write("apps/extension/package.json", JSON.stringify(manifest));
-  repo.commit();
-  assert.equal(releasePlan(repo.cwd).version, "0.5.1");
-  manifest.version = "0.6.0";
-  repo.write("apps/extension/package.json", JSON.stringify(manifest));
-  repo.commit();
-  const plan = releasePlan(repo.cwd);
-  assert.equal(plan.version, "0.6.0");
-  assert.equal(tagSnapshot(repo.cwd, plan), plan.source);
-  repo.git("switch", "main");
-  assert.equal(releasePlan(repo.cwd).changed, false);
-});
-
-test("version-only change and prerelease tags do not trigger a release", (context) => {
-  const repo = fixture(context);
-  repo.write(
-    "apps/extension/package.json",
-    '{"name":"extension","version":"0.6.0","dependencies":{"sdk":"1.0.0"}}',
+  assert.equal(zipHash(repo.baselineZip), zipHash(repo.zip("version", "0.8.0")));
+  assert.notEqual(zipHash(repo.baselineZip), zipHash(repo.zip("script", "0.5.0", "new script")));
+  assert.notEqual(
+    zipHash(repo.baselineZip),
+    zipHash(repo.zip("permission", "0.5.0", "original", { permissions: ["storage"] })),
   );
-  repo.commit();
-  repo.git("tag", "extension-v99.0.0-beta.1");
-  assert.equal(releasePlan(repo.cwd).changed, false);
 });
 
-test("dirty, stale, unrelated and mismatched tag histories fail closed", (context) => {
+test("nonshipping source/test/lock changes do not release an identical ZIP", (context) => {
   const repo = fixture(context);
-  repo.write("apps/extension/src/main.ts", "changed");
-  assert.throws(() => releasePlan(repo.cwd), /clean/u);
+  for (const path of [
+    "scripts/extension-release.mjs",
+    "apps/extension/src/test.test.ts",
+    "pnpm-lock.yaml",
+    "docs/readme.md",
+  ])
+    repo.write(path, "not shipped");
   repo.commit();
-  const plan = releasePlan(repo.cwd);
-  repo.write("packages/core/source.ts", "changed");
+  assert.equal(repo.plan(repo.zip("same", "0.5.0")).changed, false);
+});
+
+test("failed higher tags reserve numbers but never replace the successful baseline", (context) => {
+  const repo = fixture(context);
+  repo.write("apps/extension/package.json", '{"version":"0.5.1"}');
   repo.commit();
-  assert.throws(() => tagSnapshot(repo.cwd, plan), /stale/u);
-  repo.git("tag", "extension-v0.6.0");
-  assert.throws(() => releasePlan(repo.cwd), /mismatch/u);
-  repo.git("tag", "-d", "extension-v0.6.0");
-  repo.git("switch", "--orphan", "other");
-  repo.write("apps/extension/package.json", '{"version":"0.7.0"}');
-  repo.commit();
-  repo.git("tag", "extension-v0.7.0");
+  repo.git("tag", "extension-v0.5.1");
+  const plan = repo.plan(repo.zip("changed", "0.5.1", "SDK changed"));
+  assert.equal(plan.version, "0.5.2");
+  assert.deepEqual(plan.baseline, repo.baseline);
+  tagSnapshot(repo.cwd, plan);
+  assert.equal(repo.git("diff", "--name-only", "main", plan.tag), "apps/extension/package.json");
   repo.git("switch", "main");
-  assert.throws(() => releasePlan(repo.cwd), /main snapshot/u);
+  assert.equal(repo.plan(repo.zip("retry", "0.5.1", "SDK changed")).version, "0.5.3");
+  const successful = {
+    tag: plan.tag,
+    source: repo.git("rev-parse", `${plan.tag}^{commit}`),
+    runId: 2,
+  };
+  assert.equal(
+    releasePlan(
+      repo.cwd,
+      successful,
+      repo.zip("next", "0.5.1", "SDK changed"),
+      repo.zip("successful", "0.5.2", "SDK changed"),
+    ).changed,
+    false,
+  );
 });
 
-test("numeric ordering and Chrome limits are enforced", (context) => {
-  for (const version of ["0.0.0", "01.2.3", "1.2.65536", "1.2.3-beta.1", "1.2.3.4"]) {
+test("explicit main version is honored even when it is the only shipping change", (context) => {
+  const repo = fixture(context);
+  repo.write("apps/extension/package.json", '{"version":"0.6.0"}');
+  repo.commit();
+  const plan = repo.plan(repo.zip("explicit", "0.6.0"));
+  assert.equal(plan.version, "0.6.0");
+  assert.equal(plan.changed, true);
+  tagSnapshot(repo.cwd, plan);
+  assert.equal(repo.git("rev-parse", `${plan.tag}^{commit}`), plan.source);
+});
+
+test("higher tags outside main fail alertingly even with unchanged ZIP content", (context) => {
+  const repo = fixture(context);
+  repo.git("switch", "-c", "foreign");
+  repo.write("apps/extension/package.json", '{"version":"0.9.0"}');
+  repo.write("other.txt", "foreign");
+  repo.commit();
+  repo.git("tag", "extension-v0.9.0");
+  repo.git("switch", "main");
+  assert.throws(() => repo.plan(repo.baselineZip), /ALERT.*extension-v0.9.0.*outside main/u);
+});
+
+test("dirty/stale plans, mismatched baselines and invalid versions fail closed", (context) => {
+  const repo = fixture(context);
+  const archive = repo.zip("new", "0.5.0", "new bytes");
+  const plan = repo.plan(archive);
+  assert.throws(
+    () => repo.plan(archive, { ...repo.baseline, source: "a".repeat(40) }),
+    /identity mismatch/u,
+  );
+  repo.write("dirty", "dirty");
+  assert.throws(() => repo.plan(archive), /clean/u);
+  repo.commit();
+  assert.throws(() => tagSnapshot(repo.cwd, plan), /current origin/u);
+  for (const version of ["0.0.0", "01.2.3", "1.2.65536", "1.2.3-beta.1", "1.2.3.4"])
     assert.throws(() => versionParts(version));
-  }
-  const repo = fixture(context);
-  repo.write("apps/extension/package.json", '{"version":"0.10.0"}');
-  repo.commit();
-  repo.git("tag", "extension-v0.10.0");
-  repo.write("apps/extension/src/main.ts", "new code");
-  repo.commit();
-  assert.equal(releasePlan(repo.cwd).version, "0.10.1");
 });
 
-test("CLI pushes exactly one immutable tag, never main, and retry is a no-op", (context) => {
+test("baseline requires successful submission step, not green packaging or failed tags", async () => {
+  const run = (id, version) => ({
+    id,
+    event: "push",
+    path: ".github/workflows/release.yml",
+    head_branch: `extension-v${version}`,
+    head_sha: `${id}`.repeat(40),
+  });
+  const successful = {
+    name: "Submit extension to Chrome Web Store",
+    conclusion: "success",
+    steps: [
+      {
+        name: "Upload and submit for review",
+        conclusion: "success",
+        completed_at: "2026-11-01T00:00:00Z",
+      },
+    ],
+  };
+  const runs = [run(3, "0.5.2"), run(2, "0.5.1"), run(1, "0.5.0")];
+  const selected = await submissionBaseline(runs, async (id) =>
+    id === 1 ? [successful] : [{ name: "Package and publish", conclusion: "success" }],
+  );
+  assert.equal(selected.tag, "extension-v0.5.0");
+  await assert.rejects(
+    submissionBaseline(runs, async () => []),
+    /bootstrap required/u,
+  );
+  await assert.rejects(
+    submissionBaseline(runs, async () => [
+      { ...successful, steps: [{ name: "Upload and submit for review", conclusion: "failure" }] },
+    ]),
+    /bootstrap required/u,
+  );
+  const rerun = await submissionBaseline(runs, async (id) => [
+    {
+      ...successful,
+      steps: [
+        {
+          ...successful.steps[0],
+          completed_at: id === 1 ? "2026-11-02T00:00:00Z" : "2026-11-01T00:00:00Z",
+        },
+      ],
+    },
+  ]);
+  assert.equal(rerun.runId, 1);
+});
+
+test("pending/staged reviews and in-flight uploads defer without allocating a tag", () => {
+  for (const state of ["PENDING_REVIEW", "STAGED"])
+    assert.equal(
+      storeReady({ itemId: "reader", submittedItemRevisionStatus: { state } }, "reader"),
+      false,
+    );
+  assert.equal(
+    storeReady({ itemId: "reader", lastAsyncUploadState: "IN_PROGRESS" }, "reader"),
+    false,
+  );
+  assert.equal(storeReady({ itemId: "reader" }, "reader"), true);
+  assert.throws(() => storeReady({ itemId: "other" }, "reader"));
+  assert.throws(() => storeReady({ itemId: "reader", warned: true }, "reader"));
+});
+
+test("disabled CLI exits before authentication or any tag operation", (context) => {
   const repo = fixture(context);
-  const remote = mkdtempSync(join(tmpdir(), "reader-extension-remote-"));
-  context.after(() => rmSync(remote, { recursive: true, force: true }));
-  execFileSync("git", ["init", "--bare", remote], { stdio: "ignore" });
-  repo.git("remote", "add", "origin", remote);
-  repo.write("apps/extension/src/main.ts", "release this");
-  repo.commit();
-  repo.git("push", "origin", "main", "--tags");
-  const main = repo.git("rev-parse", "main");
   const script = fileURLToPath(new URL("../extension-release.mjs", import.meta.url));
-  const run = () =>
-    execFileSync(process.execPath, [script, "tag"], {
+  for (const enabled of ["", "false", "TRUE"]) {
+    const output = execFileSync(process.execPath, [script, "tag"], {
       cwd: repo.cwd,
       encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, EXTENSION_TRAIN_ENABLED: enabled },
     });
-  assert.ok(run().includes('"tag":"extension-v0.5.1"'));
-  const first = repo.git("ls-remote", "origin", "refs/tags/extension-v0.5.1");
-  assert.ok(first);
-  assert.ok(repo.git("ls-remote", "origin", "refs/heads/main").startsWith(main));
-  repo.git("switch", "main");
-  assert.ok(run().includes('"changed":false'));
-  assert.equal(repo.git("ls-remote", "origin", "refs/tags/extension-v0.5.1"), first);
-  repo.write("apps/extension/src/main.ts", "not on origin/main");
-  repo.commit();
-  assert.throws(run, /origin\/main/u);
-  assert.equal(repo.git("tag", "--list", "extension-v0.5.2"), "");
+    assert.match(output, /disabled/u);
+    assert.equal(repo.git("tag", "--list").split("\n").length, 1);
+  }
 });
 
-test("missing tags and Chrome patch exhaustion require maintainer action", (context) => {
-  const repo = fixture(context);
-  repo.git("tag", "-d", "extension-v0.5.0");
-  assert.throws(() => releasePlan(repo.cwd), /bootstrap/u);
-  repo.write("apps/extension/package.json", '{"version":"0.5.65535"}');
-  repo.commit();
-  repo.git("tag", "extension-v0.5.65535");
-  repo.write("apps/extension/src/main.ts", "release this");
-  repo.commit();
-  assert.throws(() => releasePlan(repo.cwd), /Invalid Chrome version/u);
+test("merge cannot trigger train, regardless of switch; inspection dispatch targets main", () => {
+  const workflow = readFileSync(
+    new URL("../../.github/workflows/extension-train.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(workflow, /schedule:/u);
+  assert.match(workflow, /workflow_dispatch:/u);
+  assert.doesNotMatch(workflow, /^  (push|pull_request|workflow_run):/mu);
+  assert.match(
+    workflow,
+    /if: vars\.EXTENSION_TRAIN_ENABLED == 'true' && github\.ref == 'refs\/heads\/main'/u,
+  );
+  const release = readFileSync(
+    new URL("../../.github/workflows/release.yml", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    release,
+    /if: github\.event_name == 'workflow_dispatch' && github\.ref == 'refs\/heads\/main'/u,
+  );
 });
