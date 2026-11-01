@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { verifiedPackage, verifyLockIntegrities } from "./lib/npm-provenance.mjs";
 
 export function productionIdentity(record, release, tag) {
   if (!/^v0\.1\.0-beta\.[1-9][0-9]*$/.test(release)) {
@@ -20,12 +21,7 @@ export function repinPlan(manifests, version) {
   for (const { path, text } of manifests) {
     const manifest = JSON.parse(text);
     let changed = false;
-    for (const section of [
-      "dependencies",
-      "devDependencies",
-      "optionalDependencies",
-      "peerDependencies",
-    ]) {
+    for (const section of ["dependencies", "devDependencies", "optionalDependencies"]) {
       for (const [name, pin] of Object.entries(manifest[section] ?? {})) {
         if (!name.startsWith("@mdbase-dev/")) continue;
         if (name !== "@mdbase-dev/sdk" && /^(file:|workspace:|link:)/.test(pin)) continue;
@@ -55,7 +51,7 @@ function execute(...args) {
   }).trim();
 }
 
-function main() {
+export async function repin(verifyPackage = verifiedPackage) {
   const release = process.env.CONNECT_RELEASE ?? "";
   if (!/^v0\.1\.0-beta\.[1-9][0-9]*$/.test(release)) {
     throw new Error("connect_release must be v0.1.0-beta.N");
@@ -79,29 +75,11 @@ function main() {
     .filter(Boolean)
     .map((path) => ({ path, text: readFileSync(path, "utf8") }));
   const plan = repinPlan(manifests, release.slice(1));
+  const verified = [];
   for (const name of plan.packages) {
-    let published;
-    try {
-      published = JSON.parse(
-        execute(
-          "npm",
-          "view",
-          `${name}@${release.slice(1)}`,
-          "version",
-          "--json",
-          "--registry=https://registry.npmjs.org",
-          "--fetch-retries=0",
-        ),
-      );
-    } catch {
-      throw new Error(
-        `${name}@${release.slice(1)} is unavailable; no partial repin. SDK npm publication requires Connect PR 1076 and a published production release.`,
-      );
-    }
-    if (published !== release.slice(1)) {
-      throw new Error(`Registry identity mismatch for ${name}`);
-    }
+    verified.push(await verifyPackage(name, release.slice(1), release, commit));
   }
+  writeFileSync(process.env.REPIN_INTEGRITIES, JSON.stringify(verified));
   for (const change of plan.changes) writeFileSync(change.path, change.text);
   appendFileSync(
     process.env.GITHUB_OUTPUT,
@@ -109,4 +87,14 @@ function main() {
   );
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) main();
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  if (process.argv[2] === "verify-lock") {
+    const { parse } = await import("yaml");
+    verifyLockIntegrities(
+      parse(readFileSync("pnpm-lock.yaml", "utf8")),
+      JSON.parse(readFileSync(process.env.REPIN_INTEGRITIES, "utf8")),
+    );
+  } else {
+    await repin();
+  }
+}

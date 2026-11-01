@@ -5,9 +5,20 @@ on:
   push:
     branches: [main]
     paths:
-      - "**/package.json"
-      - package.json
-      - pnpm-lock.yaml
+      - apps/reader/package.json
+      - apps/zotero-exporter/package.json
+      - packages/connect/package.json
+      - packages/core/package.json
+      - packages/i18n/package.json
+      - packages/markdown-editor/package.json
+      - packages/migration/package.json
+      - packages/platform/package.json
+      - packages/reading-surface/package.json
+      - packages/renderer-epub/package.json
+      - packages/renderer-html/package.json
+      - packages/renderer-pdf/package.json
+      - packages/ui/package.json
+      - packages/web-capture/package.json
   workflow_dispatch:
     inputs:
       target:

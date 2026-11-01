@@ -4,7 +4,6 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { fileURLToPath } from "node:url";
 import { productionIdentity, repinPlan } from "../sdk-repin.mjs";
 
 const commit = "a".repeat(40);
@@ -41,6 +40,7 @@ test("all npm pins and production SDK advance together, aliases/originals stay",
           },
           devDependencies: { "@mdbase-dev/connect-dev": "0.1.0-beta.125" },
           optionalDependencies: { "@mdbase-dev/i18n": "~0.1.0-beta.147" },
+          peerDependencies: { "@mdbase-dev/ui": "^0.1.0-beta.140" },
         }),
       },
     ],
@@ -51,6 +51,7 @@ test("all npm pins and production SDK advance together, aliases/originals stay",
   assert.equal(changed.dependencies["@mdbase-dev/sdk"], version);
   assert.equal(changed.devDependencies["@mdbase-dev/connect-dev"], version);
   assert.equal(changed.optionalDependencies["@mdbase-dev/i18n"], version);
+  assert.equal(changed.peerDependencies["@mdbase-dev/ui"], "^0.1.0-beta.140");
   assert.equal(changed.dependencies["@mdbase-dev/sdk-staging"], "file:vendor/staging.tgz");
   assert.equal(changed.dependencies["@mdbase-dev/connect-protocol"], "file:vendor/protocol.tgz");
   assert.equal(changed.dependencies["@other/package"], "1.0.0");
@@ -117,13 +118,24 @@ else console.log(JSON.stringify('${version}'));
     const invoke = (missing) =>
       execFileSync(
         process.execPath,
-        [fileURLToPath(new URL("../sdk-repin.mjs", import.meta.url))],
+        [
+          "--input-type=module",
+          "--eval",
+          `
+          import { repin } from ${JSON.stringify(new URL("../sdk-repin.mjs", import.meta.url).href)};
+          await repin(async (name, version) => {
+            if (name === '@mdbase-dev/sdk' && process.env.MISSING_SDK === 'true') throw new Error('no partial repin');
+            return {name, version, integrity: 'fixture'};
+          });
+        `,
+        ],
         {
           cwd: directory,
           env: {
             ...process.env,
             CONNECT_RELEASE: release,
             GITHUB_OUTPUT: output,
+            REPIN_INTEGRITIES: join(directory, "integrities.json"),
             MISSING_SDK: String(missing),
             PATH: `${binaries}:${process.env.PATH}`,
           },

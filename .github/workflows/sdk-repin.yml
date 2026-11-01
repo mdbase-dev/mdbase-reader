@@ -54,10 +54,17 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.ops.outputs.token }}
           CONNECT_RELEASE: ${{ inputs.connect_release }}
-        run: node scripts/sdk-repin.mjs
+          REPIN_INTEGRITIES: ${{ runner.temp }}/sdk-repin-integrities.json
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          node scripts/sdk-repin.mjs
       - name: Refresh the existing lockfile
         if: steps.pins.outputs.changed == 'true'
-        run: pnpm install --lockfile-only --ignore-scripts
+        env:
+          REPIN_INTEGRITIES: ${{ runner.temp }}/sdk-repin-integrities.json
+        run: |
+          pnpm install --lockfile-only --ignore-scripts
+          node scripts/sdk-repin.mjs verify-lock
       - name: Open or update the single release PR
         if: steps.pins.outputs.changed == 'true'
         env:
@@ -82,7 +89,6 @@ jobs:
           if [ -n "$pull" ]; then
             gh pr edit "$pull" --title "$title" --body "$body"
           else
-            gh pr create --head "$branch" --base main --title "$title" --body "$body"
-            pull=$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number')
+            pull=$(gh pr create --head "$branch" --base main --title "$title" --body "$body")
           fi
           gh pr merge "$pull" --auto --squash
