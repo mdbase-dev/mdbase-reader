@@ -84,7 +84,7 @@ jobs:
           git commit -m "Pin production Connect packages to $CONNECT_RELEASE"
           git push --force-with-lease="refs/heads/$branch:$previous" origin "HEAD:refs/heads/$branch"
           title="Pin production Connect packages to $CONNECT_RELEASE"
-          body=$(printf 'Connect: %s, commit %s.\n\nTrain run: https://github.com/%s/actions/runs/%s\n\nExact npm pins and pnpm lockfile only. App CI and normal branch protections gate auto-merge. Reader web uses the existing production publisher on dependency merges; extension version/tag/store handoff remains separate.\n' "$CONNECT_RELEASE" "$CONNECT_COMMIT" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          body=$(printf 'Connect: %s, commit %s.\n\nTrain run: https://github.com/%s/actions/runs/%s\n\nExact npm pins and pnpm lockfile only. App CI and normal branch protections gate auto-merge. Reader web uses the existing production publisher on dependency merges; the extension release train tags changed production inputs after merge and release.yml runs exact-snapshot CI, packaging and normal store review.\n' "$CONNECT_RELEASE" "$CONNECT_COMMIT" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
           pull=$(gh pr list --head "$branch" --base main --state open --json number --jq '.[0].number // empty')
           if [ -n "$pull" ]; then
             gh pr edit "$pull" --title "$title" --body "$body"

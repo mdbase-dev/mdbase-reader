@@ -37,15 +37,7 @@ export function validateStatus(status, itemId, version) {
   }
 }
 
-export async function publishWebstore({
-  publisherId,
-  itemId,
-  token,
-  version,
-  archive,
-  fetchImpl = fetch,
-  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-}) {
+function webstoreClient({ publisherId, itemId, token, fetchImpl = fetch }) {
   if (!/^[a-f0-9-]{36}$/u.test(publisherId ?? "") || !/^[a-p]{32}$/u.test(itemId ?? "") || !token) {
     throw new Error("Web Store publisher ID, item ID and access token are required.");
   }
@@ -64,7 +56,30 @@ export async function publishWebstore({
     return response.json();
   }
   const statusPath = `v2/${name}:fetchStatus`;
-  validateStatus(await request("status check", statusPath), itemId, version);
+  return { name, request, statusPath };
+}
+
+export async function inspectWebstore(options) {
+  const { request, statusPath } = webstoreClient(options);
+  const status = await request("status check", statusPath);
+  if (status.itemId !== options.itemId)
+    throw new Error("Web Store returned an unexpected item ID.");
+  return status;
+}
+
+export async function publishWebstore({
+  publisherId,
+  itemId,
+  token,
+  version,
+  archive,
+  fetchImpl = fetch,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+}) {
+  const { name, request, statusPath } = webstoreClient({ publisherId, itemId, token, fetchImpl });
+  const status = await request("status check", statusPath);
+  console.log(`Web Store pre-upload status: ${JSON.stringify(status)}`);
+  validateStatus(status, itemId, version);
   const uploaded = await request("upload", `upload/v2/${name}:upload`, {
     method: "POST",
     headers: { "Content-Type": "application/zip" },
@@ -96,33 +111,50 @@ export async function publishWebstore({
   return result.state;
 }
 
-/**
- * Google's own status and message for a failed request, which say what to fix (a missing
- * permission justification, an invalid package). Only those two fields are kept, on one
- * line and bounded, with anything resembling a credential removed: never the raw payload.
- */
 export async function googleError(response, token) {
   let error;
+  let raw = "";
   try {
-    error = (await response.json())?.error;
+    if (response.text) {
+      raw = await response.text();
+      error = JSON.parse(raw)?.error;
+    } else {
+      error = (await response.json())?.error;
+    }
   } catch {
-    return "";
+    error = undefined;
   }
+  const redact = (value) =>
+    value
+      .split(token)
+      .join("[redacted]")
+      .replace(/\b(?:ya29\.|Bearer\s+)[\w.~+/=-]+/gu, "[redacted]")
+      .replace(/\s+/gu, " ")
+      .trim();
   const parts = [error?.status, error?.message]
     .filter((part) => typeof part === "string" && part.trim())
-    .map((part) =>
-      part
-        .split(token)
-        .join("[redacted]")
-        .replace(/\b(?:ya29\.|Bearer\s+)[\w.~+/=-]+/gu, "[redacted]")
-        .replace(/\s+/gu, " ")
-        .trim(),
-    );
-  return parts.length ? `: ${parts.join(": ").slice(0, 400)}` : "";
+    .map(redact);
+  const details = error?.details
+    ? JSON.stringify(error.details, (key, value) => {
+        if (/token|secret|authorization|credential/iu.test(key)) return "[redacted]";
+        return typeof value === "string" ? redact(value) : value;
+      })
+    : "";
+  const body = [...parts, ...(details ? [`details=${details}`] : [])].join(": ") || redact(raw);
+  return body ? `: ${body.slice(0, 12000)}${body.length > 12000 ? " [truncated]" : ""}` : "";
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   try {
+    if (process.argv[2] === "--status") {
+      const status = await inspectWebstore({
+        publisherId: process.env.CWS_PUBLISHER_ID,
+        itemId: process.env.CWS_ITEM_ID,
+        token: process.env.CWS_ACCESS_TOKEN,
+      });
+      console.log(JSON.stringify(status, null, 2));
+      process.exit(0);
+    }
     const archivePath = process.argv[2];
     if (!archivePath) throw new Error("Usage: node publish-webstore.mjs <release.zip>");
     const manifest = JSON.parse(
