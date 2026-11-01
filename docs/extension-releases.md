@@ -1,35 +1,55 @@
 # Browser extension releases
 
-Store-installed copies of [mdbase Reader](https://chromewebstore.google.com/detail/mdbase-reader/kimdfjefhbfgfecconmaiaaindjccidp) receive Chrome's normal automatic updates. Unpacked installations do not: install the store version once and authorize it in Connect. The store has a different extension identity, so existing unpacked grants/settings do not migrate automatically. Disable the unpacked copy to avoid duplicate capture actions.
+## Disabled-by-default weekly train
 
-## Release path
+`extension-train.yml` runs only on the Sunday 22:30 UTC weekly sweep or manual dispatch on **main**. There is no push/merge, pull-request or workflow-run trigger. **Merging this PR is a no-op for extension releases even if the switch is already on.** The entire job additionally requires repository variable `EXTENSION_TRAIN_ENABLED` to equal the exact string `true`. The script repeats the check before reading credentials. The variable has not been created or enabled.
 
-1. Update `apps/extension/package.json` to a new stable version and merge the change to `main`.
-2. Push `extension-v<version>` pointing at that commit.
-3. `.github/workflows/release.yml` runs CI, packages for production, and publishes the ZIP and SHA256SUMS to GitHub Releases.
-4. The Web Store job downloads that exact ZIP, verifies its checksum, obtains a short-lived Google token, uploads, and submits for normal review. Approval publishes using the item's existing visibility/distribution settings; Chrome then updates installations on its own schedule.
+SDK repin PRs still merge through ordinary CI/protections; their shipping effects are picked up by the next enabled weekly/manual sweep. The train:
 
-Prerelease tags remain GitHub-only. Zotero releases are unaffected. Ordinary pushes/builds do not publish an extension. No `update_url` is needed: Chrome manages store updates.
+1. Uses the existing release App for Git pushes and a read-only Google scope to inspect the store. A pending/staged review or in-progress upload defers before building or allocating a tag. Store policy issues fail closed.
+2. Builds the production ZIP, rather than treating source paths or lockfile changes as proof of a shipped change. There is no path list.
+3. Reads paginated `release.yml` run/jobs history and selects the most recently completed successful **Upload and submit for review** step in the Web Store job on a stable extension push tag. A green packaging-only run or failed submission is not a baseline; a later post-step job failure does not erase a proved successful submission. It checks the tag commit against the run SHA, downloads that release's exact ZIP and SHA256SUMS, and verifies the archive checksum.
+4. Compares hashes of sorted ZIP file names and uncompressed file contents, normalizing only the root manifest's `version`/`version_name`. ZIP order, compression and timestamps do not count. Every other shipped byte does. Identical content is a no-op, except an explicitly higher version on main is honored as deliberate release intent.
+5. Allocates a Chrome-compatible stable version above every reserved tag, including failed tags; failed tags never replace the content baseline. An explicit higher main version (for example `0.6.0`) is used unchanged. Alien tags outside main/version-only main snapshots produce an alerting failure, even for identical ZIPs. Patch exhaustion requires a higher minor/major version.
+6. Rechecks store state before tagging, defers if an extension release is still running, and tags a main snapshot with only the extension package version bumped. It does not write directly to main. The App-token tag push starts `release.yml`: exact-snapshot CI, production ZIP/checksums/GitHub Release, then ordinary store review. No mutation is automatically retried.
 
-The upload refuses to disturb a pending review or staged submission, to replace an equal/older published version, or to proceed while policy warnings/takedowns are present. It never cancels submissions, skips review, or retries mutations automatically. If the upload succeeds but submission fails, inspect the dashboard and submit that draft manually rather than blindly rerunning the upload. If the Web Store job fails before any mutation, rerun **failed jobs** after resolving the problem; rerunning all jobs would encounter the already-created GitHub release.
+Train and Web Store jobs share a serialization group. A store change outside this automation can still race the preflight; the publisher independently refuses pending review, old versions and policy issues. No pending submission is cancelled or replaced.
 
-## Authentication
+## Baseline and enablement blockers verified 2026-11-02
 
-No Google password, refresh token or service-account key is stored in GitHub. `google-github-actions/auth` exchanges GitHub OIDC identity for a service-account access token scoped to `https://www.googleapis.com/auth/chromewebstore`.
+There is currently **no workflow-proved successful Web Store submission baseline**. The ten visible extension release runs were inspected: `extension-v0.2.0` through `0.2.3` green runs packaged GitHub releases but had no Web Store job. `0.3.0`, `0.4.0`, `0.4.1` and `0.5.0` had failed Web Store submissions. The train explicitly fails rather than adopting `0.2.3` or the highest failed tag. A maintainer must establish a successful normal release workflow submission after resolving the dashboard blocker; this PR does not bootstrap by guessing from a published store version or a manual dashboard submission.
 
-Configured resources:
+Ruleset **26306750**, `extension-version-immutability`, is active for `refs/tags/extension-v*` with **creation, update and deletion** rules. The **only** bypass actor is RepositoryRole **5** (repository admin), mode `always`. This bypass applies to all three rules, including update/deletion; non-admin actors cannot create tags. The release App has **not** been added. An owner must install/authorize it and deliberately add its bypass before enabling the train. No tag was created to test enforcement.
 
-- Google Cloud project: `mdbase-connect` (`927694253189`). Chrome Web Store API, IAM Credentials API and STS enabled.
-- Service account: `reader-webstore@mdbase-connect.iam.gserviceaccount.com`, linked in the Web Store publisher settings. **Google grants it access to all items under that publisher**, not just Reader; the workflow targets only Reader.
-- Workload identity provider: `projects/927694253189/locations/global/workloadIdentityPools/reader-github/providers/reader-release`.
-- Provider requires repository ID `1388387271`, owner ID `307332157`, an `extension-v*` tag, and `.github/workflows/release.yml` on that tag. Only this repository principal can impersonate the account (`roles/iam.workloadIdentityUser`).
-- GitHub environment: `reader-extension-production`, restricted to `extension-v*` tags. Its non-secret variables are `CWS_WORKLOAD_IDENTITY_PROVIDER`, `CWS_SERVICE_ACCOUNT`, `CWS_PUBLISHER_ID` and `CWS_ITEM_ID`.
-- Publisher: `01a9bdcf-e8d0-46ba-956d-2ef4dde4dc43`; item: `kimdfjefhbfgfecconmaiaaindjccidp`.
+## Main-branch inspection and Google binding handoff
 
-Keep tag creation and workflow changes restricted to trusted maintainers. Protect release tags with repository rulesets if stricter release approval is needed. To stop publishing, disable the identity provider or remove the service-account link in the Web Store dashboard. No other extension's release workflow has been configured.
+`release.yml` manual dispatch on **main** runs only `inspect-webstore`, using the existing environment variables/service account and `chromewebstore.readonly` scope. Push-only CI/packaging/upload/publish jobs do not run. No new tag is needed. The command is `node apps/extension/scripts/publish-webstore.mjs --status` with `CWS_ACCESS_TOKEN`, `CWS_PUBLISHER_ID` and `CWS_ITEM_ID`; it performs only a v2 GET `:fetchStatus`.
 
-## Verification at setup
+**Two existing settings reject main. Neither was changed.**
 
-The linked service account successfully fetched Reader's status through the v2 Web Store API. It reported a published `0.2.0` revision and a pending-review `0.2.0` submission. Neither was changed. A temporary local operator impersonation grant used for this read-only verification was removed afterward. Upload/publication and GitHub OIDC token exchange require a subsequent tagged release; they have not been exercised against the live store during setup.
+- Environment `reader-extension-production` currently allows only the `extension-v*` **tag** deployment policy (61634280). An owner must add an exact **branch** policy `main`, retaining the tag policy and **no required reviewers**. Otherwise the job cannot reach Google authentication.
+- Provider `projects/927694253189/locations/global/workloadIdentityPools/reader-github/providers/reader-release` currently requires this repository/owner plus an extension tag and `release.yml` at that tag. Its service-account `roles/iam.workloadIdentityUser` principalSet already selects repository ID 1388387271; that binding does not need replacing. The provider's attribute condition must deliberately admit the two exact main workflows as below, preserving tag release trust. This is proposed configuration, **not an applied change**:
 
-References: [Web Store API](https://developer.chrome.com/docs/webstore/using-api), [service accounts](https://developer.chrome.com/docs/webstore/service-accounts).
+```text
+assertion.repository_id == '1388387271' &&
+assertion.repository_owner_id == '307332157' && (
+  (assertion.ref.startsWith('refs/tags/extension-v') &&
+   assertion.workflow_ref.startsWith('mdbase-dev/mdbase-reader/.github/workflows/release.yml@refs/tags/extension-v')) ||
+  (assertion.ref == 'refs/heads/main' &&
+   assertion.event_name == 'workflow_dispatch' &&
+   assertion.workflow_ref == 'mdbase-dev/mdbase-reader/.github/workflows/release.yml@refs/heads/main') ||
+  (assertion.ref == 'refs/heads/main' &&
+   assertion.event_name in ['schedule', 'workflow_dispatch'] &&
+   assertion.workflow_ref == 'mdbase-dev/mdbase-reader/.github/workflows/extension-train.yml@refs/heads/main')
+)
+```
+
+Existing non-secret environment variables remain `CWS_WORKLOAD_IDENTITY_PROVIDER`, `CWS_SERVICE_ACCOUNT` (`reader-webstore@mdbase-connect.iam.gserviceaccount.com`), `CWS_PUBLISHER_ID` (`01a9bdcf-e8d0-46ba-956d-2ef4dde4dc43`), and `CWS_ITEM_ID` (`kimdfjefhbfgfecconmaiaaindjccidp`). No secret, IAM, provider or environment setting was changed. Service-account store access remains publisher-wide, so workflows hard-target Reader.
+
+## Publisher diagnostics and slow uploads
+
+The publisher keeps CWS **v2**, normal review and `blockOnWarnings: true`. It reports bounded, credential-redacted `error.details` and pre-upload status. If upload succeeds but submission fails, inspect the dashboard instead of blindly rerunning upload. Rerun only failed jobs when failure was provably before mutation; never retry an unknown-outcome mutation automatically.
+
+Slow upload processing is polled to completion, then `crxVersion` must be known and match before submission. **API limitation:** the current v2 upload response documents that `crxVersion` is omitted during async processing, while `fetchStatus` exposes only `lastAsyncUploadState` and versions of **published/submitted revisions**, not the newly uploaded unsubmitted draft. Those older revisions cannot safely verify the upload. Therefore missing version now **fails closed** instead of silently submitting. Polling cannot recover an unexposed draft version; this part of the requested behavior needs Google API support/operator verification. No undocumented field, re-upload, deprecated v1 fallback or post-submission inference is used. The v1 API support ended October 15, 2026.
+
+References: [v2 upload response](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/media/upload), [v2 status fields](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/fetchStatus), [v1 retirement](https://developer.chrome.com/docs/webstore/api/v1). See [the corrected dashboard checklist](extension-store-checklist.md). Store-installed copies receive Chrome's normal updates after approval/publication; unpacked copies do not. Zotero release behavior is unchanged.

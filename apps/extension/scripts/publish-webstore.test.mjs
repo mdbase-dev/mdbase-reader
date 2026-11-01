@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { publishWebstore, validateRelease, validateStatus } from "./publish-webstore.mjs";
+import {
+  googleError,
+  inspectWebstore,
+  publishWebstore,
+  validateRelease,
+  validateStatus,
+} from "./publish-webstore.mjs";
 
 const itemId = "kimdfjefhbfgfecconmaiaaindjccidp";
 const publisherId = "01a9bdcf-e8d0-46ba-956d-2ef4dde4dc43";
@@ -29,6 +35,14 @@ function mock(responses) {
     },
   };
 }
+
+test("status inspection is exactly one GET with no upload or publish", async () => {
+  const mocked = mock([status]);
+  assert.deepEqual(await inspectWebstore({ ...options, ...mocked }), status);
+  assert.equal(mocked.calls.length, 1);
+  assert.ok(mocked.calls[0].url.endsWith(":fetchStatus"));
+  assert.equal(mocked.calls[0].method, undefined);
+});
 
 test("only matching stable production tags can publish", () => {
   assert.equal(validateRelease("extension-v0.3.0", manifest), "0.3.0");
@@ -89,7 +103,7 @@ test("pending review causes no upload or cancellation", async () => {
 test("polls async uploads before publishing", async () => {
   const m = mock([
     status,
-    { itemId, uploadState: "IN_PROGRESS" },
+    { itemId, uploadState: "IN_PROGRESS", crxVersion: "0.3.0" },
     { lastAsyncUploadState: "IN_PROGRESS" },
     { lastAsyncUploadState: "SUCCEEDED" },
     { itemId, state: "PENDING_REVIEW" },
@@ -106,6 +120,25 @@ test("polls async uploads before publishing", async () => {
     "PENDING_REVIEW",
   );
   assert.equal(waits, 2);
+});
+
+test("slow upload cannot submit an unknown or mismatching version", async () => {
+  for (const crxVersion of [undefined, "0.2.9"]) {
+    const mocked = mock([
+      status,
+      { itemId, uploadState: "IN_PROGRESS", crxVersion },
+      {
+        lastAsyncUploadState: "SUCCEEDED",
+        publishedItemRevisionStatus: { distributionChannels: [{ crxVersion: "0.3.0" }] },
+      },
+    ]);
+    await assert.rejects(
+      publishWebstore({ ...options, ...mocked, sleep: async () => {} }),
+      /crxVersion is unknown|version does not match/u,
+    );
+    assert.equal(mocked.calls.length, 3);
+    assert.ok(!mocked.calls.some((call) => call.url.endsWith(":publish")));
+  }
 });
 
 test("failed upload never publishes", async () => {
@@ -125,7 +158,12 @@ test("a refused submission names the step and Google's reason, without credentia
           error: {
             status: "FAILED_PRECONDITION",
             message: `Permission justification missing.\nToken ${options.token} Bearer ya29.abc-def`,
-            details: [{ echoed: options.token }],
+            details: [
+              {
+                echoed: options.token,
+                warnings: [{ message: "Host permission justification required" }],
+              },
+            ],
           },
         }),
       };
@@ -135,11 +173,37 @@ test("a refused submission names the step and Google's reason, without credentia
   await assert.rejects(publishWebstore({ ...options, fetchImpl }), (error) => {
     assert.match(
       error.message,
-      /^Web Store submission failed \(HTTP 400: FAILED_PRECONDITION: Permission justification missing\. Token \[redacted\] \[redacted\]\)/u,
+      /^Web Store submission failed \(HTTP 400: FAILED_PRECONDITION: Permission justification missing\. Token \[redacted\] \[redacted\]: details=/u,
     );
+    assert.match(error.message, /Host permission justification required/u);
     assert.ok(!error.message.includes(options.token) && !error.message.includes("ya29"));
     return true;
   });
+});
+
+test("nested Google warning details survive redaction and remain bounded", async () => {
+  const response = {
+    json: async () => ({
+      error: {
+        status: "FAILED_PRECONDITION",
+        details: [
+          { token: "hidden", warning: `required ${options.token}`, reason: "x".repeat(20000) },
+        ],
+      },
+    }),
+  };
+  const message = await googleError(response, options.token);
+  assert.ok(message.includes("required [redacted]"));
+  assert.ok(!message.includes("hidden") && !message.includes(options.token));
+  assert.ok(message.length < 12100 && message.endsWith("[truncated]"));
+});
+
+test("non-JSON HTTP error bodies are reported without exposing the access token", async () => {
+  const message = await googleError(
+    { text: async () => `upstream failure ${options.token}` },
+    options.token,
+  );
+  assert.equal(message, ": upstream failure [redacted]");
 });
 
 test("HTTP failures are redacted and never retried", async () => {
