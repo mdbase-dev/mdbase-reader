@@ -9,7 +9,7 @@
 - `extension-v0.4.0`, run `36868829802`, October 2: only HTTP 400 was logged. The response body is unrecoverable from that log.
 - The old helper discarded **all `error.details`** and truncated status/message to 400 characters. The logs do not identify a particular missing field. Do **not** label privacy certification, permissions, listing completeness or single-purpose text as the confirmed cause yet.
 - The 0.5.0 request reached submission after the helper's pending-review, published-version, policy-status and upload-success checks. Thus those preflight checks were not the historical failure path; current state remains unknown. It is not evidence of a successful review or a publicly published 0.5.0.
-- Local read-only service-account impersonation was denied (`iam.serviceAccounts.getAccessToken`); no IAM or secrets were changed. Existing WIF is intentionally restricted to release.yml on extension tags, so it cannot be reused from this feature branch. The v2 status read does not expose missing listing/privacy fields anyway.
+- Local read-only service-account impersonation was denied (`iam.serviceAccounts.getAccessToken`). A direct `fetchStatus` GET with the existing operator credential also returned 403 `ACCESS_TOKEN_SCOPE_INSUFFICIENT`; no IAM, scopes or secrets were changed. Existing WIF is intentionally restricted to release.yml on extension tags, so it cannot be reused from this feature branch. The v2 status read does not expose missing listing/privacy fields anyway.
 
 ## Parent-thread dashboard checklist
 

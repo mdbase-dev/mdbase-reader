@@ -4,6 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { releasePlan, tagSnapshot, versionParts } from "../extension-release.mjs";
 
 function fixture(context) {
@@ -126,4 +127,46 @@ test("numeric ordering and Chrome limits are enforced", (context) => {
   repo.write("apps/extension/src/main.ts", "new code");
   repo.commit();
   assert.equal(releasePlan(repo.cwd).version, "0.10.1");
+});
+
+test("CLI pushes exactly one immutable tag, never main, and retry is a no-op", (context) => {
+  const repo = fixture(context);
+  const remote = mkdtempSync(join(tmpdir(), "reader-extension-remote-"));
+  context.after(() => rmSync(remote, { recursive: true, force: true }));
+  execFileSync("git", ["init", "--bare", remote], { stdio: "ignore" });
+  repo.git("remote", "add", "origin", remote);
+  repo.write("apps/extension/src/main.ts", "release this");
+  repo.commit();
+  repo.git("push", "origin", "main", "--tags");
+  const main = repo.git("rev-parse", "main");
+  const script = fileURLToPath(new URL("../extension-release.mjs", import.meta.url));
+  const run = () =>
+    execFileSync(process.execPath, [script, "tag"], {
+      cwd: repo.cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  assert.ok(run().includes('"tag":"extension-v0.5.1"'));
+  const first = repo.git("ls-remote", "origin", "refs/tags/extension-v0.5.1");
+  assert.ok(first);
+  assert.ok(repo.git("ls-remote", "origin", "refs/heads/main").startsWith(main));
+  repo.git("switch", "main");
+  assert.ok(run().includes('"changed":false'));
+  assert.equal(repo.git("ls-remote", "origin", "refs/tags/extension-v0.5.1"), first);
+  repo.write("apps/extension/src/main.ts", "not on origin/main");
+  repo.commit();
+  assert.throws(run, /origin\/main/u);
+  assert.equal(repo.git("tag", "--list", "extension-v0.5.2"), "");
+});
+
+test("missing tags and Chrome patch exhaustion require maintainer action", (context) => {
+  const repo = fixture(context);
+  repo.git("tag", "-d", "extension-v0.5.0");
+  assert.throws(() => releasePlan(repo.cwd), /bootstrap/u);
+  repo.write("apps/extension/package.json", '{"version":"0.5.65535"}');
+  repo.commit();
+  repo.git("tag", "extension-v0.5.65535");
+  repo.write("apps/extension/src/main.ts", "release this");
+  repo.commit();
+  assert.throws(() => releasePlan(repo.cwd), /Invalid Chrome version/u);
 });

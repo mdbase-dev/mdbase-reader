@@ -124,6 +124,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const plan = releasePlan();
     console.log(JSON.stringify(plan));
     if (process.argv[2] === "tag" && plan.changed) {
+      if (git(process.cwd(), "rev-parse", "refs/remotes/origin/main") !== plan.source) {
+        throw new Error("Only the checked-out origin/main snapshot may create a release tag.");
+      }
       tagSnapshot(process.cwd(), plan);
       git(process.cwd(), "push", "origin", `refs/tags/${plan.tag}:refs/tags/${plan.tag}`);
     } else if (process.argv[2] && process.argv[2] !== "tag") {
