@@ -236,7 +236,7 @@ test("merge cannot trigger train, regardless of switch; inspection dispatch targ
   );
   assert.match(workflow, /schedule:/u);
   assert.match(workflow, /workflow_dispatch:/u);
-  assert.doesNotMatch(workflow, /^  (push|pull_request|workflow_run):/mu);
+  assert.doesNotMatch(workflow, /^ {2}(push|pull_request|workflow_run):/mu);
   assert.match(
     workflow,
     /if: vars\.EXTENSION_TRAIN_ENABLED == 'true' && github\.ref == 'refs\/heads\/main'/u,
