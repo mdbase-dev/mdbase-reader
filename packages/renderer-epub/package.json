@@ -12,8 +12,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@lingui/core": "6.10.1",
-    "@lingui/react": "6.10.1",
+    "@lingui/core": "6.11.0",
+    "@lingui/react": "6.11.0",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/reading-surface": "workspace:*",
     "@readium/navigator": "^2.14.0",
