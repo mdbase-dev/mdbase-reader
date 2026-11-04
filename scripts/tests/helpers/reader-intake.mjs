@@ -18,7 +18,7 @@ export async function intakeCopy(target = "staging") {
     const lock = parseYaml(await readFile("pnpm-lock.yaml", "utf8"));
     const uiIntegrity = lock.packages[`@mdbase-dev/ui@${uiVersion}`].resolution.integrity;
     const liveSdk = JSON.parse(
-      await readFile("packages/connect/vendor/sdk-production-beta153.json", "utf8"),
+      await readFile("packages/connect/vendor/sdk-production-beta154.json", "utf8"),
     );
     const approvedSdk = JSON.parse(
       await readFile("packages/connect/vendor/sdk-production-beta141.json", "utf8"),
