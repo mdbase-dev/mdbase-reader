@@ -87,7 +87,7 @@ test("ALL installed SDK, npm UI candidate, protocol and peers match original mem
   const repoRoot = process.cwd();
   const installerEvidence = [];
   const sdk = JSON.parse(
-    await readFile("packages/connect/vendor/sdk-production-beta149.json", "utf8"),
+    await readFile("packages/connect/vendor/sdk-production-beta153.json", "utf8"),
   );
   const sdkMembers = originalMembers(`packages/connect/vendor/${sdk.artifact}`);
   // Generated from npm's integrity-verified beta.149 archive, not from the
