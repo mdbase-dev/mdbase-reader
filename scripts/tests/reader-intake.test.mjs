@@ -10,13 +10,13 @@ import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved
 import { assertExtensionManifests } from "../lib/reader-extension.mjs";
 test("Reader pins the published beta149 SDK with beta141 trust", async () => {
   const vendor = "packages/connect/vendor/";
-  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta149.json", "utf8"));
+  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta153.json", "utf8"));
   const archive = vendor + pin.artifact;
   const bytes = await readFile(archive);
-  assert.equal(pin.sourceCommit, "4443fd15c4a591e46538eae24cf8425708e6a7f0");
+  assert.equal(pin.sourceCommit, "45b120644deed3525b8182be081110478adaa397");
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "e573c3c2df74076a868e8422ec4e6cf233ede3007806757a03000aed865dedb6",
+    "cb0d08603890ec7d3848352245b1a50572ae61f19199a305632b804fe3545f2e",
   );
   for (const [owner, path] of [
     ["apps/reader", "../../" + archive],
