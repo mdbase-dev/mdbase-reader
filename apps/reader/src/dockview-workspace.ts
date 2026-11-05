@@ -129,7 +129,18 @@ export class ReaderDockWorkspace {
     paneId?: string,
   ): void {
     if (this.api) {
-      openDockTab(this.api, createLibraryWorkspaceTab(view, title), this.group(paneId));
+      const group = this.group(paneId);
+      const panels = paneId ? group?.panels : this.api.panels;
+      const existing = panels?.find((panel) => panelTab(panel)?.kind === "library");
+      if (existing) {
+        existing.api.updateParameters({
+          tab: { ...panelTab(existing), libraryViewId: view, title },
+        });
+        existing.api.setTitle(title);
+        existing.api.setActive();
+      } else {
+        openDockTab(this.api, createLibraryWorkspaceTab(view, title), group);
+      }
     }
     this.schedule();
   }

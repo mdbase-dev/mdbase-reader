@@ -5,6 +5,20 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { chromium, expect } from "@playwright/test";
+import { installLocalPdfium } from "./audit-local-pdfium.mjs";
+import {
+  addSourceTiming,
+  geometry,
+  keyboardLibrary,
+  pdfSheet,
+  removeContrast,
+  pdfHighlightKey,
+  marginTicks,
+  titleFocus,
+  autoHide,
+  interruptPane,
+  libraryDetails,
+} from "./polish-round3-cases.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
@@ -96,20 +110,27 @@ function assertMotion(samples, duration, reducedMotion) {
 }
 
 async function desktopPanes(page, output, name, reducedMotion) {
-  const sidebarSelector = ".reader-dock-sidebar:has(#reader-library-navigator)";
-  const sidebarTrigger = 'button[aria-label="Toggle Sources sidebar"]';
-  const paneEnter = await trace(page, "open", sidebarSelector, sidebarTrigger);
-  assertMotion(paneEnter, 160, reducedMotion);
-  const paneExit = await trace(page, "open", sidebarSelector, sidebarTrigger);
-  assertMotion(paneExit, 120, reducedMotion);
+  console.log(`${name}: sidebar geometry`);
+  const paneEnter = await geometry(page, "Toggle Sources sidebar", reducedMotion);
+  const paneExit = await geometry(page, "Toggle Sources sidebar", reducedMotion);
+  const notesEnter = await geometry(page, "Toggle Notes panel", reducedMotion);
+  console.log(`${name}: margin positions`);
+  await marginTicks(page);
+  const notesExit = await geometry(page, "Toggle Notes panel", reducedMotion);
+  await marginTicks(page);
+  const interrupted = await interruptPane(page, reducedMotion);
   await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
   await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   const inspector = page.getByRole("complementary", { name: "Source workspace" });
+  console.log(`${name}: pane resizing`);
+  await expect.poll(async () => Math.round((await inspector.boundingBox()).width)).toBe(340);
   const initialBounds = await inspector.boundingBox();
+  console.log(`${name}: inspector bounds ${JSON.stringify(initialBounds)}`);
   await page.mouse.move(initialBounds.x, initialBounds.y + initialBounds.height / 2);
   await page.mouse.down();
   await page.mouse.move(1075, initialBounds.y + initialBounds.height / 2, { steps: 12 });
   await page.mouse.up();
+  console.log(`${name}: resized`);
   await expect.poll(async () => (await inspector.boundingBox()).width).toBe(365);
   const widths = () =>
     page.locator(".dv-groupview-edge").evaluateAll((elements) =>
@@ -120,11 +141,14 @@ async function desktopPanes(page, output, name, reducedMotion) {
     );
   const before = await widths();
   await page.setViewportSize({ width: 390, height: 844 });
+  console.log(`${name}: phone layout`);
   await expect(page.locator(".reader-dock")).toHaveAttribute("data-mobile", "true");
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect.poll(widths).toEqual(before);
+  console.log(`${name}: desktop layout restored`);
   await inspector.getByRole("tab", { name: "Citation", exact: true }).click();
   await inspector.getByRole("button", { name: "Fix details", exact: true }).click();
+  console.log(`${name}: citation edit`);
   const bounds = await inspector.boundingBox();
   await page.mouse.move(bounds.x, bounds.y + bounds.height / 2);
   await page.mouse.down();
@@ -146,7 +170,20 @@ async function desktopPanes(page, output, name, reducedMotion) {
   );
   await page.screenshot({ path: join(output, `${name}-citation-180.png`) });
   await inspector.getByRole("button", { name: "Back to citation", exact: true }).click();
-  return { paneEnter, paneExit, before, after: await widths(), controls };
+  const maximize = await geometry(page, "Maximize document", reducedMotion);
+  const restore = await geometry(page, "Restore document panes", reducedMotion);
+  return {
+    paneEnter,
+    interrupted,
+    paneExit,
+    notesEnter,
+    notesExit,
+    maximize,
+    restore,
+    before,
+    after: await widths(),
+    controls,
+  };
 }
 
 async function command(page, query) {
@@ -170,8 +207,9 @@ try {
       for (const reducedMotion of ["no-preference", "reduce"]) {
         const name = `${String(viewport.width)}-${colorScheme}-${reducedMotion}`;
         const context = await browser.newContext({ viewport, colorScheme, reducedMotion });
+        await installLocalPdfium(context);
         const page = await context.newPage();
-        page.setDefaultTimeout(30000);
+        page.setDefaultTimeout(10000);
         const errors = [];
         page.on("pageerror", (error) => errors.push(error.message));
         const result = { name, viewport, colorScheme, reducedMotion, errors };
@@ -186,13 +224,23 @@ try {
           await expect(page.locator(".connection-state")).toHaveCount(0);
           await audit(page, `${name} library`);
           await page.screenshot({ path: join(output, `${name}-library.png`) });
+          await keyboardLibrary(page);
+          await titleFocus(page);
+          await libraryDetails(page);
+          result.addSource = await addSourceTiming(page);
+          result.removalContrast = await removeContrast(page, audit);
           result.enter = await trace(page, "open");
+          assert.ok((await page.locator(".mdbase-command-palette").boundingBox()).height <= 480);
           const input = page.getByRole("combobox", {
             name: "Search sources and commands",
             exact: true,
           });
           await expect(input).toBeFocused();
           await input.fill("shortcuts");
+          await expect(page.locator('[role="option"][aria-selected="true"] strong')).toHaveText(
+            "Keyboard shortcuts",
+          );
+          await page.keyboard.press("Enter");
           await expect(
             page.getByRole("heading", { name: "Keyboard shortcuts", exact: true }),
           ).toBeVisible();
@@ -203,6 +251,32 @@ try {
             "aria-selected",
             "true",
           );
+          result.paletteLayout = await page.locator(".mdbase-command-palette").evaluate((panel) => {
+            const help = panel.querySelector(".reader-shortcut-help").getBoundingClientRect();
+            const results = panel.querySelector(".mdbase-command-results").getBoundingClientRect();
+            const footer = panel.querySelector(".mdbase-command-footer").getBoundingClientRect();
+            const active = panel.querySelector('[aria-selected="true"]');
+            const bounds = active.getBoundingClientRect();
+            return {
+              helpBottom: help.bottom,
+              resultsTop: results.top,
+              resultsBottom: results.bottom,
+              footerTop: footer.top,
+              activeTop: bounds.top,
+              activeBottom: bounds.bottom,
+              activeHit: active.contains(
+                globalThis.document.elementFromPoint(
+                  bounds.left + bounds.width / 2,
+                  bounds.top + bounds.height / 2,
+                ),
+              ),
+            };
+          });
+          assert.ok(result.paletteLayout.helpBottom <= result.paletteLayout.resultsTop + 1);
+          assert.ok(result.paletteLayout.resultsBottom <= result.paletteLayout.footerTop + 1);
+          assert.ok(result.paletteLayout.activeTop >= result.paletteLayout.resultsTop - 1);
+          assert.ok(result.paletteLayout.activeBottom <= result.paletteLayout.resultsBottom + 1);
+          assert.equal(result.paletteLayout.activeHit, true);
           await audit(page, `${name} palette`);
           await page.screenshot({ path: join(output, `${name}-palette.png`) });
           result.exit = await trace(page, "close");
@@ -214,7 +288,7 @@ try {
             assert.ok(
               result.enter.some(({ animations }) =>
                 animations.some(
-                  ({ duration, property }) => duration === 160 && property === "opacity",
+                  ({ duration, property }) => duration === 90 && property === "opacity",
                 ),
               ),
             );
@@ -302,6 +376,7 @@ try {
           if (viewport.width === 1440)
             result.panes = await desktopPanes(page, output, name, reducedMotion);
           if (viewport.width === 390) {
+            result.autoHide = await autoHide(page, reducedMotion);
             result.targets = await page
               .locator(".reader-header button, .reader-header summary")
               .evaluateAll((elements) =>
@@ -352,6 +427,10 @@ try {
             )
             .toBeGreaterThan(0);
           await audit(page, `${name} PDF`);
+          console.log(`${name}: PDF sheet`);
+          if (viewport.width === 390)
+            result.pdfSheet = await pdfSheet(page, reducedMotion, true, audit);
+          if (viewport.width === 1440) await pdfHighlightKey(page);
           result.pdf = await page.locator("embedpdf-container").evaluate((host) => ({
             pages: host.shadowRoot.querySelectorAll("article section").length,
             firstText: host.shadowRoot.querySelector("article p").textContent,
@@ -372,6 +451,7 @@ try {
           await page.screenshot({ path: join(output, `${name}-pdf.png`) });
           result.passed = true;
         } catch (error) {
+          console.error(name, error);
           result.overlays = await page.locator(".reader-overlay").evaluateAll((elements) =>
             elements.map((element) => ({
               state: element.getAttribute("data-state"),

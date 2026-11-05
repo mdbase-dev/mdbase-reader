@@ -263,7 +263,7 @@ try {
     expect(measurements.renderedRows5000Sources).toBeLessThanOrEqual(101);
     const grid = page.locator('.library-table[aria-label="Sources"]');
     await expect(grid).toHaveAttribute("aria-rowcount", "5001");
-    await grid.getByRole("row").nth(1).getByRole("gridcell").first().click();
+    await grid.getByRole("row").nth(1).focus();
     await page.keyboard.press("End");
     const last = grid.getByRole("row", { name: /Research 4999/u });
     await expect(last).toBeFocused();
@@ -287,9 +287,10 @@ try {
     const titleWidth = async () => Math.round((await titleHeader.boundingBox()).width);
     const before = await titleWidth();
     const resizer = page.getByRole("separator", { name: "Resize Title column" });
-    await resizer.focus();
+    await expect(resizer).toHaveAttribute("tabindex", "-1");
+    await grid.getByRole("button", { name: "Title", exact: true }).focus();
     for (let step = 0; step < 3; step += 1) {
-      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("Alt+ArrowRight");
     }
     await expect.poll(titleWidth).toBe(before + 48);
     await grid.getByRole("button", { name: "Published", exact: true }).click();
@@ -306,7 +307,7 @@ try {
         .locator('.library-table[aria-label="Sources"]')
         .getByRole("columnheader", { name: /^Published/u }),
     ).toHaveAttribute("aria-sort", "descending");
-    await page.getByLabel("View options").click();
+    await page.getByLabel("Library actions", { exact: true }).click();
     await page.getByRole("button", { name: "Reset columns and layout" }).click();
     await expect.poll(titleWidth).toBe(before);
     completed.push("Column widths and header sorting persist on this device and reset cleanly");

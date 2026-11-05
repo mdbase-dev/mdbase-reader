@@ -100,6 +100,7 @@
   --warning-text: oklch(46% 0.085 65);
   --warning-soft: oklch(96.2% 0.03 85);
   --danger-color: oklch(50% 0.14 28);
+  --on-danger: oklch(99% 0.004 28);
   --danger-soft: oklch(96.8% 0.02 28);
   /* Highlights, yellow the default: a wash behind text and an ink for bars and swatches. The
      renderers draw the same colours from @mdbase-reader/core (highlight-color.ts). Body text is
@@ -147,6 +148,7 @@
   --warning-text: oklch(82% 0.08 80);
   --warning-soft: oklch(27% 0.03 80);
   --danger-color: oklch(72% 0.13 28);
+  --on-danger: oklch(18% 0.02 28);
   --danger-soft: oklch(26% 0.035 28);
   --hl-yellow: oklch(41% 0.075 88);
   --hl-green: oklch(39% 0.06 150);
@@ -193,6 +195,7 @@
     --warning-text: oklch(82% 0.08 80);
     --warning-soft: oklch(27% 0.03 80);
     --danger-color: oklch(72% 0.13 28);
+    --on-danger: oklch(18% 0.02 28);
     --danger-soft: oklch(26% 0.035 28);
     --hl-yellow: oklch(41% 0.075 88);
     --hl-green: oklch(39% 0.06 150);

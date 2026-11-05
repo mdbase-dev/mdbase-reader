@@ -92,3 +92,15 @@ it("leads the title cell with the title, then people and format as words", () =>
   expect(title?.querySelector(".library-title-format")?.textContent).toBe("PDF");
   expect(title?.querySelector(".source-format-tag")).toBeNull();
 });
+
+it("opens a title with one click without selecting or editing the row", () => {
+  const handlers = { onMenu: vi.fn(), onSelect: vi.fn(), onOpen: vi.fn() };
+  render(handlers);
+  const link = document.querySelector<HTMLAnchorElement>(".library-source-link")!;
+  expect(link.tabIndex).toBe(-1);
+  act(() => link.click());
+  expect(handlers.onOpen).toHaveBeenCalledExactlyOnceWith(source.id);
+  expect(handlers.onSelect).not.toHaveBeenCalled();
+  expect(handlers.onMenu).not.toHaveBeenCalled();
+  expect(document.querySelector("input")).toBeNull();
+});

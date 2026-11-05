@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 
@@ -13,6 +13,7 @@ export interface PendingSourceRemoval {
 }
 
 export interface SourceRemovalController {
+  readonly notice: string | null;
   /** Asks to remove a source; null when this collection cannot remove sources. */
   readonly request: ((source: SourceSummary) => void) | null;
   readonly pending: PendingSourceRemoval | null;
@@ -34,6 +35,14 @@ export function useSourceRemoval(
 ): SourceRemovalController {
   const { planSourceRemoval: plan, removeSource: remove } = writes;
   const [pending, setPending] = useState<PendingSourceRemoval | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!notice) {
+      return undefined;
+    }
+    const timer = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [notice]);
   // Each request gets a number, so a check that finishes after a cancel is ignored.
   const attempt = useRef(0);
   const request = useCallback(
@@ -83,6 +92,7 @@ export function useSourceRemoval(
           setPending(null);
         }
         onRemoved(source.id);
+        setNotice(t`Removed “${source.title}”.`);
       },
       (reason: unknown) => {
         if (attempt.current === current) {
@@ -100,5 +110,5 @@ export function useSourceRemoval(
       },
     );
   };
-  return { request: plan && remove ? request : null, pending, cancel, confirm };
+  return { request: plan && remove ? request : null, pending, cancel, confirm, notice };
 }

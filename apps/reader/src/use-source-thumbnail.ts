@@ -9,6 +9,7 @@ import {
   type ThumbnailFileReader,
   type ThumbnailLoader,
 } from "./source-thumbnail.js";
+import { whenIdle } from "./when-idle.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
 
@@ -93,13 +94,4 @@ function shown({ image, pageCount }: LoadedThumbnail): SourceThumbnail {
     url: URL.createObjectURL(image),
     ...(pageCount === undefined ? {} : { pageCount }),
   };
-}
-
-function whenIdle(run: () => void): () => void {
-  if (typeof requestIdleCallback === "function") {
-    const handle = requestIdleCallback(run, { timeout: 2_000 });
-    return () => cancelIdleCallback(handle);
-  }
-  const handle = setTimeout(run, 200);
-  return () => clearTimeout(handle);
 }

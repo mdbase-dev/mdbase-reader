@@ -125,7 +125,12 @@ const cells: Record<
       className={`annotation-kind is-${annotation.annotationType}`}
       {...(annotation.annotationType === "highlight" ? highlightColorProps(annotation.color) : {})}
     >
-      {annotationKindLabel(annotation.annotationType)}
+      <span
+        className="annotation-kind-label"
+        title={annotationKindLabel(annotation.annotationType)}
+      >
+        {annotationKindLabel(annotation.annotationType)}
+      </span>
     </span>
   ),
   tags: ({ annotation }) => <TextCell text={annotation.tags.join(", ")} />,

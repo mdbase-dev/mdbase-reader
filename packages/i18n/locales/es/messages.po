@@ -209,6 +209,17 @@ msgstr "{0} GiB"
 msgid "{0} hidden."
 msgstr "Se ocultó {0}."
 
+#. placeholder {0}: tabLabel(tab)
+#. placeholder {1}: workbenchOwner.paneLabel
+#: apps/reader/src/InspectorPane.tsx
+msgid "{0} is open in {1}."
+msgstr "{0} está abierto en {1}."
+
+#. placeholder {0}: this.props.label
+#: apps/reader/src/lazy-feature.tsx
+msgid "{0} is unavailable"
+msgstr "{0} no está disponible"
+
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
@@ -307,12 +318,6 @@ msgstr "{0}. Comprueba las páginas o secciones compartidas y marca la casilla d
 #: apps/reader/src/LibraryCells.tsx
 msgid "{0}% read"
 msgstr "{0}% leído"
-
-#. placeholder {0}: tabLabel(tab)
-#. placeholder {1}: workbenchOwner.paneLabel
-#: apps/reader/src/InspectorPane.tsx
-msgid "{0}is open in{1}"
-msgstr "{0}está abierto en{1}"
 
 #. placeholder {0}: preview.newRecords.toLocaleString(i18n.locale)
 #. placeholder {1}: preview.existingRecords.toLocaleString(i18n.locale)
@@ -2258,6 +2263,10 @@ msgstr "Conectar una colección"
 msgid "Connect a collection above"
 msgstr "Conecta una colección arriba"
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Connect a collection to import files. You can add a link or identifier in this preview."
+msgstr "Conecta una colección para importar archivos. Puedes añadir un enlace o identificador en esta vista previa."
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Connect and scan your library →"
 msgstr "Conectar y analizar tu biblioteca →"
@@ -2283,6 +2292,10 @@ msgstr "Connect ha rechazado el origen de esta extensión. Recarga la compilaci�
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
 msgstr "Conectar con mdbase{target}"
+
+#: apps/reader/src/lazy-feature.tsx
+msgid "Connect to the internet and try again to load this reading tool."
+msgstr "Conéctate a Internet e intenta cargar de nuevo esta herramienta de lectura."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected"
@@ -2938,6 +2951,7 @@ msgstr "Cerrar (Esc)"
 msgid "Dismiss {0}"
 msgstr "Cerrar {0}"
 
+#: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Display"
 msgstr "Visualización"
@@ -3651,10 +3665,6 @@ msgstr "La exportación de archivos no está disponible para esta conexión."
 #: apps/reader/src/use-bibliography-export.ts
 msgid "File export is unavailable in this build."
 msgstr "La exportación de archivos no está disponible en esta compilación."
-
-#: apps/reader/src/SourceAddDialog.tsx
-msgid "File import is unavailable here."
-msgstr "La importación de archivos no está disponible aquí."
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "file names"
@@ -4568,6 +4578,7 @@ msgid "Key idea"
 msgstr "Idea clave"
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Keyboard shortcuts"
 msgstr "Atajos de teclado"
@@ -4651,6 +4662,10 @@ msgstr "Biblioteca"
 msgctxt "workspace tab display"
 msgid "Library"
 msgstr "Biblioteca"
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Library actions"
+msgstr "Acciones de la biblioteca"
 
 #: apps/reader/src/LibraryDocumentIndex.tsx
 msgid "Library index unavailable; searching loaded documents only."
@@ -5289,6 +5304,10 @@ msgstr "Narrador"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Narrow"
 msgstr "Estrecha"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Narrow column"
+msgstr "Estrechar columna"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
@@ -5988,6 +6007,10 @@ msgstr "Otras fuentes de Readwise"
 msgid "other source"
 msgstr "otra fuente"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Outline"
+msgstr "Índice"
+
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgctxt "PDF navigation outline"
 msgid "Outline"
@@ -6220,6 +6243,10 @@ msgstr "Las coordenadas del PDF deben ser números finitos."
 #: packages/migration/src/zotero-anchors.ts
 msgid "PDF geometry unavailable."
 msgstr "La geometría del PDF no está disponible."
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF navigation"
+msgstr "Navegación PDF"
 
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "PDF page image"
@@ -6656,11 +6683,6 @@ msgstr "Reader no pudo inspeccionar esta página. Abre una página HTTPS normal 
 #: apps/reader/src/use-library-annotations.ts
 msgid "Reader could not list annotations."
 msgstr "Reader no pudo enumerar las anotaciones."
-
-#. placeholder {0}: this.props.label
-#: apps/reader/src/lazy-feature.tsx
-msgid "Reader could not load {0}."
-msgstr "Reader no pudo cargar {0}."
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not load saved library views."
@@ -7125,6 +7147,11 @@ msgstr "Quitar el valor {0}"
 msgid "Removed"
 msgstr "Eliminado"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-removal.ts
+msgid "Removed “{0}”."
+msgstr "Se ha eliminado «{0}»."
+
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Removing…"
@@ -7493,6 +7520,11 @@ msgstr "Guardado"
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved"
 msgstr "Guardado"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Saved changes to “{0}”."
+msgstr "Se han guardado los cambios en «{0}»."
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Saved for everyone using this collection."
@@ -9141,6 +9173,7 @@ msgstr "Esta parte del hilo no está en la copia guardada. Abre esa copia en Rea
 msgid "This view couldn’t be applied by mdbase, so Reader is filtering here instead."
 msgstr "mdbase no pudo aplicar esta vista, así que Reader está filtrando aquí en su lugar."
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgid "Thumbnails"
 msgstr "Miniaturas"
@@ -9514,6 +9547,11 @@ msgstr "Actualizar detalles de la biblioteca"
 msgid "Update Reader"
 msgstr "Actualizar Reader"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Updated reading status for “{0}”."
+msgstr "Se ha actualizado el estado de lectura de «{0}»."
+
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -9654,16 +9692,6 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
 msgstr "Opciones de vista"
 
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace interface"
-msgid "View options"
-msgstr "Opciones de vista"
-
-#. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
-#: apps/reader/src/LibraryWorkspace.tsx
-msgid "View options{0}"
-msgstr "Opciones de vista{0}"
-
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
 msgstr "Vistas"
@@ -9785,6 +9813,10 @@ msgstr "¿Por qué importa esto?"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Wide"
 msgstr "Ancha"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Widen column"
+msgstr "Ampliar columna"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "With comments"

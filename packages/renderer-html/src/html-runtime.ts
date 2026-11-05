@@ -71,7 +71,10 @@ export class HtmlDocumentRuntime {
     this.emitLocation();
     this.#motion.track(scrollingRoot(this.#document).scrollTop);
   };
-  readonly #onResize = (): void => this.#motion.settle("resize");
+  readonly #onResize = (): void => {
+    this.#motion.settle("resize");
+    this.#markers.layout();
+  };
   readonly #onKeyDown = (event: KeyboardEvent): void =>
     forwardApplicationShortcut(event, this.#frame.ownerDocument);
   readonly #markers: MarginMarkers;
@@ -114,6 +117,7 @@ export class HtmlDocumentRuntime {
       }
     });
     this.#reflow?.observe(document.body);
+    this.#reflow?.observe(document.documentElement);
   }
 
   public onLocation(listener: (locator: ReaderLocator) => void): Unsubscribe {

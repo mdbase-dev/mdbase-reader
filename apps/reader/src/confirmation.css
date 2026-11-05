@@ -34,5 +34,5 @@
 .reader-confirm-actions .is-danger {
   border-color: var(--danger);
   background: var(--danger);
-  color: var(--paper);
+  color: var(--on-danger);
 }

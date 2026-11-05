@@ -28,6 +28,7 @@ export function ModalDialog({
   const mounted = useRef(false);
   useLayoutEffect(() => {
     const active = document.activeElement;
+    const before = document.querySelector(".workspace-pane.is-focused");
     const parent = active?.closest("dialog");
     const opener =
       returnFocus ??
@@ -44,14 +45,16 @@ export function ModalDialog({
     return () => {
       mounted.current = false;
       const restoreFocus = element?.contains(document.activeElement);
+      const after = document.querySelector(".workspace-pane.is-focused");
+      const destination = after && after !== before ? after : opener;
       element?.close();
       if (
         restoreFocus &&
-        opener instanceof HTMLElement &&
-        opener.isConnected &&
-        !opener.closest('[inert], [hidden], [aria-hidden="true"]')
+        destination instanceof HTMLElement &&
+        destination.isConnected &&
+        !destination.closest('[inert], [hidden], [aria-hidden="true"]')
       ) {
-        opener.focus();
+        destination.focus();
       }
     };
   }, [initialFocus, returnFocus]);

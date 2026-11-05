@@ -56,6 +56,7 @@ export interface ReaderShortcutActions {
   readonly focusMode: boolean;
   readonly setFocusMode: (value: boolean) => void;
   readonly openCommands: () => void;
+  readonly openShortcuts: () => void;
   readonly focusSearch: () => void;
   readonly switchTab: (direction: -1 | 1) => void;
   readonly focusNextPane: () => void;
@@ -98,6 +99,9 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
   const editing =
     event.target instanceof Element &&
     Boolean(event.target.closest("input, textarea, [contenteditable='true']"));
+  if (handleLibraryShortcut(event, actions, editing, modifier)) {
+    return true;
+  }
   if (asksForCommands(event, modifier, editing)) {
     event.preventDefault();
     actions.openCommands();
@@ -115,6 +119,30 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
   }
   if (modifier && !event.altKey && handleLayoutShortcut(event, actions)) {
     event.preventDefault();
+    return true;
+  }
+  return false;
+}
+
+function handleLibraryShortcut(
+  event: KeyboardEvent,
+  actions: ReaderShortcutActions,
+  editing: boolean,
+  modifier: boolean,
+): boolean {
+  if ((modifier && event.key === "/") || (!editing && event.key === "?")) {
+    event.preventDefault();
+    actions.openShortcuts();
+    return true;
+  }
+  if (!editing && !modifier && !event.altKey && /^[jk]$/iu.test(event.key)) {
+    const row = document.querySelector<HTMLElement>(
+      '.library-table-row:not(.is-header)[tabindex="0"]',
+    );
+    if (row) {
+      event.preventDefault();
+      row.focus();
+    }
     return true;
   }
   return false;

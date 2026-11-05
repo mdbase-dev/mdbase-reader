@@ -33,6 +33,10 @@ export const readerPdfChromeCss = `
   clip-path: inset(50%);
   white-space: pre-wrap;
 }
+div[style*="background: rgb(33, 150, 243)"] {
+  background: var(--color-selected) !important;
+  opacity: 1 !important;
+}
 [data-epdf-i="reader-page-controls"] {
   display: flex;
   height: 100%;
@@ -60,6 +64,26 @@ export const readerPdfChromeCss = `
   width: 2.25rem;
   border-radius: 0.25rem;
   font-size: 0.75rem;
+}
+
+@media (max-width: 680px), (pointer: coarse) {
+  [data-epdf-i="reader-navigation"],
+  [data-epdf-i="reader-page-controls"] {
+    min-height: 44px;
+    height: auto;
+  }
+  [data-epdf-i="reader-navigation"] button,
+  [data-epdf-i="reader-page-controls"] button,
+  [data-epdf-i="reader-page-controls"] input {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /* Keep the selected content readable while drawing a precise capture frame. */

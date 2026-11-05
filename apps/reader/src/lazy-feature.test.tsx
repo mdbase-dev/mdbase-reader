@@ -58,7 +58,10 @@ it("shows loading state while a feature downloads", async () => {
     "the library",
   );
   await act(async () => root.render(<Library />));
-  expect(host.querySelector('[role="status"]')?.textContent).toBe("Loading the library…");
+  expect(host.querySelector('[role="status"]')?.getAttribute("aria-label")).toBe(
+    "Loading the library…",
+  );
+  expect(host.querySelectorAll(".reader-feature-skeleton span")).toHaveLength(4);
   await act(async () => resolve(module));
   expect(host.textContent).toContain("Ready library");
 });
@@ -71,7 +74,8 @@ it("retries a rejected import without reloading the reader", async () => {
     .mockResolvedValue({ default: () => <p>Ready editor</p> });
   const Editor = lazyFeature(load, "the editor");
   await act(async () => root.render(<Editor />));
-  expect(host.textContent).toContain("Reader could not load the editor");
+  expect(host.querySelector('[role="alert"] h2')?.textContent).toBe("the editor is unavailable");
+  expect(host.textContent).toContain("Connect to the internet and try again");
   await act(async () => host.querySelector("button")?.click());
   expect(host.textContent).toContain("Ready editor");
   expect(load).toHaveBeenCalledTimes(2);

@@ -45,6 +45,7 @@ describe("user text is rendered literally", () => {
 
   it("shows a markup-shaped source title literally in the removal dialog", () => {
     const removal: SourceRemovalController = {
+      notice: null,
       request: null,
       pending: { source, status: "confirming", plan: null, problem: null },
       cancel: vi.fn(),

@@ -1,13 +1,42 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { addDockTab, openDockTab, panelsForClose, patchDockTab } from "./dockview-tab-commands.js";
-import { createWorkspaceTab } from "./source-workspace-layout.js";
+import { ReaderDockWorkspace } from "./dockview-workspace.js";
+import { createLibraryWorkspaceTab, createWorkspaceTab } from "./source-workspace-layout.js";
 
 import type { SourceId } from "@mdbase-reader/core";
 import type { DockviewApi, DockviewGroupPanel } from "dockview-react";
 
 const source = "source-one" as SourceId;
 describe("Dockview session commands", () => {
+  it.each([undefined, "content"])(
+    "reuses a library view for destination %s without adding tabs, including from another split",
+    (paneId) => {
+      const tab = createLibraryWorkspaceTab();
+      const panel = {
+        id: tab.id,
+        params: { tab },
+        api: { updateParameters: vi.fn(), setTitle: vi.fn(), setActive: vi.fn() },
+      };
+      const group = { id: "content", panels: [panel] };
+      const focusedGroup = { id: "other-split", panels: [] };
+      const addPanel = vi.fn();
+      const workspace = new ReaderDockWorkspace("preview", null, new Set());
+      workspace.api = {
+        groups: [group, focusedGroup],
+        panels: [panel],
+        getPanel: () => ({ group: focusedGroup }),
+        addPanel,
+      } as unknown as DockviewApi;
+      workspace.openLibrary("reading", "Reading", paneId);
+      expect(panel.api.updateParameters).toHaveBeenCalledWith({
+        tab: { ...tab, libraryViewId: "reading", title: "Reading" },
+      });
+      expect(panel.api.setTitle).toHaveBeenCalledWith("Reading");
+      expect(panel.api.setActive).toHaveBeenCalledOnce();
+      expect(addPanel).not.toHaveBeenCalled();
+    },
+  );
   it("awaits every dirty tab before returning a close batch, without accepting a Promise as consent", async () => {
     const tabs = ["first", "second"].map((id) => ({
       id,

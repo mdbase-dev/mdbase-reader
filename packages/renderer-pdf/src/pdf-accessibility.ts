@@ -22,7 +22,9 @@ export function installPdfAccessibility(
   const isActive = (): boolean => !lifetime.signal.aborted;
   let allPagesHaveText = true;
   let complete = false;
+  const updateSheet = pdfSheetAccessibility(root);
   const update = (): void => {
+    updateSheet();
     const scroller = findPdfScroller(root);
     const viewport = findPdfViewport(scroller);
     if (scroller && !scroller.contains(text)) {
@@ -83,5 +85,61 @@ export function installPdfAccessibility(
     lifetime.abort();
     observer.disconnect();
     text.remove();
+  };
+}
+
+function pdfSheetAccessibility(root: ShadowRoot): () => void {
+  let current: Element | null = null;
+  let returnTo: HTMLElement | null = null;
+  return () => {
+    const sheet = root.querySelector<HTMLElement>(
+      '.bg-bg-overlay + [data-sidebar-id="sidebar-panel"]',
+    );
+    const backdrop = sheet?.previousElementSibling;
+    if (sheet) {
+      sheet.setAttribute("role", "dialog");
+      sheet.setAttribute("aria-modal", "true");
+      sheet.setAttribute("aria-label", t`PDF navigation`);
+      const tabs = sheet.querySelectorAll<HTMLElement>('[role="tab"]');
+      tabs[0]?.setAttribute("aria-label", t`Thumbnails`);
+      tabs[1]?.setAttribute("aria-label", t`Outline`);
+      for (const scroller of sheet.querySelectorAll<HTMLElement>('[style*="overflow-y: auto"]')) {
+        scroller.tabIndex = 0;
+        scroller.setAttribute("role", "region");
+        scroller.setAttribute("aria-label", t`Thumbnails`);
+      }
+    }
+    if (sheet === current) {
+      return;
+    }
+    current = sheet;
+    if (!sheet) {
+      returnTo?.focus();
+      return;
+    }
+    returnTo = root.activeElement instanceof HTMLElement ? root.activeElement : null;
+    const controls = (): HTMLElement[] =>
+      Array.from(
+        sheet.querySelectorAll<HTMLElement>(
+          'button:not(:disabled):not([tabindex="-1"]), input:not(:disabled), [tabindex="0"]',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+    controls()[0]?.focus();
+    sheet.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (backdrop instanceof HTMLElement) {
+          backdrop.click();
+        }
+      } else if (event.key === "Tab") {
+        const items = controls();
+        const index = items.indexOf(root.activeElement as HTMLElement);
+        if ((event.shiftKey && index <= 0) || (!event.shiftKey && index === items.length - 1)) {
+          event.preventDefault();
+          items[event.shiftKey ? items.length - 1 : 0]?.focus();
+        }
+      }
+    });
   };
 }

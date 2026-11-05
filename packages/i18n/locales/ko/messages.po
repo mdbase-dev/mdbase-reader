@@ -209,6 +209,17 @@ msgstr "{0} GiB"
 msgid "{0} hidden."
 msgstr "{0} 숨김."
 
+#. placeholder {0}: tabLabel(tab)
+#. placeholder {1}: workbenchOwner.paneLabel
+#: apps/reader/src/InspectorPane.tsx
+msgid "{0} is open in {1}."
+msgstr "{0}은(는) {1}에서 열려 있습니다."
+
+#. placeholder {0}: this.props.label
+#: apps/reader/src/lazy-feature.tsx
+msgid "{0} is unavailable"
+msgstr "{0}을(를) 사용할 수 없습니다"
+
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
@@ -307,12 +318,6 @@ msgstr "{0}. 겹치는 페이지나 절을 확인한 후 확인란을 선택하�
 #: apps/reader/src/LibraryCells.tsx
 msgid "{0}% read"
 msgstr "{0}% 읽음"
-
-#. placeholder {0}: tabLabel(tab)
-#. placeholder {1}: workbenchOwner.paneLabel
-#: apps/reader/src/InspectorPane.tsx
-msgid "{0}is open in{1}"
-msgstr "{0}은(는) {1}에서 열려 있습니다"
 
 #. placeholder {0}: preview.newRecords.toLocaleString(i18n.locale)
 #. placeholder {1}: preview.existingRecords.toLocaleString(i18n.locale)
@@ -2258,6 +2263,10 @@ msgstr "컬렉션 연결"
 msgid "Connect a collection above"
 msgstr "위에서 컬렉션 연결"
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Connect a collection to import files. You can add a link or identifier in this preview."
+msgstr "파일을 가져오려면 컬렉션을 연결하세요. 이 미리보기에서는 링크나 식별자를 추가할 수 있습니다."
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Connect and scan your library →"
 msgstr "연결하고 라이브러리 스캔 →"
@@ -2283,6 +2292,10 @@ msgstr "Connect가 이 확장 프로그램의 출처를 거부했습니다. 현�
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
 msgstr "mdbase{target}에 연결"
+
+#: apps/reader/src/lazy-feature.tsx
+msgid "Connect to the internet and try again to load this reading tool."
+msgstr "인터넷에 연결한 후 이 읽기 도구를 다시 불러오세요."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected"
@@ -2938,6 +2951,7 @@ msgstr "닫기(Esc)"
 msgid "Dismiss {0}"
 msgstr "{0} 닫기"
 
+#: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Display"
 msgstr "표시"
@@ -3651,10 +3665,6 @@ msgstr "이 연결에서는 파일 내보내기를 사용할 수 없습니다."
 #: apps/reader/src/use-bibliography-export.ts
 msgid "File export is unavailable in this build."
 msgstr "이 빌드에서는 파일 내보내기를 사용할 수 없습니다."
-
-#: apps/reader/src/SourceAddDialog.tsx
-msgid "File import is unavailable here."
-msgstr "여기에서는 파일을 가져올 수 없습니다."
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "file names"
@@ -4568,6 +4578,7 @@ msgid "Key idea"
 msgstr "핵심 내용"
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Keyboard shortcuts"
 msgstr "키보드 단축키"
@@ -4651,6 +4662,10 @@ msgstr "라이브러리"
 msgctxt "workspace tab display"
 msgid "Library"
 msgstr "라이브러리"
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Library actions"
+msgstr "라이브러리 작업"
 
 #: apps/reader/src/LibraryDocumentIndex.tsx
 msgid "Library index unavailable; searching loaded documents only."
@@ -5289,6 +5304,10 @@ msgstr "내레이터"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Narrow"
 msgstr "좁게"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Narrow column"
+msgstr "열 너비 줄이기"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
@@ -5988,6 +6007,10 @@ msgstr "기타 Readwise 출처"
 msgid "other source"
 msgstr "다른 자료"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Outline"
+msgstr "목차"
+
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgctxt "PDF navigation outline"
 msgid "Outline"
@@ -6220,6 +6243,10 @@ msgstr "PDF 좌표는 유한한 숫자여야 합니다."
 #: packages/migration/src/zotero-anchors.ts
 msgid "PDF geometry unavailable."
 msgstr "PDF 지오메트리를 사용할 수 없습니다."
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF navigation"
+msgstr "PDF 탐색"
 
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "PDF page image"
@@ -6656,11 +6683,6 @@ msgstr "Reader에서 이 페이지를 검사하지 못했습니다. 일반 HTTPS
 #: apps/reader/src/use-library-annotations.ts
 msgid "Reader could not list annotations."
 msgstr "Reader에서 주석 목록을 불러오지 못했습니다."
-
-#. placeholder {0}: this.props.label
-#: apps/reader/src/lazy-feature.tsx
-msgid "Reader could not load {0}."
-msgstr "Reader에서 {0}을(를) 불러올 수 없었습니다."
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not load saved library views."
@@ -7125,6 +7147,11 @@ msgstr "값 {0} 제거"
 msgid "Removed"
 msgstr "제거됨"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-removal.ts
+msgid "Removed “{0}”."
+msgstr "“{0}”을(를) 삭제했습니다."
+
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Removing…"
@@ -7493,6 +7520,11 @@ msgstr "저장됨"
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved"
 msgstr "저장됨"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Saved changes to “{0}”."
+msgstr "“{0}”의 변경 사항을 저장했습니다."
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Saved for everyone using this collection."
@@ -9141,6 +9173,7 @@ msgstr "이 스레드 부분이 저장된 사본에 없습니다. Reader에서 �
 msgid "This view couldn’t be applied by mdbase, so Reader is filtering here instead."
 msgstr "mdbase에서 이 뷰를 적용할 수 없어 Reader가 대신 여기에서 필터링합니다."
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgid "Thumbnails"
 msgstr "미리보기"
@@ -9514,6 +9547,11 @@ msgstr "라이브러리 세부 정보 업데이트"
 msgid "Update Reader"
 msgstr "Reader 업데이트"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Updated reading status for “{0}”."
+msgstr "“{0}”의 읽기 상태를 업데이트했습니다."
+
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -9654,16 +9692,6 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
 msgstr "보기 옵션"
 
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace interface"
-msgid "View options"
-msgstr "보기 옵션"
-
-#. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
-#: apps/reader/src/LibraryWorkspace.tsx
-msgid "View options{0}"
-msgstr "보기 옵션{0}"
-
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
 msgstr "보기"
@@ -9785,6 +9813,10 @@ msgstr "이것이 왜 중요한가요?"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Wide"
 msgstr "넓게"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Widen column"
+msgstr "열 너비 늘리기"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "With comments"

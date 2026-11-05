@@ -85,6 +85,11 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
           className="library-column-sort"
           title={t`Sort by ${label.toLocaleLowerCase()} · Drag to move`}
           onClick={() => props.onSort(next)}
+          onKeyDown={(event) => {
+            if (event.altKey) {
+              resizeKey(event, props.onResizeBy);
+            }
+          }}
           {...dragSource(column, props.onDragStart)}
         >
           <span>{label}</span>
@@ -134,6 +139,12 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
         <button type="button" onClick={props.onResetWidth}>
           <Trans>Reset width</Trans>
         </button>
+        <button type="button" onClick={() => props.onResizeBy(-20)}>
+          <Trans>Narrow column</Trans>
+        </button>
+        <button type="button" onClick={() => props.onResizeBy(20)}>
+          <Trans>Widen column</Trans>
+        </button>
         {props.hideable ? (
           <>
             <hr />
@@ -143,8 +154,7 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
           </>
         ) : null}
       </Menu>
-      {/* A focusable separator is the ARIA window-splitter pattern: arrows resize the column. */}
-      {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
+      {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */}
       <span
         role="separator"
         aria-valuenow={props.width}
@@ -153,7 +163,7 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
         aria-orientation="vertical"
         aria-label={t`Resize ${label} column`}
         title={t({ message: "Drag to resize · Double-click to reset" })}
-        tabIndex={0}
+        tabIndex={-1}
         className="library-column-resizer"
         onMouseDown={(event) => {
           // Without this, the press starts a text selection that Chromium turns into a
@@ -165,7 +175,7 @@ export function HeaderCell(props: HeaderCellProps): JSX.Element {
         onDoubleClick={props.onResetWidth}
         onKeyDown={(event) => resizeKey(event, props.onResizeBy)}
       />
-      {/* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
+      {/* eslint-enable jsx-a11y/no-noninteractive-element-interactions */}
     </div>
   );
 }

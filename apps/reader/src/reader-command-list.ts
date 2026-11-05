@@ -53,6 +53,7 @@ export interface ReaderCommandInput {
   readonly toggleInspector: () => void;
   readonly openSettings: () => void;
   readonly addSource: () => void;
+  readonly openShortcuts: () => void;
   readonly importHref: string;
   readonly theme: ThemePreference;
   readonly setTheme: (theme: ThemePreference) => void;
@@ -103,6 +104,9 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
   const open = new Set(input.workspace.openSourceIds);
   const sources = input.sources
     .filter((source) => !open.has(source.id))
+    .toSorted((left, right) =>
+      (right.reading?.lastOpenedAt ?? "").localeCompare(left.reading?.lastOpenedAt ?? ""),
+    )
     .map((source): ReaderCommand => ({
       id: `open:${source.id}`,
       label: source.title,
@@ -118,6 +122,18 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
       },
     }));
   return [
+    ...openTabs,
+    ...sources,
+    ...sourceCommands(input),
+    ...libraryChapterCommands(input),
+    {
+      id: "keyboard-shortcuts",
+      label: translate`Keyboard shortcuts`,
+      group: "Workspace",
+      keywords: "help keyboard shortcuts keyboard help",
+      shortcut: "mod+/",
+      run: input.openShortcuts,
+    },
     {
       id: "previous-tab",
       label: translate`Previous tab`,
@@ -146,10 +162,6 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
       shortcut: "alt+ArrowRight",
       run: () => input.workspace.navigate(1),
     },
-    ...openTabs,
-    ...sourceCommands(input),
-    ...sources,
-    ...libraryChapterCommands(input),
   ];
 }
 

@@ -7,6 +7,7 @@ import { OverlayPresence } from "./OverlayPresence.js";
 
 export function ReaderCommandPalette(props: {
   readonly open: boolean;
+  readonly shortcuts?: boolean;
   readonly commands: readonly Command[];
   readonly onClose: () => void;
   readonly label: string;
@@ -28,6 +29,7 @@ function OpenPalette({
   placeholder,
   showAll,
   groupLabel,
+  shortcuts,
 }: Parameters<typeof ReaderCommandPalette>[0]): JSX.Element {
   const { t } = useLingui();
   const [query, setQuery] = useState("");
@@ -35,7 +37,15 @@ function OpenPalette({
   const input = useRef<HTMLInputElement>(null);
   const results = useRef<HTMLDivElement>(null);
   const id = useId();
-  const matches = matchingCommands(commands, query, showAll);
+  const matches = matchingCommands(
+    shortcuts ? commands.filter((command) => command.shortcut) : commands,
+    query,
+    shortcuts ? [...new Set(commands.map((command) => command.group))] : showAll,
+  ).toSorted((left, right) =>
+    /^(keyboard|shortcuts|help)(\s+(shortcuts|help))?$/iu.test(query.trim())
+      ? Number(right.id === "keyboard-shortcuts") - Number(left.id === "keyboard-shortcuts")
+      : 0,
+  );
   const selected = Math.min(active, Math.max(0, matches.length - 1));
   useEffect(() => {
     results.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest" });
@@ -84,7 +94,7 @@ function OpenPalette({
           }}
         />
       </label>
-      {/^(keyboard|shortcuts|help)$/iu.test(query.trim()) ? <ShortcutHelp /> : null}
+      {shortcuts ? <ShortcutHelp /> : null}
       <div
         ref={results}
         id={`${id}-results`}
@@ -112,7 +122,7 @@ function OpenPalette({
                 <strong>{command.label}</strong>
                 {command.detail ? <small>{command.detail}</small> : null}
               </span>
-              {command.shortcut ? <kbd>{shortcutLabel(command.shortcut)}</kbd> : null}
+              {command.shortcut ? <kbd>{readerShortcutLabel(command.shortcut)}</kbd> : null}
             </button>
           </Fragment>
         ))}
@@ -145,7 +155,7 @@ function PaletteHint({
       </span>
       {alternate ? (
         <span>
-          <kbd>{shortcutLabel("shift")}+↵</kbd> {alternate.label}
+          <kbd>{shortcutLabel("shift+↵")}</kbd> {alternate.label}
         </span>
       ) : null}
       <span>
@@ -158,6 +168,16 @@ function PaletteHint({
         <Trans>Search “shortcuts” for keyboard help</Trans>
       </span>
     </footer>
+  );
+}
+
+function readerShortcutLabel(shortcut: string): string {
+  return shortcutLabel(
+    shortcut
+      .replace(/\btab\b/gu, "Tab")
+      .replace(/\bctrl\b/gu, "Ctrl")
+      .replaceAll("ArrowLeft", "←")
+      .replaceAll("ArrowRight", "→"),
   );
 }
 

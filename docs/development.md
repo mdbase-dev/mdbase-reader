@@ -30,13 +30,19 @@ READER_AUDIT_ORIGIN=http://127.0.0.1:5329 pnpm --filter @mdbase-reader/app test:
 
 `test:polish` runs Chromium at 1440×900 and 390×844, with light/dark themes and normal/reduced
 motion. It writes screenshots and JSON traces under its reported temporary evidence directory.
-The checks cover preview identity, registry-derived shortcuts and active results, modal/menu/pane
-motion, interrupted exits, nondefault pane widths across the mobile breakpoint, 180px citation
-editing, phone header targets, and PDF text/page input/keyboard scrolling. Root motion uses
+The checks cover preview identity, registry-derived shortcuts and active results, real keyboard
+navigation and focus return, dialog contrast, modal/menu/pane geometry and interrupted transitions,
+HTML margin markers after pane resizing, nondefault pane widths across the mobile breakpoint,
+180px citation editing, phone library and PDF toolbar targets, PDF sheet names/focus/Escape,
+and PDF text/page input/keyboard highlighting. Root and PDF shadow-root motion use
 `document.getAnimations()` plus requestAnimationFrame samples. Chromium does not expose the native
 `::details-content` transitions through that API; those traces use computed transition durations
 and requestAnimationFrame opacity samples instead. Reduced motion must have no intermediate opacity.
-These are development-build fixture checks, not production performance or assistive-technology certification.
+For production timings, run `pnpm build:production`, serve its output with `pnpm --filter
+@mdbase-reader/app exec vite preview --host 127.0.0.1 --port 5329 --strictPort`, and point the
+gate at that origin. The production gate also requires Add source to open within 50ms. These
+are disposable preview-fixture checks, not real-account, input-to-photon, or assistive-technology
+certification.
 
 For feedback qualification, start Vite with a loopback `VITE_MDBASE_FEEDBACK_URL` ending in
 `/v1/feedback`, then run `READER_FEEDBACK_TEST_ORIGIN=http://127.0.0.1:5330 pnpm --filter

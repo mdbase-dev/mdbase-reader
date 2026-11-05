@@ -42,7 +42,13 @@ function setup(failedId?: string): {
   document.body.append(host);
   root = createRoot(host);
   act(() => root!.render(<Harness />));
-  return { writes, save, changed };
+  return {
+    get writes() {
+      return writes;
+    },
+    save,
+    changed,
+  };
 }
 const source = (id: string, volume?: unknown): SourceSummary => ({
   ...partSource(id),
@@ -76,4 +82,18 @@ it("counts zero changes when no source needs updating", async () => {
   await writes.setFields!(sources, "csl.volume", "3", progress);
   expect(save).not.toHaveBeenCalled();
   expect(progress).toHaveBeenLastCalledWith({ done: 2, total: 2, failed: 0, changed: 0 });
+});
+
+it("names a saved source only after its field write succeeds", async () => {
+  const state = setup("failed");
+  const summary = source("saved");
+  expect(state.writes.notice).toBeNull();
+  await act(async () => {
+    await expect(state.writes.saveField!(source("failed"), "csl.volume", "4")).rejects.toThrow(
+      "Write refused",
+    );
+  });
+  expect(state.writes.notice).toBeNull();
+  await act(async () => state.writes.saveField!(summary, "csl.volume", "4"));
+  expect(state.writes.notice).toBe(`Saved changes to “${summary.title}”.`);
 });
