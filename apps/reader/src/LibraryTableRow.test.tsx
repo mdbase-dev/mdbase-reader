@@ -25,6 +25,7 @@ function render(handlers: {
   readonly onMenu: (x: number, y: number) => void;
   readonly onSelect: () => void;
   readonly onOpen: () => void;
+  readonly selection?: typeof emptyRowSelection;
 }): void {
   const layout = layoutOf(defaultLibraryView.configuration);
   function Harness(): JSX.Element {
@@ -45,7 +46,7 @@ function render(handlers: {
           valuesByPath={new Map()}
           annotationCounts={new Map()}
           focused
-          selection={emptyRowSelection}
+          selection={handlers.selection ?? emptyRowSelection}
           onSelectionChange={vi.fn()}
           scrollRef={{ current: null }}
           onOpen={handlers.onOpen}
@@ -91,6 +92,24 @@ it("leads the title cell with the title, then people and format as words", () =>
   expect(title?.querySelector("strong")?.textContent).toBe("Attention Is All You Need");
   expect(title?.querySelector(".library-title-format")?.textContent).toBe("PDF");
   expect(title?.querySelector(".source-format-tag")).toBeNull();
+});
+
+it("lets a title link follow touch selection and modified clicks", () => {
+  const touching = { onMenu: vi.fn(), onSelect: vi.fn(), onOpen: vi.fn() };
+  render({ ...touching, selection: { ...emptyRowSelection, touch: true } });
+  act(() => document.querySelector<HTMLAnchorElement>(".library-source-link")!.click());
+  expect(touching.onSelect).toHaveBeenCalledOnce();
+  expect(touching.onOpen).not.toHaveBeenCalled();
+  act(() => root?.unmount());
+  const modified = { onMenu: vi.fn(), onSelect: vi.fn(), onOpen: vi.fn() };
+  render(modified);
+  act(() => {
+    document
+      .querySelector(".library-source-link")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true, detail: 1 }));
+  });
+  expect(modified.onSelect).toHaveBeenCalledOnce();
+  expect(modified.onOpen).not.toHaveBeenCalled();
 });
 
 it("opens a title with one click without selecting or editing the row", () => {

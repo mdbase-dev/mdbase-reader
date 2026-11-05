@@ -138,6 +138,8 @@ export class ReaderDockWorkspace {
         });
         existing.api.setTitle(title);
         existing.api.setActive();
+        // Dockview stays silent when the panel was already active; visiting the same location is a no-op.
+        this.state.visit(existing);
       } else {
         openDockTab(this.api, createLibraryWorkspaceTab(view, title), group);
       }

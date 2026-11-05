@@ -84,7 +84,10 @@ export function DocumentWorkspace({
   useEffect(() => {
     if (focused && visible) {
       const frame = requestAnimationFrame(() => {
-        host.current?.focus({ preventScroll: true });
+        // Activation by a click or Tab inside the pane leaves focus on that control.
+        if (!host.current?.contains(host.current.ownerDocument.activeElement)) {
+          host.current?.focus({ preventScroll: true });
+        }
       });
       return () => cancelAnimationFrame(frame);
     }

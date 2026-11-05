@@ -162,7 +162,14 @@ export function LibraryTableRow({
                 event.preventDefault();
                 event.stopPropagation();
                 pendingEdit.cancel();
-                onOpen(source.id);
+                if (itemClick(press, event, selection.touch === true) === "ignore") {
+                  return;
+                }
+                if (selection.touch === true || hasModifier(event)) {
+                  onSelect(event);
+                } else {
+                  onOpen(source.id);
+                }
               }}
               onDoubleClick={(event) => event.stopPropagation()}
             >

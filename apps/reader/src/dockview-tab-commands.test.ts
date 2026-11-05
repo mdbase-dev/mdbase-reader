@@ -128,3 +128,32 @@ describe("Dockview session commands", () => {
     expect(patchDockTab(api, tab.id, { dirty: false })).toBe(false);
   });
 });
+
+it("records a library view change on the already active tab in history", () => {
+  const tab = createLibraryWorkspaceTab();
+  const panel = {
+    id: tab.id,
+    params: { tab } as Record<string, unknown>,
+    api: {
+      updateParameters: (params: Record<string, unknown>) => {
+        panel.params = params;
+      },
+      setTitle: vi.fn(),
+      setActive: vi.fn(),
+    },
+  };
+  const workspace = new ReaderDockWorkspace("preview", null, new Set());
+  workspace.api = {
+    groups: [{ id: "content", panels: [panel] }],
+    panels: [panel],
+    activePanel: panel,
+    getPanel: () => panel,
+  } as unknown as DockviewApi;
+  const state = Reflect.get(workspace, "state") as { visit(panel: unknown): void };
+  const visit = vi.spyOn(state, "visit");
+  workspace.openLibrary("reading", "Reading");
+  expect(visit).toHaveBeenCalledOnce();
+  expect(visit.mock.calls[0]?.[0]).toMatchObject({
+    params: { tab: { libraryViewId: "reading" } },
+  });
+});
