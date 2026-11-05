@@ -17,6 +17,12 @@ const findings = {};
 async function audit(page, name) {
   await page.addScriptTag({ path: axePath });
   const violations = await page.evaluate(async () => {
+    await Promise.allSettled(
+      globalThis.document
+        .getAnimations()
+        .filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime))
+        .map((animation) => animation.finished),
+    );
     const result = await globalThis.axe.run(globalThis.document, { resultTypes: ["violations"] });
     return result.violations.map(({ id, impact, nodes }) => ({
       id,
@@ -31,7 +37,7 @@ try {
     await browser.newContext({ viewport: { width: 1440, height: 900 } })
   ).newPage();
   await desktop.goto(`${origin}/?preview=1`, { waitUntil: "networkidle" });
-  await desktop.getByRole("grid", { name: "Sources" }).waitFor();
+  await desktop.locator('.library-table[aria-label="Sources"]').waitFor();
   await audit(desktop, "library");
   await desktop
     .locator(".library-table-body .library-table-row .is-title")
@@ -40,10 +46,9 @@ try {
   await desktop.getByRole("menu").waitFor();
   await audit(desktop, "row menu");
   await desktop.keyboard.press("Escape");
-  await desktop.getByRole("button", { name: /^Switch collection/u }).click();
-  await desktop.getByRole("menu", { name: "Switch collection" }).waitFor();
-  await audit(desktop, "collection menu");
-  await desktop.keyboard.press("Escape");
+  if (await desktop.getByRole("button", { name: /^Switch collection/u }).count()) {
+    throw new Error("Preview must not offer fictitious connected collections.");
+  }
   const titles = desktop.locator(".library-table-body .library-table-row .is-title");
   await titles.nth(0).click();
   await titles.nth(2).click({ modifiers: ["Shift"] });
@@ -52,7 +57,7 @@ try {
   await desktop.getByRole("grid", { name: "Annotations" }).waitFor();
   await audit(desktop, "annotations view");
   await desktop.getByRole("button", { name: "Sources", exact: true }).click();
-  await desktop.getByRole("grid", { name: "Sources" }).waitFor();
+  await desktop.locator('.library-table[aria-label="Sources"]').waitFor();
   await desktop.getByLabel("Add column").click();
   await audit(desktop, "add-column menu");
   await desktop.keyboard.press("Escape");
@@ -73,7 +78,7 @@ try {
     await browser.newContext({ viewport: { width: 390, height: 844 } })
   ).newPage();
   await phone.goto(`${origin}/?preview=1`, { waitUntil: "networkidle" });
-  await phone.getByRole("grid", { name: "Sources" }).waitFor();
+  await phone.locator('.library-table[aria-label="Sources"]').waitFor();
   await audit(phone, "phone library");
   await phone
     .getByRole("button", { name: /^Continue reading The Principles of Psychology/u })

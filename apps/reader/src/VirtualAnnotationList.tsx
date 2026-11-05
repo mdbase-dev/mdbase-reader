@@ -52,7 +52,7 @@ export function VirtualAnnotationList({
         tabIndex={-1}
         onWheel={pause}
         onTouchMove={pause}
-        onPointerDown={pause}
+        onClickCapture={pause}
         onKeyDown={(event) => annotationListKeyDown(event, results.length, focusItem, pause)}
         onFocusCapture={(event) =>
           setFocusedId(

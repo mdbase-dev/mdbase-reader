@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { suppressNativeCapturePreview } from "./embedpdf-native-capture-preview.js";
 import { installReaderPdfChrome } from "./embedpdf-reader-chrome.js";
 import { createEmbedPdfRuntime } from "./embedpdf-runtime.js";
+import { installPdfAccessibility } from "./pdf-accessibility.js";
 import { installLongPressSelection } from "./pdf-long-press-selection.js";
 import { EmbedPdfSurface } from "./pdf-surface.js";
 import { installTouchSelectionHandles } from "./pdf-touch-selection-handles.js";
@@ -79,6 +80,19 @@ export function PdfViewerSurface({
           throw new Error(t`EmbedPDF did not initialize its document manager.`);
         }
         const documents = manager.provides();
+        let disposeAccessibleText: (() => void) | undefined;
+        const documentOpened = (): void => {
+          const current = documents.getActiveDocument();
+          if (current && containerRef.current) {
+            disposeAccessibleText?.();
+            disposeAccessibleText = installPdfAccessibility(
+              containerRef.current,
+              registry.getEngine(),
+              current,
+            );
+          }
+          onDocumentReady?.();
+        };
         const translations = registry.getPlugin<I18nPlugin>(I18nPlugin.id)?.provides();
         subscriptionsRef.current = [
           i18n.on("change", () => {
@@ -86,7 +100,8 @@ export function PdfViewerSurface({
             translations?.registerLocale(locale);
             translations?.setLocale(locale.code);
           }),
-          documents.onDocumentOpened(() => onDocumentReady?.()),
+          documents.onDocumentOpened(documentOpened),
+          () => disposeAccessibleText?.(),
           documents.onDocumentError(({ message }) => onDocumentError?.(message)),
           ...(pansByDefault && containerRef.current
             ? [
@@ -102,7 +117,7 @@ export function PdfViewerSurface({
         ];
         const current = documents.getOpenDocuments()[0];
         if (current?.status === "loaded") {
-          onDocumentReady?.();
+          documentOpened();
         } else if (current?.status === "error") {
           onDocumentError?.(current.error ?? t`EmbedPDF could not open this PDF.`);
         }

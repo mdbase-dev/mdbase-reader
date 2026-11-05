@@ -51,7 +51,7 @@ export interface ReaderCommandInput {
   readonly toggleFocus: () => void;
   readonly toggleLibrary: () => void;
   readonly toggleInspector: () => void;
-  readonly searchLibrary: () => void;
+  readonly openSettings: () => void;
   readonly addSource: () => void;
   readonly importHref: string;
   readonly theme: ThemePreference;
@@ -66,7 +66,14 @@ export function readerCommands(input: ReaderCommandInput): readonly ReaderComman
     ...libraryCommands(input),
     ...workspaceCommands(input),
     ...displayCommands(input),
-  ];
+  ].map((command) =>
+    command.shortcut
+      ? {
+          ...command,
+          keywords: `${command.keywords ?? ""} keyboard shortcuts help ${command.shortcut}`,
+        }
+      : command,
+  );
 }
 
 function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
@@ -110,7 +117,40 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
         run: () => input.workspace.openBeside(source.id),
       },
     }));
-  return [...openTabs, ...sourceCommands(input), ...sources, ...libraryChapterCommands(input)];
+  return [
+    {
+      id: "previous-tab",
+      label: translate`Previous tab`,
+      group: "Workspace",
+      shortcut: "ctrl+shift+tab",
+      run: () => input.workspace.switchRelative(-1),
+    },
+    {
+      id: "next-tab",
+      label: translate`Next tab`,
+      group: "Workspace",
+      shortcut: "ctrl+tab",
+      run: () => input.workspace.switchRelative(1),
+    },
+    {
+      id: "back",
+      label: translate`Go back`,
+      group: "Workspace",
+      shortcut: "alt+ArrowLeft",
+      run: () => input.workspace.navigate(-1),
+    },
+    {
+      id: "forward",
+      label: translate`Go forward`,
+      group: "Workspace",
+      shortcut: "alt+ArrowRight",
+      run: () => input.workspace.navigate(1),
+    },
+    ...openTabs,
+    ...sourceCommands(input),
+    ...sources,
+    ...libraryChapterCommands(input),
+  ];
 }
 
 function viewLabel(view: string): string {
@@ -146,9 +186,9 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
     {
       id: "toggle-focus",
       label: input.focusMode
-        ? translate({ message: "Leave reading mode" })
-        : translate({ message: "Enter reading mode" }),
-      detail: translate({ message: "Read the document with interface controls hidden" }),
+        ? translate({ message: "Restore document panes" })
+        : translate({ message: "Maximize document" }),
+      detail: translate({ message: "Expand the current document pane · Escape to restore" }),
       group: "Workspace",
       keywords: "focus distraction",
       shortcut: "mod+.",

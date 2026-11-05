@@ -1,6 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
@@ -15,8 +14,10 @@ import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
+import { ReaderCommandPalette as CommandPalette } from "./ReaderCommandPalette.js";
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
@@ -133,9 +134,11 @@ export function ReaderWorkspaceView({
   const searchNavigation = useSearchNavigation(sourceWorkspace, model.surfaces);
   const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
+  const settingsPage = useSettingsPage();
   const commands = useCommandsForView(model, () => dock.toggleSidebar("right"), {
     density: shell.value.density,
     setDensity: (density) => shell.update({ density }),
+    openSettings: settingsPage.show,
   });
   const activeSource = sourceWorkspace.activeSourceId
     ? (library.sources.find(({ id }) => id === sourceWorkspace.activeSourceId) ?? null)
@@ -149,9 +152,8 @@ export function ReaderWorkspaceView({
   const mobile = useMediaQuery("(max-width: 680px)");
   const libraryOpen = dock.isSidebarVisible("left");
   useEffect(() => {
-    dock.setMobile(mobile);
     dock.setSinglePane(model.focusMode);
-  }, [dock, mobile, model.focusMode]);
+  }, [dock, model.focusMode]);
   const reading = useReadingPreferences(model, shell, mobile);
   const shellRef = useRef<HTMLDivElement>(null);
   useShellChrome(shellRef, model, mobile);
@@ -166,7 +168,6 @@ export function ReaderWorkspaceView({
     () => (collectionSettings ? bindHighlightSettings(collectionSettings) : undefined),
     [collectionSettings],
   );
-  const settingsPage = useSettingsPage();
   const beforeCollectionSwitch = (): Promise<boolean> =>
     confirmCollectionSwitch(sourceWorkspace.layout, library.sources);
   const workbenchOwner = findWorkbenchOwner(
@@ -222,7 +223,6 @@ export function ReaderWorkspaceView({
       data-density={shell.value.density}
       ref={shellRef}
       className={`reader-shell${notices ? " has-update" : ""}`}
-      inert={settingsPage.open}
       {...fileDrop.handlers}
     >
       {fileDrop.active ? (
@@ -440,7 +440,7 @@ export function ReaderWorkspaceView({
   return (
     <>
       {workspaceShell}
-      {settingsPage.open ? (
+      <OverlayPresence open={settingsPage.open}>
         <SettingsPage
           density={shell.value.density}
           display={{
@@ -461,7 +461,7 @@ export function ReaderWorkspaceView({
           beforeCollectionSwitch={beforeCollectionSwitch}
           onClose={settingsPage.hide}
         />
-      ) : null}
+      </OverlayPresence>
     </>
   );
 }
@@ -609,15 +609,13 @@ function findWorkbenchOwner(
   return undefined;
 }
 
-// prettier-ignore
-function focusLibrarySearch(): void { globalThis.setTimeout(() => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(), 0); }
-
 function useCommandsForView(
   model: ReaderWorkspaceViewModel,
   toggleInspector: () => void,
   display: {
     readonly density: "comfortable" | "compact";
     readonly setDensity: (density: "comfortable" | "compact") => void;
+    readonly openSettings: () => void;
   },
 ): ReturnType<typeof readerCommands> {
   const createSourceParts = useSourcePartCreation();
@@ -634,10 +632,6 @@ function useCommandsForView(
     toggleFocus: () => model.setFocusMode((value) => !value),
     toggleLibrary: () => toggleLibrary(model),
     toggleInspector,
-    searchLibrary: () => {
-      model.sourceWorkspace.dock.setSideVisible(navigatorPanelId, true);
-      focusLibrarySearch();
-    },
     addSource: model.sourceAddition.open,
     importHref: importHref(),
     theme: model.theme,

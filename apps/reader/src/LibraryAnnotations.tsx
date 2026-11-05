@@ -11,6 +11,7 @@ import { AnnotationProblem, AnnotationSelectionBar } from "./LibraryAnnotationBa
 import { AnnotationTable } from "./LibraryAnnotationTable.js";
 import { AnnotationToolbar } from "./LibraryAnnotationToolbar.js";
 import { LibraryViewSaveDialog } from "./LibraryViewSaveDialog.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 import {
   annotationLayoutOf,
   savedAnnotationConfiguration,
@@ -141,7 +142,7 @@ export function LibraryAnnotations({
           onClear={() => setSelection(emptyRowSelection)}
         />
       ) : null}
-      {saving.naming ? (
+      <OverlayPresence open={saving.naming}>
         <LibraryViewSaveDialog
           description={t({
             message:
@@ -152,7 +153,7 @@ export function LibraryAnnotations({
           onCancel={saving.stopNaming}
           onSave={saving.saveAs}
         />
-      ) : null}
+      </OverlayPresence>
     </div>
   );
 }

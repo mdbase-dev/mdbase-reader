@@ -101,7 +101,7 @@ describe("command palette", () => {
       toggleFocus: () => undefined,
       toggleLibrary: () => undefined,
       toggleInspector: () => undefined,
-      searchLibrary: () => undefined,
+      openSettings: () => undefined,
       addSource: () => undefined,
       importHref: "/import",
       theme: "dark",
@@ -110,6 +110,14 @@ describe("command palette", () => {
       setDensity: () => undefined,
     } as unknown as ReaderCommandInput;
     const commands = readerCommands(input);
+    const openSettings = vi.fn();
+    const configured = readerCommands({ ...input, openSettings });
+    matchingCommands(configured, "settings")[0]?.run();
+    expect(openSettings).toHaveBeenCalledOnce();
+    expect(
+      matchingCommands(configured, "shortcuts").every(({ shortcut }) => Boolean(shortcut)),
+    ).toBe(true);
+    expect(matchingCommands(configured, "shortcuts").length).toBeGreaterThan(0);
     const titled = (title: string): readonly string[] =>
       commands.filter(({ label }) => label === title).map(({ group }) => group);
     expect(titled(open.title)).toEqual(["Open tabs"]);

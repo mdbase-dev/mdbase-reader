@@ -66,7 +66,6 @@ function OpenSourceAddDialog({
   const { t } = useLingui();
   const [url, setUrl] = useState("");
   const input = useRef<HTMLInputElement>(null);
-
   return (
     <ModalDialog
       className="import-dialog source-add-dialog"
@@ -87,17 +86,7 @@ function OpenSourceAddDialog({
       >
         <CloseIcon />
       </button>
-      <div className="import-dialog-heading">
-        <h2 id="reader-add-source-title">
-          <Trans>Add source</Trans>
-        </h2>
-        <p>
-          <Trans>
-            Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from
-            your device.
-          </Trans>
-        </p>
-      </div>
+      <SourceAddHeading />
       <form
         className="capture-form"
         onSubmit={(event) => {
@@ -168,8 +157,27 @@ function OpenSourceAddDialog({
           <Trans>or</Trans>
         </span>
       </div>
-      <FileChoice disabled={busy || !canChooseFile} onChoose={onChooseFile} onDrop={onDropFile} />
+      {canChooseFile ? (
+        <FileChoice disabled={busy} onChoose={onChooseFile} onDrop={onDropFile} />
+      ) : (
+        <p className="menu-note">
+          <Trans>File import is unavailable here.</Trans>
+        </p>
+      )}
     </ModalDialog>
+  );
+}
+
+function SourceAddHeading(): JSX.Element {
+  return (
+    <header className="import-dialog-heading">
+      <h2 id="reader-add-source-title">
+        <Trans>Add source</Trans>
+      </h2>
+      <p>
+        <Trans>Save a web page or PDF link, or look up a work by DOI, arXiv ID or ISBN.</Trans>
+      </p>
+    </header>
   );
 }
 

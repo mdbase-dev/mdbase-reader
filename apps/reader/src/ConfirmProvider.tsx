@@ -3,7 +3,6 @@ import {
   useContext,
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
   useSyncExternalStore,
   type JSX,
@@ -11,6 +10,8 @@ import {
 } from "react";
 
 import { readerConfirmation, type Confirm, type ConfirmationRequest } from "./confirmation.js";
+import { ModalDialog } from "./ModalDialog.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 
 import "./confirmation.css";
 
@@ -31,13 +32,15 @@ export function ConfirmProvider({
   return (
     <ConfirmContext value={service.confirm}>
       {children}
-      {request ? (
-        <ConfirmationDialog
-          key={request.id}
-          request={request}
-          answer={(accepted) => service.answer(request, accepted)}
-        />
-      ) : null}
+      <OverlayPresence open={Boolean(request)}>
+        {request ? (
+          <ConfirmationDialog
+            key={request.id}
+            request={request}
+            answer={(accepted) => service.answer(request, accepted)}
+          />
+        ) : null}
+      </OverlayPresence>
     </ConfirmContext>
   );
 }
@@ -49,42 +52,18 @@ function ConfirmationDialog({
   readonly request: ConfirmationRequest;
   readonly answer: (accepted: boolean) => void;
 }): JSX.Element {
-  const ref = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
   const messageId = useId();
   const { options, opener } = request;
-  useLayoutEffect(() => {
-    const dialog = ref.current;
-    // Keep workspace shortcuts out of the modal, without swallowing native Escape/Tab behavior.
-    const stopShortcut = (event: KeyboardEvent): void => event.stopPropagation();
-    dialog?.addEventListener("keydown", stopShortcut);
-    dialog?.showModal();
-    cancelRef.current?.focus();
-    return () => {
-      dialog?.removeEventListener("keydown", stopShortcut);
-      dialog?.close();
-      if (opener instanceof HTMLElement && opener.isConnected) {
-        opener.focus();
-      }
-    };
-  }, [request, opener]);
   return (
-    <dialog
-      ref={ref}
+    <ModalDialog
       className="reader-confirm-dialog"
-      aria-labelledby={titleId}
-      aria-describedby={messageId}
-      onClose={(event) => {
-        if (!event.currentTarget.open) {
-          answer(false);
-        }
-      }}
-      onCancel={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        answer(false);
-      }}
+      labelledBy={titleId}
+      describedBy={messageId}
+      initialFocus={cancelRef}
+      returnFocus={opener}
+      onDismiss={() => answer(false)}
     >
       <h2 id={titleId}>{options.title}</h2>
       <p id={messageId}>{options.message}</p>
@@ -105,6 +84,6 @@ function ConfirmationDialog({
           {options.confirmLabel}
         </button>
       </div>
-    </dialog>
+    </ModalDialog>
   );
 }

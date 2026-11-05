@@ -211,8 +211,18 @@ export class ReaderDockWorkspace {
       }
     });
   }
-  layoutViewport = (width: number, height: number): void =>
-    this.responsive.layoutViewport(this.api, width, height);
+  layoutViewport = (width: number, height: number): void => {
+    const mobile = width <= 680;
+    const changingMode = mobile !== this.mobile;
+    if (this.api && !this.mobile && mobile) {
+      this.responsive.remember(this.api);
+    }
+    this.api?.layout(width, height);
+    this.setMobile(mobile);
+    if (changingMode) {
+      this.api?.layout(width, height);
+    }
+  };
   seedDesktop = (layout: Dockview.SerializedDockview): void => this.responsive.seed(layout);
   get mobile(): boolean {
     return this.responsive.mobile;

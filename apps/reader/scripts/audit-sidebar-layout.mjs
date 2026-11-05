@@ -1,3 +1,4 @@
+import { searchSources } from "./audit-source-search.mjs";
 import { expect } from "@playwright/test";
 
 /** Compare the same real Reader interactions with grid and experimental edge sidebars. */
@@ -12,12 +13,13 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
       }),
     });
   const open = async (n) => {
-    await navigator
-      .getByRole("textbox", { name: "Find a source by title, author or tag" })
-      .fill(`Research ${String(n).padStart(4, "0")}`);
+    await searchSources(page, `Research ${String(n).padStart(4, "0")}`);
     await page
-      .getByRole("option", { name: new RegExp(`Research ${String(n).padStart(4, "0")}`) })
-      .dblclick();
+      .getByRole("option", {
+        name: new RegExp(`^\\[test\\] Research ${String(n).padStart(4, "0")}`),
+      })
+      .click();
+    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
     await expect(tab(n)).toBeVisible();
   };
   const menu = async (n, label) => {
@@ -27,7 +29,22 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
   const measure = async (name) => {
     // Dockview measures and persists asynchronously. This is a geometry observation, not a speed test.
     await page.waitForTimeout(350);
-    const box = async (locator) => ((await locator.isVisible()) ? locator.boundingBox() : null);
+    await page.evaluate(async () => {
+      await new Promise(globalThis.requestAnimationFrame);
+      await Promise.allSettled(
+        globalThis.document
+          .getAnimations()
+          .filter((animation) => Number.isFinite(animation.effect.getComputedTiming().endTime))
+          .map((animation) => animation.finished),
+      );
+    });
+    const box = async (locator) =>
+      locator.evaluateAll((elements) => {
+        const element = elements.find((candidate) =>
+          candidate.checkVisibility({ visibilityProperty: true }),
+        );
+        return element ? element.getBoundingClientRect().toJSON() : null;
+      });
     results[name] = {
       navigator: await box(navigator),
       inspector: await box(inspector),

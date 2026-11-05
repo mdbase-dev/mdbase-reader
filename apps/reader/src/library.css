@@ -242,6 +242,13 @@
   font-size: var(--ui-meta);
   font-weight: var(--weight-regular);
 }
+@media (max-width: 680px) {
+  .library-workspace
+    .library-table:not(.library-annotation-table)
+    .library-table-row:not(.is-header) {
+    height: 76px;
+  }
+}
 
 .library-workspace .library-column-header[aria-sort="ascending"],
 .library-workspace .library-column-header[aria-sort="descending"] {

@@ -10,7 +10,6 @@ import {
   describeConnectionProblem,
   libraryLoadFallback,
 } from "./connection-recovery.js";
-import { navigatorPanelId } from "./dockview-workspace-state.js";
 import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
   useDocumentSurfaceTiming,
@@ -184,10 +183,7 @@ function OpenedReaderApp({
     focusMode,
     setFocusMode,
     openCommands: () => setCommandsOpen(true),
-    focusSearch: () => {
-      sourceWorkspace.dock.setSideVisible(navigatorPanelId, true);
-      focusLibrarySearch();
-    },
+    focusSearch: () => setCommandsOpen(true),
     switchTab: sourceWorkspace.switchRelative,
     focusNextPane: sourceWorkspace.focusNextPane,
     reopenTab: sourceWorkspace.reopenClosed,
@@ -283,11 +279,4 @@ function confirmCloseDirtyTab(): Promise<boolean> {
     cancelLabel: translate({ message: "Keep open" }),
     danger: true,
   });
-}
-
-function focusLibrarySearch(): void {
-  globalThis.setTimeout(
-    () => document.querySelector<HTMLInputElement>("#reader-library-search")?.focus(),
-    0,
-  );
 }

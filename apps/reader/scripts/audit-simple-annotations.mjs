@@ -102,10 +102,13 @@ export async function auditSimpleAnnotations(
   expect(requests).toBe(2);
   await page.unroute(pattern, delayFirstWrite);
   await screenshot("annotation-memory-autosave");
-  page.removeAllListeners("dialog");
-  page.on("dialog", (dialog) => void dialog.accept());
   await comments.fill("[test] Discard before debounce");
   await panes.nth(0).getByRole("button", { name: "Discard changes", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Discard draft?", exact: true })
+    .getByRole("button", { name: "Discard draft", exact: true })
+    .click();
+  await expect(page.locator(".reader-confirm-dialog")).toHaveCount(0);
   await expect(comments).toHaveCount(0);
   await page.waitForTimeout(1200);
   await expect(panes.nth(0)).toContainText("Newer typing during the first save");
@@ -113,12 +116,12 @@ export async function auditSimpleAnnotations(
   blockWrites(true);
   await comments.fill("[test] Unsaved close warning");
   await expect(panes.nth(0).getByRole("button", { name: "Retry save", exact: true })).toBeVisible();
-  page.removeAllListeners("dialog");
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain("unsaved changes");
-    await dialog.dismiss();
-  });
   await comments.press("Escape");
+  await page
+    .getByRole("dialog", { name: "Close with unsaved changes?", exact: true })
+    .getByRole("button", { name: "Keep editing", exact: true })
+    .click();
+  await expect(page.locator(".reader-confirm-dialog")).toHaveCount(0);
   await expect(comments).toHaveValue("[test] Unsaved close warning");
   blockWrites(false);
   await panes.nth(0).getByRole("button", { name: "Retry save", exact: true }).click();

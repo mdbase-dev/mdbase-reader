@@ -1,8 +1,8 @@
+import { searchSources } from "./audit-source-search.mjs";
 import { expect } from "@playwright/test";
 import { auditAnnotationWorkbench } from "./audit-annotation-workbench.mjs";
 import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
 import { auditAnnotationNavigationFailure } from "./audit-annotation-navigation.mjs";
-import { chooseOption } from "./audit-select.mjs";
 
 export async function auditAnnotations(page, { screenshot, blockWrites }) {
   const completed = [];
@@ -28,14 +28,16 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await page.goto(entry);
   const open = async (number) => {
     const title = `Research ${String(number).padStart(4, "0")}`;
-    await page.getByRole("textbox", { name: "Find a source by title, author or tag" }).fill(title);
-    await page.getByRole("option", { name: new RegExp(title) }).dblclick();
+    await searchSources(page, title);
+    await page.getByRole("option", { name: new RegExp(`^\\[test\\] ${title}`) }).click();
+    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   };
   await open(0);
   const frame = () => page.frameLocator("iframe.html-viewer:visible");
   const select = async (paragraph = 0) => {
     const target = frame().locator(`#p${paragraph}`);
     await target.scrollIntoViewIfNeeded();
+    await target.click();
     await target.evaluate((element) => {
       const doc = element.ownerDocument;
       const range = doc.createRange();
@@ -69,9 +71,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     await page.getByRole("button", { name: "Toggle Notes panel" }).click();
   }
   await expect(tools.locator(".annotation-card.is-selected")).toBeVisible();
-  await expect(tools.locator(".annotation-reading-context")).toContainText(
-    "Near reading position: Document passage",
-  );
+  await expect(tools.locator(".annotation-reading-label")).toHaveText("Near reading position");
   await expect(tools.locator('[aria-current="location"]')).toBeVisible();
   await expect(tools.locator(".annotation-card.is-selected")).toHaveCSS("box-shadow", "none");
   await expect(tools.getByRole("textbox", { name: "Comment" })).toHaveCount(0);
@@ -87,7 +87,8 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     "Selecting offers actions without a draft; H highlights; clicking the highlight selects its card and offers its actions",
   );
 
-  await tools.getByRole("button", { name: "Edit", exact: true }).click();
+  await tools.getByRole("button", { name: "Edit", exact: true }).focus();
+  await page.keyboard.press("Enter");
   const editor = tools.getByRole("textbox", { name: "Comment" });
   const editText = "[test] A recoverable annotation comment.";
   blockWrites(true);
@@ -137,10 +138,11 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await tools.getByRole("searchbox", { name: "Search annotations" }).fill("no such quotation");
   await expect(tools.getByText("No matching annotations", { exact: true })).toBeVisible();
   await tools.getByRole("button", { name: "Clear filters", exact: true }).click();
-  await tools.getByLabel("Filter and sort annotations", { exact: true }).click();
-  await chooseOption(tools.getByRole("combobox", { name: "Filter annotations" }), "comments");
+  await tools.getByLabel("Filter annotations", { exact: true }).click();
+  await tools.getByRole("radio", { name: /^With comments/u }).click();
   await expect(tools.locator(".annotation-card")).toHaveCount(2);
-  await chooseOption(tools.getByRole("combobox", { name: "Sort annotations" }), "newest");
+  await tools.getByRole("radio", { name: "Newest first", exact: true }).click();
+  await tools.getByLabel("Filter annotations (changed)", { exact: true }).click();
   await screenshot("annotation-browsing-desktop");
   await tools.getByRole("button", { name: "Show in document" }).first().click();
   await expect(page.getByRole("button", { name: "Back to reading position" })).toBeVisible();

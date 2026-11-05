@@ -188,7 +188,13 @@ function Connection({
         <dt>
           <Trans>Status</Trans>
         </dt>
-        <dd>{connectionLabels[state]}</dd>
+        <dd>
+          {state === null ? (
+            <Trans>No collection connected · interface preview</Trans>
+          ) : (
+            connectionLabels[state]
+          )}
+        </dd>
       </dl>
       {mdbase ? (
         <>

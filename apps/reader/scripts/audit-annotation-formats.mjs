@@ -48,7 +48,12 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
     )
     .toBeGreaterThan(20);
   await area.getByRole("button", { name: "Discard selection", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Discard draft?", exact: true })
+    .getByRole("button", { name: "Discard draft", exact: true })
+    .click();
   await expect(area).toHaveCount(0);
+  await expect(page.locator(".reader-confirm-dialog")).toHaveCount(0);
 
   // A text highlight on the PDF: EmbedPDF draws it and its margin mark (see pdf-decoration.ts).
   const pageImage = await pdf.locator("img").first().boundingBox();
@@ -155,12 +160,12 @@ export async function auditAnnotationFormats(page, { open, screenshot }) {
     position: { x: paragraphBox.width - 4, y: paragraphBox.height - 4 },
   });
   await paragraph.press("Control+.");
-  await expect(page.getByRole("button", { name: "Reading mode" })).toHaveAttribute(
+  await expect(page.getByRole("button", { name: "Restore document panes" })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
   await paragraph.press("Escape");
-  await expect(page.getByRole("button", { name: "Reading mode" })).toHaveAttribute(
+  await expect(page.getByRole("button", { name: "Maximize document" })).toHaveAttribute(
     "aria-pressed",
     "false",
   );

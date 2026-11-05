@@ -1,3 +1,4 @@
+import { searchSources } from "./audit-source-search.mjs";
 import { expect } from "@playwright/test";
 import { realpathSync } from "node:fs";
 import { auditSimpleAnnotations } from "./audit-simple-annotations.mjs";
@@ -80,14 +81,11 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
     editor.evaluate((element) => element.closest("[data-session-id]").dataset.sessionId);
   const duplicate = async (id) => {
     await tab(id).click({ button: "right" });
-    await page
-      .getByRole("menuitem", { name: "Open another editor in pane right", exact: true })
-      .click();
+    await page.getByRole("menuitem", { name: "Open beside", exact: true }).click();
   };
-  await page
-    .getByRole("textbox", { name: "Find a source by title, author or tag" })
-    .fill("Research 0000");
-  await page.getByRole("option", { name: /Research 0000/u }).dblclick();
+  await searchSources(page, "Research 0000");
+  await page.getByRole("option", { name: /^\[test\] Research 0000/u }).click();
+  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   const documentId = await page
     .locator(".reader-dock-tab:not(.is-side)")
     .filter({ hasText: "[test] Research 0000" })

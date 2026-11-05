@@ -37,7 +37,7 @@ import type { CitationUpdateRequest, Claim } from "@mdbase-reader/web-capture/ci
 export interface ReaderLibrarySnapshot {
   readonly collectionName: string;
   readonly sources: readonly SourceSummary[];
-  readonly connectionState: "connected" | "offline" | "syncing";
+  readonly connectionState: "connected" | "offline" | "syncing" | null;
   readonly sourceIndex?: {
     readonly loaded: number;
     readonly total?: number;

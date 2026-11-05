@@ -9,6 +9,14 @@
   overflow: auto;
   color: var(--ink);
   background: var(--canvas);
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
 }
 
 .settings-page-header {

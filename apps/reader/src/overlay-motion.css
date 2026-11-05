@@ -1,0 +1,105 @@
+.reader-overlay {
+  display: contents;
+}
+.reader-overlay > :is(dialog, .settings-page),
+dialog.mdbase-feedback-dialog,
+[popover] {
+  animation: none;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 160ms ease-out,
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
+    display 120ms allow-discrete,
+    overlay 120ms allow-discrete;
+}
+.reader-menu::details-content {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out,
+    content-visibility 120ms allow-discrete;
+}
+.reader-menu[open]::details-content {
+  opacity: 1;
+  transform: none;
+  transition-duration: 160ms;
+}
+.reader-overlay > .mdbase-command-palette {
+  position: fixed;
+  margin: min(14vh, 120px) auto auto;
+  padding: 0;
+  width: min(600px, calc(100% - 32px));
+  max-height: calc(100dvh - min(14vh, 120px) - 24px);
+}
+.reader-overlay .mdbase-command-search {
+  grid-template-columns: minmax(0, 1fr);
+}
+.reader-overlay .mdbase-command-footer {
+  display: flex;
+}
+.reader-shortcut-help {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.reader-shortcut-help :is(h3, p) {
+  margin: 0;
+}
+.reader-shortcut-help p {
+  margin-top: 4px;
+}
+.mdbase-command-results [aria-selected="true"] :is(small, kbd),
+.mdbase-command-results [aria-selected="true"] .mdbase-command-alternate {
+  color: inherit;
+}
+.reader-overlay > dialog::backdrop,
+dialog.mdbase-feedback-dialog::backdrop {
+  opacity: 1;
+  transition: opacity 160ms ease-out;
+}
+.reader-overlay[data-state="closed"] > :is(dialog, .settings-page, [popover]),
+dialog.mdbase-feedback-dialog:not([open]),
+[popover]:not(:popover-open) {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition-duration: 120ms;
+  pointer-events: none;
+}
+.reader-overlay[data-state="closed"] > dialog::backdrop,
+dialog.mdbase-feedback-dialog:not([open])::backdrop {
+  opacity: 0;
+  transition-duration: 120ms;
+}
+.mdbase-feedback-app[inert] ~ dialog.mdbase-feedback-dialog,
+.mdbase-feedback-app[inert] ~ dialog.mdbase-feedback-dialog::backdrop {
+  transition: none;
+}
+@starting-style {
+  .reader-overlay > :is(dialog, .settings-page),
+  dialog.mdbase-feedback-dialog[open],
+  [popover]:popover-open {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  .reader-overlay > dialog::backdrop,
+  dialog.mdbase-feedback-dialog::backdrop {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader-overlay > :is(dialog, .settings-page),
+  .reader-overlay > dialog::backdrop,
+  dialog.mdbase-feedback-dialog,
+  dialog.mdbase-feedback-dialog::backdrop,
+  [popover] {
+    transform: none;
+    transition: none;
+  }
+  .reader-menu::details-content {
+    transform: none;
+    transition: none;
+  }
+}

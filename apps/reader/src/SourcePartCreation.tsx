@@ -1,17 +1,11 @@
 import { plural, t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type JSX,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type JSX, type ReactNode } from "react";
 
 import { ChapterPreview } from "./ChapterPreview.js";
+import { ModalDialog } from "./ModalDialog.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 import { useChapterCreation, type ChapterChoice } from "./use-chapter-creation.js";
 import "./source-parts-library.css";
 
@@ -42,15 +36,17 @@ export function SourcePartCreation({
   return (
     <CreationContext value={enabled && gateway.createSourcePart ? setBook : null}>
       {children}
-      {book ? (
-        <ChapterCreationDialog
-          key={book.id}
-          gateway={gateway}
-          book={book}
-          onCreated={onCreated}
-          onClose={() => setBook(null)}
-        />
-      ) : null}
+      <OverlayPresence open={Boolean(book)}>
+        {book ? (
+          <ChapterCreationDialog
+            key={book.id}
+            gateway={gateway}
+            book={book}
+            onCreated={onCreated}
+            onClose={() => setBook(null)}
+          />
+        ) : null}
+      </OverlayPresence>
     </CreationContext>
   );
 }
@@ -67,24 +63,12 @@ function ChapterCreationDialog({
   readonly onClose: () => void;
 }): JSX.Element {
   useLocale();
-  const dialog = useRef<HTMLDialogElement>(null);
   const model = useChapterCreation(gateway, book, onCreated, onClose);
-  useEffect(() => {
-    const launcher = window.document.activeElement;
-    dialog.current?.showModal();
-    return () => {
-      if (launcher instanceof HTMLElement && launcher.isConnected) {
-        launcher.focus();
-      }
-    };
-  }, []);
   return (
-    <dialog
-      ref={dialog}
+    <ModalDialog
       className="import-dialog source-parts-dialog"
-      aria-labelledby="chapter-create-title"
-      onCancel={(event) => {
-        event.preventDefault();
+      labelledBy="chapter-create-title"
+      onDismiss={() => {
         if (!model.busy) {
           onClose();
         }
@@ -128,7 +112,7 @@ function ChapterCreationDialog({
           </button>
         </div>
       </form>
-    </dialog>
+    </ModalDialog>
   );
 }
 

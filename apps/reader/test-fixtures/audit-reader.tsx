@@ -8,7 +8,9 @@ import "../src/reader.css";
 import "../src/reader-improvements.css";
 import "../src/annotation-polish.css";
 import "../src/reader-shell.css";
+import "../src/notes-panel.css";
 
+import { ConfirmProvider } from "../src/ConfirmProvider.js";
 import { ConnectedDocument } from "../src/ConnectedDocument.js";
 import {
   applyLibraryViewConfiguration,
@@ -196,17 +198,19 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <ReaderI18nProvider>
-      <ReaderApp
-        gateway={gateway}
-        renderDocument={(source, onSurfaceChange) => (
-          <ConnectedDocument
-            repository={repository}
-            source={source}
-            onSurfaceChange={onSurfaceChange}
-          />
-        )}
-        saveFile={() => Promise.resolve()}
-      />
+      <ConfirmProvider>
+        <ReaderApp
+          gateway={gateway}
+          renderDocument={(source, onSurfaceChange) => (
+            <ConnectedDocument
+              repository={repository}
+              source={source}
+              onSurfaceChange={onSurfaceChange}
+            />
+          )}
+          saveFile={() => Promise.resolve()}
+        />
+      </ConfirmProvider>
     </ReaderI18nProvider>
   </StrictMode>,
 );

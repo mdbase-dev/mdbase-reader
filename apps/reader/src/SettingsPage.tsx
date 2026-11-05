@@ -1,11 +1,12 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { useCallback, useEffect, useId, useRef, useState, type JSX } from "react";
+import { useCallback, useId, useRef, useState, type JSX } from "react";
 
 import { requestConfirmation } from "./confirmation.js";
 import { BackIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
+import { ModalDialog } from "./ModalDialog.js";
 import "./settings.css";
 
 import type { SettingsSectionsProps } from "./SettingsSections.js";
@@ -26,20 +27,9 @@ export function useSettingsPage(): {
   readonly hide: () => void;
 } {
   const [open, setOpen] = useState(false);
-  const opener = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    if (!open && opener.current?.isConnected) {
-      opener.current.focus();
-      opener.current = null;
-    }
-  }, [open]);
   return {
     open,
     show: useCallback(() => {
-      const active = document.activeElement;
-      // A menu item is gone once its menu closes, so return to the menu's trigger instead.
-      const target = active?.closest("details")?.querySelector("summary") ?? active;
-      opener.current = target instanceof HTMLElement ? target : null;
       setOpen(true);
       SettingsSections.preload();
     }, []),
@@ -62,17 +52,8 @@ export function SettingsPage({
 }): JSX.Element {
   useLocale();
   const headingId = useId();
-  const page = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const dirty = useRef(new Map<string, boolean>());
-  useEffect(() => {
-    heading.current?.focus();
-    // Workspace shortcuts listen on the document; none should act on the workspace behind.
-    const element = page.current;
-    const stopShortcut = (event: KeyboardEvent): void => event.stopPropagation();
-    element?.addEventListener("keydown", stopShortcut);
-    return () => element?.removeEventListener("keydown", stopShortcut);
-  }, []);
   const onDirtyChange = useCallback((name: string, value: boolean) => {
     dirty.current.set(name, value);
   }, []);
@@ -99,7 +80,19 @@ export function SettingsPage({
     );
   }, []);
   return (
-    <div ref={page} className="settings-page" data-density={density}>
+    <ModalDialog
+      className="settings-page"
+      density={density}
+      labelledBy={headingId}
+      initialFocus={heading}
+      onDismiss={() => {
+        void beforeLeave().then((leave) => {
+          if (leave) {
+            onClose();
+          }
+        });
+      }}
+    >
       <header className="settings-page-header">
         <button
           type="button"
@@ -122,6 +115,6 @@ export function SettingsPage({
         </h1>
         <SettingsSections {...sections} onDirtyChange={onDirtyChange} beforeLeave={beforeLeave} />
       </main>
-    </div>
+    </ModalDialog>
   );
 }

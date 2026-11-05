@@ -52,6 +52,7 @@ import {
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
 import { Menu } from "./Menu.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 import { useInspectedLibraryRow } from "./use-inspected-library-row.js";
 import { layoutOf, useLibraryLayoutDraft } from "./use-library-layout-draft.js";
 import { useLibraryWrites } from "./use-library-writes.js";
@@ -320,6 +321,7 @@ export function LibraryWorkspace({
 
   return (
     <section className="library-workspace" aria-label={t`${view.name} library view`}>
+      <h1 className="sr-only">{view.name}</h1>
       <header className="library-workspace-header">
         <label className="library-view-identity">
           <Select
@@ -741,7 +743,7 @@ export function LibraryWorkspace({
           onExport={bibliographyExport.runFor}
         />
       ) : null}
-      {saving ? (
+      <OverlayPresence open={saving}>
         <LibraryViewSaveDialog
           description={t({
             message: "The filters, sort, columns and layout are saved in your collection.",
@@ -751,7 +753,7 @@ export function LibraryWorkspace({
           onCancel={() => setSaving(false)}
           onSave={(name) => void save(name, false)}
         />
-      ) : null}
+      </OverlayPresence>
     </section>
   );
 }

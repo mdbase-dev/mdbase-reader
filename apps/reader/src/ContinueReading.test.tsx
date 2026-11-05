@@ -75,7 +75,9 @@ describe("Continue reading cards", () => {
   it("shows the title, people and year, and where the reader stopped", () => {
     render([paper]);
     const card = document.querySelector<HTMLButtonElement>(".continue-reading-card");
-    expect(card?.getAttribute("aria-label")).toBe("Continue reading Attention Is All You Need");
+    expect(card?.querySelector(".sr-only")?.textContent).toBe(
+      "Continue reading Attention Is All You Need",
+    );
     expect(card?.querySelector(".continue-reading-byline")?.textContent).toBe(
       "Ashish Vaswani · 2017",
     );
@@ -87,7 +89,7 @@ describe("Continue reading cards", () => {
     render([paper]);
     const thumbnail = document.querySelector(".source-thumbnail");
     expect(thumbnail?.getAttribute("aria-hidden")).toBe("true");
-    expect(thumbnail?.querySelector(".source-thumbnail-title")?.textContent).toBe(paper.title);
+    expect(thumbnail?.querySelector(".source-thumbnail-title")?.textContent).toBe("A");
     expect(thumbnail?.querySelector(".source-thumbnail-format")?.textContent).toBe("PDF");
     act(() => {
       vi.runAllTimers();

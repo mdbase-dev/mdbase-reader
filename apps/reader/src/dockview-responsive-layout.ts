@@ -25,39 +25,11 @@ function desktopForMobile(
 export class ResponsiveDockLayout {
   private desktop: SerializedDockview | null = null;
   private lastDesktop: SerializedDockview | null = null;
-  private pendingSizes: SerializedDockview["edgeGroups"];
-  layoutViewport(api: DockviewApi | null, width: number, height: number): void {
-    if (api) {
-      api.layout(width, height);
-      this.restoreSizes(api);
-    }
-  }
-  private restoreSizes(api: DockviewApi): void {
-    if (!this.pendingSizes) {
-      return;
-    }
-    const sizes = this.pendingSizes;
-    this.pendingSizes = undefined;
-    for (const position of edgePositions) {
-      const edge = sizes[position];
-      if (edge) {
-        api
-          .getEdgeGroup(position)
-          ?.setSize(
-            position === "left" || position === "right"
-              ? { width: edge.size }
-              : { height: edge.size },
-          );
-      }
-    }
-    // Do not let a transient narrow fromJSON layout replace the desktop geometry cache.
-    this.lastDesktop = api.toJSON();
-  }
   seed(layout: SerializedDockview): void {
     this.lastDesktop = structuredClone(layout);
   }
   remember(api: DockviewApi): void {
-    if (!this.mobile && !this.pendingSizes) {
+    if (!this.mobile) {
       this.lastDesktop = api.toJSON();
     }
   }
@@ -82,8 +54,6 @@ export class ResponsiveDockLayout {
       const restored = desktopLayout(this.desktop, api.toJSON(), focused);
       this.desktop = null;
       api.fromJSON(restored, { reuseExistingPanels: true });
-      // Apply after React removes the mobile toolbar and the host has its desktop dimensions.
-      this.pendingSizes = restored.edgeGroups;
     }
   }
   serialize(api: DockviewApi, focused: string | null): SerializedDockview {

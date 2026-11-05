@@ -3,6 +3,7 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { useRef, type JSX } from "react";
 
 import { ModalDialog } from "./ModalDialog.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 
 import type { SourceRemovalController } from "./use-source-removal.js";
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -20,9 +21,13 @@ export function SourceRemovalDialog({
   readonly sources?: readonly SourceSummary[];
 }): JSX.Element | null {
   const { pending } = removal;
-  return pending ? (
-    <OpenSourceRemovalDialog removal={removal} pending={pending} sources={sources} />
-  ) : null;
+  return (
+    <OverlayPresence open={Boolean(pending)}>
+      {pending ? (
+        <OpenSourceRemovalDialog removal={removal} pending={pending} sources={sources} />
+      ) : null}
+    </OverlayPresence>
+  );
 }
 
 function OpenSourceRemovalDialog({
