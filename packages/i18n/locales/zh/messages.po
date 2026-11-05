@@ -209,6 +209,17 @@ msgstr "{0} GiB"
 msgid "{0} hidden."
 msgstr "已隐藏 {0}。"
 
+#. placeholder {0}: tabLabel(tab)
+#. placeholder {1}: workbenchOwner.paneLabel
+#: apps/reader/src/InspectorPane.tsx
+msgid "{0} is open in {1}."
+msgstr "{0} 已在 {1} 中打开。"
+
+#. placeholder {0}: this.props.label
+#: apps/reader/src/lazy-feature.tsx
+msgid "{0} is unavailable"
+msgstr "{0} 不可用"
+
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
@@ -307,12 +318,6 @@ msgstr "{0}。检查共同的页面或章节，然后勾选确认框继续。"
 #: apps/reader/src/LibraryCells.tsx
 msgid "{0}% read"
 msgstr "已读 {0}%"
-
-#. placeholder {0}: tabLabel(tab)
-#. placeholder {1}: workbenchOwner.paneLabel
-#: apps/reader/src/InspectorPane.tsx
-msgid "{0}is open in{1}"
-msgstr "{0}已在{1}中打开"
 
 #. placeholder {0}: preview.newRecords.toLocaleString(i18n.locale)
 #. placeholder {1}: preview.existingRecords.toLocaleString(i18n.locale)
@@ -2258,6 +2263,10 @@ msgstr "连接集合"
 msgid "Connect a collection above"
 msgstr "在上方连接集合"
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Connect a collection to import files. You can add a link or identifier in this preview."
+msgstr "连接一个集合以导入文件。你可以在此预览中添加链接或标识符。"
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Connect and scan your library →"
 msgstr "连接并扫描你的文献库 →"
@@ -2283,6 +2292,10 @@ msgstr "Connect 拒绝了此扩展的来源。请重新加载当前扩展构建�
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
 msgstr "连接到 mdbase{target}"
+
+#: apps/reader/src/lazy-feature.tsx
+msgid "Connect to the internet and try again to load this reading tool."
+msgstr "请连接互联网，然后重试加载此阅读工具。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected"
@@ -2938,6 +2951,7 @@ msgstr "关闭提示（Esc）"
 msgid "Dismiss {0}"
 msgstr "忽略 {0}"
 
+#: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Display"
 msgstr "显示"
@@ -3651,10 +3665,6 @@ msgstr "此连接不支持文件导出。"
 #: apps/reader/src/use-bibliography-export.ts
 msgid "File export is unavailable in this build."
 msgstr "此版本不支持文件导出。"
-
-#: apps/reader/src/SourceAddDialog.tsx
-msgid "File import is unavailable here."
-msgstr "此处无法导入文件。"
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "file names"
@@ -4568,6 +4578,7 @@ msgid "Key idea"
 msgstr "核心观点"
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Keyboard shortcuts"
 msgstr "键盘快捷键"
@@ -4651,6 +4662,10 @@ msgstr "文献库"
 msgctxt "workspace tab display"
 msgid "Library"
 msgstr "文献库"
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Library actions"
+msgstr "书库操作"
 
 #: apps/reader/src/LibraryDocumentIndex.tsx
 msgid "Library index unavailable; searching loaded documents only."
@@ -5289,6 +5304,10 @@ msgstr "旁白"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Narrow"
 msgstr "窄"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Narrow column"
+msgstr "缩窄列"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
@@ -5988,6 +6007,10 @@ msgstr "其他 Readwise 来源"
 msgid "other source"
 msgstr "其他来源"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Outline"
+msgstr "目录"
+
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgctxt "PDF navigation outline"
 msgid "Outline"
@@ -6220,6 +6243,10 @@ msgstr "PDF 坐标必须是有限数值。"
 #: packages/migration/src/zotero-anchors.ts
 msgid "PDF geometry unavailable."
 msgstr "PDF 几何信息不可用。"
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF navigation"
+msgstr "PDF 导航"
 
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "PDF page image"
@@ -6656,11 +6683,6 @@ msgstr "Reader 无法检查此页面。请打开普通的 HTTPS 页面后重试�
 #: apps/reader/src/use-library-annotations.ts
 msgid "Reader could not list annotations."
 msgstr "Reader 无法列出注释。"
-
-#. placeholder {0}: this.props.label
-#: apps/reader/src/lazy-feature.tsx
-msgid "Reader could not load {0}."
-msgstr "Reader 无法加载 {0}。"
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not load saved library views."
@@ -7125,6 +7147,11 @@ msgstr "移除值 {0}"
 msgid "Removed"
 msgstr "已移除"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-removal.ts
+msgid "Removed “{0}”."
+msgstr "已移除“{0}”。"
+
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Removing…"
@@ -7493,6 +7520,11 @@ msgstr "已保存"
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved"
 msgstr "已保存"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Saved changes to “{0}”."
+msgstr "已保存对“{0}”的更改。"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Saved for everyone using this collection."
@@ -9141,6 +9173,7 @@ msgstr "已保存的副本中缺少这部分串文。请在 Reader 中打开该�
 msgid "This view couldn’t be applied by mdbase, so Reader is filtering here instead."
 msgstr "mdbase 无法应用此视图，因此 Reader 改为在本地筛选。"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgid "Thumbnails"
 msgstr "缩略图"
@@ -9514,6 +9547,11 @@ msgstr "更新文献库详情"
 msgid "Update Reader"
 msgstr "更新 Reader"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Updated reading status for “{0}”."
+msgstr "已更新“{0}”的阅读状态。"
+
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -9654,16 +9692,6 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
 msgstr "视图选项"
 
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace interface"
-msgid "View options"
-msgstr "视图选项"
-
-#. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
-#: apps/reader/src/LibraryWorkspace.tsx
-msgid "View options{0}"
-msgstr "视图选项{0}"
-
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
 msgstr "视图"
@@ -9785,6 +9813,10 @@ msgstr "为什么这很重要？"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Wide"
 msgstr "宽"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Widen column"
+msgstr "加宽列"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "With comments"

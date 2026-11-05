@@ -59,6 +59,8 @@ export function LibraryTableRow({
 }): JSX.Element {
   useLocale();
   const part = partRows?.get(source.id);
+  const context = part?.diagnostic ?? part?.context;
+  const annotations = annotationCounts.get(source.id) ?? 0;
   const selected = selection.ids.has(source.id);
   const pressHandlers = press.bind(onLongPress);
   const editable = (column: LibraryColumn): boolean =>
@@ -151,15 +153,42 @@ export function LibraryTableRow({
               onSave={(text) => onEditField(source, columnFieldKey(column) ?? column, text)}
               onDone={onEditDone}
             />
+          ) : column === "title" ? (
+            <a
+              className="library-source-link"
+              href={`#source=${encodeURIComponent(source.id)}`}
+              tabIndex={-1}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                pendingEdit.cancel();
+                if (itemClick(press, event, selection.touch === true) === "ignore") {
+                  return;
+                }
+                if (selection.touch === true || hasModifier(event)) {
+                  onSelect(event);
+                } else {
+                  onOpen(source.id);
+                }
+              }}
+              onDoubleClick={(event) => event.stopPropagation()}
+            >
+              <TableValue
+                source={source}
+                column={column}
+                annotations={annotations}
+                context={context}
+              />
+            </a>
           ) : column === "status" && onChangeStatus ? (
             <StatusPicker source={source} onChange={onChangeStatus} />
           ) : (
             <TableValue
               source={source}
               column={column}
-              annotations={annotationCounts.get(source.id) ?? 0}
+              annotations={annotations}
               selected={valuesByPath.get(source.path)}
-              context={part?.diagnostic ?? part?.context}
+              context={context}
             />
           )}
         </span>

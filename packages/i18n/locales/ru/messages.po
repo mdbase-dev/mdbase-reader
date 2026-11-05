@@ -209,6 +209,17 @@ msgstr "{0} ГиБ"
 msgid "{0} hidden."
 msgstr "Скрыто: {0}."
 
+#. placeholder {0}: tabLabel(tab)
+#. placeholder {1}: workbenchOwner.paneLabel
+#: apps/reader/src/InspectorPane.tsx
+msgid "{0} is open in {1}."
+msgstr "{0} открыто в {1}."
+
+#. placeholder {0}: this.props.label
+#: apps/reader/src/lazy-feature.tsx
+msgid "{0} is unavailable"
+msgstr "{0} недоступно"
+
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
 #: apps/reader/src/use-source-addition.ts
@@ -307,12 +318,6 @@ msgstr "{0}. Проверьте общие страницы или раздел�
 #: apps/reader/src/LibraryCells.tsx
 msgid "{0}% read"
 msgstr "Прочитано: {0}%"
-
-#. placeholder {0}: tabLabel(tab)
-#. placeholder {1}: workbenchOwner.paneLabel
-#: apps/reader/src/InspectorPane.tsx
-msgid "{0}is open in{1}"
-msgstr "{0} открыто в {1}"
 
 #. placeholder {0}: preview.newRecords.toLocaleString(i18n.locale)
 #. placeholder {1}: preview.existingRecords.toLocaleString(i18n.locale)
@@ -2258,6 +2263,10 @@ msgstr "Подключить коллекцию"
 msgid "Connect a collection above"
 msgstr "Подключите коллекцию выше"
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Connect a collection to import files. You can add a link or identifier in this preview."
+msgstr "Подключите коллекцию для импорта файлов. В этом предпросмотре можно добавить ссылку или идентификатор."
+
 #: apps/reader/src/ImportPageView.tsx
 msgid "Connect and scan your library →"
 msgstr "Подключитесь и просканируйте библиотеку →"
@@ -2283,6 +2292,10 @@ msgstr "Connect отклонил источник этого расширени�
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
 msgstr "Подключиться к mdbase{target}"
+
+#: apps/reader/src/lazy-feature.tsx
+msgid "Connect to the internet and try again to load this reading tool."
+msgstr "Подключитесь к интернету и повторите загрузку этого инструмента для чтения."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Connected"
@@ -2938,6 +2951,7 @@ msgstr "Закрыть (Esc)"
 msgid "Dismiss {0}"
 msgstr "Отклонить {0}"
 
+#: apps/reader/src/LibraryWorkspace.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Display"
 msgstr "Отображение"
@@ -3651,10 +3665,6 @@ msgstr "Экспорт файлов недоступен для этого по�
 #: apps/reader/src/use-bibliography-export.ts
 msgid "File export is unavailable in this build."
 msgstr "Экспорт файлов недоступен в этой сборке."
-
-#: apps/reader/src/SourceAddDialog.tsx
-msgid "File import is unavailable here."
-msgstr "Импорт файлов здесь недоступен."
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "file names"
@@ -4568,6 +4578,7 @@ msgid "Key idea"
 msgstr "Основная идея"
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/reader-command-list.ts
 #: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Keyboard shortcuts"
 msgstr "Сочетания клавиш"
@@ -4651,6 +4662,10 @@ msgstr "Библиотека"
 msgctxt "workspace tab display"
 msgid "Library"
 msgstr "Библиотека"
+
+#: apps/reader/src/LibraryWorkspace.tsx
+msgid "Library actions"
+msgstr "Действия с библиотекой"
 
 #: apps/reader/src/LibraryDocumentIndex.tsx
 msgid "Library index unavailable; searching loaded documents only."
@@ -5289,6 +5304,10 @@ msgstr "Диктор"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Narrow"
 msgstr "Узкий"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Narrow column"
+msgstr "Сузить столбец"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Native metadata is also archived as JSON. Existing records matched by import identity are kept unchanged; ambiguous title or URL matches are never silently merged."
@@ -5988,6 +6007,10 @@ msgstr "Другие источники Readwise"
 msgid "other source"
 msgstr "другой источник"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Outline"
+msgstr "Оглавление"
+
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgctxt "PDF navigation outline"
 msgid "Outline"
@@ -6220,6 +6243,10 @@ msgstr "Координаты PDF должны быть конечными чис
 #: packages/migration/src/zotero-anchors.ts
 msgid "PDF geometry unavailable."
 msgstr "Геометрия PDF недоступна."
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF navigation"
+msgstr "Навигация по PDF"
 
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "PDF page image"
@@ -6656,11 +6683,6 @@ msgstr "Reader не удалось проверить эту страницу. �
 #: apps/reader/src/use-library-annotations.ts
 msgid "Reader could not list annotations."
 msgstr "Reader не удалось получить список аннотаций."
-
-#. placeholder {0}: this.props.label
-#: apps/reader/src/lazy-feature.tsx
-msgid "Reader could not load {0}."
-msgstr "Приложению Reader не удалось загрузить {0}."
 
 #: apps/reader/src/use-mdbase-library-views.ts
 msgid "Reader could not load saved library views."
@@ -7125,6 +7147,11 @@ msgstr "Убрать значение {0}"
 msgid "Removed"
 msgstr "Удалено"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-removal.ts
+msgid "Removed “{0}”."
+msgstr "«{0}» удалено."
+
 #: apps/reader/src/SourceRemovalDialog.tsx
 msgctxt "SourceRemovalDialog interface"
 msgid "Removing…"
@@ -7493,6 +7520,11 @@ msgstr "Сохранено"
 msgctxt "SourceNoteEditor status or action"
 msgid "Saved"
 msgstr "Сохранено"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Saved changes to “{0}”."
+msgstr "Изменения в «{0}» сохранены."
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Saved for everyone using this collection."
@@ -9141,6 +9173,7 @@ msgstr "Этой части цепочки нет в сохранённой ко
 msgid "This view couldn’t be applied by mdbase, so Reader is filtering here instead."
 msgstr "mdbase не удалось применить это представление, поэтому Reader фильтрует данные здесь."
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
 #: packages/renderer-pdf/src/pdf-viewer-ui-schema.ts
 msgid "Thumbnails"
 msgstr "Миниатюры"
@@ -9514,6 +9547,11 @@ msgstr "Обновить сведения библиотеки"
 msgid "Update Reader"
 msgstr "Обновить Reader"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-library-writes.ts
+msgid "Updated reading status for “{0}”."
+msgstr "Статус чтения «{0}» обновлён."
+
 #. placeholder {0}: String(progress.done)
 #. placeholder {1}: String(progress.total)
 #: apps/reader/src/LibraryBulkBar.tsx
@@ -9654,16 +9692,6 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
 msgstr "Параметры представления"
 
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace interface"
-msgid "View options"
-msgstr "Параметры представления"
-
-#. placeholder {0}: filterCount ? `, ${String(filterCount)} active filters` : ""
-#: apps/reader/src/LibraryWorkspace.tsx
-msgid "View options{0}"
-msgstr "Параметры представления{0}"
-
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Views"
 msgstr "Представления"
@@ -9785,6 +9813,10 @@ msgstr "Почему это важно?"
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Wide"
 msgstr "Широкий"
+
+#: apps/reader/src/LibraryTableHeader.tsx
+msgid "Widen column"
+msgstr "Расширить столбец"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "With comments"

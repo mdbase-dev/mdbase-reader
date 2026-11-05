@@ -87,8 +87,8 @@ export interface ReaderWorkspaceViewModel {
   readonly changeTheme: (theme: ThemePreference) => void;
   readonly focusMode: boolean;
   readonly setFocusMode: (value: boolean | ((current: boolean) => boolean)) => void;
-  readonly commandsOpen: boolean;
-  readonly setCommandsOpen: (value: boolean) => void;
+  readonly commandsOpen: boolean | "shortcuts";
+  readonly setCommandsOpen: (value: boolean | "shortcuts") => void;
   readonly pickSourceFile: (() => Promise<PickedFile | null>) | undefined;
 }
 
@@ -105,7 +105,7 @@ const LibraryWorkspace = lazyFeature(
 );
 
 /** Every open tab is listed; other groups show a few until the reader types. */
-const paletteShowsAll = ["Open tabs"];
+const paletteShowsAll = ["Open tabs", "Sources"];
 
 // eslint-disable-next-line max-lines-per-function
 export function ReaderWorkspaceView({
@@ -268,6 +268,7 @@ export function ReaderWorkspaceView({
               openSources={model.openSources}
               selectedSourceId={source?.id ?? null}
               views={model.libraryViews.views}
+              activeView={sourceWorkspace.activeTab?.libraryViewId}
               viewsLoading={model.libraryViews.loading}
               indexLoading={library.sourceIndex?.complete === false}
               problem={model.libraryViews.problem}
@@ -431,7 +432,8 @@ export function ReaderWorkspaceView({
         placeholder={t({ message: "Search sources and commands" })}
         showAll={paletteShowsAll}
         groupLabel={readerCommandGroupLabel}
-        open={model.commandsOpen}
+        open={Boolean(model.commandsOpen)}
+        shortcuts={model.commandsOpen === "shortcuts"}
         commands={commands}
         onClose={() => model.setCommandsOpen(false)}
       />
@@ -633,6 +635,7 @@ function useCommandsForView(
     toggleLibrary: () => toggleLibrary(model),
     toggleInspector,
     addSource: model.sourceAddition.open,
+    openShortcuts: () => model.setCommandsOpen("shortcuts"),
     importHref: importHref(),
     theme: model.theme,
     setTheme: model.changeTheme,

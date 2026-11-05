@@ -13,6 +13,7 @@ interface LibraryNavigatorProps {
   readonly sources: readonly SourceSummary[];
   readonly openSources?: readonly SourceSummary[];
   readonly selectedSourceId: SourceId | null;
+  readonly activeView?: string | undefined;
   readonly views: readonly MdbaseLibraryView[];
   readonly viewsLoading: boolean;
   readonly indexLoading?: boolean;
@@ -32,6 +33,7 @@ export function LibraryNavigator({
   sources,
   openSources = [],
   selectedSourceId,
+  activeView,
   views,
   viewsLoading,
   indexLoading = false,
@@ -65,6 +67,7 @@ export function LibraryNavigator({
           viewsLoading={viewsLoading}
           problem={problem}
           onOpenView={onOpenView}
+          activeView={activeView}
         />
         {openSources.length > 0 ? (
           <NavigatorShortList
@@ -92,7 +95,11 @@ function NavigatorViews({
   viewsLoading,
   problem,
   onOpenView,
-}: Pick<LibraryNavigatorProps, "views" | "viewsLoading" | "problem" | "onOpenView">): JSX.Element {
+  activeView,
+}: Pick<
+  LibraryNavigatorProps,
+  "views" | "viewsLoading" | "problem" | "onOpenView" | "activeView"
+>): JSX.Element {
   return (
     <section className="navigator-view-section">
       <header>
@@ -107,7 +114,12 @@ function NavigatorViews({
       </header>
       <div>
         {views.map((view) => (
-          <button key={view.key} type="button" onClick={() => onOpenView(view)}>
+          <button
+            key={view.key}
+            type="button"
+            aria-current={activeView === view.key ? "page" : undefined}
+            onClick={() => onOpenView(view)}
+          >
             <ViewGlyph presentation={view.configuration.presentation} />
             <span>{view.name}</span>
           </button>
@@ -147,7 +159,7 @@ function NavigatorEmptySources({
 
 function ViewGlyph({ presentation }: { readonly presentation: "table" | "cards" }): JSX.Element {
   return presentation === "cards" ? (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
+    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
       <rect x="2" y="2" width="5" height="5" />
       <rect x="9" y="2" width="5" height="5" />
       <rect x="2" y="9" width="5" height="5" />

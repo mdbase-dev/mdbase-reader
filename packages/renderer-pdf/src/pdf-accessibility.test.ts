@@ -87,3 +87,45 @@ it("stops extraction after disposal, including an in-flight failure", async () =
   expect(extractText).toHaveBeenCalledOnce();
   expect(root.querySelector("article")).toBeNull();
 });
+
+it("names the phone navigation sheet and makes late thumbnail content reachable", async () => {
+  const { host, root } = fixture();
+  const stop = installPdfAccessibility(
+    host,
+    {} as PdfEngine,
+    { pageCount: 0 } as PdfDocumentObject,
+  );
+  const backdrop = document.createElement("div");
+  backdrop.className = "bg-bg-overlay";
+  const sheet = document.createElement("section");
+  sheet.setAttribute("data-sidebar-id", "sidebar-panel");
+  sheet.innerHTML = '<button role="tab" tabindex="0"></button><button role="tab"></button>';
+  root.append(backdrop, sheet);
+  await vi.waitFor(() => expect(sheet.getAttribute("aria-label")).toBe("PDF navigation"));
+  expect(sheet.getAttribute("aria-modal")).toBe("true");
+  expect(
+    [...sheet.querySelectorAll("button")].map((button) => button.getAttribute("aria-label")),
+  ).toEqual(["Thumbnails", "Outline"]);
+  const scroller = document.createElement("div");
+  scroller.style.overflowY = "auto";
+  sheet.append(scroller);
+  await vi.waitFor(() => expect(scroller.tabIndex).toBe(0));
+  expect(scroller.getAttribute("role")).toBe("region");
+  expect(scroller.getAttribute("aria-label")).toBe("Thumbnails");
+  stop();
+});
+
+it("does not turn the desktop navigation sidebar into a modal sheet", () => {
+  const { host, root } = fixture();
+  const sidebar = document.createElement("section");
+  sidebar.setAttribute("data-sidebar-id", "sidebar-panel");
+  root.append(sidebar);
+  const stop = installPdfAccessibility(
+    host,
+    {} as PdfEngine,
+    { pageCount: 0 } as PdfDocumentObject,
+  );
+  expect(sidebar.hasAttribute("role")).toBe(false);
+  expect(sidebar.hasAttribute("aria-modal")).toBe(false);
+  stop();
+});

@@ -41,5 +41,5 @@ function applyHtmlPalette(
   }
   const dark = root.colorScheme.split(/\s+/u)[0] === "dark";
   document.documentElement.dataset["readerScheme"] = dark ? "dark" : "light";
-  style.textContent = `:root { color-scheme: ${dark ? "dark" : "light"}; background: ${frame.backgroundColor}; color: ${frame.color}; }`;
+  style.textContent = `:root { color-scheme: ${dark ? "dark" : "light"}; background: ${frame.backgroundColor}; color: ${frame.color}; --reader-selection: ${root.getPropertyValue("--color-selected")}; }`;
 }

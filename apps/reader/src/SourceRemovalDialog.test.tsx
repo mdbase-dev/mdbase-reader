@@ -84,6 +84,9 @@ describe("removing a source", () => {
     await act(async () => button("Remove source")?.click());
     expect(remove).toHaveBeenCalledExactlyOnceWith(plan);
     expect(onRemoved).toHaveBeenCalledExactlyOnceWith(source.id);
+    expect(host.querySelector('[role="status"]')?.textContent).toContain(
+      "Removed “Imported by mistake”.",
+    );
     expect(host.querySelector("[role=alertdialog]")).toBeNull();
   });
 

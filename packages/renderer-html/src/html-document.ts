@@ -160,7 +160,7 @@ function readerStyle(document: Document): HTMLStyleElement {
     a { color: inherit; text-decoration-color: #3ba5d8; text-underline-offset: .16em; }
     blockquote { margin-inline: 0; padding-left: 1.4rem; border-left: 2px solid #3ba5d8; color: color-mix(in srgb, currentColor 72%, transparent); }
     pre { overflow: auto; padding: 1rem; background: rgba(0,0,0,.06); }
-    ::selection { background: rgba(64, 174, 224, .28); }
+    ::selection { background: var(--reader-selection); }
     ::highlight(reader-search-passage) { background: Highlight; color: HighlightText; text-decoration: underline; }
     /* One highlight per palette colour, with light and dark washes (html-css-highlights.ts). */
     ${annotationHighlightCss()}

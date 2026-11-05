@@ -1,5 +1,6 @@
+import { t } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { propertyValue } from "./library-columns.js";
 import { parseFieldInput } from "./library-field-edit.js";
@@ -13,6 +14,7 @@ import type { ReadingStatus, Source, SourceSummary } from "@mdbase-reader/core";
 type Progress = (value: BulkStatusProgress) => void;
 
 export interface LibraryWrites {
+  readonly notice: string | null;
   /** Sets one reading status on many sources. */
   readonly setStatuses?: (
     sources: readonly SourceSummary[],
@@ -36,6 +38,14 @@ export function useLibraryWrites(
   onSourceChanged: ((source: Source) => void) | undefined,
   shapeOf: (key: string) => FieldShape,
 ): LibraryWrites {
+  const [notice, setNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!notice) {
+      return undefined;
+    }
+    const timer = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const saveStatus = gateway.saveReadingStatus?.bind(gateway);
   const saveFields = gateway.saveSourceFields?.bind(gateway);
   const fieldValue = useCallback(
@@ -48,6 +58,7 @@ export function useLibraryWrites(
       eachSource(sources, progress, async (source) => {
         if (saveStatus) {
           onSourceChanged?.(await saveStatus(source.id, status));
+          setNotice(t`Updated reading status for “${source.title}”.`);
         }
       }),
     [onSourceChanged, saveStatus],
@@ -83,15 +94,17 @@ export function useLibraryWrites(
         throw reason;
       }
       signalMdbaseMark("saved");
+      setNotice(t`Saved changes to “${source.title}”.`);
     },
     [fieldValue, onSourceChanged, saveFields],
   );
   return useMemo(
     () => ({
+      notice,
       ...(saveStatus ? { setStatuses } : {}),
       ...(saveFields ? { setFields, saveField } : {}),
     }),
-    [saveField, saveFields, saveStatus, setFields, setStatuses],
+    [notice, saveField, saveFields, saveStatus, setFields, setStatuses],
   );
 }
 

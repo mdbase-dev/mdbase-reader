@@ -22,11 +22,18 @@ export function SourceRemovalDialog({
 }): JSX.Element | null {
   const { pending } = removal;
   return (
-    <OverlayPresence open={Boolean(pending)}>
-      {pending ? (
-        <OpenSourceRemovalDialog removal={removal} pending={pending} sources={sources} />
+    <>
+      {removal.notice ? (
+        <div className="reader-operation-notice" role="status">
+          {removal.notice}
+        </div>
       ) : null}
-    </OverlayPresence>
+      <OverlayPresence open={Boolean(pending)}>
+        {pending ? (
+          <OpenSourceRemovalDialog removal={removal} pending={pending} sources={sources} />
+        ) : null}
+      </OverlayPresence>
+    </>
   );
 }
 

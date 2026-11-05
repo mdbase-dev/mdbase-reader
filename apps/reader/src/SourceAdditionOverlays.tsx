@@ -1,13 +1,10 @@
 import { lazyFeature } from "./lazy-feature.js";
 import { OverlayPresence } from "./OverlayPresence.js";
+import { SourceAddDialog } from "./SourceAddDialog.js";
 
 import type { SourceAdditionController } from "./use-source-addition.js";
 import type { JSX } from "react";
 
-const SourceAddDialog = lazyFeature(
-  async () => ({ default: (await import("./SourceAddDialog.js")).SourceAddDialog }),
-  "the add source dialog",
-);
 const SourceImportOverlay = lazyFeature(
   async () => ({ default: (await import("./SourceImportDialog.js")).SourceImportOverlay }),
   "the add source dialog",

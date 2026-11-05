@@ -87,20 +87,13 @@
 }
 .reader-dock-sidebar[hidden] {
   display: none;
-  opacity: 0;
-  transition-duration: 120ms;
-}
-.reader-dock-sidebar {
-  opacity: 1;
-  transition:
-    opacity 160ms ease-out,
-    display 120ms allow-discrete;
 }
 .reader-dock .dv-render-overlay {
-  opacity: 1;
   transition:
-    opacity 160ms ease-out,
-    visibility 160ms allow-discrete;
+    width 220ms var(--ease-out),
+    height 220ms var(--ease-out),
+    left 220ms var(--ease-out),
+    top 220ms var(--ease-out);
 }
 /* Always-mounted edge panels can retain phone geometry while a hidden shell is 0px wide.
    Hide the renderer overlay too: its empty React wrapper must not intercept other tabs. */
@@ -108,19 +101,16 @@
 .reader-dock .dv-render-overlay:has(.workspace-pane[aria-hidden="true"]) {
   visibility: hidden !important;
   pointer-events: none !important;
-  opacity: 0;
-  transition-duration: 120ms;
-}
-@starting-style {
-  .reader-dock-sidebar:not([hidden]) {
-    opacity: 0;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .reader-dock-sidebar,
   .reader-dock .dv-render-overlay {
     transition: none;
   }
+}
+.reader-dock .dv-tab:focus-visible,
+.reader-dock [role="separator"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .reader-dock .library-pane,
 .reader-dock .inspector-pane {

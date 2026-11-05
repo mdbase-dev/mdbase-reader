@@ -127,7 +127,7 @@ function OpenedReaderApp({
   readonly library: ReaderWorkspaceViewModel["library"];
 }): JSX.Element {
   const [focusMode, setFocusMode] = useState(false);
-  const [commandsOpen, setCommandsOpen] = useState(false);
+  const [commandsOpen, setCommandsOpen] = useState<boolean | "shortcuts">(false);
   const [theme, changeTheme] = useThemePreference();
   const [surfaces, setSurfaces] = useState<ReadonlyMap<string, ReadingSurface>>(new Map());
   const [sessionLocations] = useState(() => new SessionReadingLocations());
@@ -183,6 +183,7 @@ function OpenedReaderApp({
     focusMode,
     setFocusMode,
     openCommands: () => setCommandsOpen(true),
+    openShortcuts: () => setCommandsOpen("shortcuts"),
     focusSearch: () => setCommandsOpen(true),
     switchTab: sourceWorkspace.switchRelative,
     focusNextPane: sourceWorkspace.focusNextPane,

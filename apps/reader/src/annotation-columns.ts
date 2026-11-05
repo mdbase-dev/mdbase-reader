@@ -57,7 +57,7 @@ const widths: Record<AnnotationColumn, number> = {
   passage: 420,
   source: 240,
   creator: 180,
-  type: 96,
+  type: 148,
   tags: 150,
   location: 130,
   created: 104,

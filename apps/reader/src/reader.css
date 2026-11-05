@@ -22,7 +22,7 @@ body {
 
 ::selection {
   color: var(--ink);
-  background: color-mix(in oklch, var(--accent) 24%, transparent);
+  background: var(--color-selected);
 }
 
 * {
@@ -106,6 +106,7 @@ button {
 }
 
 .reader-shell {
+  transition: grid-template-rows 220ms var(--ease-out);
   height: 100%;
   display: grid;
   grid-template-rows: var(--reader-header-height) minmax(0, 1fr);
@@ -137,11 +138,17 @@ button {
 .workspace-pane,
 .document-toolbar {
   transition:
-    grid-template-rows 160ms var(--ease),
-    opacity 160ms var(--ease);
+    grid-template-rows 220ms var(--ease-out),
+    opacity 220ms var(--ease-out);
 }
-.reader-shell[data-chrome-hidden] :is(.workspace-pane, .document-toolbar) {
-  transition-duration: 120ms;
+@media (prefers-reduced-motion: reduce) {
+  .reader-shell,
+  .reader-header,
+  .workspace-pane,
+  .document-toolbar,
+  .reader-dock .dv-tabs-and-actions-container {
+    transition: none;
+  }
 }
 
 .deployment-update {

@@ -375,6 +375,23 @@ export function LibraryWorkspace({
                       ? updateFilter({ query: event.target.value })
                       : setContentQuery(event.target.value)
                   }
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape" && event.currentTarget.value) {
+                      event.preventDefault();
+                      if (searchScope === "sources") {
+                        updateFilter({ query: "" });
+                      } else {
+                        setContentQuery("");
+                      }
+                    } else if (event.key === "ArrowDown" || event.key === "Escape") {
+                      event.preventDefault();
+                      resultsRef.current
+                        ?.querySelector<HTMLElement>(
+                          '.library-table-row:not(.is-header)[tabindex="0"], .search-passage-list button',
+                        )
+                        ?.focus();
+                    }
+                  }}
                 />
               </label>
               <span className="library-search-scope-label" aria-hidden="true">
@@ -408,8 +425,8 @@ export function LibraryWorkspace({
               ) : null}
               <Menu
                 className="library-workspace-more"
-                label={t`View options${filterCount ? `, ${String(filterCount)} active filters` : ""}`}
-                title={t({ message: "View options", context: "LibraryWorkspace interface" })}
+                label={t`Filter`}
+                title={t`Filter`}
                 trigger={
                   <>
                     <FilterIcon />
@@ -465,6 +482,10 @@ export function LibraryWorkspace({
                       <Trans>Clear filters</Trans>
                     </button>
                   ) : null}
+                </div>
+              </Menu>
+              <Menu label={t`Display`} trigger={t`Display`} triggerClassName="library-save-button">
+                <div className="library-options" data-menu-keep-open>
                   <span className="menu-label">
                     <Trans>Sort</Trans>
                   </span>
@@ -523,7 +544,8 @@ export function LibraryWorkspace({
                     ))}
                   </div>
                 </div>
-                <hr />
+              </Menu>
+              <Menu label={t`Library actions`} trigger="…">
                 <button
                   type="button"
                   disabled={JSON.stringify(layout) === JSON.stringify(layoutOf(view.configuration))}
@@ -589,6 +611,11 @@ export function LibraryWorkspace({
       {(problem ?? controller.problem) ? (
         <div className="library-view-problem" role="alert">
           {problem ?? controller.problem}
+        </div>
+      ) : null}
+      {writes.notice ? (
+        <div className="reader-operation-notice" role="status">
+          {writes.notice}
         </div>
       ) : null}
 

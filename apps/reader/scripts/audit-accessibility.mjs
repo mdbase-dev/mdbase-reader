@@ -2,7 +2,7 @@
 // Usage: READER_AUDIT_ORIGIN=http://127.0.0.1:5311 node scripts/audit-accessibility.mjs
 import { createRequire } from "node:module";
 
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
@@ -49,9 +49,13 @@ try {
   if (await desktop.getByRole("button", { name: /^Switch collection/u }).count()) {
     throw new Error("Preview must not offer fictitious connected collections.");
   }
-  const titles = desktop.locator(".library-table-body .library-table-row .is-title");
-  await titles.nth(0).click();
-  await titles.nth(2).click({ modifiers: ["Shift"] });
+  await desktop.locator(".library-table-body .library-table-row").first().focus();
+  await desktop.keyboard.press("Home");
+  await desktop.keyboard.press("Shift+ArrowDown");
+  await desktop.keyboard.press("Shift+ArrowDown");
+  await expect(desktop.getByRole("toolbar", { name: "Selected sources" })).toContainText(
+    "3 sources selected",
+  );
   await audit(desktop, "bulk selection");
   await desktop.getByRole("button", { name: "Annotations", exact: true }).click();
   await desktop.getByRole("grid", { name: "Annotations" }).waitFor();

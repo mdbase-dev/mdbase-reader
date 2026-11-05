@@ -30,7 +30,20 @@ export function lazyFeature<Props extends object>(
     };
     return (
       <FeatureBoundary key={attempt} label={label} retry={retry}>
-        <Suspense fallback={<p role="status">{translate`Loading ${label}…`}</p>}>
+        <Suspense
+          fallback={
+            <div
+              className="reader-feature-skeleton"
+              role="status"
+              aria-label={translate`Loading ${label}…`}
+            >
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          }
+        >
           <Surface {...props} />
         </Suspense>
       </FeatureBoundary>
@@ -56,8 +69,9 @@ class FeatureBoundary extends Component<
 
   override render(): ReactNode {
     return this.state.failed ? (
-      <div className="lazy-feature-error" role="alert">
-        <p>{translate`Reader could not load ${this.props.label}.`}</p>
+      <div className="connected-document-message is-error" role="alert">
+        <h2>{translate`${this.props.label} is unavailable`}</h2>
+        <p>{translate`Connect to the internet and try again to load this reading tool.`}</p>
         <button type="button" onClick={this.props.retry}>
           <Trans context="Reader interface">Try again</Trans>
         </button>

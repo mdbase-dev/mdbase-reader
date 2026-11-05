@@ -161,7 +161,9 @@ function OpenSourceAddDialog({
         <FileChoice disabled={busy} onChoose={onChooseFile} onDrop={onDropFile} />
       ) : (
         <p className="menu-note">
-          <Trans>File import is unavailable here.</Trans>
+          <Trans>
+            Connect a collection to import files. You can add a link or identifier in this preview.
+          </Trans>
         </p>
       )}
     </ModalDialog>

@@ -489,6 +489,7 @@ function useToolbarKeys(
         const action = latest.current[key as ToolbarKey];
         if (action) {
           event.preventDefault();
+          event.stopPropagation();
           action();
         }
       }
@@ -498,10 +499,10 @@ function useToolbarKeys(
         dismiss();
       }
     };
-    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("pointerdown", onPointerDown, true);
     return () => {
-      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("pointerdown", onPointerDown, true);
     };
   }, [barRef, dismiss]);

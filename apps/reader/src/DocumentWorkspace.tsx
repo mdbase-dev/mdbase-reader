@@ -1,5 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useCallback, useRef, type JSX, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, type JSX, type ReactNode } from "react";
 
 import { AnnotationComposerLayer } from "./AnnotationComposerLayer.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
@@ -81,11 +81,24 @@ export function DocumentWorkspace({
   const source = tab.kind === "source" ? props.sources.find(({ id }) => id === tab.sourceId) : null;
   const resident = visible || hydrated.has(workspaceSessionKey(paneId, tab.id));
   const document = tab.view === "document";
+  useEffect(() => {
+    if (focused && visible) {
+      const frame = requestAnimationFrame(() => {
+        // Activation by a click or Tab inside the pane leaves focus on that control.
+        if (!host.current?.contains(host.current.ownerDocument.activeElement)) {
+          host.current?.focus({ preventScroll: true });
+        }
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+    return undefined;
+  }, [document, focused, visible]);
   useDocumentAnnotationDirty(dock, tab, source);
   const surfaceClass = workspaceSurfaceClass(tab);
   return (
     <section
       ref={host}
+      tabIndex={-1}
       className={`workspace-pane${focused ? " is-focused" : ""} ${surfaceClass}-pane`}
       data-session-id={tab.id}
       aria-label={
