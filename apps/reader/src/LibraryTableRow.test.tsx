@@ -106,7 +106,9 @@ it("lets a title link follow touch selection and modified clicks", () => {
   act(() => {
     document
       .querySelector(".library-source-link")!
-      .dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true, detail: 1 }));
+      .dispatchEvent(
+        new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true, detail: 1 }),
+      );
   });
   expect(modified.onSelect).toHaveBeenCalledOnce();
   expect(modified.onOpen).not.toHaveBeenCalled();
