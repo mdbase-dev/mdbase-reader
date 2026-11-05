@@ -7,7 +7,7 @@ export async function auditPdfTouchWorkspace(page, { screenshot }) {
   const open = async () => {
     await searchSources(page, "Research 0020");
     await page.getByRole("option", { name: /^\[test\] Research 0020/ }).click();
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
     await waitPdf();
   };
   const waitPdf = async () => {

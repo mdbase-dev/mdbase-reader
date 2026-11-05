@@ -5,7 +5,7 @@ import type { SourceSummary } from "@mdbase-reader/core";
 
 export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | null): string {
   if (tab.kind === "library") {
-    return translate({ message: "Library", context: "workspace tab display" });
+    return translate`All sources`;
   }
   if (tab.view === "note") {
     return translate({ message: "Source note" });

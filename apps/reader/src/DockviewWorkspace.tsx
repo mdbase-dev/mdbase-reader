@@ -67,9 +67,17 @@ function SidePanel({
   readonly id: string;
   readonly children: ReactNode;
 }): JSX.Element {
-  const visible = useDockContext().document.sourceWorkspace.dock.isSideVisible(id);
+  const dock = useDockContext().document.sourceWorkspace.dock;
+  const visible = dock.isSideVisible(id);
+  const location = dock.api?.getPanel(id)?.api.location;
   return (
-    <div className="reader-dock-sidebar" hidden={!visible} inert={!visible}>
+    <div
+      className="reader-dock-sidebar"
+      data-reader-edge={location?.type === "edge" ? location.position : undefined}
+      data-visible={visible}
+      inert={!visible}
+      aria-hidden={!visible}
+    >
       {children}
     </div>
   );
@@ -155,7 +163,9 @@ export function DockviewWorkspace({
                   ? document.sources.find(({ id }) => id === tab.sourceId)
                   : null;
               const title = workspaceTabAccessibleTitle(tab, source ?? null);
-              return t`Opened ${title}`;
+              return tab.kind === "source" && tab.view === "document"
+                ? t`Opening ${title}`
+                : t`Opened ${title}`;
             }}
             onReady={ready}
             defaultTabComponent={ReaderDockTab}

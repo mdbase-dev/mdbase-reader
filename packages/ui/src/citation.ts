@@ -8,6 +8,11 @@
  */
 import { t } from "@lingui/core/macro";
 
+import type * as ItalianModule from "./locales/csl-it-IT.xml?raw";
+import type * as LocalesModule from "@citation-js/plugin-csl/lib-mjs/locales.json";
+import type * as StylesModule from "@citation-js/plugin-csl/lib-mjs/styles.json";
+import type * as CiteprocModule from "citeproc";
+
 export type CitationItem = Readonly<Record<string, unknown>> & { readonly id: string };
 
 /**
@@ -29,6 +34,17 @@ export type RenderedCitation =
   | { readonly kind: "empty" }
   | { readonly kind: "failed" };
 
+export function prepareCitationEngine(): Promise<
+  readonly [typeof CiteprocModule, typeof StylesModule, typeof LocalesModule, typeof ItalianModule]
+> {
+  return Promise.all([
+    import("citeproc"),
+    import("@citation-js/plugin-csl/lib-mjs/styles.json"),
+    import("@citation-js/plugin-csl/lib-mjs/locales.json"),
+    import("./locales/csl-it-IT.xml?raw"),
+  ]);
+}
+
 /** The formatted bibliography entry as plain text, rendered by citeproc-js. */
 export async function renderCitation(
   citation: CitationItem,
@@ -37,17 +53,12 @@ export async function renderCitation(
 ): Promise<RenderedCitation> {
   try {
     const [{ default: CSL }, { default: styles }, { default: locales }, italian] =
-      await Promise.all([
-        import("citeproc"),
-        import("@citation-js/plugin-csl/lib-mjs/styles.json"),
-        import("@citation-js/plugin-csl/lib-mjs/locales.json"),
-        lang === "it-IT" ? import("./locales/csl-it-IT.xml?raw") : Promise.resolve(null),
-      ]);
+      await prepareCitationEngine();
     const engine = new CSL.Engine(
       {
         retrieveItem: () => citation,
         retrieveLocale: (locale) =>
-          (locale === "it-IT" ? italian?.default : undefined) ??
+          (locale === "it-IT" ? italian.default : undefined) ??
           locales[locale] ??
           locales[locale.replace("-", "_")] ??
           locales["en-US"] ??

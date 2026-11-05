@@ -108,6 +108,11 @@ msgstr ". 개수는 이 기기에서 계산하며, 아무것도 전송하거나 
 msgid ". Create a metadata-only chapter with its own DOI and citation; no PDF page range is inferred."
 msgstr ". 고유 DOI와 인용 정보가 있는 메타데이터 전용 장을 만듭니다. PDF 페이지 범위는 추정하지 않습니다."
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-status.tsx
+msgid "“{0}” — {label}"
+msgstr "“{0}”: {label}"
+
 #. placeholder {0}: item.label
 #: apps/reader/src/CreateFollowThroughNotice.tsx
 msgid "“{0}” could not be added to your collection: another record already uses each name Reader tried."
@@ -214,11 +219,6 @@ msgstr "{0} 숨김."
 #: apps/reader/src/InspectorPane.tsx
 msgid "{0} is open in {1}."
 msgstr "{0}은(는) {1}에서 열려 있습니다."
-
-#. placeholder {0}: this.props.label
-#: apps/reader/src/lazy-feature.tsx
-msgid "{0} is unavailable"
-msgstr "{0}을(를) 사용할 수 없습니다"
 
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
@@ -374,10 +374,9 @@ msgstr "검색 결과 {count}개"
 msgid "{environment} environment"
 msgstr "{environment} 환경"
 
-#. placeholder {0}: state.message
 #: apps/reader/src/DocumentRendererStage.tsx
-msgid "{errorName} could not render this file: {0}"
-msgstr "{errorName}이(가) 이 파일을 렌더링하지 못했습니다: {0}"
+msgid "{errorName} could not open this file. Check your connection and try again."
+msgstr "{errorName}에서 이 파일을 열 수 없습니다. 연결을 확인하고 다시 시도하세요."
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "{failures, plural, one {# loaded document could not be indexed} other {# loaded documents could not be indexed}}. Reopen document search to retry."
@@ -845,6 +844,13 @@ msgstr "모든 페이지"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 #: apps/reader/src/mdbase-library-views.ts
+#: apps/reader/src/source-workspace-layout.ts
+#: apps/reader/src/workspace-tab-display.ts
+msgid "All sources"
+msgstr "모든 자료"
+
+#: apps/reader/src/dockview-workspace.ts
+msgctxt "dockview workspace"
 msgid "All sources"
 msgstr "모든 자료"
 
@@ -1392,10 +1398,6 @@ msgstr "북마크"
 #: packages/migration/src/readwise.ts
 msgid "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open."
 msgstr "Kindle, Apple Books, Instapaper, 팟캐스트 등 Readwise의 기존 자료는 메타데이터와 하이라이트만 가져옵니다. Readwise가 본문이나 파일을 제공하지 않기 때문입니다. 위치는 Readwise가 붙인 표시(예: Kindle 위치)이며, Reader에서 열 수 있는 위치가 아닙니다."
-
-#: apps/reader/src/ImportPageView.tsx
-msgid "Bring your library with you."
-msgstr "라이브러리를 그대로 가져가세요."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2676,6 +2678,10 @@ msgstr "CSL-JSON 인용 정보"
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "CSL-JSON에 오류가 있습니다 — 수정하거나 버리세요"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Ctrl+/ for shortcuts"
+msgstr "Ctrl+/로 단축키 표시"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4638,28 +4644,8 @@ msgstr "법령"
 msgid "Library"
 msgstr "라이브러리"
 
-#: apps/reader/src/dockview-workspace.ts
-msgctxt "dockview workspace"
-msgid "Library"
-msgstr "라이브러리"
-
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace searchScopeOptions"
-msgid "Library"
-msgstr "라이브러리"
-
-#: apps/reader/src/source-workspace-layout.ts
-msgctxt "source workspace layout"
-msgid "Library"
-msgstr "라이브러리"
-
 #: apps/reader/src/source-workspace-persistence.ts
 msgctxt "source workspace persistence"
-msgid "Library"
-msgstr "라이브러리"
-
-#: apps/reader/src/workspace-tab-display.ts
-msgctxt "workspace tab display"
 msgid "Library"
 msgstr "라이브러리"
 
@@ -4712,6 +4698,10 @@ msgstr "라이브러리 보기 및 자료"
 msgctxt "DocumentWorkspace interface"
 msgid "Library workspace"
 msgstr "라이브러리 작업 공간"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches panes."
+msgstr "라이브러리: J/K로 이동, X로 선택, S로 상태 변경, A로 자료 추가, E로 내보내기, Delete로 삭제 확인, F2로 이름 변경. [로 자료 목록을 전환합니다. 읽기: Page Up/Down과 Space로 스크롤, H로 강조, 1–5로 색상을 선택합니다. Ctrl+Z로 표시된 실행 취소를 수행합니다. F6으로 패널에 들어가거나 패널을 전환합니다."
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Light appearance theme"
@@ -5873,6 +5863,10 @@ msgstr "{0} 여는 중"
 msgid "Opening {0}…"
 msgstr "{0} 여는 중…"
 
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Opening {title}"
+msgstr "{title} 여는 중"
+
 #: apps/reader/src/preview.tsx
 msgid "Opening An anthology of attention…"
 msgstr "An anthology of attention 여는 중…"
@@ -6623,7 +6617,7 @@ msgstr "Reader에서 해당 페이지를 캡처하지 못했습니다."
 msgid "Reader could not change its colour."
 msgstr "Reader에서 색상을 변경할 수 없었습니다."
 
-#: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/use-source-status.tsx
 msgid "Reader could not change the reading status."
 msgstr "Reader에서 읽기 상태를 변경하지 못했습니다."
 
@@ -6896,6 +6890,10 @@ msgstr "페이지를 읽는 중…"
 msgid "Reading the table of contents…"
 msgstr "목차 읽는 중…"
 
+#: apps/reader/src/lazy-feature.tsx
+msgid "Reading tool unavailable"
+msgstr "읽기 도구를 사용할 수 없습니다"
+
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium cannot open an EPUB with an empty reading order."
 msgstr "Readium은 읽기 순서가 비어 있는 EPUB을 열 수 없습니다."
@@ -7000,6 +6998,11 @@ msgstr "Readwise 토큰이 삭제되었습니다. 계속하려면 다시 연결�
 #: packages/migration/src/readwise.ts
 msgid "Readwise tweets"
 msgstr "Readwise 트윗"
+
+#. placeholder {0}: source?.title ?? ""
+#: apps/reader/src/DocumentWorkspace.tsx
+msgid "Ready to read {0}"
+msgstr "{0} 읽기 준비 완료"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
@@ -7235,6 +7238,11 @@ msgstr "문서 창 복원"
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Restore document panes · {0}"
 msgstr "문서 창 복원 · {0}"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-status.tsx
+msgid "Restored the status of “{0}”."
+msgstr "“{0}”의 상태를 복원했습니다."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved changes from earlier."
@@ -7572,10 +7580,6 @@ msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
 msgstr "저장된 웹 페이지"
 
-#: apps/reader/src/RenderedSourceDocument.tsx
-msgid "Saved web page · original headings below are unchanged"
-msgstr "저장된 웹 페이지 · 아래의 원래 제목은 변경되지 않았습니다"
-
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Saved web pages"
@@ -7710,10 +7714,6 @@ msgstr "검색"
 msgctxt "PDF viewer search"
 msgid "Search"
 msgstr "검색"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Search “shortcuts” for keyboard help"
-msgstr "키보드 도움말을 보려면 ‘shortcuts’를 검색하세요"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Search above covers all annotations"
@@ -7901,6 +7901,11 @@ msgstr "필드 설정…"
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set reading status of the selected sources"
 msgstr "선택한 소스의 읽기 상태 설정"
+
+#. placeholder {0}: readingStatusLabel(status)
+#: apps/reader/src/reader-command-list.ts
+msgid "Set status: {0}"
+msgstr "상태 설정: {0}"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
@@ -9103,6 +9108,10 @@ msgstr "이 PDF가 {maximumMb}MB보다 큽니다. 다운로드한 후 Reader에�
 msgid "This Reader connection cannot store annotation images."
 msgstr "이 Reader 연결은 주석 이미지를 저장할 수 없습니다."
 
+#: apps/reader/src/lazy-feature.tsx
+msgid "This reading tool could not be loaded. Connect to the internet and try again."
+msgstr "이 읽기 도구를 불러올 수 없습니다. 인터넷에 연결하고 다시 시도하세요."
+
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "This record only uses the core fields above."
 msgstr "이 레코드는 위의 핵심 필드만 사용합니다."
@@ -9344,6 +9353,7 @@ msgstr "다시 시도"
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/CreateFollowThroughNotice.tsx
+#: apps/reader/src/DocumentRendererStage.tsx
 #: apps/reader/src/lazy-feature.tsx
 #: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
@@ -9426,6 +9436,7 @@ msgstr "날짜 없음"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/use-source-status.tsx
 msgctxt "Reader interface"
 msgid "Undo"
 msgstr "실행 취소"
@@ -9867,6 +9878,10 @@ msgstr "이 창을 닫으셔도 됩니다."
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
 msgstr "탭을 사용해 여러 문서를 볼 수 있습니다."
+
+#: apps/reader/src/DocumentRendererStage.tsx
+msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
+msgstr "오프라인 상태입니다. 이 파일은 아직 다운로드되지 않았습니다. 인터넷에 연결하고 다시 시도하세요."
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

@@ -14,6 +14,7 @@ export function libraryCommands(input: ReaderCommandInput): readonly ReaderComma
     },
     {
       id: "add-source",
+      shortcut: "A",
       label: translate({ message: "Add source…", context: "reader app commands" }),
       group: "Library",
       keywords: "new import file pdf epub web page",

@@ -2,10 +2,11 @@ import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { validateCslItem } from "@mdbase-reader/core";
-import { formatCitation } from "@mdbase-reader/ui/citation";
+import { renderedCitationText } from "@mdbase-reader/ui/citation";
 import { useEffect, useState, type JSX } from "react";
 
 import { citationNames } from "./citation-form-model.js";
+import { renderCitation } from "./citation-renderer.js";
 
 import type { ChapterOutline } from "./chapter-outline.js";
 import type { DocumentRange, PlannedSourcePart } from "@mdbase-reader/core";
@@ -24,7 +25,7 @@ export function ChapterPreview({
     let current = true;
     const validated = validateCslItem(plan.citation);
     const formatted = validated.valid
-      ? formatCitation(validated.item, "apa", "en-US")
+      ? renderCitation(validated.item, "apa", "en-US").then(renderedCitationText)
       : Promise.resolve(
           translate({
             message: "Add a chapter title and check the citation details to preview it.",

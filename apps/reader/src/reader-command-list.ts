@@ -1,5 +1,6 @@
 import { t as translate } from "@lingui/core/macro";
 
+import { readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
 import {
   annotationCommands,
   chapterCommands,
@@ -13,7 +14,7 @@ import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { Command } from "@mdbase-dev/ui/command-palette";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
-import type { SourceSummary } from "@mdbase-reader/core";
+import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
 
 /** The palette's groups, in the order Reader shows them. */
 export type ReaderCommandGroup =
@@ -42,6 +43,7 @@ export interface ReaderCommandInput {
   readonly sourceExport: SourceExportController;
   /** Asks to remove a source, which confirms first; null when the collection cannot. */
   readonly removeSource?: ((source: SourceSummary) => void) | null;
+  readonly changeStatus?: ((id: SourceId, status: ReadingStatus) => void) | undefined;
   /** Null when chapter creation is disabled or unavailable for this collection. */
   readonly createSourceParts?: ((source: SourceSummary) => void) | null;
   readonly bibliographyExport: BibliographyExportController;
@@ -130,7 +132,8 @@ function navigationCommands(input: ReaderCommandInput): readonly ReaderCommand[]
       id: "keyboard-shortcuts",
       label: translate`Keyboard shortcuts`,
       group: "Workspace",
-      keywords: "help keyboard shortcuts keyboard help",
+      keywords:
+        "help keyboard shortcuts J K X S A E Delete F2 [ Ctrl Z list status select export add remove undo",
       shortcut: "mod+/",
       run: input.openShortcuts,
     },
@@ -272,8 +275,19 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   }
   const removeSource = input.removeSource;
   return [
+    ...(input.changeStatus
+      ? readingStatusChoices.map((status): ReaderCommand => ({
+          id: `status:${status}`,
+          label: translate`Set status: ${readingStatusLabel(status)}`,
+          detail: activeSource.title,
+          group: "Current source",
+          keywords: "reading status",
+          run: () => input.changeStatus?.(sourceId, status),
+        }))
+      : []),
     {
       id: "export-source",
+      shortcut: "E",
       label: translate({ message: "Export current source" }),
       group: "Current source",
       run: input.sourceExport.run,
@@ -317,6 +331,7 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
       ? [
           {
             id: "remove-source",
+            shortcut: "Delete",
             label: translate({ message: "Remove current source…" }),
             detail: activeSource.title,
             group: "Current source" as const,

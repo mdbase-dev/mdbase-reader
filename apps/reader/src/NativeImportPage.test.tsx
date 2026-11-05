@@ -109,7 +109,7 @@ async function selectInput(): Promise<void> {
 it("native import home keeps the existing tiles without starting any SDK/legacy session", async () => {
   const h = await fixture(false);
   await act(() => Promise.resolve(root.render(<NativeImportPage sdk={h.mdbase} service="home" />)));
-  expect(host.textContent).toContain("Bring your library with you.");
+  expect(host.textContent).toContain("Import a library");
   expect(host.querySelector('a[href$="import/zotero"]')).not.toBeNull();
   expect(host.querySelector('a[href$="import/readwise"]')).not.toBeNull();
   expect(h.controls.observedActions()).toHaveLength(0);

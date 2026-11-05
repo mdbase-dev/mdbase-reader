@@ -64,6 +64,7 @@ export interface ReaderShortcutActions {
   readonly navigate: (direction: -1 | 1) => void;
   readonly toggleSidebar: () => void;
   readonly toggleNotes: () => void;
+  readonly addSource?: () => void;
 }
 
 export function useReaderShortcuts(actions: ReaderShortcutActions): void {
@@ -135,7 +136,22 @@ function handleLibraryShortcut(
     actions.openShortcuts();
     return true;
   }
-  if (!editing && !modifier && !event.altKey && /^[jk]$/iu.test(event.key)) {
+  if (editing || modifier || event.altKey) {
+    return false;
+  }
+  if (
+    document.querySelector(".workspace-pane.is-focused .library-workspace") &&
+    (event.key === "[" || event.key.toLowerCase() === "a")
+  ) {
+    event.preventDefault();
+    if (event.key === "[") {
+      actions.toggleSidebar();
+    } else {
+      actions.addSource?.();
+    }
+    return true;
+  }
+  if (/^[jk]$/iu.test(event.key)) {
     const row = document.querySelector<HTMLElement>(
       '.library-table-row:not(.is-header)[tabindex="0"]',
     );

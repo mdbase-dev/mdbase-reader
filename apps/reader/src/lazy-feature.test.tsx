@@ -74,7 +74,7 @@ it("retries a rejected import without reloading the reader", async () => {
     .mockResolvedValue({ default: () => <p>Ready editor</p> });
   const Editor = lazyFeature(load, "the editor");
   await act(async () => root.render(<Editor />));
-  expect(host.querySelector('[role="alert"] h2')?.textContent).toBe("the editor is unavailable");
+  expect(host.querySelector('[role="alert"] h2')?.textContent).toBe("Reading tool unavailable");
   expect(host.textContent).toContain("Connect to the internet and try again");
   await act(async () => host.querySelector("button")?.click());
   expect(host.textContent).toContain("Ready editor");
@@ -91,4 +91,22 @@ it("a failed speculative preload does not poison a later open", async () => {
   await act(async () => root.render(<Import />));
   expect(host.textContent).toContain("Ready import");
   expect(load).toHaveBeenCalledTimes(2);
+});
+
+it("hands a PDF download failure to its stage instead of leaving an opening overlay and duplicate error", async () => {
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const problem = new TypeError("Failed to fetch dynamically imported module");
+  const Pdf = lazyFeature<{ onDocumentError: (error: unknown) => void }>(
+    () => Promise.reject(problem),
+    "PDF",
+  );
+  const onDocumentError = vi.fn();
+  await act(async () => {
+    root.render(<Pdf onDocumentError={onDocumentError} />);
+  });
+  expect(onDocumentError).toHaveBeenCalledWith(
+    "This reading tool could not be loaded. Connect to the internet and try again.",
+  );
+  expect(host.textContent).not.toContain("TypeError");
+  expect(host.querySelector('[role="alert"]')).toBeNull();
 });

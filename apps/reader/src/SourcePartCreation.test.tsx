@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes queued React effects */
-import { formatCitation } from "@mdbase-reader/ui/citation";
 import { act, type JSX } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { renderCitation } from "./citation-renderer.js";
 import { partSource } from "./source-parts.fixtures.js";
 import { SourcePartCreation, useSourcePartCreation } from "./SourcePartCreation.js";
 import { createRoot } from "./testing/i18n.js";
@@ -17,10 +17,11 @@ vi.mock("./chapter-outline.js", async (original) => ({
   ...(await original<typeof ChapterOutlineModule>()),
   readChapterOutline: readOutline,
 }));
-vi.mock("@mdbase-reader/ui/citation", () => ({
-  formatCitation: vi
-    .fn()
-    .mockResolvedValue("Bea Writer. Outline chapter. In book (pp. 41–67). Book press."),
+vi.mock("./citation-renderer.js", () => ({
+  renderCitation: vi.fn().mockResolvedValue({
+    kind: "formatted",
+    text: "Bea Writer. Outline chapter. In book (pp. 41–67). Book press.",
+  }),
 }));
 
 beforeEach(() => {
@@ -241,7 +242,7 @@ describe("readable chapter previews", () => {
     expect(preview?.textContent).toContain(
       "Bea Writer. Outline chapter. In book (pp. 41–67). Book press.",
     );
-    expect(formatCitation).toHaveBeenLastCalledWith(
+    expect(renderCitation).toHaveBeenLastCalledWith(
       expect.objectContaining({
         title: "Outline chapter",
         "container-title": "book",

@@ -1,4 +1,5 @@
 import { panelTab } from "./dockview-workspace-state.js";
+import { focusReadingPane } from "./focus-reading-pane.js";
 
 import type { ReaderDockWorkspace } from "./dockview-workspace.js";
 import type { WorkspaceSplitDirection } from "./source-workspace-layout.js";
@@ -63,6 +64,13 @@ export function mergeDockGroup(api: DockviewApi | null, groupId: string): void {
 export function focusNextDockGroup(api: DockviewApi | null): void {
   if (!api) {
     return;
+  }
+  if (document.activeElement === document.body) {
+    const pane = document.querySelector<HTMLElement>(".workspace-pane.is-focused");
+    if (pane) {
+      focusReadingPane(pane);
+      return;
+    }
   }
   const groups = api.groups.filter(
     (group) =>

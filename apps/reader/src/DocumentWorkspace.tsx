@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, type JSX, type ReactNode } from "react"
 import { AnnotationComposerLayer } from "./AnnotationComposerLayer.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
 import { DocumentNotices } from "./DocumentNotices.js";
+import { focusReadingPane } from "./focus-reading-pane.js";
 import { SelectionToolbarLayer } from "./SelectionToolbar.js";
 import { SourceReadingBoundary } from "./SourceReadingBoundary.js";
 import { useDocumentAnnotationDirty } from "./use-annotation-draft.js";
@@ -81,18 +82,30 @@ export function DocumentWorkspace({
   const source = tab.kind === "source" ? props.sources.find(({ id }) => id === tab.sourceId) : null;
   const resident = visible || hydrated.has(workspaceSessionKey(paneId, tab.id));
   const document = tab.view === "document";
+  const surface = props.surfaces.get(tab.id);
   useEffect(() => {
     if (focused && visible) {
       const frame = requestAnimationFrame(() => {
         // Activation by a click or Tab inside the pane leaves focus on that control.
         if (!host.current?.contains(host.current.ownerDocument.activeElement)) {
-          host.current?.focus({ preventScroll: true });
+          if (host.current) {
+            focusReadingPane(host.current);
+          }
         }
       });
       return () => cancelAnimationFrame(frame);
     }
     return undefined;
   }, [document, focused, visible]);
+  useEffect(() => {
+    const pane = host.current;
+    if (!pane) {
+      return;
+    }
+    if (document && surface && focused && visible && pane.ownerDocument.activeElement === pane) {
+      focusReadingPane(pane);
+    }
+  }, [document, surface, focused, visible]);
   useDocumentAnnotationDirty(dock, tab, source);
   const surfaceClass = workspaceSurfaceClass(tab);
   return (
@@ -108,6 +121,9 @@ export function DocumentWorkspace({
       inert={!visible}
     >
       <div className={`document-canvas ${surfaceClass}-canvas`}>
+        {surface && focused && visible ? (
+          <span role="status" className="sr-only">{t`Ready to read ${source?.title ?? ""}`}</span>
+        ) : null}
         <div className="document-session-deck">
           <div className={visible ? "document-session is-active" : "document-session"}>
             {resident ? sessionContent(props, tab, paneId, focused, visible) : null}

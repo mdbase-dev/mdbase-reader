@@ -28,11 +28,11 @@ describe("workspace tab display", () => {
     const saved = createLibraryWorkspaceTab("saved.md::my-view", "My reading");
     try {
       await readerI18n.selectLocale("de");
-      expect(workspaceTabAccessibleTitle(library, null)).toBe("Bibliothek");
+      expect(workspaceTabAccessibleTitle(library, null)).toBe("Alle Quellen");
       expect(sidePanelTitle(navigatorPanelId)).toBe("Quellen");
       expect(sidePanelTitle(inspectorPanelId)).toBe("Notizen");
       await readerI18n.selectLocale("ja");
-      expect(workspaceTabAccessibleTitle(library, null)).toBe("ライブラリ");
+      expect(workspaceTabAccessibleTitle(library, null)).toBe("すべての資料");
       expect(sidePanelTitle(navigatorPanelId)).toBe("資料");
       expect(workspaceTabAccessibleTitle(saved, null)).toBe("My reading");
       expect(workspaceTabTitle(createWorkspaceTab(source.id), source)).toBe(source.title);

@@ -1,11 +1,12 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useCallback, useEffect, type JSX } from "react";
+import { useCallback, useEffect, useState, type JSX } from "react";
 
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
 import { useAnnotationPanelActions } from "./AnnotationPanelActions.js";
+import { preloadCitations } from "./citation-renderer.js";
 import { requestConfirmation } from "./confirmation.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
@@ -66,7 +67,10 @@ export function InspectorPane({
     if (!sourceId) {
       return undefined;
     }
-    return whenIdle(() => CitationEditor.preload());
+    return whenIdle(() => {
+      CitationEditor.preload();
+      preloadCitations();
+    });
   }, [sourceId]);
   return (
     <aside
@@ -223,24 +227,35 @@ export function InspectorContent({
       gateway.readFile(path, undefined, options),
     [gateway],
   );
-  return tab === "annotations" ? (
-    <AnnotationsTab
-      workspace={workspace}
-      composer={composer}
-      gateway={gateway}
-      readFile={readFile}
-    />
-  ) : tab === "note" ? (
-    <div className="note-editor">
-      <SourceNoteEditor
-        workspace={workspace}
-        composer={composer}
-        gateway={gateway}
-        {...(onOpenSourceView ? { onOpenSourceView } : {})}
-      />
-    </div>
-  ) : (
-    <CitationEditor workspace={workspace} />
+  const [citationOpened, setCitationOpened] = useState(tab === "citation");
+  if (tab === "citation" && !citationOpened) {
+    setCitationOpened(true);
+  }
+  return (
+    <>
+      {citationOpened ? (
+        <div hidden={tab !== "citation"} className="inspector-citation-resident">
+          <CitationEditor workspace={workspace} />
+        </div>
+      ) : null}
+      {tab === "annotations" ? (
+        <AnnotationsTab
+          workspace={workspace}
+          composer={composer}
+          gateway={gateway}
+          readFile={readFile}
+        />
+      ) : tab === "note" ? (
+        <div className="note-editor">
+          <SourceNoteEditor
+            workspace={workspace}
+            composer={composer}
+            gateway={gateway}
+            {...(onOpenSourceView ? { onOpenSourceView } : {})}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }
 

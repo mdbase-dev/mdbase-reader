@@ -210,7 +210,7 @@ try {
       .getByRole("combobox", { name: "Search sources and commands", exact: true })
       .fill(title);
     await page.getByRole("option", { name: new RegExp(`^\\[test\\] ${title}`) }).click();
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   };
   if (formatsAudit) {
     completed.push(...(await auditAnnotationFormats(page, { open: openSource, screenshot })));
@@ -430,7 +430,7 @@ try {
           name: new RegExp(`^\\[test\\] Research ${String(index).padStart(4, "0")}`),
         })
         .click();
-      await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+      await expect(page.locator(".mdbase-command-palette")).toBeHidden();
       await expect(page.locator(".document-session.is-active iframe.html-viewer")).toBeVisible({
         timeout: 20000,
       });
@@ -451,7 +451,7 @@ try {
     writesBlocked = false;
     await navigatorSearch.fill("Research 0001");
     await page.getByRole("option", { name: /^\[test\] Research 0001/ }).click();
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
     await expect
       .poll(() => activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollY))
       .toBeGreaterThan(1000);
@@ -470,7 +470,7 @@ try {
           name: new RegExp(`^\\[test\\] Research ${String(index).padStart(4, "0")}`),
         })
         .click();
-      await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+      await expect(page.locator(".mdbase-command-palette")).toBeHidden();
       await expect(page.locator(`.document-session.is-active .${format}-viewer`)).toBeVisible({
         timeout: 60000,
       });

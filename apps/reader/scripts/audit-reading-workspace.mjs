@@ -14,7 +14,7 @@ export async function auditReadingWorkspace(page, { screenshot }) {
 
   await searchSources(page, "Research 0001");
   await page.getByRole("option", { name: /^\[test\] Research 0001/u }).click();
-  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+  await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   const frame = page.frameLocator("iframe.html-viewer:visible");
   await expect(frame.locator("#p0")).toBeVisible({ timeout: 30000 });
   await expect(navigator).toBeHidden();

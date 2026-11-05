@@ -35,6 +35,7 @@ import { useReaderWorkspace, type ReaderWorkspaceController } from "./use-reader
 import { useSourceAddition } from "./use-source-addition.js";
 import { useSourceExport } from "./use-source-export.js";
 import { useSourceRemoval } from "./use-source-removal.js";
+import { useSourceStatus } from "./use-source-status.js";
 import { useSourceWorkspace } from "./use-source-workspace.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
@@ -178,6 +179,7 @@ function OpenedReaderApp({
     saveFile,
   });
   const sourceRemoval = useSourceRemoval(workspace, sourceWorkspace.close);
+  const sourceStatus = useSourceStatus(gateway, library.sources, workspace.reconcileSource);
 
   useReaderShortcuts({
     focusMode,
@@ -191,6 +193,7 @@ function OpenedReaderApp({
     navigate: sourceWorkspace.navigate,
     toggleSidebar: () => sourceWorkspace.dock.toggleSidebar("left"),
     toggleNotes: () => sourceWorkspace.dock.toggleSidebar("right"),
+    addSource: sourceAddition.open,
   });
 
   const model = {
@@ -209,6 +212,7 @@ function OpenedReaderApp({
     bibliographyExport,
     sourceExport,
     sourceRemoval,
+    sourceStatus,
     renderDocument,
     onSurfaceChange,
     surfaces,

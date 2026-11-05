@@ -30,7 +30,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     const title = `Research ${String(number).padStart(4, "0")}`;
     await searchSources(page, title);
     await page.getByRole("option", { name: new RegExp(`^\\[test\\] ${title}`) }).click();
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   };
   await open(0);
   const frame = () => page.frameLocator("iframe.html-viewer:visible");

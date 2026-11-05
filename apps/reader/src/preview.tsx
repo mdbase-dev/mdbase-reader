@@ -789,6 +789,7 @@ function PreviewAnthologyDocument({
   readonly onSurfaceChange: (surface: ReadingSurface | null) => void;
 }): JSX.Element {
   const [state, setState] = useState<RendererState>({ status: "opening" });
+  const [attempt, setAttempt] = useState(0);
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   const document = useMemo<SurfaceDocument>(
@@ -804,11 +805,16 @@ function PreviewAnthologyDocument({
       state={state}
       openingLabel={translate`Opening An anthology of attention…`}
       errorName="PDF viewer"
+      onRetry={() => {
+        setState({ status: "opening" });
+        setAttempt((value) => value + 1);
+      }}
     >
       <Suspense
         fallback={<DocumentMessage label={translate`Opening An anthology of attention…`} />}
       >
         <PdfViewerSurface
+          key={attempt}
           className="pdf-viewer"
           document={document}
           onSurfaceReady={onSurfaceChange}

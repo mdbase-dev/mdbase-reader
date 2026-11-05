@@ -55,6 +55,7 @@ import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceAdditionController } from "./use-source-addition.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceRemovalController } from "./use-source-removal.js";
+import type { useSourceStatus } from "./use-source-status.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
@@ -78,6 +79,7 @@ export interface ReaderWorkspaceViewModel {
   readonly bibliographyExport: BibliographyExportController;
   readonly sourceExport: SourceExportController;
   readonly sourceRemoval: SourceRemovalController;
+  readonly sourceStatus: ReturnType<typeof useSourceStatus>;
   readonly renderDocument: SourceDocumentRenderer | undefined;
   readonly onSurfaceChange: (sessionId: string, surface: ReadingSurface | null) => void;
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
@@ -360,6 +362,7 @@ export function ReaderWorkspaceView({
                 bibliographyExport={model.bibliographyExport}
                 annotationCounts={annotationCounts}
                 onSourceChanged={workspace.reconcileSource}
+                changeStatus={model.sourceStatus.change}
                 {...(model.sourceRemoval.request
                   ? { onRemoveSource: model.sourceRemoval.request }
                   : {})}
@@ -427,6 +430,8 @@ export function ReaderWorkspaceView({
         canChooseFile={Boolean(model.pickSourceFile)}
       />
       <SourceRemovalDialog removal={model.sourceRemoval} sources={library.sources} />
+      <div id="reader-notices" className="reader-notices" />
+      {model.sourceStatus.notice}
       <CommandPalette
         label={t({ message: "Reader commands", context: "ReaderWorkspaceView interface" })}
         placeholder={t({ message: "Search sources and commands" })}
@@ -627,6 +632,7 @@ function useCommandsForView(
     workspace: model.sourceWorkspace,
     sourceExport: model.sourceExport,
     removeSource: model.sourceRemoval.request,
+    changeStatus: model.sourceStatus.change,
     createSourceParts,
     bibliographyExport: model.bibliographyExport,
     focusMode: model.focusMode,

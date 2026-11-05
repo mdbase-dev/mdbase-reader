@@ -4,6 +4,7 @@ import { useRef, type JSX } from "react";
 
 import { ModalDialog } from "./ModalDialog.js";
 import { OverlayPresence } from "./OverlayPresence.js";
+import { ReaderNotice } from "./ReaderNotice.js";
 
 import type { SourceRemovalController } from "./use-source-removal.js";
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -24,9 +25,9 @@ export function SourceRemovalDialog({
   return (
     <>
       {removal.notice ? (
-        <div className="reader-operation-notice" role="status">
-          {removal.notice}
-        </div>
+        <ReaderNotice>
+          <span role="status">{removal.notice}</span>
+        </ReaderNotice>
       ) : null}
       <OverlayPresence open={Boolean(pending)}>
         {pending ? (
@@ -61,6 +62,7 @@ function OpenSourceRemovalDialog({
       labelledBy="reader-remove-source-title"
       describedBy="reader-remove-source-description"
       initialFocus={cancelRef}
+      returnFocus={pending.invoker}
       onDismiss={() => {
         if (!removing) {
           cancel();

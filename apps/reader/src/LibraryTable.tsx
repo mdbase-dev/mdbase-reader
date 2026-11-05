@@ -31,7 +31,7 @@ import type { LibraryPartRow } from "./library-source-parts.js";
 import type { LibraryLayout } from "./use-library-layout-draft.js";
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
 
-export const libraryRowHeight = 56;
+export const libraryRowHeight = 48;
 const headerHeight = 32;
 
 export interface LibraryTableProps {
@@ -121,12 +121,24 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
         aria-colcount={layout.columns.length + 1}
         aria-multiselectable="true"
         style={{ minWidth: `${String(width)}px` }}
+        onFocus={(event) => {
+          const row = (event.target as Element).closest<HTMLElement>("[data-row-index]");
+          if (row) {
+            const index = Number(row.dataset["rowIndex"]);
+            if (selection.active !== index) {
+              onSelectionChange({ ...selection, active: index });
+            }
+          }
+        }}
         onKeyDown={(event) => {
           if (
             (event.target as Element).closest("select, input, button, summary, [role=separator]") ||
             rowMenu.openFromKey(event) ||
             startCellEdit(event, props, selection.active, setEditing)
           ) {
+            return;
+          }
+          if (sourceActionKey(event, props, gridRef.current)) {
             return;
           }
           if (
@@ -201,6 +213,36 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
       {rowMenu.element}
     </div>
   );
+}
+
+function sourceActionKey(
+  event: React.KeyboardEvent,
+  props: LibraryTableProps,
+  grid: HTMLElement | null,
+): boolean {
+  const index = props.selection.active;
+  const source = index === null ? undefined : props.sources[index];
+  if (event.ctrlKey || event.metaKey || event.altKey || !source) {
+    return false;
+  }
+  const key = event.key.toLowerCase();
+  if (key === "delete" && props.onRemove) {
+    event.preventDefault();
+    props.onRemove(source);
+  } else if (key === "e" && props.onExport) {
+    event.preventDefault();
+    props.onExport([source]);
+  } else if (key === "s" && props.onChangeStatus) {
+    event.preventDefault();
+    const picker = grid?.querySelector<HTMLElement>(
+      `[data-row-index="${String(index)}"] .library-status button`,
+    );
+    picker?.focus();
+    picker?.click();
+  } else {
+    return false;
+  }
+  return true;
 }
 
 function handlePartGridKey(

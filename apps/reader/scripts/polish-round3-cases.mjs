@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
 import { expect } from "@playwright/test";
+import { assertPdfTabContrast } from "./polish-round4-cases.mjs";
 
 export async function keyboardLibrary(page) {
   await page.locator("body").click({ position: { x: 4, y: 4 } });
   await page.keyboard.press("j");
   await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
+  await activateRowAndReturn(page);
   const search = page.locator(".library-search-field input").first();
   await search.focus();
   await search.fill("psychology");
   await page.keyboard.press("ArrowDown");
   await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
+  await activateRowAndReturn(page);
   await search.focus();
   await page.keyboard.press("Escape");
   await expect(search).toHaveValue("");
@@ -26,6 +29,23 @@ export async function keyboardLibrary(page) {
   );
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog[open]")).toHaveCount(0);
+}
+
+async function activateRowAndReturn(page) {
+  const title = await page
+    .locator('.library-table-row[tabindex="0"] .library-title-copy strong')
+    .innerText();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.locator('.workspace-pane.is-document-pane.is-focused .sr-only[role="status"]'),
+  ).toContainText(`Ready to read ${title}`);
+  await page.keyboard.press("Control+k");
+  await page
+    .getByRole("combobox", { name: "Search sources and commands", exact: true })
+    .fill("Close active tab");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".mdbase-command-palette")).toBeHidden();
+  await expect(page.locator(".workspace-pane.is-library-pane.is-focused")).toBeVisible();
 }
 
 export async function libraryDetails(page) {
@@ -79,7 +99,17 @@ export async function titleFocus(page) {
     .filter({ hasText: "The Principles of Psychology" })
     .click();
   await page.locator("iframe.html-viewer").waitFor();
-  await expect(page.locator(".workspace-pane.is-document-pane.is-focused")).toBeFocused();
+  await expect
+    .poll(() =>
+      page
+        .locator("iframe.html-viewer")
+        .evaluate(
+          (frame) =>
+            globalThis.document.activeElement === frame &&
+            frame.contentDocument.activeElement === frame.contentDocument.body,
+        ),
+    )
+    .toBe(true);
   if (page.viewportSize().width > 680) {
     const tab = page.getByRole("tab", { name: "The Principles of Psychology", exact: true });
     await tab.focus();
@@ -91,7 +121,7 @@ export async function titleFocus(page) {
       .getByRole("combobox", { name: "Search sources and commands", exact: true })
       .fill("Close active tab");
     await page.keyboard.press("Enter");
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   }
   await expect(page.locator(".workspace-pane.is-library-pane.is-focused")).toBeFocused();
   await page.keyboard.press("j");
@@ -126,7 +156,10 @@ export async function autoHide(page, reducedMotion) {
   await expect(page.locator(".reader-shell")).toHaveAttribute("data-chrome-hidden", "");
   const first = samples[0].height;
   const last = samples.at(-1).height;
-  assert.ok(last > first, "Auto-hide must return chrome space to the document");
+  assert.ok(
+    last > first,
+    `Auto-hide must return chrome space to the document: ${JSON.stringify(samples)}`,
+  );
   if (reducedMotion === "reduce") {
     assert.ok(samples.every(({ animations }) => animations.length === 0));
   } else {
@@ -152,11 +185,22 @@ export async function sampleAction(page, action, selector, shadow = false) {
         const element = globalThis.document.querySelector(selector);
         const root = shadow ? element?.shadowRoot : globalThis.document;
         const animations = root?.getAnimations() ?? [];
+        const notes = globalThis.document.querySelector(
+          '.dv-render-overlay:has([data-reader-edge="right"])',
+        );
         samples.push({
           time: performance.now() - start,
           width: element?.getBoundingClientRect().width,
           height: element?.getBoundingClientRect().height,
           x: element?.getBoundingClientRect().x,
+          notes: notes
+            ? {
+                x: notes.getBoundingClientRect().x,
+                opacity: Number(globalThis.getComputedStyle(notes).opacity),
+                visibility: globalThis.getComputedStyle(notes).visibility,
+                closing: notes.querySelector('[data-visible="false"]') !== null,
+              }
+            : null,
           animations: animations.map((animation) => ({
             property: animation.transitionProperty,
             duration: animation.effect.getTiming().duration,
@@ -221,6 +265,21 @@ export async function geometry(page, button, reducedMotion) {
   const first = samples[0].width;
   const last = samples.at(-1).width;
   assert.notEqual(first, last, `${button}: pane geometry must change`);
+  if (button === "Toggle Notes panel") {
+    const notesSamples = samples.map(({ notes }) => notes).filter(Boolean);
+    assert.ok(notesSamples.length > 0, "Notes must mount when toggled");
+    assert.ok(
+      notesSamples.every(({ x }) => x >= 680),
+      `Notes must travel from their own edge, never across the reading pane: ${JSON.stringify(notesSamples)}`,
+    );
+    if (last > first && reducedMotion !== "reduce")
+      assert.ok(
+        notesSamples.some(
+          ({ closing, opacity, visibility }) => closing && opacity > 0 && visibility === "visible",
+        ),
+        "Closing Notes must remain visible during their exit",
+      );
+  }
   if (reducedMotion === "reduce") {
     assert.ok(
       samples.every(
@@ -248,6 +307,23 @@ export async function geometry(page, button, reducedMotion) {
 }
 
 export async function addSourceTiming(page) {
+  const probe = await page.context().newPage();
+  let blankFrame;
+  try {
+    blankFrame = await probe.evaluate(async () => {
+      const frames = [];
+      let previous = await new Promise(globalThis.requestAnimationFrame);
+      for (let index = 0; index < 12; index += 1) {
+        const current = await new Promise(globalThis.requestAnimationFrame);
+        frames.push(current - previous);
+        previous = current;
+      }
+      return frames.toSorted((left, right) => left - right)[6];
+    });
+  } finally {
+    await probe.close();
+    await page.bringToFront();
+  }
   const trigger = page.getByRole("button", { name: "Add source…", exact: true }).first();
   await trigger.focus();
   await page.evaluate(() => {
@@ -276,10 +352,14 @@ export async function addSourceTiming(page) {
   });
   await page.keyboard.press("Enter");
   const elapsed = await page.evaluate(() => globalThis.readerDialogTiming);
-  assert.ok(elapsed < 50, `Add source took ${elapsed}ms`);
+  const normalized = elapsed / Math.max(1, blankFrame / (1000 / 60));
+  assert.ok(
+    normalized < 50,
+    `Add source ${elapsed}ms, blank frame ${blankFrame}ms, normalized ${normalized}ms`,
+  );
   await page.keyboard.press("Escape");
   await expect(page.locator("dialog.source-add-dialog")).toHaveCount(0);
-  return elapsed;
+  return { elapsed, blankFrame, normalized };
 }
 
 export async function pdfSheet(page, reducedMotion, phone, audit) {
@@ -299,9 +379,23 @@ export async function pdfSheet(page, reducedMotion, phone, audit) {
   assert.ok(
     await dialog.evaluate((element) => element.contains(element.getRootNode().activeElement)),
   );
-  await page.keyboard.press("Shift+Tab");
-  const thumbnails = dialog.getByRole("region", { name: "Thumbnails", exact: true });
+  const thumbnailTab = dialog.getByRole("tab", { name: "Thumbnails", exact: true });
+  const outlineTab = dialog.getByRole("tab", { name: "Outline", exact: true });
+  for (const tab of [thumbnailTab, outlineTab]) {
+    assert.ok((await tab.boundingBox()).height >= 44);
+  }
+  await thumbnailTab.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(outlineTab).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(thumbnailTab).toBeFocused();
+  await assertPdfTabContrast(thumbnailTab);
+  await page.keyboard.press("Tab");
+  const thumbnails = dialog.getByRole("tabpanel", { name: "Thumbnails", exact: true });
   await expect(thumbnails).toBeFocused();
+  await expect
+    .poll(() => thumbnails.evaluate((element) => element.scrollHeight - element.clientHeight))
+    .toBeGreaterThan(0);
   await page.keyboard.press("PageDown");
   await expect.poll(() => thumbnails.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
   await page.keyboard.press("Tab");
@@ -354,6 +448,7 @@ export async function removeContrast(page, audit) {
   assert.notEqual(contrast.color, contrast.background);
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
+  await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
   return contrast;
 }
 

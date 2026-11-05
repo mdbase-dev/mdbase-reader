@@ -107,7 +107,7 @@ try {
     if (file.kind !== "html") {
       await searchSources(page, `Passage ${index}`);
       await page.getByRole("option", { name: new RegExp(`Passage ${index}`) }).click();
-      await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+      await expect(page.locator(".mdbase-command-palette")).toBeHidden();
       await expect(page.locator(`.document-session.is-active .${file.kind}-viewer`)).toBeVisible({
         timeout: 60_000,
       });

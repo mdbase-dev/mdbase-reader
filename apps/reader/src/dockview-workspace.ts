@@ -125,7 +125,7 @@ export class ReaderDockWorkspace {
   }
   openLibrary(
     view = "all-sources",
-    title = t({ message: "Library", context: "dockview workspace" }),
+    title = t({ message: "All sources", context: "dockview workspace" }),
     paneId?: string,
   ): void {
     if (this.api) {

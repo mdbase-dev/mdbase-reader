@@ -13,7 +13,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
         name: new RegExp(`^\\[test\\] Research ${String(number).padStart(4, "0")}`),
       })
       .click();
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   };
   const tab = (name) =>
     page

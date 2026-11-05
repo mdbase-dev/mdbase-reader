@@ -139,7 +139,7 @@ export function LibraryRowMenu({
             type="button"
             role="menuitem"
             className="is-danger"
-            onClick={run(() => actions.onRemove?.(source), true)}
+            onClick={run(() => actions.onRemove?.(source))}
           >
             <Trans>Remove source…</Trans>
           </button>

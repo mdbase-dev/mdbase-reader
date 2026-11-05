@@ -16,7 +16,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
         name: new RegExp(`^\\[test\\] Research ${String(n).padStart(4, "0")}`),
       })
       .click();
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   };
   const state = () =>
     page.evaluate(() =>
@@ -126,7 +126,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await page.keyboard.press("Control+Backslash");
   await searchSources(page, "Research 0002");
   await page.getByRole("option", { name: /^\[test\] Research 0002/u }).click();
-  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+  await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   await expect(page.frameLocator("iframe.html-viewer:visible").locator("h1")).toContainText(
     "fixture 2",
   );
@@ -224,7 +224,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   }
   await searchSources(page, "Research 0003");
   await page.getByRole("option", { name: /^\[test\] Research 0003/u }).click();
-  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+  await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(1);
   await expect(page.locator(".reader-dock .dv-groupview")).toHaveCount(1);
   await expect(page.frameLocator("iframe.html-viewer:visible").locator("h1")).toContainText(

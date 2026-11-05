@@ -21,6 +21,7 @@
    background; the accent is at least 6:1 on surfaces in both themes. */
 
 :root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   /* Type. The UI face is Atkinson Hyperlegible Next; the reading face (quotations,
      passages, formatted citations) is Source Serif 4, bundled by each app. */
   --font-ui:

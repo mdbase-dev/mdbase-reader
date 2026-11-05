@@ -124,7 +124,7 @@ export function createWorkspaceTab(
 
 export function createLibraryWorkspaceTab(
   libraryViewId = "all-sources",
-  title = t({ message: "Library", context: "source workspace layout" }),
+  title = t`All sources`,
   preview = false,
 ): LibraryWorkspaceTab {
   return {

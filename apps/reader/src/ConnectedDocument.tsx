@@ -195,6 +195,7 @@ function PdfStage({
 }): JSX.Element {
   const { t } = useLingui();
   const [state, setState] = useState<RendererState>({ status: "opening" });
+  const [attempt, setAttempt] = useState(0);
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
@@ -202,9 +203,14 @@ function PdfStage({
       state={state}
       openingLabel={translate({ message: "Preparing PDF pages…" })}
       errorName="EmbedPDF"
+      onRetry={() => {
+        setState({ status: "opening" });
+        setAttempt((value) => value + 1);
+      }}
     >
       <Suspense fallback={<DocumentMessage label={t({ message: "Loading the PDF renderer…" })} />}>
         <PdfViewerSurface
+          key={attempt}
           className="pdf-viewer"
           document={document}
           onDocumentError={failed}

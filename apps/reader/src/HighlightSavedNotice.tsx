@@ -1,12 +1,13 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { claimFrameShortcut, type ViewportRect } from "@mdbase-reader/reading-surface";
 import { useEffect, useLayoutEffect, useRef, useState, type JSX } from "react";
 
 import { CheckIcon, CloseIcon } from "./icons.js";
+import { ReaderNotice } from "./ReaderNotice.js";
 
 import type { SavedHighlight } from "./use-highlight-undo.js";
+import type { ViewportRect } from "@mdbase-reader/reading-surface";
 
 /** How long Undo stays offered while the pointer and focus are elsewhere. */
 export const highlightUndoMilliseconds = 6000;
@@ -87,7 +88,7 @@ export function HighlightSavedNotice({
   // Held by its id, so a notice that goes while held does not leave the next one held.
   const [heldId, setHeldId] = useState<number | null>(null);
   const held = saved !== null && heldId === saved.id;
-  useNoticeLifetime(saved?.status, held, overlaid, onUndo, onDismiss);
+  useNoticeLifetime(saved?.status, held, overlaid, onDismiss);
   if (!saved) {
     return null;
   }
@@ -98,9 +99,8 @@ export function HighlightSavedNotice({
         {savedMessage(saved)}
       </span>
       {saved.status === "saving" ? null : (
-        <div
-          className="highlight-saved"
-          data-highlight-color={saved.color}
+        <ReaderNotice
+          onUndo={saved.status === "saved" ? onUndo : undefined}
           onPointerEnter={() => setHeldId(saved.id)}
           onPointerLeave={() => setHeldId(null)}
           onFocus={() => setHeldId(saved.id)}
@@ -117,7 +117,7 @@ export function HighlightSavedNotice({
           >
             <CloseIcon />
           </button>
-        </div>
+        </ReaderNotice>
       )}
     </>
   );
@@ -184,7 +184,6 @@ function useNoticeLifetime(
   status: SavedHighlight["status"] | undefined,
   held: boolean,
   overlaid: boolean,
-  onUndo: () => void,
   onDismiss: () => void,
 ): void {
   useEffect(() => {
@@ -212,29 +211,6 @@ function useNoticeLifetime(
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [status, overlaid, onDismiss]);
-  useEffect(() => {
-    if (status !== "saved") {
-      return undefined;
-    }
-    // Focus is usually still in the page just highlighted, so ask it to pass Undo on.
-    const release = claimFrameShortcut(document, "undo");
-    const onKeyDown = (event: KeyboardEvent): void => {
-      const undoKey =
-        event.key.toLocaleLowerCase() === "z" &&
-        (event.ctrlKey || event.metaKey) &&
-        !event.shiftKey &&
-        !event.altKey;
-      if (undoKey && !event.defaultPrevented && !isTyping(event.target)) {
-        event.preventDefault();
-        onUndo();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      release();
-    };
-  }, [status, onUndo]);
 }
 
 function relative(rect: ViewportRect, origin: LayerBox): ViewportRect {

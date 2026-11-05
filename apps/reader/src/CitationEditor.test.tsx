@@ -21,6 +21,9 @@ import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { Root } from "react-dom/client";
 
 vi.mock("@mdbase-dev/ui/mark-activity", () => ({ signalMdbaseMark: vi.fn() }));
+vi.mock("./citation-renderer.js", async () => ({
+  renderCitation: (await import("@mdbase-reader/ui/citation")).renderCitation,
+}));
 vi.mock("./MultilineCodeEditor.js", () => ({
   MultilineCodeEditor: ({
     ariaLabel,

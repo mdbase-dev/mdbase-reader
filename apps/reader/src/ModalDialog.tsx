@@ -13,6 +13,7 @@ export function ModalDialog({
   returnFocus,
   density,
   onDismiss,
+  active = true,
 }: {
   readonly children: ReactNode;
   readonly className: string;
@@ -23,18 +24,17 @@ export function ModalDialog({
   readonly returnFocus?: Element | null;
   readonly density?: "comfortable" | "compact";
   readonly onDismiss: () => void;
+  readonly active?: boolean;
 }): JSX.Element {
   const dialog = useRef<HTMLDialogElement>(null);
   const mounted = useRef(false);
   useLayoutEffect(() => {
-    const active = document.activeElement;
+    if (!active) {
+      return;
+    }
+    const focusedElement = document.activeElement;
     const before = document.querySelector(".workspace-pane.is-focused");
-    const parent = active?.closest("dialog");
-    const opener =
-      returnFocus ??
-      (parent
-        ? openers.get(parent)
-        : (active?.closest("details")?.querySelector("summary") ?? active));
+    const opener = returnFocus ?? dialogInvoker(focusedElement);
     const element = dialog.current;
     if (element) {
       openers.set(element, opener ?? null);
@@ -57,7 +57,7 @@ export function ModalDialog({
         destination.focus();
       }
     };
-  }, [initialFocus, returnFocus]);
+  }, [initialFocus, returnFocus, active]);
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- native backdrop clicks target the dialog; Escape uses its cancel event.
     <dialog
@@ -107,4 +107,17 @@ export function ModalDialog({
       {children}
     </dialog>
   );
+}
+
+export function dialogInvoker(focused: Element | null): Element | null | undefined {
+  const parent = focused?.closest("dialog");
+  if (parent) {
+    return openers.get(parent);
+  }
+  if (focused?.closest('[role="menu"]')) {
+    return (
+      document.querySelector('.workspace-pane.is-focused [data-row-index][tabindex="0"]') ?? focused
+    );
+  }
+  return focused?.closest("details")?.querySelector("summary") ?? focused;
 }
