@@ -138,7 +138,10 @@ button {
 .document-toolbar {
   transition:
     grid-template-rows 160ms var(--ease),
-    opacity 140ms var(--ease);
+    opacity 160ms var(--ease);
+}
+.reader-shell[data-chrome-hidden] :is(.workspace-pane, .document-toolbar) {
+  transition-duration: 120ms;
 }
 
 .deployment-update {
@@ -328,9 +331,6 @@ button {
   min-width: 0;
   min-height: 0;
   background: var(--paper);
-  transition:
-    opacity 160ms var(--ease),
-    translate 220ms var(--ease);
 }
 
 .library-pane {
@@ -698,7 +698,6 @@ button {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--control-radius);
   box-shadow: none;
-  animation: mdbase-popover-in var(--motion-base) var(--ease-out);
 }
 
 .source-add-close {
@@ -883,6 +882,9 @@ button {
   visibility: hidden;
   pointer-events: none;
   opacity: 0;
+  transition:
+    opacity 120ms ease-out,
+    visibility 120ms allow-discrete;
 }
 
 .document-session.is-active {
@@ -890,6 +892,7 @@ button {
   visibility: visible;
   pointer-events: auto;
   opacity: 1;
+  transition-duration: 160ms;
 }
 
 .workspace-tool-surface {
@@ -1340,6 +1343,7 @@ button {
 
 .annotation-editor-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
@@ -1450,30 +1454,6 @@ button {
   justify-items: center;
   padding: 34px 40px 60px;
   overflow: auto;
-}
-
-.preview-notice {
-  position: fixed;
-  bottom: 16px;
-  left: calc(
-    var(--reader-library-width) +
-      (100vw - var(--reader-library-width) - var(--reader-inspector-width)) / 2
-  );
-  z-index: 5;
-  max-width: calc(100vw - 32px);
-  padding: 6px 9px;
-  translate: -50% 0;
-  border: 1px solid var(--line-strong);
-  border-radius: 3px;
-  color: var(--muted);
-  background: var(--paper);
-  font-size: var(--text-xs);
-}
-
-.preview-notice span {
-  margin-right: 5px;
-  color: var(--ink);
-  font-family: var(--mono);
 }
 
 @container reader-pane (max-width: 520px) {
@@ -1588,10 +1568,6 @@ button {
 
   .preview-document {
     padding: 14px 10px 56px;
-  }
-
-  .preview-notice {
-    left: 50%;
   }
 }
 
@@ -2200,7 +2176,6 @@ button {
   border: 1px solid var(--color-border-strong);
   border-radius: var(--control-radius);
   box-shadow: none;
-  animation: mdbase-popover-in var(--motion-base) var(--ease-out);
 }
 
 .library-save-dialog h2,
@@ -2351,12 +2326,4 @@ button {
 .annotation-card:first-of-type {
   border-top: 0;
   border-bottom: 0;
-}
-
-/* Dialogs arrive like the shared ones; without motion they simply appear. */
-@media (prefers-reduced-motion: reduce) {
-  .import-dialog,
-  .library-save-dialog {
-    animation: none;
-  }
 }

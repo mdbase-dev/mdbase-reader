@@ -1,3 +1,4 @@
+import { searchSources } from "./audit-source-search.mjs";
 import { createHash } from "node:crypto";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -101,12 +102,12 @@ const evidence = [];
 try {
   await page.goto(`${origin}/test-fixtures/audit-reader.html`);
   for (const [index, file] of files.entries()) {
-    const navigator = page.getByRole("textbox", { name: "Find a source by title, author or tag" });
     // HTML must be found through the persistent worker index before any surface opens.
     // PDF/EPUB still exercise loaded-document destinations.
     if (file.kind !== "html") {
-      await navigator.fill(`Passage ${index}`);
-      await page.getByRole("option", { name: new RegExp(`Passage ${index}`) }).dblclick();
+      await searchSources(page, `Passage ${index}`);
+      await page.getByRole("option", { name: new RegExp(`Passage ${index}`) }).click();
+      await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
       await expect(page.locator(`.document-session.is-active .${file.kind}-viewer`)).toBeVisible({
         timeout: 60_000,
       });
@@ -132,7 +133,6 @@ try {
           .first(),
       ).toBeVisible({ timeout: 30_000 });
     }
-    await navigator.fill("");
     const views = page.getByRole("navigation", { name: "Library views and sources" });
     if (!(await views.isVisible())) {
       await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();

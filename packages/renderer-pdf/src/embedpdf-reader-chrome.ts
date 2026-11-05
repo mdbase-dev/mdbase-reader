@@ -25,6 +25,14 @@ export function installReaderPdfChrome(container: EmbedPdfContainer): Unsubscrib
 }
 
 export const readerPdfChromeCss = `
+.reader-pdf-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: pre-wrap;
+}
 [data-epdf-i="reader-page-controls"] {
   display: flex;
   height: 100%;

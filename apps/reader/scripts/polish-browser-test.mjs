@@ -1,0 +1,410 @@
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { chromium, expect } from "@playwright/test";
+
+const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
+if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
+  throw new Error("Run against an explicit loopback origin.");
+}
+const output = await mkdtemp(join(tmpdir(), "reader-polish-"));
+const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js");
+const browser = await chromium.launch({ headless: true });
+const results = [];
+
+async function audit(page, state) {
+  const violations = await page.evaluate(async () => {
+    const result = await globalThis.axe.run(globalThis.document, {
+      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
+    });
+    return result.violations.map(({ id, nodes }) => ({
+      id,
+      nodes: nodes.map(({ target, failureSummary }) => ({ target, failureSummary })),
+    }));
+  });
+  assert.deepEqual(violations, [], `${state}: ${JSON.stringify(violations)}`);
+}
+
+async function trace(
+  page,
+  action,
+  selector = ".mdbase-command-palette",
+  trigger = ".header-command-button",
+  pseudo = null,
+) {
+  return page.evaluate(
+    async ({ action, selector, trigger, pseudo }) => {
+      if (action === "open") {
+        if (trigger === ".header-command-button")
+          globalThis.document.querySelector(trigger).focus();
+        globalThis.document.querySelector(trigger).click();
+      } else if (action === "close")
+        globalThis.document
+          .querySelector(selector)
+          .dispatchEvent(new Event("cancel", { cancelable: true }));
+      const start = performance.now();
+      const samples = [];
+      while (performance.now() - start < 340) {
+        await new Promise(globalThis.requestAnimationFrame);
+        const panel = globalThis.document.querySelector(selector);
+        samples.push({
+          time: performance.now() - start,
+          present: Boolean(panel),
+          opacity: panel ? Number(globalThis.getComputedStyle(panel, pseudo).opacity) : null,
+          transform: panel ? globalThis.getComputedStyle(panel, pseudo).transform : null,
+          transitionDuration: panel
+            ? globalThis.getComputedStyle(panel, pseudo).transitionDuration
+            : null,
+          pseudo,
+          animations: globalThis.document
+            .getAnimations()
+            .filter((animation) => animation.effect?.target === panel)
+            .map((animation) => ({
+              duration: animation.effect.getTiming().duration,
+              property: animation.transitionProperty,
+              currentTime: animation.currentTime,
+            })),
+        });
+      }
+      return samples;
+    },
+    { action, selector, trigger, pseudo },
+  );
+}
+
+function assertMotion(samples, duration, reducedMotion) {
+  if (reducedMotion === "reduce") {
+    assert.ok(samples.every(({ animations }) => animations.length === 0));
+    assert.ok(samples.every(({ opacity }) => opacity === null || opacity === 0 || opacity === 1));
+  } else {
+    assert.ok(
+      samples.some(({ animations, pseudo, transitionDuration }) =>
+        pseudo
+          ? transitionDuration
+              .split(",")
+              .some((value) => Number.parseFloat(value) * 1000 === duration)
+          : animations.some(
+              (animation) => animation.duration === duration && animation.property === "opacity",
+            ),
+      ),
+    );
+    assert.ok(samples.some(({ opacity }) => opacity > 0 && opacity < 1));
+  }
+}
+
+async function desktopPanes(page, output, name, reducedMotion) {
+  const sidebarSelector = ".reader-dock-sidebar:has(#reader-library-navigator)";
+  const sidebarTrigger = 'button[aria-label="Toggle Sources sidebar"]';
+  const paneEnter = await trace(page, "open", sidebarSelector, sidebarTrigger);
+  assertMotion(paneEnter, 160, reducedMotion);
+  const paneExit = await trace(page, "open", sidebarSelector, sidebarTrigger);
+  assertMotion(paneExit, 120, reducedMotion);
+  await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
+  await page.getByRole("button", { name: "Toggle Notes panel" }).click();
+  const inspector = page.getByRole("complementary", { name: "Source workspace" });
+  const initialBounds = await inspector.boundingBox();
+  await page.mouse.move(initialBounds.x, initialBounds.y + initialBounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(1075, initialBounds.y + initialBounds.height / 2, { steps: 12 });
+  await page.mouse.up();
+  await expect.poll(async () => (await inspector.boundingBox()).width).toBe(365);
+  const widths = () =>
+    page.locator(".dv-groupview-edge").evaluateAll((elements) =>
+      elements.map((element) => ({
+        name: element.getAttribute("aria-label"),
+        width: element.getBoundingClientRect().width,
+      })),
+    );
+  const before = await widths();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".reader-dock")).toHaveAttribute("data-mobile", "true");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect.poll(widths).toEqual(before);
+  await inspector.getByRole("tab", { name: "Citation", exact: true }).click();
+  await inspector.getByRole("button", { name: "Fix details", exact: true }).click();
+  const bounds = await inspector.boundingBox();
+  await page.mouse.move(bounds.x, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(1260, bounds.y + bounds.height / 2, { steps: 12 });
+  await page.mouse.up();
+  await expect.poll(async () => (await inspector.boundingBox()).width).toBe(180);
+  const controls = await inspector.locator("input,select,textarea,button").evaluateAll((elements) =>
+    elements
+      .filter((element) => element.checkVisibility())
+      .map((element) => ({
+        name: element.getAttribute("aria-label") ?? element.textContent,
+        left: element.getBoundingClientRect().left,
+        right: element.getBoundingClientRect().right,
+      })),
+  );
+  assert.ok(
+    controls.every(({ left, right }) => left >= 1260 && right <= 1440),
+    JSON.stringify(controls),
+  );
+  await page.screenshot({ path: join(output, `${name}-citation-180.png`) });
+  await inspector.getByRole("button", { name: "Back to citation", exact: true }).click();
+  return { paneEnter, paneExit, before, after: await widths(), controls };
+}
+
+async function command(page, query) {
+  await page.keyboard.press("Control+k");
+  await page
+    .getByRole("combobox", { name: "Search sources and commands", exact: true })
+    .fill(query);
+  await expect(page.locator('[role="option"][aria-selected="true"] strong')).toContainText(
+    new RegExp(query, "iu"),
+  );
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0, { timeout: 30_000 });
+}
+
+try {
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    for (const colorScheme of ["light", "dark"]) {
+      for (const reducedMotion of ["no-preference", "reduce"]) {
+        const name = `${String(viewport.width)}-${colorScheme}-${reducedMotion}`;
+        const context = await browser.newContext({ viewport, colorScheme, reducedMotion });
+        const page = await context.newPage();
+        page.setDefaultTimeout(30000);
+        const errors = [];
+        page.on("pageerror", (error) => errors.push(error.message));
+        const result = { name, viewport, colorScheme, reducedMotion, errors };
+        results.push(result);
+        try {
+          await page.goto(`${origin}/?preview=1`);
+          await page.locator('.library-table[aria-label="Sources"]').waitFor();
+          await page.evaluate(() => globalThis.document.fonts.ready);
+          await page.addScriptTag({ path: axePath });
+          await expect(page.getByRole("note")).toContainText("no collection connected");
+          await expect(page.getByRole("button", { name: /Switch collection/u })).toHaveCount(0);
+          await expect(page.locator(".connection-state")).toHaveCount(0);
+          await audit(page, `${name} library`);
+          await page.screenshot({ path: join(output, `${name}-library.png`) });
+          result.enter = await trace(page, "open");
+          const input = page.getByRole("combobox", {
+            name: "Search sources and commands",
+            exact: true,
+          });
+          await expect(input).toBeFocused();
+          await input.fill("shortcuts");
+          await expect(
+            page.getByRole("heading", { name: "Keyboard shortcuts", exact: true }),
+          ).toBeVisible();
+          assert.ok(await page.getByRole("option").count());
+          await page.keyboard.press("ArrowDown");
+          result.active = await input.getAttribute("aria-activedescendant");
+          await expect(page.locator(`[id="${result.active}"]`)).toHaveAttribute(
+            "aria-selected",
+            "true",
+          );
+          await audit(page, `${name} palette`);
+          await page.screenshot({ path: join(output, `${name}-palette.png`) });
+          result.exit = await trace(page, "close");
+          assert.equal(result.exit.at(-1).present, false);
+          if (reducedMotion === "reduce") {
+            assert.ok(result.enter.every(({ animations }) => animations.length === 0));
+            assert.ok(result.exit.every(({ animations }) => animations.length === 0));
+          } else {
+            assert.ok(
+              result.enter.some(({ animations }) =>
+                animations.some(
+                  ({ duration, property }) => duration === 160 && property === "opacity",
+                ),
+              ),
+            );
+            assert.ok(
+              result.exit.some(({ animations }) =>
+                animations.some(
+                  ({ duration, property }) => duration === 120 && property === "opacity",
+                ),
+              ),
+            );
+            assert.ok(result.exit.some(({ opacity }) => opacity > 0 && opacity < 1));
+          }
+          result.interruption = await page.evaluate(async () => {
+            globalThis.document.querySelector(".header-command-button").click();
+            await new Promise(globalThis.requestAnimationFrame);
+            await new Promise(globalThis.requestAnimationFrame);
+            const panel = globalThis.document.querySelector(".mdbase-command-palette");
+            panel.dispatchEvent(new Event("cancel", { cancelable: true }));
+            await new Promise(globalThis.requestAnimationFrame);
+            globalThis.document.querySelector(".header-command-button").click();
+            await new Promise(globalThis.requestAnimationFrame);
+            const same = panel === globalThis.document.querySelector(".mdbase-command-palette");
+            await new Promise((resolve) => setTimeout(resolve, 240));
+            return {
+              same,
+              open: Boolean(globalThis.document.querySelector(".reader-overlay[data-state=open]")),
+            };
+          });
+          if (reducedMotion !== "reduce") assert.equal(result.interruption.same, true);
+          assert.equal(result.interruption.open, true);
+          await page
+            .getByRole("combobox", { name: "Search sources and commands", exact: true })
+            .fill("settings");
+          await expect(page.locator('[role="option"][aria-selected="true"] strong')).toHaveText(
+            "Settings",
+          );
+          await page.getByRole("option", { name: "Settings", exact: true }).click();
+          result.settingsEnter = await trace(page, "observe", "dialog.settings-page");
+          await page.locator("dialog.settings-page").waitFor();
+          assertMotion(result.settingsEnter, 160, reducedMotion);
+          await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+          await audit(page, `${name} settings`);
+          await page.keyboard.press("Escape");
+          result.settingsExit = await trace(page, "observe", "dialog.settings-page");
+          await expect(page.locator("dialog.settings-page")).toHaveCount(0);
+          assertMotion(result.settingsExit, 120, reducedMotion);
+          await expect(page.getByRole("button", { name: /^Search and commands/u })).toBeFocused();
+          const displayMenu = 'details.reader-menu:has(summary[aria-label="Display settings"])';
+          const displayTrigger = `${displayMenu} > summary`;
+          result.menuEnter = await trace(
+            page,
+            "open",
+            displayMenu,
+            displayTrigger,
+            "::details-content",
+          );
+          result.menuExit = await trace(
+            page,
+            "open",
+            displayMenu,
+            displayTrigger,
+            "::details-content",
+          );
+          assertMotion(result.menuEnter, 160, reducedMotion);
+          assertMotion(result.menuExit, 120, reducedMotion);
+          await page.getByRole("button", { name: /^Search and commands/u }).click();
+          await page.keyboard.press("Escape");
+          result.earlyEscape = await trace(page, "observe");
+          assert.equal(result.earlyEscape.at(-1).present, false);
+          await page.keyboard.press("Control+Shift+f");
+          await expect(
+            page.getByRole("combobox", { name: "Search sources and commands", exact: true }),
+          ).toBeFocused();
+          await page
+            .getByRole("combobox", { name: "Search sources and commands", exact: true })
+            .fill("psychology");
+          await page.keyboard.press("Enter");
+          await page.locator("iframe.html-viewer").waitFor();
+          await expect(
+            page.getByRole("status").filter({ hasText: "Opened The Principles of Psychology" }),
+          ).toHaveCount(1, { timeout: 30_000 });
+          await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+          await audit(page, `${name} HTML`);
+          await page.screenshot({ path: join(output, `${name}-reading.png`) });
+          if (viewport.width === 1440)
+            result.panes = await desktopPanes(page, output, name, reducedMotion);
+          if (viewport.width === 390) {
+            result.targets = await page
+              .locator(".reader-header button, .reader-header summary")
+              .evaluateAll((elements) =>
+                elements
+                  .filter((element) => element.checkVisibility({ contentVisibilityAuto: true }))
+                  .map((element) => ({
+                    name: element.getAttribute("aria-label") ?? element.textContent,
+                    width: element.getBoundingClientRect().width,
+                    height: element.getBoundingClientRect().height,
+                  })),
+              );
+            assert.ok(
+              result.targets.every(({ width, height }) => width >= 44 && height >= 44),
+              JSON.stringify(result.targets),
+            );
+          }
+          await command(page, "citation details");
+          await page.locator(".citation-editor").waitFor();
+          await audit(page, `${name} citation`);
+          await command(page, "anthology");
+          await page
+            .locator("embedpdf-container")
+            .getByRole("article", { name: "PDF page text" })
+            .waitFor();
+          await expect(
+            page
+              .locator("embedpdf-container")
+              .getByRole("heading", { name: "Page 24", exact: true }),
+          ).toHaveCount(1);
+          await page
+            .locator("embedpdf-container")
+            .getByRole("textbox", { name: "Page", exact: true })
+            .waitFor();
+          await page
+            .locator("embedpdf-container")
+            .getByRole("region", { name: "PDF pages", exact: true })
+            .focus();
+          await page.keyboard.press("PageDown");
+          await expect
+            .poll(() =>
+              page
+                .locator("embedpdf-container")
+                .evaluate(
+                  (host) =>
+                    host.shadowRoot.querySelector('[role="region"][aria-label="PDF pages"]')
+                      .scrollTop,
+                ),
+            )
+            .toBeGreaterThan(0);
+          await audit(page, `${name} PDF`);
+          result.pdf = await page.locator("embedpdf-container").evaluate((host) => ({
+            pages: host.shadowRoot.querySelectorAll("article section").length,
+            firstText: host.shadowRoot.querySelector("article p").textContent,
+            pageInput: host.shadowRoot
+              .querySelector('[data-epdf-i="reader-page-controls"] input')
+              .getAttribute("aria-label"),
+            scrollTop: host.shadowRoot.querySelector('[role="region"][aria-label="PDF pages"]')
+              .scrollTop,
+          }));
+          assert.ok(result.pdf.scrollTop > 0);
+          assert.equal(errors.length, 0, errors.join("\n"));
+          assert.equal(
+            await page.evaluate(
+              () => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth,
+            ),
+            true,
+          );
+          await page.screenshot({ path: join(output, `${name}-pdf.png`) });
+          result.passed = true;
+        } catch (error) {
+          result.overlays = await page.locator(".reader-overlay").evaluateAll((elements) =>
+            elements.map((element) => ({
+              state: element.getAttribute("data-state"),
+              child: element.firstElementChild?.className,
+              opacity: element.firstElementChild
+                ? globalThis.getComputedStyle(element.firstElementChild).opacity
+                : null,
+              animations: element.getAnimations({ subtree: true }).map((animation) => ({
+                target: animation.effect?.target?.className,
+                state: animation.playState,
+                time: animation.currentTime,
+                timing: animation.effect?.getComputedTiming(),
+              })),
+            })),
+          );
+          await page.screenshot({ path: join(output, `${name}-failure.png`) });
+          result.failure = String(error);
+          console.error(name, error);
+        } finally {
+          await context.close();
+          await writeFile(join(output, "results.json"), JSON.stringify(results, null, 2));
+        }
+      }
+    }
+  }
+} finally {
+  await browser.close();
+}
+console.log(
+  JSON.stringify({
+    output,
+    passed: results.filter(({ passed }) => passed).length,
+    total: results.length,
+  }),
+);
+process.exitCode = results.every(({ passed }) => passed) ? 0 : 1;

@@ -1,15 +1,19 @@
+import { searchSources } from "./audit-source-search.mjs";
 import { expect } from "@playwright/test";
 import { blockSourceDraftStorage } from "./audit-source-storage.mjs";
 
 /** Real pointer gestures against the unified dock, not synthetic calls to its layout API. */
 export async function auditDockview(page, { screenshot, blockWrites }) {
   const completed = [];
-  const navigator = page.getByRole("textbox", { name: "Find a source by title, author or tag" });
+  const navigator = page.getByRole("complementary", { name: "Sources sidebar" });
   const open = async (number) => {
-    await navigator.fill(`Research ${String(number).padStart(4, "0")}`);
+    await searchSources(page, `Research ${String(number).padStart(4, "0")}`);
     await page
-      .getByRole("option", { name: new RegExp(`Research ${String(number).padStart(4, "0")}`) })
-      .dblclick();
+      .getByRole("option", {
+        name: new RegExp(`^\\[test\\] Research ${String(number).padStart(4, "0")}`),
+      })
+      .click();
+    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   };
   const tab = (name) =>
     page
@@ -52,6 +56,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   };
 
   await open(1);
+  await menu(tab("[test] Research 0001"), "Close other unpinned tabs");
   const firstId = await tab("[test] Research 0001").getAttribute("data-panel-id");
   const firstSession = page.locator(`[data-session-id="${firstId}"]`);
   await expect(firstSession.locator("iframe.html-viewer")).toBeVisible();
@@ -65,6 +70,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   expect(
     await firstHtml.evaluate((element) => element.ownerDocument.defaultView.__dockviewSentinel),
   ).toBe("same-document");
+  await tab("[test] Research 0001").click();
   await open(2);
   const secondId = await tab("[test] Research 0002").last().getAttribute("data-panel-id");
   await expect.poll(async () => panelGroup(await state(), secondId)).not.toBeNull();
@@ -73,9 +79,11 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   const library = tab("Library").filter({
     has: page.locator(".dv-default-tab-content", { hasText: /^Library$/ }),
   });
+  const destinationTab =
+    panelGroup(await state(), firstId) === originalGroup ? library : tab("[test] Research 0001");
   const libraryRect = await page
     .locator(".dv-groupview")
-    .filter({ has: library })
+    .filter({ has: destinationTab })
     .locator(".dv-tabs-and-actions-container")
     .boundingBox();
   await drag(page.locator(`[data-panel-id="${secondId}"]`), {
@@ -84,6 +92,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   });
   await expect.poll(async () => panelGroup(await state(), secondId)).not.toBe(originalGroup);
   await expect(page.locator(`[data-session-id="${secondId}"] iframe.html-viewer`)).toBeVisible();
+  await tab("[test] Research 0001").click();
   // The now-visible first document must not have been remounted while its sibling moved.
   expect(
     await firstHtml.evaluate((element) => element.ownerDocument.defaultView.__dockviewSentinel),
@@ -162,12 +171,14 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   await blockSourceDraftStorage(page, true);
   await editor.fill("[test] Docking never discards this local draft. Storage failure.");
   await expect(page.locator(".draft-recovery.is-error")).toBeVisible();
-  page.removeAllListeners("dialog");
-  page.once("dialog", (dialog) => void dialog.dismiss());
   await noteTab.locator(".reader-tab-close").click();
+  await page
+    .getByRole("dialog", { name: "Close this tab?", exact: true })
+    .getByRole("button", { name: "Keep open", exact: true })
+    .click();
+  await expect(page.locator(".reader-confirm-dialog")).toHaveCount(0);
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toBeVisible();
   await expect(editor).toContainText("Docking never discards");
-  page.on("dialog", (dialog) => void dialog.accept());
   await blockSourceDraftStorage(page, false);
   await editor.fill("[test] Docking never discards this local draft. Storage recovered.");
   await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
@@ -240,10 +251,10 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
 
   // Keyboard-accessible pane menu offers the same operations; reset never closes tabs.
   await page.locator(`[data-panel-id="${noteId}"]`).click();
-  await page.getByRole("button", { name: "Search and commands" }).focus();
+  await page.getByRole("button", { name: /^Search and commands/u }).focus();
   await page.keyboard.press("Enter");
   await page
-    .getByRole("textbox", { name: "Search sources and commands" })
+    .getByRole("combobox", { name: "Search sources and commands" })
     .fill("Reset pane arrangement");
   await page.keyboard.press("Enter");
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toBeVisible();
@@ -296,9 +307,9 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   await page.locator(`[data-panel-id="${noteId}"]`).locator(".reader-tab-close").click();
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toHaveCount(0);
   await page.reload();
-  await page.getByRole("button", { name: "Search and commands" }).click();
+  await page.getByRole("button", { name: /^Search and commands/u }).click();
   await page
-    .getByRole("textbox", { name: "Search sources and commands" })
+    .getByRole("combobox", { name: "Search sources and commands" })
     .fill("Reopen closed tab");
   await page.keyboard.press("Enter");
   await expect(page.locator(`[data-panel-id="${noteId}"]`)).toBeVisible();

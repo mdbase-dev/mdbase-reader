@@ -17,6 +17,7 @@ import {
   useLayoutEffect,
   useRef,
   useMemo,
+  useId,
   type JSX,
   type ReactNode,
 } from "react";
@@ -103,12 +104,18 @@ export function DockviewWorkspace({
   const cleanup = useRef<(() => void) | undefined>(undefined);
   const layout = document.sourceWorkspace.layout;
   const engine = useRef<HTMLDivElement>(null);
-  const mobile = dock.mobile;
   useLayoutEffect(() => {
-    if (engine.current) {
-      dock.layoutViewport(engine.current.clientWidth, engine.current.clientHeight);
+    const element = engine.current;
+    if (!element) {
+      return;
     }
-  }, [dock, mobile]);
+    const layoutViewport = (): void =>
+      dock.layoutViewport(element.clientWidth, element.clientHeight);
+    const observer = new ResizeObserver(layoutViewport);
+    observer.observe(element);
+    layoutViewport();
+    return () => observer.disconnect();
+  }, [dock]);
   const hydrationLayout = useMemo(
     () => ({
       ...layout,
@@ -135,8 +142,21 @@ export function DockviewWorkspace({
         <MobileWorkspaceNavigation dock={dock} />
         <div className="reader-dock-engine" ref={engine}>
           <DockviewReact
+            disableAutoResizing
             components={components}
             theme={theme}
+            getAnnouncement={({ kind, panel }) => {
+              const tab = panelTab(panel);
+              if (kind !== "open" || !tab) {
+                return undefined;
+              }
+              const source =
+                tab.kind === "source"
+                  ? document.sources.find(({ id }) => id === tab.sourceId)
+                  : null;
+              const title = workspaceTabAccessibleTitle(tab, source ?? null);
+              return t`Opened ${title}`;
+            }}
             onReady={ready}
             defaultTabComponent={ReaderDockTab}
             rightHeaderActionsComponent={PaneActions}
@@ -199,6 +219,13 @@ function WorkspacePanel(props: IDockviewPanelProps<{ tab?: WorkspaceTab }>): JSX
 function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>): JSX.Element {
   const { t } = useLingui();
   const { document, inspectorTitle } = useDockContext();
+  const label = useId();
+  const element = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const tab = element.current?.closest('[role="tab"]');
+    tab?.setAttribute("aria-labelledby", label);
+    return () => tab?.removeAttribute("aria-labelledby");
+  }, [label]);
   const tab = props.params.tab;
   const close = (): void => document.sourceWorkspace.dock.close(props.api.id);
   const side = sidePanelIds.has(props.api.id);
@@ -216,6 +243,8 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
     // the tab's context menu or the pane menu, all of which go through the dirty-tab guard.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
+      ref={element}
+      id={label}
       className={`reader-dock-tab${tab?.preview ? " is-preview" : ""}${tab?.dirty ? " is-dirty" : ""}${side ? " is-side" : ""}`}
       data-panel-id={props.api.id}
       title={t`${title} · Drag to move or split · Right-click for pane actions · Delete closes the tab`}

@@ -205,8 +205,12 @@ try {
   }
   const openSource = async (number) => {
     const title = `Research ${String(number).padStart(4, "0")}`;
-    await page.getByRole("textbox", { name: "Find a source by title, author or tag" }).fill(title);
-    await page.getByRole("option", { name: new RegExp(title) }).dblclick();
+    await page.getByRole("button", { name: /^Search and commands/u }).click();
+    await page
+      .getByRole("combobox", { name: "Search sources and commands", exact: true })
+      .fill(title);
+    await page.getByRole("option", { name: new RegExp(`^\\[test\\] ${title}`) }).click();
+    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   };
   if (formatsAudit) {
     completed.push(...(await auditAnnotationFormats(page, { open: openSource, screenshot })));
@@ -253,11 +257,11 @@ try {
     !sidebarComparison &&
     process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1"
   ) {
-    await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
+    await expect(page.locator('.library-table[aria-label="Sources"]')).toBeVisible();
     measurements.libraryReadyMs = Math.round(performance.now() - started);
     measurements.renderedRows5000Sources = await page.getByRole("row").count();
     expect(measurements.renderedRows5000Sources).toBeLessThanOrEqual(101);
-    const grid = page.getByRole("grid", { name: "Sources" });
+    const grid = page.locator('.library-table[aria-label="Sources"]');
     await expect(grid).toHaveAttribute("aria-rowcount", "5001");
     await grid.getByRole("row").nth(1).getByRole("gridcell").first().click();
     await page.keyboard.press("End");
@@ -295,11 +299,11 @@ try {
     );
     await page.waitForTimeout(400);
     await page.reload();
-    await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
+    await expect(page.locator('.library-table[aria-label="Sources"]')).toBeVisible();
     await expect.poll(titleWidth).toBe(before + 48);
     await expect(
       page
-        .getByRole("grid", { name: "Sources" })
+        .locator('.library-table[aria-label="Sources"]')
         .getByRole("columnheader", { name: /^Published/u }),
     ).toHaveAttribute("aria-sort", "descending");
     await page.getByLabel("View options").click();
@@ -323,7 +327,7 @@ try {
     });
     await expect(editor).toContainText("Unsaved draft survives a reload");
     await editor.focus();
-    await page.getByRole("button", { name: "Search and commands" }).focus();
+    await page.getByRole("button", { name: /^Search and commands/u }).focus();
     await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
     completed.push("Failed autosave: durable draft survives reload and remains reviewable on blur");
     records[0].body = "[test] A different application edited the collection version.";
@@ -399,14 +403,20 @@ try {
     await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
     await page.keyboard.press("Control+Shift+f");
     await expect(
-      page.getByRole("textbox", { name: "Find a source by title, author or tag" }),
+      page.getByRole("combobox", { name: "Search sources and commands", exact: true }),
     ).toBeFocused();
     completed.push("Density persists; mobile sheets, overflow, and keyboard library shortcut");
 
     await page.setViewportSize({ width: 1440, height: 1000 });
-    const navigatorSearch = page.getByRole("textbox", {
-      name: "Find a source by title, author or tag",
-    });
+    await page.keyboard.press("Escape");
+    const navigatorSearch = {
+      fill: async (query) => {
+        await page.getByRole("button", { name: /^Search and commands/u }).click();
+        await page
+          .getByRole("combobox", { name: "Search sources and commands", exact: true })
+          .fill(query);
+      },
+    };
     const residency = [];
     writesBlocked = true; // Local position restoration must not depend on a successful server save.
     const activeHtml = page
@@ -415,8 +425,11 @@ try {
     for (let index = 1; index <= 19; index += 1) {
       await navigatorSearch.fill(`Research ${String(index).padStart(4, "0")}`);
       await page
-        .getByRole("option", { name: new RegExp(`Research ${String(index).padStart(4, "0")}`) })
-        .dblclick();
+        .getByRole("option", {
+          name: new RegExp(`^\\[test\\] Research ${String(index).padStart(4, "0")}`),
+        })
+        .click();
+      await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
       await expect(page.locator(".document-session.is-active iframe.html-viewer")).toBeVisible({
         timeout: 20000,
       });
@@ -436,7 +449,8 @@ try {
     completed.push("Twenty visited HTML documents retain at most four renderers");
     writesBlocked = false;
     await navigatorSearch.fill("Research 0001");
-    await page.getByRole("option", { name: /Research 0001/ }).dblclick();
+    await page.getByRole("option", { name: /^\[test\] Research 0001/ }).click();
+    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
     await expect
       .poll(() => activeHtml.evaluate((element) => element.ownerDocument.defaultView.scrollY))
       .toBeGreaterThan(1000);
@@ -451,8 +465,11 @@ try {
     ]) {
       await navigatorSearch.fill(`Research ${String(index).padStart(4, "0")}`);
       await page
-        .getByRole("option", { name: new RegExp(`Research ${String(index).padStart(4, "0")}`) })
-        .dblclick();
+        .getByRole("option", {
+          name: new RegExp(`^\\[test\\] Research ${String(index).padStart(4, "0")}`),
+        })
+        .click();
+      await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
       await expect(page.locator(`.document-session.is-active .${format}-viewer`)).toBeVisible({
         timeout: 60000,
       });
@@ -558,6 +575,7 @@ try {
     completed,
     measurements,
     error: error.message,
+    stack: error.stack,
     workspace: await page
       .evaluate(() => ({
         saved: localStorage.getItem("mdbase-reader:dockview:v1:test-reader-audit"),

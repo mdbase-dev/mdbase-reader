@@ -37,11 +37,11 @@ import {
   type SourceRecordCreationRequest,
   type SourceSummary,
 } from "@mdbase-reader/core";
-import { Suspense, useMemo, type JSX } from "react";
+import { Suspense, useMemo, useState, useCallback, type JSX } from "react";
 
 import { captureCitationProvenance } from "./capture-citation-provenance.js";
-import { CollectionSwitchingContext, type CollectionSwitching } from "./CollectionPicker.js";
 import { HtmlViewerSurface, PdfViewerSurface } from "./document-renderers.js";
+import { RendererStage, DocumentMessage, type RendererState } from "./DocumentRendererStage.js";
 import {
   applyLibraryViewConfiguration,
   defaultLibraryView,
@@ -123,15 +123,7 @@ const sources: readonly Source[] = [
     readingStatus: "queued",
     reading: { status: "queued", lastOpenedAt: dateTime("2026-09-18T09:02:00+10:00") },
     published: 1983,
-    documents: [
-      {
-        fileId: fileId("file_tufte_epub"),
-        file: "[[files/visual-display.epub]]",
-        revision: fileRevision("sha256:ca102f"),
-        mediaType: "application/epub+zip",
-        role: "primary",
-      },
-    ],
+    documents: [],
     properties: {
       id: "src_tufte",
       title: "The Visual Display of Quantitative Information",
@@ -312,9 +304,9 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
 
   library(): Promise<ReaderLibrarySnapshot> {
     return Promise.resolve({
-      collectionName: "Reading",
+      collectionName: "Sample library",
       sources: this.#sources,
-      connectionState: "connected",
+      connectionState: null,
     });
   }
   listLibraryViews(): Promise<readonly MdbaseLibraryView[]> {
@@ -765,7 +757,8 @@ function PreviewDocument({
           <strong>{source.title}</strong>
           <span>
             <Trans>
-              The interface preview includes one sample document: The Principles of Psychology.
+              This sample has metadata only. Read The Principles of Psychology (HTML) or An
+              anthology of attention (PDF).
             </Trans>
           </span>
         </div>
@@ -784,12 +777,6 @@ function PreviewDocument({
           onSurfaceReady={onSurfaceChange}
         />
       </Suspense>
-      <div className="preview-notice">
-        <Trans>
-          <span>Interface preview</span>
-          No collection records or files are created.
-        </Trans>
-      </div>
     </div>
   );
 }
@@ -801,6 +788,9 @@ function PreviewAnthologyDocument({
   readonly descriptor: DocumentDescriptor;
   readonly onSurfaceChange: (surface: ReadingSurface | null) => void;
 }): JSX.Element {
+  const [state, setState] = useState<RendererState>({ status: "opening" });
+  const ready = useCallback(() => setState({ status: "ready" }), []);
+  const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   const document = useMemo<SurfaceDocument>(
     () => ({
       document: descriptor,
@@ -810,26 +800,36 @@ function PreviewAnthologyDocument({
     [descriptor],
   );
   return (
-    <Suspense
-      fallback={
-        <p>
-          <Trans>Preparing anthology…</Trans>
-        </p>
-      }
+    <RendererStage
+      state={state}
+      openingLabel={translate`Opening An anthology of attention…`}
+      errorName="PDF viewer"
     >
-      <PdfViewerSurface
-        className="pdf-viewer"
-        document={document}
-        onSurfaceReady={onSurfaceChange}
-      />
-    </Suspense>
+      <Suspense
+        fallback={<DocumentMessage label={translate`Opening An anthology of attention…`} />}
+      >
+        <PdfViewerSurface
+          className="pdf-viewer"
+          document={document}
+          onSurfaceReady={onSurfaceChange}
+          onDocumentReady={ready}
+          onDocumentError={failed}
+        />
+      </Suspense>
+    </RendererStage>
   );
 }
 
 export function PreviewReader(): JSX.Element {
   const gateway = useMemo(() => new PreviewGateway(), []);
   return (
-    <CollectionSwitchingContext value={previewCollections}>
+    <div className="interface-preview">
+      <aside className="preview-notice" aria-label={translate({ message: "Sample library" })}>
+        <span role="note">
+          <Trans>Interface preview · no collection connected. Changes stay in this tab.</Trans>{" "}
+          <Trans>HTML and PDF samples are available; other sources have metadata only.</Trans>
+        </span>
+      </aside>
       <ReaderApp
         gateway={gateway}
         initialSourceId={requestedSourceId(location.href, collection)}
@@ -839,42 +839,9 @@ export function PreviewReader(): JSX.Element {
         )}
         saveFile={() => Promise.resolve()}
       />
-    </CollectionSwitchingContext>
+    </div>
   );
 }
-
-/** Sample collections show the switcher; the preview has only its own records to open. */
-const previewCollections: CollectionSwitching = {
-  collectionId: collection,
-  connections: [
-    { collectionId: collection, displayName: "Reading", authority: { kind: "hosted" } },
-    {
-      collectionId: "preview-thesis",
-      displayName: "Thesis research",
-      authority: { kind: "connector" },
-    },
-    {
-      collectionId: "preview-course",
-      displayName: "Course reading",
-      authority: { kind: "hosted" },
-    },
-  ],
-  select: () => {
-    throw new Error(
-      translate({
-        message: "The preview has one sample collection. Connect mdbase to switch between yours.",
-      }),
-    );
-  },
-  connect: () =>
-    Promise.reject(
-      new Error(
-        translate({
-          message: "Connecting a collection needs mdbase Connect, outside the preview.",
-        }),
-      ),
-    ),
-};
 
 /** Preview records list friendly fields on the summary; a real record stores them as frontmatter. */
 function withRecordFrontmatter(source: Source): Source {

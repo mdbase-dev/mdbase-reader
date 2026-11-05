@@ -25,6 +25,7 @@ import { LibraryTableRow, isEditableColumn } from "./LibraryTableRow.js";
 import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { useLibraryColumns } from "./use-library-columns.js";
 import { hasModifier, useLongPress } from "./use-long-press.js";
+import { useMediaQuery } from "./use-media-query.js";
 
 import type { LibraryPartRow } from "./library-source-parts.js";
 import type { LibraryLayout } from "./use-library-layout-draft.js";
@@ -68,6 +69,7 @@ interface EditingCell {
 export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const { t } = useLingui();
   const { sources, layout, selection, onSelectionChange, scrollRef } = props;
+  const rowHeight = useMediaQuery("(max-width: 680px)") ? 76 : libraryRowHeight;
   const gridRef = useRef<HTMLDivElement>(null);
   const table = useLibraryColumns(props);
   const rowIds = useMemo(() => sources.map(({ id }) => id), [sources]);
@@ -77,13 +79,14 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const virtualizer = useVirtualizer({
     count: sources.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => libraryRowHeight,
+    estimateSize: () => rowHeight,
     getItemKey: (index) => sources[index]?.id ?? index,
     overscan: 10,
     scrollPaddingStart: headerHeight,
     scrollMargin: offset + headerHeight,
   });
   const margin = offset + headerHeight;
+  useLayoutEffect(() => virtualizer.measure(), [virtualizer, rowHeight]);
   const focusRow = useRowFocus(gridRef);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
@@ -138,10 +141,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
           handleGridKey(event, {
             rowIds,
             selection,
-            pageSize: Math.max(
-              1,
-              Math.floor((scrollRef.current?.clientHeight ?? 400) / libraryRowHeight),
-            ),
+            pageSize: Math.max(1, Math.floor((scrollRef.current?.clientHeight ?? 400) / rowHeight)),
             moveTo: (index, next) => {
               focusRow(index);
               virtualizer.scrollToIndex(index, { align: "auto" });

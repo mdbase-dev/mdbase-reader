@@ -523,10 +523,6 @@ msgstr "<0>{shortcut}</0>: 페이지에서 선택한 내용을 하이라이트�
 msgid "<0>Download Zotero exporter (.xpi)</0>"
 msgstr "<0>Zotero 내보내기 도구(.xpi) 다운로드</0>"
 
-#: apps/reader/src/preview.tsx
-msgid "<0>Interface preview</0>No collection records or files are created."
-msgstr "<0>인터페이스 미리보기</0>컬렉션 레코드나 파일은 만들어지지 않습니다."
-
 #: apps/reader/src/ImportReview.tsx
 msgid "<0>Open imported collection →</0>"
 msgstr "<0>가져온 컬렉션 열기 →</0>"
@@ -2305,10 +2301,6 @@ msgstr "이 컴퓨터에 직접 연결됨"
 msgid "Connected. The panel saves here unless you choose another."
 msgstr "연결되었습니다. 다른 컬렉션을 선택하지 않으면 패널이 여기에 저장합니다."
 
-#: apps/reader/src/preview.tsx
-msgid "Connecting a collection needs mdbase Connect, outside the preview."
-msgstr "컬렉션을 연결하려면 미리보기 밖에서 mdbase Connect가 필요합니다."
-
 #: apps/reader/src/ImportDestination.tsx
 msgid "Connecting to mdbase…"
 msgstr "mdbase에 연결하는 중…"
@@ -3344,15 +3336,6 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "Enter document password"
 msgstr "문서 비밀번호 입력"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Enter reading mode"
-msgstr "읽기 모드 시작"
-
-#. placeholder {0}: shortcutLabel("mod+.")
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Enter reading mode · {0}"
-msgstr "읽기 모드 시작 · {0}"
-
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
 msgstr "이 값을 적용하려면 올바른 JSON을 입력해 주세요."
@@ -3482,6 +3465,7 @@ msgid "Error loading document"
 msgstr "문서를 불러오는 중 오류가 발생했습니다"
 
 #: apps/extension/src/CaptureApp.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgctxt "Reader interface"
 msgid "Esc"
 msgstr "Esc"
@@ -3544,6 +3528,10 @@ msgstr "총괄 프로듀서"
 #: apps/extension/src/TagInput.tsx
 msgid "Existing tags"
 msgstr "기존 태그"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Expand the current document pane · Escape to restore"
+msgstr "현재 문서 창 확장 · Escape로 복원"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
@@ -3664,6 +3652,10 @@ msgstr "이 연결에서는 파일 내보내기를 사용할 수 없습니다."
 msgid "File export is unavailable in this build."
 msgstr "이 빌드에서는 파일 내보내기를 사용할 수 없습니다."
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "File import is unavailable here."
+msgstr "여기에서는 파일을 가져올 수 없습니다."
+
 #: apps/reader/src/SettingsPage.tsx
 msgid "file names"
 msgstr "파일 이름"
@@ -3707,10 +3699,6 @@ msgctxt "CollectionMenu interface"
 msgid "Filter collections"
 msgstr "컬렉션 필터"
 
-#: apps/reader/src/reader-app-commands.ts
-msgid "Filter sources in the sidebar"
-msgstr "사이드바에서 자료 필터링"
-
 #: apps/reader/src/FileNameSettings.tsx
 msgid "Filters"
 msgstr "필터"
@@ -3723,14 +3711,6 @@ msgstr "제목, 저자 또는 태그로 자료 찾기"
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Find a field"
 msgstr "필드 찾기"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Find a source"
-msgstr "자료 찾기"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Find a source by title, author or tag"
-msgstr "제목, 저자 또는 태그로 자료 찾기"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Find an open-access PDF"
@@ -3906,6 +3886,14 @@ msgstr "이름"
 msgctxt "CitationContributors interface"
 msgid "Given names"
 msgstr "이름"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Go back"
+msgstr "뒤로 이동"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Go forward"
+msgstr "앞으로 이동"
 
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgid "Go to chapter start"
@@ -4111,6 +4099,10 @@ msgstr "mdbase에서 호스팅"
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
 msgstr "이 컬렉션에서 새 자료 노트와 주석의 이름을 지정하는 방식입니다. 변경 사항은 새 항목에만 적용되며 기존 파일 이름은 유지됩니다."
 
+#: apps/reader/src/preview.tsx
+msgid "HTML and PDF samples are available; other sources have metadata only."
+msgstr "HTML 및 PDF 샘플을 사용할 수 있습니다. 다른 자료에는 메타데이터만 있습니다."
+
 #. placeholder {0}: String(response.status)
 #: packages/renderer-html/src/html-viewer.tsx
 msgid "HTML download failed with HTTP {0}."
@@ -4227,6 +4219,10 @@ msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
 msgstr "노트에서"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter to open. Escape closes overlays and returns focus."
+msgstr "소스 및 주석 목록에서 화살표, Home, End, Page Up/Down 키로 이동하고 Enter 키로 엽니다. Escape 키는 겹쳐진 창을 닫고 포커스를 돌려줍니다."
+
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In source note"
 msgstr "자료 노트에 있음"
@@ -4324,6 +4320,10 @@ msgstr "{appName}을(를) 설치하면 별도 창에서 빠르게 열 수 있습
 #: apps/reader/src/ImportInput.tsx
 msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
 msgstr "실험용 Zotero 10.0.x 내보내기 도구를 설치한 다음 <0>도구 → Export for mdbase Reader…</0>를 사용해 주세요. Zotero의 데이터 디렉터리가 아니라 내보낸 폴더 전체를 선택해야 합니다."
+
+#: apps/reader/src/preview.tsx
+msgid "Interface preview · no collection connected. Changes stay in this tab."
+msgstr "인터페이스 미리보기 · 연결된 컬렉션 없음. 변경 사항은 이 탭에만 남습니다."
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview document"
@@ -4568,6 +4568,7 @@ msgid "Key idea"
 msgstr "핵심 내용"
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Keyboard shortcuts"
 msgstr "키보드 단축키"
 
@@ -4607,16 +4608,6 @@ msgstr "마지막 유효한 미리보기"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Layout"
 msgstr "레이아웃"
-
-#: apps/reader/src/DocumentContextualToolbar.tsx
-#: apps/reader/src/reader-command-list.ts
-msgid "Leave reading mode"
-msgstr "읽기 모드 종료"
-
-#. placeholder {0}: shortcutLabel("mod+.")
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Leave reading mode · {0}"
-msgstr "읽기 모드 종료 · {0}"
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "Leave without saving?"
@@ -4926,10 +4917,6 @@ msgstr "시스템 설정 따르기"
 msgid "Match system theme"
 msgstr "시스템 테마 따르기"
 
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Matches"
-msgstr "일치 항목"
-
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Matches several places on this page"
 msgstr "이 페이지의 여러 위치와 일치합니다"
@@ -4943,6 +4930,17 @@ msgstr "일치하는 본문 구간: “{0}”. 문서에서 임시로 하이라�
 #: apps/reader/src/dockview-menus.ts
 msgid "Maximize / restore pane"
 msgstr "패널 최대화 / 복원"
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+#: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Maximize document"
+msgstr "문서 최대화"
+
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Maximize document · {0}"
+msgstr "문서 최대화 · {0}"
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase answered the readiness check with something else."
@@ -5348,6 +5346,10 @@ msgstr "다음 페이지"
 msgid "Next part: {0}"
 msgstr "다음 부분: {0}"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Next tab"
+msgstr "다음 탭"
+
 #: apps/reader/src/citation-form-model.ts
 msgid "No"
 msgstr "아니요"
@@ -5374,6 +5376,10 @@ msgstr "저자나 편집자가 기록되어 있지 않습니다."
 msgid "No citation details were found on this page. Save the source, then add them in Reader."
 msgstr "이 페이지에서 인용 정보를 찾지 못했습니다. 자료를 저장한 후 Reader에서 추가하세요."
 
+#: apps/reader/src/SettingsSections.tsx
+msgid "No collection connected · interface preview"
+msgstr "연결된 컬렉션 없음 · 인터페이스 미리보기"
+
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
@@ -5396,6 +5402,10 @@ msgstr "열린 문서 없음"
 msgid "No downloadable content; importing metadata only: {key}"
 msgstr "다운로드할 수 있는 콘텐츠가 없어 메타데이터만 가져옵니다: {key}"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "No extractable text on this page."
+msgstr "이 페이지에는 추출할 수 있는 텍스트가 없습니다."
+
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "NO FILE"
@@ -5409,10 +5419,6 @@ msgstr "첨부된 파일 없음"
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "No file attached"
 msgstr "첨부된 파일 없음"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "No matches in the sources loaded so far. Loading more…"
-msgstr "지금까지 불러온 자료 중 일치하는 항목이 없습니다. 더 불러오는 중…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "No matching annotations"
@@ -5459,10 +5465,6 @@ msgstr "이 패널에 자료 없음"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "No sources match"
 msgstr "일치하는 자료 없음"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "No sources match."
-msgstr "일치하는 자료가 없습니다."
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources yet."
@@ -5574,6 +5576,11 @@ msgstr "노트는 출처 본문을 대체하지 않고 독립적인 출처 수�
 #: apps/reader/src/InspectorPane.tsx
 msgid "Notes follow the active pane"
 msgstr "노트가 활성 창을 따라갑니다"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "Nothing matches"
+msgstr "일치하는 항목 없음"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
@@ -5695,8 +5702,8 @@ msgid "Open a document"
 msgstr "문서 열기"
 
 #: apps/reader/src/ReaderHeader.tsx
-msgid "Open a document to use reading mode"
-msgstr "읽기 모드를 사용하려면 문서를 여세요"
+msgid "Open a document to maximize it"
+msgstr "최대화하려면 문서를 여세요"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
@@ -5833,10 +5840,23 @@ msgstr "작업 공간 탭 열기"
 msgid "Open your library in mdbase Reader"
 msgstr "mdbase Reader에서 라이브러리 열기"
 
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Opened {title}"
+msgstr "{title} 열림"
+
 #. placeholder {0}: original.displayName
 #: apps/reader/src/SdkReaderRoot.tsx
 msgid "Opening {0}"
 msgstr "{0} 여는 중"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "Opening {0}…"
+msgstr "{0} 여는 중…"
+
+#: apps/reader/src/preview.tsx
+msgid "Opening An anthology of attention…"
+msgstr "An anthology of attention 여는 중…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Opening citation details…"
@@ -5845,11 +5865,6 @@ msgstr "인용 정보 여는 중…"
 #: apps/reader/src/native-signin-ui.ts
 msgid "Opening collections isn’t available in this build yet."
 msgstr "이 빌드에서는 아직 컬렉션을 열 수 없습니다."
-
-#: apps/reader/src/ConnectedDocument.tsx
-msgctxt "ConnectedDocument interface"
-msgid "Opening document…"
-msgstr "문서를 여는 중…"
 
 #: apps/reader/src/MultilineCodeEditor.tsx
 msgid "Opening editor…"
@@ -6016,6 +6031,10 @@ msgstr "{0}과(와) 겹침"
 msgid "p. {0}"
 msgstr "{0}페이지"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Page"
+msgstr "페이지"
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page"
@@ -6030,6 +6049,10 @@ msgstr "{0}페이지"
 #: apps/reader/src/reading-progress.ts
 msgid "Page {0} of {pageCount}"
 msgstr "{pageCount}페이지 중 {0}페이지"
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Page {number}"
+msgstr "{number}페이지"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
@@ -6058,6 +6081,10 @@ msgstr "페이지 회전"
 msgctxt "PDF viewer page"
 msgid "Page Settings"
 msgstr "페이지 설정"
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Page text could not be loaded."
+msgstr "페이지 텍스트를 불러올 수 없습니다."
 
 #: apps/reader/src/citation-provenance.ts
 msgid "page title"
@@ -6194,7 +6221,16 @@ msgstr "PDF 좌표는 유한한 숫자여야 합니다."
 msgid "PDF geometry unavailable."
 msgstr "PDF 지오메트리를 사용할 수 없습니다."
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF page image"
+msgstr "PDF 페이지 이미지"
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF page text"
+msgstr "PDF 페이지 텍스트"
+
 #: apps/reader/src/ChapterPreview.tsx
+#: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "PDF pages"
 msgstr "PDF 페이지"
 
@@ -6284,10 +6320,6 @@ msgstr "준비 중"
 msgid "Preparing a preview…"
 msgstr "미리보기 준비 중…"
 
-#: apps/reader/src/preview.tsx
-msgid "Preparing anthology…"
-msgstr "선집 준비 중…"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Preparing bibliography…"
@@ -6362,6 +6394,10 @@ msgstr "이전 페이지"
 msgctxt "PDF viewer page"
 msgid "Previous Page"
 msgstr "이전 페이지"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Previous tab"
+msgstr "이전 탭"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
@@ -6488,10 +6524,6 @@ msgstr "읽기"
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Read from your collection"
 msgstr "컬렉션에서 읽기"
-
-#: apps/reader/src/reader-command-list.ts
-msgid "Read the document with interface controls hidden"
-msgstr "인터페이스 컨트롤을 숨기고 문서 읽기"
 
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgid "Read the whole file"
@@ -6824,15 +6856,6 @@ msgstr "이 컬렉션에 대한 Reader의 접근 권한이 변경되었습니다
 msgctxt "reading status"
 msgid "Reading"
 msgstr "읽는 중"
-
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Reading mode"
-msgstr "읽기 모드"
-
-#: apps/reader/src/DocumentContextualToolbar.tsx
-msgctxt "DocumentContextualToolbar interface"
-msgid "Reading mode"
-msgstr "읽기 모드"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCells.tsx
@@ -7175,6 +7198,17 @@ msgstr "계속하기 전에 자료 노트 충돌을 해결해 주세요."
 msgid "Restore"
 msgstr "복원"
 
+#: apps/reader/src/DocumentContextualToolbar.tsx
+#: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Restore document panes"
+msgstr "문서 창 복원"
+
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Restore document panes · {0}"
+msgstr "문서 창 복원 · {0}"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved changes from earlier."
 msgstr "이전의 저장되지 않은 변경 사항을 복원했습니다."
@@ -7182,6 +7216,11 @@ msgstr "이전의 저장되지 않은 변경 사항을 복원했습니다."
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
 msgstr "이전에 저장하지 않은 노트를 복원했습니다."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "Results"
+msgstr "검색 결과"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Results open at the matching passage. If it cannot be found, use Find in the document."
@@ -7290,6 +7329,10 @@ msgctxt "PDF viewer rotate"
 msgid "Rotate Counter-Clockwise"
 msgstr "시계 반대 방향으로 회전"
 
+#: apps/reader/src/preview.tsx
+msgid "Sample library"
+msgstr "샘플 라이브러리"
+
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Sans"
 msgstr "산세리프"
@@ -7315,8 +7358,8 @@ msgid "Save {0} selected"
 msgstr "{0}개 선택 항목 저장"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from your device."
-msgstr "웹 페이지나 PDF 링크를 저장하거나, DOI·arXiv ID·ISBN으로 저작물을 조회하거나, 기기에서 파일을 추가하세요."
+msgid "Save a web page or PDF link, or look up a work by DOI, arXiv ID or ISBN."
+msgstr "웹 페이지나 PDF 링크를 저장하거나 DOI, arXiv ID 또는 ISBN으로 문헌을 검색하세요."
 
 #: apps/reader/src/use-annotation-owner.ts
 msgid "Save annotation"
@@ -7636,6 +7679,10 @@ msgctxt "PDF viewer search"
 msgid "Search"
 msgstr "검색"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Search “shortcuts” for keyboard help"
+msgstr "키보드 도움말을 보려면 ‘shortcuts’를 검색하세요"
+
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Search above covers all annotations"
 msgstr "위 검색은 모든 주석을 대상으로 합니다"
@@ -7842,6 +7889,7 @@ msgid "Set up this collection for Reader before saving."
 msgstr "저장하기 전에 Reader용으로 이 컬렉션을 설정하세요."
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/reader-app-commands.ts
 #: apps/reader/src/SettingsPage.tsx
 msgid "Settings"
 msgstr "설정"
@@ -8175,11 +8223,6 @@ msgstr "소스"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
-msgid "Sources"
-msgstr "소스"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgctxt "LibraryNavigator interface"
 msgid "Sources"
 msgstr "소스"
 
@@ -8608,10 +8651,6 @@ msgstr "필터, 정렬, 열이 주석의 mdbase 보기로 컬렉션에 저장됩
 msgid "The filters, sort, columns and layout are saved in your collection."
 msgstr "필터, 정렬, 열, 레이아웃이 컬렉션에 저장됩니다."
 
-#: apps/reader/src/preview.tsx
-msgid "The interface preview includes one sample document: The Principles of Psychology."
-msgstr "인터페이스 미리보기에는 샘플 문서 하나가 포함되어 있습니다: The Principles of Psychology."
-
 #: packages/renderer-html/src/html-palette.ts
 #: packages/renderer-html/src/html-runtime.ts
 msgid "The isolated HTML document is unavailable."
@@ -8676,6 +8715,10 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "The password you entered was incorrect. Please try again."
 msgstr "입력한 비밀번호가 올바르지 않습니다. 다시 시도해 주세요."
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "The PDF reading surface is unavailable."
+msgstr "PDF 읽기 화면을 사용할 수 없습니다."
+
 #: apps/extension/src/capture-errors.ts
 msgid "The post is not loaded. Scroll it into view and try again."
 msgstr "게시물이 로드되지 않았습니다. 화면에 보이도록 스크롤한 후 다시 시도해 주세요."
@@ -8683,10 +8726,6 @@ msgstr "게시물이 로드되지 않았습니다. 화면에 보이도록 스크
 #: apps/reader/src/preview.tsx
 msgid "The preview citation is invalid."
 msgstr "미리보기 인용이 유효하지 않습니다."
-
-#: apps/reader/src/preview.tsx
-msgid "The preview has one sample collection. Connect mdbase to switch between yours."
-msgstr "미리보기에는 샘플 컬렉션이 하나 있습니다. mdbase를 연결하면 내 컬렉션 간에 전환할 수 있습니다."
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "The preview returns once the details can be saved."
@@ -9040,6 +9079,10 @@ msgstr "이 레코드는 위의 핵심 필드만 사용합니다."
 msgid "This removes the source from your library and deletes its source note. Saved files and annotations are kept in the collection, but links to this source will stop working, including from its annotations and from any chapters of it."
 msgstr "라이브러리에서 이 자료를 제거하고 자료 노트를 삭제합니다. 저장된 파일과 주석은 컬렉션에 유지되지만, 해당 자료의 주석과 하위 장에서 비롯된 링크를 포함하여 이 자료를 향한 링크는 더 이상 작동하지 않습니다."
 
+#: apps/reader/src/preview.tsx
+msgid "This sample has metadata only. Read The Principles of Psychology (HTML) or An anthology of attention (PDF)."
+msgstr "이 샘플에는 메타데이터만 있습니다. The Principles of Psychology(HTML) 또는 An anthology of attention(PDF)을 읽어 보세요."
+
 #: apps/extension/src/CitationPanel.tsx
 msgid "This source has no citation yet."
 msgstr "이 출처에는 아직 인용이 없습니다."
@@ -9155,9 +9198,24 @@ msgstr "제목, 저자 또는 태그"
 msgid "Title, work type, and citation key"
 msgstr "제목, 저작 유형, 인용 키"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "to close"
+msgstr "닫기"
+
 #: apps/reader/src/highlight-colors.ts
 msgid "To follow up"
 msgstr "나중에 확인"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "to move"
+msgstr "이동"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "to open"
+msgstr "열기"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."
@@ -9349,11 +9407,6 @@ msgstr "알 수 없는 주석 생성 오류"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
-msgid "Unknown creator"
-msgstr "알 수 없는 작성자"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgctxt "LibraryNavigator interface"
 msgid "Unknown creator"
 msgstr "알 수 없는 작성자"
 

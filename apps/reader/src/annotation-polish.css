@@ -256,8 +256,7 @@
   font-size: var(--text-xs);
 }
 .annotation-save-state {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 auto;
   color: var(--faint);
   font-size: var(--text-xs);
   text-align: right;

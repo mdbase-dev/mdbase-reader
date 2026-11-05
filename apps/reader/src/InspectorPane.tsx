@@ -70,9 +70,9 @@ export function InspectorPane({
     >
       {/* The dock tab above names the source; this row only switches its tools. */}
       <div className="inspector-context">
-        <span className="sr-only">
+        <h2 className="sr-only">
           {paneLabel}: {source?.title ?? t({ message: "No source in this pane" })}
-        </span>
+        </h2>
         <InspectorTabs
           tab={tab}
           enabled={source !== null}

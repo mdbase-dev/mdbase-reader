@@ -13,14 +13,6 @@ export function libraryCommands(input: ReaderCommandInput): readonly ReaderComma
       run: () => input.workspace.openLibrary(),
     },
     {
-      id: "search",
-      label: translate({ message: "Filter sources in the sidebar" }),
-      group: "Library",
-      keywords: "search find",
-      shortcut: "mod+shift+f",
-      run: input.searchLibrary,
-    },
-    {
       id: "add-source",
       label: translate({ message: "Add source…", context: "reader app commands" }),
       group: "Library",
@@ -63,6 +55,13 @@ export function displayCommands(input: ReaderCommandInput): readonly ReaderComma
     }));
   const density = input.density === "comfortable" ? "compact" : "comfortable";
   return [
+    {
+      id: "settings",
+      label: translate({ message: "Settings" }),
+      group: "Display",
+      keywords: "preferences text display typography language appearance",
+      run: input.openSettings,
+    },
     ...themes,
     {
       id: "density",

@@ -329,10 +329,15 @@
 
 /* The reading position: a quiet accent rule rather than a bar above the list. */
 .annotation-list .annotation-reading-label {
+  position: absolute;
+  top: 0;
+  inset-inline: var(--sp-2);
+  z-index: 1;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin: var(--sp-2);
+  margin: 0;
   padding: 0;
   color: var(--accent);
   font-size: var(--text-xs);
@@ -349,6 +354,7 @@
 }
 
 .annotation-list [role="listitem"] {
+  position: relative;
   border-radius: var(--r-lg);
   outline: 0;
 }

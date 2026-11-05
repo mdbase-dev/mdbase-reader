@@ -1,14 +1,13 @@
+import { searchSources } from "./audit-source-search.mjs";
 import assert from "node:assert/strict";
 import { expect } from "@playwright/test";
 
 /** Real Reader mobile toolbar and annotation pipeline, backed by disposable in-memory routes. */
 export async function auditPdfTouchWorkspace(page, { screenshot }) {
   const open = async () => {
-    const search = page.getByRole("textbox", { name: "Find a source by title, author or tag" });
-    if (!(await search.isVisible()))
-      await page.getByRole("button", { name: "Toggle Sources sidebar" }).tap();
-    await search.fill("Research 0020");
-    await page.getByRole("option", { name: /Research 0020/ }).dblclick();
+    await searchSources(page, "Research 0020");
+    await page.getByRole("option", { name: /^\[test\] Research 0020/ }).click();
+    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
     await waitPdf();
   };
   const waitPdf = async () => {

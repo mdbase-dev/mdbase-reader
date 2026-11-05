@@ -9,9 +9,9 @@ action, and one stylesheet section for each redesigned component.
   when offline or syncing), **Search and commands** with the platform's shortcut, a **Display** menu
   (theme and density as explicit choices), and the Notes panel toggle. Import moved to the
   library options menu and the command palette.
-- **Sources sidebar** (formerly "Library navigator"). A filter field, saved views, and the
-  source list with its count and an add button. The duplicated library heading, export button
-  and "saved in mdbase" dots were removed. Saved layouts are retitled on load.
+- **Sources sidebar** (formerly "Library navigator"). Saved views, open and recent sources,
+  and an add button. Source lookup uses the command palette, not a separate sidebar filter.
+  Saved layouts are retitled on load.
 - **Library tab.** One header row: view switcher, search with its scope, result count, a filter
   menu (filters, sort, layout, columns, save as view, export, import) and add. Continue reading
   is a single row with progress. The table labels formats in text, shows status with a progress
@@ -27,7 +27,8 @@ action, and one stylesheet section for each redesigned component.
 - **Command palette.** Grouped results (open tabs, current source, sources, library, workspace,
   display). An open source is listed once, as its tab. Without a query each group shows a few
   entries; the active row scrolls into view. Shortcuts render as ⌘/⇧ on Apple platforms and
-  Ctrl/Shift elsewhere.
+  Ctrl/Shift elsewhere. Search “shortcuts” for registry-derived keyboard help; Settings is
+  searchable too. The input owns the active result through combobox/listbox semantics.
 - **Menus.** `Menu` and `useDismissableDetails` (`src/Menu.tsx`) close on an outside pointer,
   Escape (returning focus) or after an item runs. Controls that should keep a menu open sit
   inside `[data-menu-keep-open]`.
@@ -49,7 +50,7 @@ action, and one stylesheet section for each redesigned component.
   implements `saveReadingStatus`. Connect writes `reading.status`, sets `finished_at` (and a
   missing `started_at`) on finishing, and clears `finished_at` when a source is reopened. The library table prefers the library's copy of each source, so changes appear
   at once.
-- **Keyboard.** `/` focuses the search of a focused library tab, otherwise the Sources filter.
+- **Keyboard.** `/` focuses the search of a focused library tab, otherwise Search and commands.
   Arrow keys and j/k move between library rows; Enter opens.
 - **Adding sources.** Drop a PDF, EPUB or saved page anywhere in Reader, or on the add dialog.
   The dialog pastes a link and saves it in one row, and closes on an outside click.
@@ -67,8 +68,9 @@ action, and one stylesheet section for each redesigned component.
 
 - **Reading comes first.** Opening a document hides the Sources sidebar, and returning to a
   library tab restores it, but only when Reader hid it (Display → _Sidebar while reading_
-  turns this off). Focus mode is now **Reading mode**: a header button and `mod+.`, with the
-  tab strip fading alongside the header. `mod+\` toggles the sidebar and `mod+shift+\` the
+  turns this off). **Maximize document** is a header button and `mod+.`; it expands the
+  document pane without promising to hide application controls. Escape restores the panes.
+  `mod+\` toggles the sidebar and `mod+shift+\` the
   Notes panel. A side panel alone in its group has no close button, and its pane menu appears
   on hover.
 - **Shortcuts from inside a document.** Once the reader clicks into a saved page or an EPUB,
@@ -92,9 +94,9 @@ action, and one stylesheet section for each redesigned component.
   annotation id so selecting it opens the same card. The selected card and the active passage
   share one gold tint. Cards no longer say "Unanchored note" or "No passage anchor". A card
   without a passage selector shows its location label and omits _Show in document_.
-- **Sidebar.** The filter searches the whole library. Without a query the sidebar lists views,
-  open sources and up to eight recent ones (by `reading.last_opened_at`, then sources marked
-  _reading_), and ends with _Add source…_. The full list lives in the library tab.
+- **Sidebar.** Lists views, open sources and up to eight recent ones (by
+  `reading.last_opened_at`, then sources marked _reading_), and ends with _Add source…_.
+  The palette navigates the whole library; the library tab filters its current view.
 - **Library.** Default columns are Title (with creator beneath), Published, Annotations, Last
   opened and Status. Annotation counts come from the connector's annotation index
   (`annotationCountsBySource`), corrected by the selected source's loaded annotations. They
@@ -108,7 +110,9 @@ action, and one stylesheet section for each redesigned component.
 - **Mobile.** A lone library tab has no tab switcher above it, and library tabs have no close
   button.
 - **Preview.** `?preview=1` renders The Principles of Psychology through the real HTML renderer, so
-  selection, highlights, margin markers and typography can be tried there.
+  selection, highlights, margin markers and typography can be tried there. A persistent notice
+  precedes the shell: no collection is connected and changes stay in the tab. HTML and PDF
+  samples open documents; other sources identify their metadata-only state before opening.
 
 ## Library views (fourth pass)
 

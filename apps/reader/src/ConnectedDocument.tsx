@@ -125,11 +125,7 @@ function OpenConnectedDocument({
   );
 
   if (state.status === "opening") {
-    return (
-      <DocumentMessage
-        label={t({ message: "Opening document…", context: "ConnectedDocument interface" })}
-      />
-    );
+    return <DocumentMessage label={t`Opening ${source.title}…`} />;
   }
   if (state.status === "error") {
     return (

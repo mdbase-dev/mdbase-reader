@@ -160,8 +160,8 @@ export function DocumentContextualToolbar({
         >
           <ReadingModeIcon />{" "}
           {focusMode
-            ? t({ message: "Leave reading mode" })
-            : t({ message: "Reading mode", context: "DocumentContextualToolbar interface" })}
+            ? t({ message: "Restore document panes" })
+            : t({ message: "Maximize document" })}
         </button>
         <CreatePartsItem source={source} createParts={createParts} />
         <ExportItem sourceExport={sourceExport} />

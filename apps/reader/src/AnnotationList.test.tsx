@@ -61,7 +61,14 @@ vi.mock("./AnnotationCard.js", () => ({
     cardEdit.current = onEdit;
     return (
       <div data-annotation-id={annotation.id}>
-        <button>{editing ? "Editing" : annotation.body}</button>
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            onEdit();
+          }}
+        >
+          {editing ? "Editing" : annotation.body}
+        </button>
       </div>
     );
   },
@@ -228,6 +235,22 @@ describe("virtual annotation sidebar", () => {
 });
 
 describe("following the reading position", () => {
+  it("does not move a pressed action before its click activates", async () => {
+    const element = await render();
+    const action = element.querySelector<HTMLButtonElement>(".annotation-list button")!;
+    await act(async () => {
+      action.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(element.textContent).not.toContain("Resume following");
+    await act(async () => {
+      action.click();
+      await Promise.resolve();
+    });
+    expect(element.textContent).toContain("Editing");
+    expect(element.textContent).toContain("Resume following");
+  });
+
   it("highlights reading context but pauses automatic reveals on manual list interaction", async () => {
     const values = browseAnnotations(annotations, "", "all", "document");
     const element = await render(null, null, values[1]!.id);

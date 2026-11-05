@@ -106,7 +106,7 @@ describe("ReaderHeader reading mode", () => {
     expect(button).toContain('aria-disabled="true"');
     const describedBy = /aria-describedby="([^"]+)"/u.exec(button)?.[1] ?? "";
     expect(markup).toContain(
-      `<span id="${describedBy}" class="sr-only">Open a document to use reading mode</span>`,
+      `<span id="${describedBy}" class="sr-only">Open a document to maximize it</span>`,
     );
   });
 
@@ -119,15 +119,15 @@ describe("ReaderHeader reading mode", () => {
   });
 
   it.each([
-    ["de", "Lesemodus aktivieren", "Lesemodus verlassen"],
-    ["es", "Entrar en modo lectura", "Salir del modo lectura"],
-    ["fr", "Passer en mode lecture", "Quitter le mode lecture"],
-    ["it", "Attiva la modalità di lettura", "Esci dalla modalità di lettura"],
-    ["ja", "読書モードに切り替え", "読書モードを終了"],
-    ["ko", "읽기 모드 시작", "읽기 모드 종료"],
-    ["pt", "Entrar no modo de leitura", "Sair do modo de leitura"],
-    ["ru", "Перейти в режим чтения", "Выйти из режима чтения"],
-    ["zh", "进入阅读模式", "退出阅读模式"],
+    ["de", "Dokument maximieren", "Dokumentbereiche wiederherstellen"],
+    ["es", "Maximizar documento", "Restaurar los paneles del documento"],
+    ["fr", "Agrandir le document", "Rétablir les volets du document"],
+    ["it", "Ingrandisci documento", "Ripristina i riquadri del documento"],
+    ["ja", "文書を最大化", "文書ペインを元に戻す"],
+    ["ko", "문서 최대화", "문서 창 복원"],
+    ["pt", "Maximizar documento", "Restaurar os painéis do documento"],
+    ["ru", "Развернуть документ", "Восстановить панели документа"],
+    ["zh", "最大化文档", "恢复文档窗格"],
   ] as const)(
     "translates both complete reading-mode tooltips in %s",
     async (locale, enter, leave) => {

@@ -1,3 +1,4 @@
+import { searchSources } from "./audit-source-search.mjs";
 import { expect } from "@playwright/test";
 
 const shellKey = "mdbase-reader:shell:v1:test-reader-audit";
@@ -11,10 +12,9 @@ export async function auditReadingWorkspace(page, { screenshot }) {
   const navigator = page.getByRole("complementary", { name: "Sources sidebar" });
   await expect(navigator).toBeVisible();
 
-  await navigator
-    .getByRole("textbox", { name: "Find a source by title, author or tag" })
-    .fill("Research 0001");
-  await navigator.getByRole("option", { name: /Research 0001/u }).dblclick();
+  await searchSources(page, "Research 0001");
+  await page.getByRole("option", { name: /^\[test\] Research 0001/u }).click();
+  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   const frame = page.frameLocator("iframe.html-viewer:visible");
   await expect(frame.locator("#p0")).toBeVisible({ timeout: 30000 });
   await expect(navigator).toBeHidden();
@@ -43,7 +43,7 @@ export async function auditReadingWorkspace(page, { screenshot }) {
   });
   await screenshot("reading-mode");
   await frame.locator("#p2").press("Escape");
-  await expect(page.getByRole("button", { name: "Reading mode" })).toHaveAttribute(
+  await expect(page.getByRole("button", { name: "Maximize document" })).toHaveAttribute(
     "aria-pressed",
     "false",
   );

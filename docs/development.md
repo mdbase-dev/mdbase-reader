@@ -18,6 +18,43 @@ pnpm dev
 The web build is emitted by `apps/reader`. Add `?preview=1` to open the explicitly labelled,
 in-memory interface preview without creating collection records or files.
 
+### Reader interface qualification
+
+Start Vite on an unused loopback port, then pass that origin explicitly to the browser gates:
+
+```sh
+READER_AUDIT_ORIGIN=http://127.0.0.1:5329 pnpm --filter @mdbase-reader/app test:polish
+READER_AUDIT_ORIGIN=http://127.0.0.1:5329 pnpm --filter @mdbase-reader/app test:a11y
+READER_AUDIT_ORIGIN=http://127.0.0.1:5329 pnpm --filter @mdbase-reader/app test:browser
+```
+
+`test:polish` runs Chromium at 1440×900 and 390×844, with light/dark themes and normal/reduced
+motion. It writes screenshots and JSON traces under its reported temporary evidence directory.
+The checks cover preview identity, registry-derived shortcuts and active results, modal/menu/pane
+motion, interrupted exits, nondefault pane widths across the mobile breakpoint, 180px citation
+editing, phone header targets, and PDF text/page input/keyboard scrolling. Root motion uses
+`document.getAnimations()` plus requestAnimationFrame samples. Chromium does not expose the native
+`::details-content` transitions through that API; those traces use computed transition durations
+and requestAnimationFrame opacity samples instead. Reduced motion must have no intermediate opacity.
+These are development-build fixture checks, not production performance or assistive-technology certification.
+
+For feedback qualification, start Vite with a loopback `VITE_MDBASE_FEEDBACK_URL` ending in
+`/v1/feedback`, then run `READER_FEEDBACK_TEST_ORIGIN=http://127.0.0.1:5330 pnpm --filter
+@mdbase-reader/app test:feedback` against that server. The gate intercepts every feedback POST;
+it does not deliver mail. It checks the same eight viewport/theme/motion combinations, records
+WAAPI/rAF traces in `/tmp/reader-feedback-motion.json`, preserves a draft across interrupted
+closure, and verifies the dialog is already hidden when screenshot capture starts.
+
+Reader currently pins the shared UI package from npm. Its local palette replaces the shared palette
+presentation, not its matching or shortcut algorithms, and removes the separate sidebar source search.
+After a shared UI release provides one accessible combobox/listbox, retained modal exit/interruption,
+selected-result contrast, and the corresponding reduced-motion styles, repin and delete Reader's
+replacement presentation and local ownership of those styles. Feedback uses Reader CSS on the
+existing persistent native dialog, including immediate hiding while its screenshot capture makes
+the application inert; Reader does not duplicate the shared controller. Move those styles upstream
+and delete the local selectors when a shared UI release owns the same motion contract.
+PDF text extraction and shadow-root adaptation belong to Reader's renderer, not the shared UI package.
+
 ## Test a local collection
 
 An application served over HTTP from localhost cannot use the managed

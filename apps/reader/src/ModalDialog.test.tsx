@@ -112,6 +112,17 @@ describe("native modal dialogs", () => {
     await act(async () => root.render(null));
     expect(focus).not.toHaveBeenCalled();
   });
+
+  it.each(["inert", "hidden", "aria-hidden"])(
+    "does not reactivate an opener made %s by navigation",
+    async (attribute) => {
+      await act(async () => root.render(<Harness dismiss={vi.fn()} />));
+      opener.setAttribute(attribute, attribute === "aria-hidden" ? "true" : "");
+      const focus = vi.spyOn(opener, "focus");
+      await act(async () => root.render(null));
+      expect(focus).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("migrated modal tasks", () => {

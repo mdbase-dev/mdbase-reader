@@ -110,13 +110,15 @@ function ContinueReadingCard({
     <button
       className="continue-reading-card"
       type="button"
-      aria-label={t`Continue reading ${source.title}`}
       title={source.title}
       onClick={() => onOpen(source.id)}
     >
       <SourceThumbnailView ref={thumbnailRef} source={source} thumbnail={thumbnail} />
       <span className="continue-reading-copy">
-        <span className="continue-reading-title">{source.title}</span>
+        <span className="continue-reading-title">
+          <span className="sr-only">{t`Continue reading ${source.title}`}</span>
+          <span aria-hidden="true">{source.title}</span>
+        </span>
         {byline ? <span className="continue-reading-byline">{byline}</span> : null}
         {passage ? <q className="continue-reading-passage">{passage}</q> : null}
         <span className="continue-reading-progress">
@@ -155,7 +157,9 @@ export function SourceThumbnailView({
         <img src={thumbnail.url} alt="" decoding="async" draggable={false} />
       ) : (
         <>
-          <span className="source-thumbnail-title">{source.title}</span>
+          <span className="source-thumbnail-title" aria-hidden="true">
+            {source.title.trim().charAt(0).toLocaleUpperCase()}
+          </span>
           <span className="source-thumbnail-format">{shortFormatLabel(source)}</span>
         </>
       )}

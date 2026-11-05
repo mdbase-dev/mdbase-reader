@@ -523,10 +523,6 @@ msgstr "<0>{shortcut}</0> resalta la selección de la página"
 msgid "<0>Download Zotero exporter (.xpi)</0>"
 msgstr "<0>Descargar exportador de Zotero (.xpi)</0>"
 
-#: apps/reader/src/preview.tsx
-msgid "<0>Interface preview</0>No collection records or files are created."
-msgstr "<0>Vista previa de la interfaz</0>No se crean registros ni archivos en la colección."
-
 #: apps/reader/src/ImportReview.tsx
 msgid "<0>Open imported collection →</0>"
 msgstr "<0>Abrir colección importada →</0>"
@@ -2305,10 +2301,6 @@ msgstr "Conectado directamente a este ordenador"
 msgid "Connected. The panel saves here unless you choose another."
 msgstr "Conectado. El panel guarda aquí a menos que elijas otra colección."
 
-#: apps/reader/src/preview.tsx
-msgid "Connecting a collection needs mdbase Connect, outside the preview."
-msgstr "Para conectar una colección se necesita mdbase Connect, fuera de la vista previa."
-
 #: apps/reader/src/ImportDestination.tsx
 msgid "Connecting to mdbase…"
 msgstr "Conectando con mdbase…"
@@ -3344,15 +3336,6 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "Enter document password"
 msgstr "Introduce la contraseña del documento"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Enter reading mode"
-msgstr "Entrar en modo lectura"
-
-#. placeholder {0}: shortcutLabel("mod+.")
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Enter reading mode · {0}"
-msgstr "Entrar en modo lectura · {0}"
-
 #: apps/reader/src/CitationTypedFieldEditors.tsx
 msgid "Enter valid JSON to apply this value."
 msgstr "Introduce un JSON válido para aplicar este valor."
@@ -3482,6 +3465,7 @@ msgid "Error loading document"
 msgstr "Error al cargar el documento"
 
 #: apps/extension/src/CaptureApp.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgctxt "Reader interface"
 msgid "Esc"
 msgstr "Esc"
@@ -3544,6 +3528,10 @@ msgstr "Productor ejecutivo"
 #: apps/extension/src/TagInput.tsx
 msgid "Existing tags"
 msgstr "Etiquetas existentes"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Expand the current document pane · Escape to restore"
+msgstr "Ampliar el panel del documento actual · Escape para restaurar"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
@@ -3664,6 +3652,10 @@ msgstr "La exportación de archivos no está disponible para esta conexión."
 msgid "File export is unavailable in this build."
 msgstr "La exportación de archivos no está disponible en esta compilación."
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "File import is unavailable here."
+msgstr "La importación de archivos no está disponible aquí."
+
 #: apps/reader/src/SettingsPage.tsx
 msgid "file names"
 msgstr "nombres de archivo"
@@ -3707,10 +3699,6 @@ msgctxt "CollectionMenu interface"
 msgid "Filter collections"
 msgstr "Filtrar colecciones"
 
-#: apps/reader/src/reader-app-commands.ts
-msgid "Filter sources in the sidebar"
-msgstr "Filtrar fuentes en la barra lateral"
-
 #: apps/reader/src/FileNameSettings.tsx
 msgid "Filters"
 msgstr "Filtros"
@@ -3723,14 +3711,6 @@ msgstr "Buscar"
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Find a field"
 msgstr "Buscar un campo"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Find a source"
-msgstr "Buscar una fuente"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Find a source by title, author or tag"
-msgstr "Buscar una fuente por título, autor o etiqueta"
 
 #: apps/reader/src/WorkspacePaneSupport.tsx
 msgid "Find an open-access PDF"
@@ -3906,6 +3886,14 @@ msgstr "Nombre"
 msgctxt "CitationContributors interface"
 msgid "Given names"
 msgstr "Nombres"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Go back"
+msgstr "Volver atrás"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Go forward"
+msgstr "Ir adelante"
 
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgid "Go to chapter start"
@@ -4111,6 +4099,10 @@ msgstr "Alojado por mdbase"
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
 msgstr "Cómo nombra Reader las nuevas notas de fuente y anotaciones en esta colección. Los cambios solo afectan a los elementos nuevos: los archivos existentes conservan sus nombres."
 
+#: apps/reader/src/preview.tsx
+msgid "HTML and PDF samples are available; other sources have metadata only."
+msgstr "Hay ejemplos HTML y PDF disponibles; las demás fuentes solo tienen metadatos."
+
 #. placeholder {0}: String(response.status)
 #: packages/renderer-html/src/html-viewer.tsx
 msgid "HTML download failed with HTTP {0}."
@@ -4227,6 +4219,10 @@ msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
 msgstr "En la nota"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter to open. Escape closes overlays and returns focus."
+msgstr "En las listas de fuentes y anotaciones, use las flechas, Inicio, Fin y Re Pág/Av Pág para moverse y Intro para abrir. Escape cierra las ventanas superpuestas y devuelve el foco."
+
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In source note"
 msgstr "En la nota de la fuente"
@@ -4324,6 +4320,10 @@ msgstr "Instala {appName} para acceder rápidamente en su propia ventana."
 #: apps/reader/src/ImportInput.tsx
 msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
 msgstr "Instala el exportador experimental de Zotero 10.0.x y luego usa <0>Herramientas → Export for mdbase Reader…</0>. Selecciona toda la carpeta exportada, no el directorio de datos de Zotero."
+
+#: apps/reader/src/preview.tsx
+msgid "Interface preview · no collection connected. Changes stay in this tab."
+msgstr "Vista previa de la interfaz · ninguna colección conectada. Los cambios permanecen en esta pestaña."
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview document"
@@ -4568,6 +4568,7 @@ msgid "Key idea"
 msgstr "Idea clave"
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Keyboard shortcuts"
 msgstr "Atajos de teclado"
 
@@ -4607,16 +4608,6 @@ msgstr "Última vista previa válida"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Layout"
 msgstr "Diseño"
-
-#: apps/reader/src/DocumentContextualToolbar.tsx
-#: apps/reader/src/reader-command-list.ts
-msgid "Leave reading mode"
-msgstr "Salir del modo lectura"
-
-#. placeholder {0}: shortcutLabel("mod+.")
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Leave reading mode · {0}"
-msgstr "Salir del modo lectura · {0}"
 
 #: apps/reader/src/SettingsPage.tsx
 msgid "Leave without saving?"
@@ -4926,10 +4917,6 @@ msgstr "Igual que el sistema"
 msgid "Match system theme"
 msgstr "Igual que el tema del sistema"
 
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Matches"
-msgstr "Coincidencias"
-
 #: apps/extension/src/SavedHighlights.tsx
 msgid "Matches several places on this page"
 msgstr "Coincide con varios lugares de esta página"
@@ -4943,6 +4930,17 @@ msgstr "Pasaje coincidente: «{0}». Resaltado temporalmente en el documento."
 #: apps/reader/src/dockview-menus.ts
 msgid "Maximize / restore pane"
 msgstr "Maximizar / restaurar panel"
+
+#: apps/reader/src/DocumentContextualToolbar.tsx
+#: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Maximize document"
+msgstr "Maximizar documento"
+
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Maximize document · {0}"
+msgstr "Maximizar documento · {0}"
 
 #: apps/extension/src/sdk-client.ts
 msgid "mdbase answered the readiness check with something else."
@@ -5348,6 +5346,10 @@ msgstr "Página siguiente"
 msgid "Next part: {0}"
 msgstr "Parte siguiente: {0}"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Next tab"
+msgstr "Pestaña siguiente"
+
 #: apps/reader/src/citation-form-model.ts
 msgid "No"
 msgstr "No"
@@ -5374,6 +5376,10 @@ msgstr "No se ha registrado ningún autor ni editor."
 msgid "No citation details were found on this page. Save the source, then add them in Reader."
 msgstr "No se encontraron datos de cita en esta página. Guarda la fuente y luego añádelos en Reader."
 
+#: apps/reader/src/SettingsSections.tsx
+msgid "No collection connected · interface preview"
+msgstr "Ninguna colección conectada · vista previa de la interfaz"
+
 #. placeholder {0}: query.trim()
 #: apps/reader/src/CollectionMenu.tsx
 msgid "No collections match “{0}”."
@@ -5396,6 +5402,10 @@ msgstr "Ningún documento abierto"
 msgid "No downloadable content; importing metadata only: {key}"
 msgstr "No hay contenido descargable; se importan solo los metadatos: {key}"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "No extractable text on this page."
+msgstr "No hay texto extraíble en esta página."
+
 #: apps/reader/src/workspace-tab-display.ts
 msgctxt "workspace tab display"
 msgid "NO FILE"
@@ -5409,10 +5419,6 @@ msgstr "Ningún archivo adjunto"
 msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "No file attached"
 msgstr "Ningún archivo adjunto"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "No matches in the sources loaded so far. Loading more…"
-msgstr "Sin coincidencias en las fuentes cargadas hasta ahora. Cargando más…"
 
 #: apps/reader/src/AnnotationList.tsx
 msgid "No matching annotations"
@@ -5459,10 +5465,6 @@ msgstr "Ninguna fuente en este panel"
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "No sources match"
 msgstr "Ninguna fuente coincide"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "No sources match."
-msgstr "Ninguna fuente coincide."
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "No sources yet."
@@ -5574,6 +5576,11 @@ msgstr "Las notas se convierten en anotaciones independientes a nivel de fuente,
 #: apps/reader/src/InspectorPane.tsx
 msgid "Notes follow the active pane"
 msgstr "Las notas siguen al panel activo"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "Nothing matches"
+msgstr "No hay coincidencias"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
@@ -5695,8 +5702,8 @@ msgid "Open a document"
 msgstr "Abrir un documento"
 
 #: apps/reader/src/ReaderHeader.tsx
-msgid "Open a document to use reading mode"
-msgstr "Abre un documento para usar el modo de lectura"
+msgid "Open a document to maximize it"
+msgstr "Abra un documento para maximizarlo"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
@@ -5833,10 +5840,23 @@ msgstr "Abrir pestaña del espacio de trabajo"
 msgid "Open your library in mdbase Reader"
 msgstr "Abre tu biblioteca en mdbase Reader"
 
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Opened {title}"
+msgstr "Se abrió {title}"
+
 #. placeholder {0}: original.displayName
 #: apps/reader/src/SdkReaderRoot.tsx
 msgid "Opening {0}"
 msgstr "Abriendo {0}"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/ConnectedDocument.tsx
+msgid "Opening {0}…"
+msgstr "Abriendo {0}…"
+
+#: apps/reader/src/preview.tsx
+msgid "Opening An anthology of attention…"
+msgstr "Abriendo An anthology of attention…"
 
 #: apps/reader/src/CitationEditor.tsx
 msgid "Opening citation details…"
@@ -5845,11 +5865,6 @@ msgstr "Abriendo datos de la cita…"
 #: apps/reader/src/native-signin-ui.ts
 msgid "Opening collections isn’t available in this build yet."
 msgstr "Esta versión aún no permite abrir colecciones."
-
-#: apps/reader/src/ConnectedDocument.tsx
-msgctxt "ConnectedDocument interface"
-msgid "Opening document…"
-msgstr "Abriendo documento…"
 
 #: apps/reader/src/MultilineCodeEditor.tsx
 msgid "Opening editor…"
@@ -6016,6 +6031,10 @@ msgstr "Se solapa con {0}"
 msgid "p. {0}"
 msgstr "pág. {0}"
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Page"
+msgstr "Página"
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Page"
@@ -6030,6 +6049,10 @@ msgstr "Página {0}"
 #: apps/reader/src/reading-progress.ts
 msgid "Page {0} of {pageCount}"
 msgstr "Página {0} de {pageCount}"
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Page {number}"
+msgstr "Página {number}"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer search"
@@ -6058,6 +6081,10 @@ msgstr "Rotación de página"
 msgctxt "PDF viewer page"
 msgid "Page Settings"
 msgstr "Configuración de página"
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "Page text could not be loaded."
+msgstr "No se pudo cargar el texto de la página."
 
 #: apps/reader/src/citation-provenance.ts
 msgid "page title"
@@ -6194,7 +6221,16 @@ msgstr "Las coordenadas del PDF deben ser números finitos."
 msgid "PDF geometry unavailable."
 msgstr "La geometría del PDF no está disponible."
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF page image"
+msgstr "Imagen de página PDF"
+
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "PDF page text"
+msgstr "Texto de las páginas PDF"
+
 #: apps/reader/src/ChapterPreview.tsx
+#: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "PDF pages"
 msgstr "Páginas del PDF"
 
@@ -6284,10 +6320,6 @@ msgstr "Preparando"
 msgid "Preparing a preview…"
 msgstr "Preparando una vista previa…"
 
-#: apps/reader/src/preview.tsx
-msgid "Preparing anthology…"
-msgstr "Preparando la antología…"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Preparing bibliography…"
@@ -6362,6 +6394,10 @@ msgstr "Página anterior"
 msgctxt "PDF viewer page"
 msgid "Previous Page"
 msgstr "Página anterior"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Previous tab"
+msgstr "Pestaña anterior"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer document"
@@ -6488,10 +6524,6 @@ msgstr "Leer"
 #: apps/reader/src/NativeSignIn.tsx
 msgid "Read from your collection"
 msgstr "Leer desde tu colección"
-
-#: apps/reader/src/reader-command-list.ts
-msgid "Read the document with interface controls hidden"
-msgstr "Leer el documento con los controles de la interfaz ocultos"
 
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgid "Read the whole file"
@@ -6824,15 +6856,6 @@ msgstr "El acceso de Reader a esta colección ha cambiado. Revisa el acceso actu
 msgctxt "reading status"
 msgid "Reading"
 msgstr "Leyendo"
-
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Reading mode"
-msgstr "Modo de lectura"
-
-#: apps/reader/src/DocumentContextualToolbar.tsx
-msgctxt "DocumentContextualToolbar interface"
-msgid "Reading mode"
-msgstr "Modo de lectura"
 
 #. placeholder {0}: source.title
 #: apps/reader/src/LibraryCells.tsx
@@ -7175,6 +7198,17 @@ msgstr "Resuelve el conflicto de la nota de la fuente antes de continuar."
 msgid "Restore"
 msgstr "Restaurar"
 
+#: apps/reader/src/DocumentContextualToolbar.tsx
+#: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Restore document panes"
+msgstr "Restaurar los paneles del documento"
+
+#. placeholder {0}: shortcutLabel("mod+.")
+#: apps/reader/src/ReaderHeader.tsx
+msgid "Restore document panes · {0}"
+msgstr "Restaurar los paneles del documento · {0}"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved changes from earlier."
 msgstr "Se restauraron tus cambios anteriores sin guardar."
@@ -7182,6 +7216,11 @@ msgstr "Se restauraron tus cambios anteriores sin guardar."
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
 msgstr "Se restauró tu nota sin guardar de antes."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "Results"
+msgstr "Resultados"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Results open at the matching passage. If it cannot be found, use Find in the document."
@@ -7290,6 +7329,10 @@ msgctxt "PDF viewer rotate"
 msgid "Rotate Counter-Clockwise"
 msgstr "Girar en sentido antihorario"
 
+#: apps/reader/src/preview.tsx
+msgid "Sample library"
+msgstr "Biblioteca de ejemplo"
+
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Sans"
 msgstr "Sin remates"
@@ -7315,8 +7358,8 @@ msgid "Save {0} selected"
 msgstr "Guardar {0} seleccionados"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Save a web page or PDF link, look up a work by DOI, arXiv ID or ISBN, or add a file from your device."
-msgstr "Guarda una página web o un enlace a un PDF, busca una obra por DOI, ID de arXiv o ISBN, o añade un archivo desde tu dispositivo."
+msgid "Save a web page or PDF link, or look up a work by DOI, arXiv ID or ISBN."
+msgstr "Guarde una página web o un enlace PDF, o busque una obra por DOI, identificador arXiv o ISBN."
 
 #: apps/reader/src/use-annotation-owner.ts
 msgid "Save annotation"
@@ -7636,6 +7679,10 @@ msgctxt "PDF viewer search"
 msgid "Search"
 msgstr "Buscar"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Search “shortcuts” for keyboard help"
+msgstr "Busque «shortcuts» para ver los atajos de teclado"
+
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Search above covers all annotations"
 msgstr "La búsqueda de arriba abarca todas las anotaciones"
@@ -7842,6 +7889,7 @@ msgid "Set up this collection for Reader before saving."
 msgstr "Configura esta colección para Reader antes de guardar."
 
 #: apps/extension/src/OptionsApp.tsx
+#: apps/reader/src/reader-app-commands.ts
 #: apps/reader/src/SettingsPage.tsx
 msgid "Settings"
 msgstr "Ajustes"
@@ -8175,11 +8223,6 @@ msgstr "Fuentes"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
-msgid "Sources"
-msgstr "Fuentes"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgctxt "LibraryNavigator interface"
 msgid "Sources"
 msgstr "Fuentes"
 
@@ -8608,10 +8651,6 @@ msgstr "Los filtros, la ordenación y las columnas se guardan en tu colección c
 msgid "The filters, sort, columns and layout are saved in your collection."
 msgstr "Los filtros, la ordenación, las columnas y el diseño se guardan en tu colección."
 
-#: apps/reader/src/preview.tsx
-msgid "The interface preview includes one sample document: The Principles of Psychology."
-msgstr "La vista previa de la interfaz incluye un documento de muestra: The Principles of Psychology."
-
 #: packages/renderer-html/src/html-palette.ts
 #: packages/renderer-html/src/html-runtime.ts
 msgid "The isolated HTML document is unavailable."
@@ -8676,6 +8715,10 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "The password you entered was incorrect. Please try again."
 msgstr "La contraseña que has introducido es incorrecta. Inténtalo de nuevo."
 
+#: packages/renderer-pdf/src/pdf-accessibility.ts
+msgid "The PDF reading surface is unavailable."
+msgstr "La vista de lectura PDF no está disponible."
+
 #: apps/extension/src/capture-errors.ts
 msgid "The post is not loaded. Scroll it into view and try again."
 msgstr "La publicación no está cargada. Desplázala hasta que sea visible e inténtalo de nuevo."
@@ -8683,10 +8726,6 @@ msgstr "La publicación no está cargada. Desplázala hasta que sea visible e in
 #: apps/reader/src/preview.tsx
 msgid "The preview citation is invalid."
 msgstr "La cita de la vista previa no es válida."
-
-#: apps/reader/src/preview.tsx
-msgid "The preview has one sample collection. Connect mdbase to switch between yours."
-msgstr "La vista previa tiene una colección de muestra. Conecta mdbase para cambiar entre las tuyas."
 
 #: apps/reader/src/CitationPreview.tsx
 msgid "The preview returns once the details can be saved."
@@ -9040,6 +9079,10 @@ msgstr "Este registro solo usa los campos básicos de arriba."
 msgid "This removes the source from your library and deletes its source note. Saved files and annotations are kept in the collection, but links to this source will stop working, including from its annotations and from any chapters of it."
 msgstr "Esto elimina la fuente de tu biblioteca y borra su nota de fuente. Los archivos y anotaciones guardados se conservan en la colección, pero dejarán de funcionar los enlaces a esta fuente, incluidos los de sus anotaciones y los de cualquiera de sus capítulos."
 
+#: apps/reader/src/preview.tsx
+msgid "This sample has metadata only. Read The Principles of Psychology (HTML) or An anthology of attention (PDF)."
+msgstr "Este ejemplo solo tiene metadatos. Lea The Principles of Psychology (HTML) o An anthology of attention (PDF)."
+
 #: apps/extension/src/CitationPanel.tsx
 msgid "This source has no citation yet."
 msgstr "Esta fuente aún no tiene cita."
@@ -9155,9 +9198,24 @@ msgstr "Título, autor o etiqueta"
 msgid "Title, work type, and citation key"
 msgstr "Título, tipo de obra y clave de cita"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "to close"
+msgstr "para cerrar"
+
 #: apps/reader/src/highlight-colors.ts
 msgid "To follow up"
 msgstr "Para seguir adelante"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "to move"
+msgstr "para moverse"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader commands"
+msgid "to open"
+msgstr "para abrir"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."
@@ -9349,11 +9407,6 @@ msgstr "Error desconocido al crear la anotación"
 
 #: apps/reader/src/LibraryCards.tsx
 msgctxt "LibraryCards interface"
-msgid "Unknown creator"
-msgstr "Creador desconocido"
-
-#: apps/reader/src/LibraryNavigator.tsx
-msgctxt "LibraryNavigator interface"
 msgid "Unknown creator"
 msgstr "Creador desconocido"
 

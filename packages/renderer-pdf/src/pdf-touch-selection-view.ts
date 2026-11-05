@@ -29,6 +29,14 @@ export function findPdfScroller(root: ShadowRoot): HTMLElement | null {
   return null;
 }
 
+export function findPdfViewport(scroller: HTMLElement | null): HTMLElement | null {
+  let viewport = scroller?.parentElement ?? null;
+  while (viewport && !["auto", "scroll"].includes(getComputedStyle(viewport).overflowY)) {
+    viewport = viewport.parentElement;
+  }
+  return viewport;
+}
+
 export class TouchSelectionView {
   public readonly overlay = document.createElement("div");
   public readonly handles: Record<Endpoint, TouchHandle>;
@@ -62,13 +70,7 @@ export class TouchSelectionView {
     }
     if (next !== this.scroller) {
       this.scroller = next;
-      this.viewport = next.parentElement;
-      while (
-        this.viewport &&
-        !["auto", "scroll"].includes(getComputedStyle(this.viewport).overflowY)
-      ) {
-        this.viewport = this.viewport.parentElement;
-      }
+      this.viewport = findPdfViewport(next);
       next.append(this.overlay);
     }
     return true;

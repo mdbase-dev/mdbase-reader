@@ -1,24 +1,12 @@
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
-import { filterSources } from "@mdbase-reader/core";
-import { useMemo, useState, type CSSProperties, type JSX, type KeyboardEvent } from "react";
+import { useMemo, type JSX } from "react";
 
-import { SearchIcon } from "./icons.js";
-import {
-  NavigatorFooter,
-  NavigatorShortList,
-  recentSources,
-  sourceFormat,
-} from "./NavigatorSections.js";
-import { sourceCreatorsText, sourcesById } from "./source-creators.js";
-import { useVirtualSourceWindow } from "./use-virtual-source-window.js";
-import { keyboardSourceIndex } from "./virtual-source-list.js";
+import { NavigatorFooter, NavigatorShortList, recentSources } from "./NavigatorSections.js";
+import { sourcesById } from "./source-creators.js";
 
 import type { MdbaseLibraryView } from "./mdbase-library-views.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
-
-const navigatorSourceRowHeight = 50;
 
 interface LibraryNavigatorProps {
   readonly open?: boolean;
@@ -57,8 +45,6 @@ export function LibraryNavigator({
   onAddSource,
 }: LibraryNavigatorProps): JSX.Element {
   const { t } = useLingui();
-  const [query, setQuery] = useState("");
-  const visibleSources = useMemo(() => filterSources(sources, query), [query, sources]);
   // The open list is rebuilt on every workspace render; its identities are what matter.
   const openKey = openSources.map(({ id }) => id).join("\n");
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,83 +59,28 @@ export function LibraryNavigator({
       aria-hidden={!open}
       inert={!open}
     >
-      <label className="navigator-search">
-        <SearchIcon />
-        <span className="sr-only">{t({ message: "Find a source by title, author or tag" })}</span>
-        <input
-          id="reader-library-search"
-          value={query}
-          placeholder={t({ message: "Find a source" })}
-          onChange={(event) => setQuery(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape" && query) {
-              event.stopPropagation();
-              setQuery("");
-            }
-          }}
-        />
-        <kbd>{shortcutLabel("mod+shift+f")}</kbd>
-      </label>
-
       <nav className="navigator-sections" aria-label={t({ message: "Library views and sources" })}>
-        {query ? null : (
-          <NavigatorViews
-            views={views}
-            viewsLoading={viewsLoading}
-            problem={problem}
-            onOpenView={onOpenView}
+        <NavigatorViews
+          views={views}
+          viewsLoading={viewsLoading}
+          problem={problem}
+          onOpenView={onOpenView}
+        />
+        {openSources.length > 0 ? (
+          <NavigatorShortList
+            label={t({ message: "Open", context: "LibraryNavigator interface" })}
+            sources={openSources}
+            {...rowProps}
           />
-        )}
-
-        {query ? (
-          <section className="navigator-source-section">
-            <header>
-              <span>
-                <Trans>Matches</Trans>
-              </span>
-              <small>{String(visibleSources.length)}</small>
-            </header>
-            {visibleSources.length === 0 ? (
-              <p className="navigator-empty">
-                {indexLoading
-                  ? t({ message: "No matches in the sources loaded so far. Loading more…" })
-                  : t({ message: "No sources match." })}
-              </p>
-            ) : (
-              <NavigatorSourceList
-                sources={visibleSources}
-                library={library}
-                selectedSourceId={selectedSourceId}
-                resetKey={query}
-                onPreviewSource={onPreviewSource}
-                onOpenSource={onOpenSource}
-                onOpenBeside={onOpenBeside}
-              />
-            )}
-          </section>
-        ) : (
-          <>
-            {openSources.length > 0 ? (
-              <NavigatorShortList
-                label={t({ message: "Open", context: "LibraryNavigator interface" })}
-                sources={openSources}
-                {...rowProps}
-              />
-            ) : null}
-            {recent.length > 0 && !hideRecent ? (
-              <NavigatorShortList
-                label={t({ message: "Recent", context: "LibraryNavigator interface" })}
-                sources={recent}
-                {...rowProps}
-              />
-            ) : null}
-            <NavigatorEmptySources
-              sources={sources}
-              loading={indexLoading}
-              onAddSource={onAddSource}
-            />
-          </>
-        )}
+        ) : null}
+        {recent.length > 0 && !hideRecent ? (
+          <NavigatorShortList
+            label={t({ message: "Recent", context: "LibraryNavigator interface" })}
+            sources={recent}
+            {...rowProps}
+          />
+        ) : null}
+        <NavigatorEmptySources sources={sources} loading={indexLoading} onAddSource={onAddSource} />
       </nav>
       <NavigatorFooter addingSource={addingSource} onAddSource={onAddSource} />
     </aside>
@@ -211,106 +142,6 @@ function NavigatorEmptySources({
         <Trans>Add one</Trans>
       </button>
     </p>
-  );
-}
-
-function NavigatorSourceList({
-  sources,
-  library,
-  selectedSourceId,
-  resetKey,
-  onPreviewSource,
-  onOpenSource,
-  onOpenBeside,
-}: {
-  readonly sources: readonly SourceSummary[];
-  readonly library: ReadonlyMap<SourceId, SourceSummary>;
-  readonly selectedSourceId: SourceId | null;
-  readonly resetKey: string;
-  readonly onPreviewSource: (id: SourceId) => void;
-  readonly onOpenSource: (id: SourceId) => void;
-  readonly onOpenBeside: (id: SourceId) => void;
-}): JSX.Element {
-  const { t } = useLingui();
-  const { containerRef, range, measure, focusIndex } = useVirtualSourceWindow(
-    sources.length,
-    resetKey,
-    navigatorSourceRowHeight,
-  );
-  const windowStyle = {
-    transform: `translateY(${String(range.offset)}px)`,
-  } satisfies CSSProperties;
-  const spacerStyle = { height: `${String(range.totalHeight)}px` } satisfies CSSProperties;
-
-  function navigateFrom(event: KeyboardEvent, currentIndex: number): void {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const source = sources[currentIndex];
-      if (source) {
-        if (event.ctrlKey || event.metaKey) {
-          onOpenBeside(source.id);
-        } else {
-          onOpenSource(source.id);
-        }
-      }
-      return;
-    }
-    const nextIndex = keyboardSourceIndex(event.key, currentIndex, sources.length);
-    const nextSource = nextIndex === null ? undefined : sources[nextIndex];
-    if (nextIndex === null || !nextSource) {
-      return;
-    }
-    event.preventDefault();
-    onPreviewSource(nextSource.id);
-    focusIndex(nextIndex);
-  }
-
-  return (
-    <div
-      ref={containerRef}
-      className="navigator-source-list"
-      role="listbox"
-      aria-label={t({ message: "Sources", context: "LibraryNavigator interface" })}
-      onScroll={measure}
-    >
-      <div className="navigator-source-spacer" style={spacerStyle}>
-        <div className="navigator-source-window" style={windowStyle}>
-          {sources.slice(range.start, range.end).map((source, relativeIndex) => {
-            const index = range.start + relativeIndex;
-            const selected = source.id === selectedSourceId;
-            return (
-              <button
-                key={source.id}
-                type="button"
-                role="option"
-                aria-selected={selected}
-                aria-posinset={index + 1}
-                aria-setsize={sources.length}
-                data-source-index={index}
-                tabIndex={selected || index === range.start ? 0 : -1}
-                onClick={() => onPreviewSource(source.id)}
-                onDoubleClick={() => onOpenSource(source.id)}
-                onKeyDown={(event) => navigateFrom(event, index)}
-              >
-                <span className={`navigator-format is-${sourceFormat(source)}`}>
-                  {sourceFormat(source)}
-                </span>
-                <span>
-                  <strong>{source.title}</strong>
-                  <small>
-                    {sourceCreatorsText(
-                      source,
-                      library,
-                      t({ message: "Unknown creator", context: "LibraryNavigator interface" }),
-                    )}
-                  </small>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
   );
 }
 

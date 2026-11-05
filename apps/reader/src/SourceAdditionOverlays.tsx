@@ -1,4 +1,5 @@
 import { lazyFeature } from "./lazy-feature.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 
 import type { SourceAdditionController } from "./use-source-addition.js";
 import type { JSX } from "react";
@@ -21,9 +22,9 @@ export function SourceAdditionOverlays({
 }): JSX.Element {
   return (
     <>
-      {addition.dialogOpen ? (
+      <OverlayPresence open={addition.dialogOpen}>
         <SourceAddDialog
-          open={addition.dialogOpen}
+          open={true}
           busy={addition.adding}
           error={addition.error}
           canChooseFile={canChooseFile}
@@ -34,8 +35,10 @@ export function SourceAdditionOverlays({
           onEdit={addition.clearError}
           onDropFile={(file) => void addition.addFile(file)}
         />
-      ) : null}
-      {addition.fileImport.file ? <SourceImportOverlay flow={addition.fileImport} /> : null}
+      </OverlayPresence>
+      <OverlayPresence open={Boolean(addition.fileImport.file)}>
+        {addition.fileImport.file ? <SourceImportOverlay flow={addition.fileImport} /> : null}
+      </OverlayPresence>
     </>
   );
 }

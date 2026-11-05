@@ -144,17 +144,14 @@ function handleLayoutShortcut(event: KeyboardEvent, actions: ReaderShortcutActio
 
 /** Mod+K in every mdbase app; "?" too, since the palette lists each command's shortcut. */
 function asksForCommands(event: KeyboardEvent, modifier: boolean, editing: boolean): boolean {
-  if (editing) {
-    return false;
-  }
-  return modifier ? event.key.toLocaleLowerCase() === "k" : event.key === "?";
+  return modifier ? event.key.toLocaleLowerCase() === "k" : !editing && event.key === "?";
 }
 
 function isSlashSearch(event: KeyboardEvent, editing: boolean): boolean {
   return event.key === "/" && !editing && !event.metaKey && !event.ctrlKey && !event.altKey;
 }
 
-// In a library tab, "/" searches that view; elsewhere it filters the sidebar.
+// In a library tab, "/" filters that view; elsewhere it opens source navigation.
 function focusSearchForContext(actions: ReaderShortcutActions): void {
   const librarySearch = document.querySelector<HTMLInputElement>(
     ".workspace-pane.is-focused .library-search-field input",

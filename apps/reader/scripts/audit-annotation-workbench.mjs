@@ -86,8 +86,10 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
   await expect(tools.getByRole("button", { name: "In source note", exact: true })).toBeVisible();
   await tools.getByRole("button", { name: "Edit", exact: true }).first().click();
   await tools.getByRole("button", { name: "Delete annotation", exact: true }).click();
-  await expect(tools.getByText("These notes embed it and will show a broken embed:")).toBeVisible();
-  await expect(tools.getByText("sources/test_0000.md", { exact: true })).toBeVisible();
+  await expect(
+    tools.getByText("These notes embed this annotation and will show it as missing:"),
+  ).toBeVisible();
+  await expect(tools.locator('li[title="sources/test_0000.md"]')).toBeVisible();
   await screenshot("annotation-linked-delete-warning");
   await tools.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(tools.locator(".annotation-card")).toHaveCount(2);

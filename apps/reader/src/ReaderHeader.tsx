@@ -2,6 +2,7 @@ import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
+import { mdbaseApps } from "@mdbase-dev/ui/apps";
 import { CollectionSaveWarning } from "@mdbase-dev/ui/collections";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
@@ -128,7 +129,13 @@ function LibraryHeader({
         >
           <LeftPaneIcon />
         </button>
-        <AppSwitcher current="reader" urls={appUrls} />
+        {connectionState === null ? (
+          mdbaseApps
+            .filter(({ id }) => id === "reader")
+            .map(({ id, name }) => <span key={id}>{name}</span>)
+        ) : (
+          <AppSwitcher current="reader" urls={appUrls} />
+        )}
       </div>
       <div className="reader-header-context">
         {mdbase ? (
@@ -146,14 +153,13 @@ function LibraryHeader({
         <button
           className="header-command-button"
           type="button"
-          aria-label={t({ message: "Search and commands" })}
           title={t`Search sources and run commands · ${shortcutLabel("mod+k")}`}
           onClick={onOpenCommands}
         >
           <SearchIcon />
           <span>
             <Trans>Search and commands</Trans>
-          </span>
+          </span>{" "}
           <kbd>{shortcutLabel("mod+k")}</kbd>
         </button>
         {onToggleReadingMode ? (
@@ -198,16 +204,20 @@ function ReadingModeButton({
       <button
         className="icon-button header-reading-mode"
         type="button"
-        aria-label={translate({ message: "Reading mode" })}
+        aria-label={
+          readingMode
+            ? translate({ message: "Restore document panes" })
+            : translate({ message: "Maximize document" })
+        }
         aria-pressed={readingMode}
         aria-disabled={available ? undefined : true}
         aria-describedby={available ? undefined : descriptionId}
         title={
           available
             ? readingMode
-              ? translate`Leave reading mode · ${shortcutLabel("mod+.")}`
-              : translate`Enter reading mode · ${shortcutLabel("mod+.")}`
-            : translate({ message: "Open a document to use reading mode" })
+              ? translate`Restore document panes · ${shortcutLabel("mod+.")}`
+              : translate`Maximize document · ${shortcutLabel("mod+.")}`
+            : translate({ message: "Open a document to maximize it" })
         }
         onClick={available ? onToggle : undefined}
       >
@@ -215,7 +225,7 @@ function ReadingModeButton({
       </button>
       {available ? null : (
         <span id={descriptionId} className="sr-only">
-          <Trans>Open a document to use reading mode</Trans>
+          <Trans>Open a document to maximize it</Trans>
         </span>
       )}
     </>
@@ -257,11 +267,14 @@ function ConnectionState({
 }: {
   readonly state: ReaderConnectionState;
   readonly directAccess: ReaderDirectAccessState;
-}): JSX.Element {
+}): JSX.Element | null {
   const { t } = useLingui();
   const { snapshot, working, problem, request } = directAccess;
   const descriptionId = useId();
   useMdbaseMarkBusy(state === "syncing" && "stream");
+  if (state === null) {
+    return null;
+  }
   if (snapshot?.authority !== "connector" || state !== "connected") {
     return <PlainConnectionState state={state} />;
   }
@@ -321,7 +334,7 @@ function ConnectionState({
 }
 
 /** saved_on_device: the SDK keeps changes on this device until it can sync them. */
-export type ReaderConnectionState = "connected" | "offline" | "syncing" | "saved_on_device";
+export type ReaderConnectionState = "connected" | "offline" | "syncing" | "saved_on_device" | null;
 
 export const connectionLabels = {
   connected: "Connected",
@@ -330,7 +343,11 @@ export const connectionLabels = {
   saved_on_device: "Saved on this device; waiting for sync",
 } as const;
 
-function PlainConnectionState({ state }: { readonly state: ReaderConnectionState }): JSX.Element {
+function PlainConnectionState({
+  state,
+}: {
+  readonly state: NonNullable<ReaderConnectionState>;
+}): JSX.Element {
   const { t } = useLingui();
   const connectionLabels = {
     connected: t`Connected`,

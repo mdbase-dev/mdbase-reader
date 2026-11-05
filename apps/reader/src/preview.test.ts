@@ -11,6 +11,14 @@ async function firstSource(gateway: PreviewGateway): Promise<Source> {
 }
 
 describe("preview citation save guards", () => {
+  it("does not claim a connected collection or advertise a missing EPUB", async () => {
+    const snapshot = await new PreviewGateway().library();
+    expect(snapshot.connectionState).toBeNull();
+    expect(snapshot.collectionName).toBe("Sample library");
+    expect(
+      snapshot.sources.find(({ title }) => title.includes("Visual Display"))?.documents,
+    ).toEqual([]);
+  });
   it("rejects a stale editor with the current raw citation and provenance", async () => {
     const gateway = new PreviewGateway();
     const source = await firstSource(gateway);

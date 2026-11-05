@@ -5,6 +5,7 @@ import { createContext, useContext, useId, useRef, useState, type JSX } from "re
 import { CollectionMenu } from "./CollectionMenu.js";
 import { readerErrorMessage } from "./errors.js";
 import { ChevronDownIcon, CollectionIcon } from "./icons.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 
 import type { CollectionChoice } from "./collection-menu-model.js";
 import "./collection-picker.css";
@@ -115,7 +116,7 @@ export function CollectionPicker({
         {label}
         <ChevronDownIcon className="collection-picker-chevron" aria-hidden="true" />
       </button>
-      {open ? (
+      <OverlayPresence open={open}>
         <CollectionMenu
           id={menuId}
           triggerRef={triggerRef}
@@ -128,7 +129,7 @@ export function CollectionPicker({
           onConnect={() => void connect()}
           onClose={close}
         />
-      ) : null}
+      </OverlayPresence>
     </>
   );
 }

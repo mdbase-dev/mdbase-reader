@@ -59,7 +59,7 @@ function Workspace({
   } as unknown as ReaderWorkspaceGateway;
   return (
     <>
-      <div className="workspace" inert={page.open}>
+      <div className="workspace">
         <details>
           <summary>Aa</summary>
           <button type="button" onClick={page.show}>
@@ -183,7 +183,7 @@ describe("SettingsPage", () => {
     expect(heading?.textContent).toBe("Settings");
     expect(document.activeElement).toBe(heading);
     expect(document.querySelector("main")?.getAttribute("aria-labelledby")).toBe(heading?.id);
-    expect(document.querySelector(".workspace")?.hasAttribute("inert")).toBe(true);
+    expect(document.querySelector("dialog[open]")?.classList.contains("settings-page")).toBe(true);
     expect([...document.querySelectorAll("h2")].map((section) => section.textContent)).toEqual([
       "This device",
       "This collection",

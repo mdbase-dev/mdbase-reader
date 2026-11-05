@@ -1,3 +1,4 @@
+import { searchSources } from "./audit-source-search.mjs";
 import { expect } from "@playwright/test";
 import { blockSourceDraftStorage } from "./audit-source-storage.mjs";
 import { chooseOption } from "./audit-select.mjs";
@@ -9,12 +10,13 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
       .locator(".reader-dock-tab:not(.is-side)")
       .filter({ has: page.locator(".dv-default-tab-content", { hasText: name }) });
   const open = async (n) => {
+    await searchSources(page, `Research ${String(n).padStart(4, "0")}`);
     await page
-      .getByRole("textbox", { name: "Find a source by title, author or tag" })
-      .fill(`Research ${String(n).padStart(4, "0")}`);
-    await page
-      .getByRole("option", { name: new RegExp(`Research ${String(n).padStart(4, "0")}`) })
-      .dblclick();
+      .getByRole("option", {
+        name: new RegExp(`^\\[test\\] Research ${String(n).padStart(4, "0")}`),
+      })
+      .click();
+    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   };
   const state = () =>
     page.evaluate(() =>
@@ -122,10 +124,9 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.keyboard.press("Control+Backslash");
-  await page
-    .getByRole("textbox", { name: "Find a source by title, author or tag" })
-    .fill("Research 0002");
-  await page.getByRole("option", { name: /Research 0002/u }).click();
+  await searchSources(page, "Research 0002");
+  await page.getByRole("option", { name: /^\[test\] Research 0002/u }).click();
+  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   await expect(page.frameLocator("iframe.html-viewer:visible").locator("h1")).toContainText(
     "fixture 2",
   );
@@ -177,15 +178,17 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   await blockSourceDraftStorage(page, true);
   await editor.fill("[test] Responsive draft with an unstored change.");
   await expect(page.locator(".draft-recovery.is-error")).toBeVisible();
-  page.removeAllListeners("dialog");
-  page.once("dialog", (dialog) => void dialog.dismiss());
   await page.getByRole("button", { name: "Close current tab", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Close this tab?", exact: true })
+    .getByRole("button", { name: "Keep open", exact: true })
+    .click();
+  await expect(page.locator(".reader-confirm-dialog")).toHaveCount(0);
   await expect(editor).toBeVisible();
   await expect(editor).toContainText("Responsive draft");
   await blockSourceDraftStorage(page, false);
   await editor.fill("[test] Responsive draft with storage recovered.");
   await expect(page.getByText("Saved locally", { exact: true })).toBeVisible();
-  page.on("dialog", (dialog) => void dialog.accept());
   await chooseOption(page.getByRole("combobox", { name: "Open workspace tab" }), first);
   await page.getByRole("button", { name: "Close current tab", exact: true }).click();
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -215,14 +218,13 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
   }
   // With only the library left, its own view title is the heading and the switcher goes away.
   await expect(picker).toHaveCount(0);
-  await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
+  await expect(page.locator('.library-table[aria-label="Sources"]')).toBeVisible();
   if (!(await page.getByRole("complementary", { name: "Sources sidebar" }).isVisible())) {
     await page.getByRole("button", { name: "Toggle Sources sidebar" }).click();
   }
-  await page
-    .getByRole("textbox", { name: "Find a source by title, author or tag" })
-    .fill("Research 0003");
-  await page.getByRole("option", { name: /Research 0003/u }).click();
+  await searchSources(page, "Research 0003");
+  await page.getByRole("option", { name: /^\[test\] Research 0003/u }).click();
+  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
   await expect(page.locator('.workspace-pane[aria-hidden="false"]')).toHaveCount(1);
   await expect(page.locator(".reader-dock .dv-groupview")).toHaveCount(1);
   await expect(page.frameLocator("iframe.html-viewer:visible").locator("h1")).toContainText(
@@ -240,7 +242,7 @@ export async function auditResponsiveWorkspace(page, { screenshot, blockWrites }
     localStorage.removeItem("mdbase-reader:workspace:v2:test-reader-audit");
   });
   await page.reload();
-  await expect(page.getByRole("grid", { name: "Sources" })).toBeVisible();
+  await expect(page.locator('.library-table[aria-label="Sources"]')).toBeVisible();
   await expect(page.locator(".reader-dock .dv-groupview")).toHaveCount(1);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect.poll(async () => (await state()).layout.edgeGroups?.left?.size).toBe(260);
