@@ -2,6 +2,7 @@ import { sourceLink } from "@mdbase-reader/core";
 
 import { annotationCandidatesForSource, annotationRecordsAt } from "./annotation-query.js";
 import { AnnotationRecordCache } from "./annotation-record-cache.js";
+import { annotationSourcePages } from "./annotation-source-pages.js";
 import * as sources from "./annotation-source.js";
 import { CreateFollowThrough } from "./create-follow-through.js";
 import { annotationFromDocument, annotationFrontmatter } from "./mapping.js";
@@ -11,6 +12,7 @@ import {
   type ReaderNaming,
 } from "./naming-templates.js";
 import {
+  ConnectRepositoryError,
   mapConcurrent,
   outcomeValue,
   readWithOptions,
@@ -19,14 +21,7 @@ import {
 } from "./repository-client.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
-import type {
-  DeletePreflightResult,
-  QueryRecord,
-  QueryMetadataRecord,
-  QueryPage,
-  QueryMetadataPage,
-  ReadManyRecord,
-} from "@mdbase-dev/connect";
+import type { DeletePreflightResult, ReadManyRecord } from "@mdbase-dev/connect";
 import type {
   Annotation,
   AnnotationListOptions,
@@ -102,7 +97,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       }
       published = annotations.length;
     };
-    for await (const page of this.#annotationSourcePages(options)) {
+    for await (const page of annotationSourcePages(this.client, options)) {
       for (let offset = 0; offset < page.length;) {
         options.signal?.throwIfAborted();
         // A small first batch minimizes time to content; larger later batches limit rerenders.
@@ -130,7 +125,10 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
                 ? entry.source
                 : undefined,
             );
-          } catch {
+          } catch (error) {
+            if (error instanceof ConnectRepositoryError) {
+              throw error;
+            }
             // Invalid records do not belong in the overview.
             return null;
           }
@@ -381,80 +379,15 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     return index;
   }
 
-  /** Every annotation with the source mdbase resolves its link to, in one query. */
   async #annotationSources(
     options: ReaderRequestOptions,
   ): Promise<{ readonly path: string; readonly source: SourceId; readonly reference: unknown }[]> {
     const listed: { path: string; source: SourceId; reference: unknown }[] = [];
-    for await (const page of this.#annotationSourcePages(options)) {
+    for await (const page of annotationSourcePages(this.client, options)) {
       listed.push(...page);
     }
     return listed;
   }
-
-  async *#annotationSourcePages(
-    options: AnnotationListOptions,
-  ): AsyncGenerator<
-    { readonly path: string; readonly source: SourceId; readonly reference: unknown }[]
-  > {
-    if (options.paths?.size === 0) {
-      return;
-    }
-    const metadata = outcomeValue(
-      await this.client.supportsAuthorityFeature("query-metadata-v1", options),
-      "discover metadata queries",
-    );
-    for (const scope of annotationQueryScopes(options.paths)) {
-      const selected = scope ? new Set(scope) : null;
-      options.signal?.throwIfAborted();
-      const input = sources.withResolvedSource({
-        types: ["reader-annotation"],
-        select: ["id", "source"],
-        frontmatterMode: "effective",
-        ...(scope
-          ? { where: scope.map((path) => `file.path == ${JSON.stringify(path)}`).join(" || ") }
-          : {}),
-      });
-      const paging = {
-        ...(options.signal ? { signal: options.signal } : {}),
-        ...(options.replaceableFamily ? { replaceableFamily: options.replaceableFamily } : {}),
-        pageSize: 500,
-      };
-      const pages = metadata
-        ? this.client.queryPages({ ...input, output: "metadata", includeBody: false }, paging)
-        : this.client.queryPages(input, paging);
-      for await (const outcome of pages) {
-        yield outcomeValue<QueryPage | QueryMetadataPage>(outcome, "query annotations")
-          .results.flatMap((record) => annotationSourceEntry(record, selected))
-          .filter((entry) => !options.sourceIds || options.sourceIds.has(entry.source));
-      }
-    }
-  }
-}
-
-function annotationQueryScopes(paths?: ReadonlySet<string>): (string[] | null)[] {
-  if (!paths) {
-    return [null];
-  }
-  const listed = [...paths];
-  const scopes: string[][] = [];
-  // readMany cannot carry the resolved-source projection; keep these queries bounded.
-  for (let offset = 0; offset < listed.length; offset += 100) {
-    scopes.push(listed.slice(offset, offset + 100));
-  }
-  return scopes;
-}
-
-function annotationSourceEntry(
-  record: QueryRecord | QueryMetadataRecord,
-  selected: ReadonlySet<string> | null,
-): { path: string; source: SourceId; reference: unknown }[] {
-  const fields =
-    "file" in record ? (record.effectiveFrontmatter ?? record.frontmatter) : record.values;
-  const source = sources.annotationSourceFromResult(record);
-  return sources.stringField(fields?.["id"]) && source && (!selected || selected.has(record.path))
-    ? [{ path: record.path, source, reference: fields?.["source"] }]
-    : [];
 }
 
 function revisionedAnnotation(

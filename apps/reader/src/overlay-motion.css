@@ -68,6 +68,17 @@ dialog.mdbase-feedback-dialog,
   font-size: 13px;
   color: var(--ink-soft);
 }
+.reader-shortcut-help h2:focus {
+  outline: none;
+  box-shadow: none;
+}
+.reader-shortcut-footer {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+}
 .reader-shortcut-help dl {
   margin: 8px 0 16px;
 }

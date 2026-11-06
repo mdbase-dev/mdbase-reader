@@ -2,6 +2,8 @@ import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { markPwaInstallEligible } from "./pwa-install.js";
+import { useReaderMdbase } from "./reader-collections.js";
+import { useSdkConnectionState } from "./sdk-connection-state.js";
 import { useSourceImport, type SourceImportFlow } from "./use-source-import.js";
 import { useWebCapture, type WebCaptureFlow } from "./use-web-capture.js";
 
@@ -60,11 +62,17 @@ export function useSourceAddition(
   const [dropError, setDropError] = useState<string | null>(null);
   const clearFileError = fileImport.clearError;
   const clearWebError = webCapture.clearError;
-  const connection =
-    workspace.library.status === "ready" ? workspace.library.value.connectionState : null;
+  const connection = useSdkConnectionState(
+    useReaderMdbase(),
+    workspace.library.status === "ready" ? workspace.library.value.connectionState : null,
+  );
   const previousConnection = useRef(connection);
   useEffect(() => {
-    if (previousConnection.current !== connection && connection === "connected") {
+    if (
+      previousConnection.current === "offline" &&
+      connection !== "offline" &&
+      connection !== null
+    ) {
       clearFileError();
       clearWebError();
       setDropError(null);

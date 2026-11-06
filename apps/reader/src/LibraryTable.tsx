@@ -109,6 +109,28 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   );
   const gridTemplateColumns = `${sizes.map((size) => `${String(size)}px`).join(" ")} minmax(44px, 1fr)`;
   const width = sizes.reduce((total, size) => total + size, 0) + 60;
+  useLayoutEffect(() => {
+    const frame = scrollRef.current;
+    if (!frame) {
+      return undefined;
+    }
+    const measure = (): void => {
+      frame.dataset["clipped"] = String(
+        frame.scrollWidth - frame.clientWidth - frame.scrollLeft > 1,
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(frame);
+    if (gridRef.current) {
+      observer.observe(gridRef.current);
+    }
+    frame.addEventListener("scroll", measure);
+    measure();
+    return () => {
+      observer.disconnect();
+      frame.removeEventListener("scroll", measure);
+    };
+  }, [scrollRef, width]);
   return (
     <div ref={scrollRef} className="library-table-frame">
       <div
@@ -121,6 +143,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
         aria-rowcount={sources.length + 1}
         aria-colcount={layout.columns.length + 1}
         aria-multiselectable="true"
+        data-active-row={selection.active ?? undefined}
         style={{ minWidth: `${String(width)}px` }}
         onFocus={(event) => {
           const row = (event.target as Element).closest<HTMLElement>("[data-row-index]");
@@ -221,9 +244,7 @@ function sourceActionKey(
   props: LibraryTableProps,
   grid: HTMLElement | null,
 ): boolean {
-  const index = Number(
-    (event.target as Element).closest<HTMLElement>("[data-row-index]")?.dataset["rowIndex"],
-  );
+  const index = sourceActionIndex(event.target as Element, props.selection.active);
   const source = props.sources[index];
   if (event.ctrlKey || event.metaKey || event.altKey || !source) {
     return false;
@@ -237,15 +258,38 @@ function sourceActionKey(
     props.onExport([source]);
   } else if (key === "s" && props.onChangeStatus) {
     event.preventDefault();
-    const picker = grid?.querySelector<HTMLElement>(
-      `[data-row-index="${String(index)}"] .library-status button`,
-    );
-    picker?.focus();
-    picker?.click();
+    openStatusPicker(grid, index);
   } else {
     return false;
   }
   return true;
+}
+
+function openStatusPicker(grid: HTMLElement | null, index: number): void {
+  const picker = grid?.querySelector<HTMLElement>(
+    `[data-row-index="${String(index)}"] .library-status button`,
+  );
+  if (picker && grid?.parentElement) {
+    const frame = grid.parentElement;
+    const visible = frame.getBoundingClientRect();
+    const bounds = picker.getBoundingClientRect();
+    frame.scrollBy({
+      left:
+        Math.min(0, bounds.left - Math.max(0, visible.left)) +
+        Math.max(0, bounds.right - Math.min(window.innerWidth, visible.right)),
+      top:
+        Math.min(0, bounds.top - Math.max(0, visible.top)) +
+        Math.max(0, bounds.bottom - Math.min(window.innerHeight, visible.bottom)),
+      behavior: "instant",
+    });
+  }
+  picker?.focus({ preventScroll: true });
+  picker?.click();
+}
+
+function sourceActionIndex(target: Element, active: number | null): number {
+  const row = target.closest<HTMLElement>("[data-row-index]");
+  return row ? Number(row.dataset["rowIndex"]) : (active ?? 0);
 }
 
 function handlePartGridKey(

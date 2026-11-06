@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 import { sampleAction } from "./polish-round3-cases.mjs";
 
@@ -162,7 +164,7 @@ try {
     );
   });
   evidence.installDuringMenu = await page.locator(".pwa-install").count();
-  await page.screenshot({ path: "/tmp/reader-r6-remove-hit.png" });
+  await page.screenshot({ path: join(tmpdir(), "reader-r6-remove-hit.png") });
   await layoutAndTouchEvidence();
   console.log(JSON.stringify(evidence, null, 2));
   assert.ok(evidence.scroll.every(({ mid, end }) => mid > 0 && end === 0));

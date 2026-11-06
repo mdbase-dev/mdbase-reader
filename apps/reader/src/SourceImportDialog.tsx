@@ -61,13 +61,7 @@ export function SourceImportDialog({
           <Trans>The original file stays intact in your collection.</Trans>
         </p>
       </div>
-      <div className="import-file-summary">
-        <span className="import-format">{formatLabel(file)}</span>
-        <span>
-          <strong>{file.name}</strong>
-          <small>{formatBytes(file.size)}</small>
-        </span>
-      </div>
+      <ImportFileSummary file={file} importing={importing} progress={progress} />
       <label
         className="import-title-field"
         htmlFor="reader-import-source-title"
@@ -96,17 +90,10 @@ export function SourceImportDialog({
         disabled={importing}
         onChange={setUseCitation}
       />
-      {error ? (
-        <SourceAdditionError error={error}>
-          <Trans>
-            Couldn’t confirm this file was added. Reconnect, then check pending changes and your
-            library before trying again.
-          </Trans>
-        </SourceAdditionError>
-      ) : null}
+      {error ? <ImportFailure error={error} progress={progress} /> : null}
       {stopped ? (
         <p role="status">
-          <Trans>Stopped. Nothing was added.</Trans>
+          <Trans>Stopped adding. Check pending changes before trying again.</Trans>
         </p>
       ) : null}
       {importing ? <ImportProgress progress={progress} /> : null}
@@ -130,6 +117,54 @@ export function SourceImportDialog({
         </ReaderButton>
       </div>
     </ModalDialog>
+  );
+}
+
+function ImportFailure({
+  error,
+  progress,
+}: Pick<SourceImportFlow, "progress"> & { readonly error: string }): JSX.Element {
+  return (
+    <SourceAdditionError error={error}>
+      {error.includes("the live upload request changed") ||
+      progress?.phase === "checking" ||
+      progress?.phase === "recovering" ? (
+        <Trans>This file wasn’t added. Close this and try again.</Trans>
+      ) : (
+        <Trans>
+          Couldn’t confirm this file was added. Check pending changes and your library before trying
+          again.
+        </Trans>
+      )}
+    </SourceAdditionError>
+  );
+}
+
+function ImportFileSummary({
+  file,
+  importing,
+  progress,
+}: Pick<SourceImportFlow, "file" | "importing" | "progress"> & {
+  readonly file: PickedFile;
+}): JSX.Element {
+  const transferred =
+    progress &&
+    (progress.phase === "uploading" || progress.phase === "creating") &&
+    progress.totalBytes > 0 &&
+    progress.completedBytes >= progress.totalBytes;
+  return (
+    <div className="import-file-summary" aria-busy={importing}>
+      <span className="import-format">{formatLabel(file)}</span>
+      <span>
+        <strong>{file.name}</strong>
+        <small>{formatBytes(file.size)}</small>
+        {importing && transferred ? (
+          <small>
+            <Trans>File transferred · Pending confirmation</Trans>
+          </small>
+        ) : null}
+      </span>
+    </div>
   );
 }
 

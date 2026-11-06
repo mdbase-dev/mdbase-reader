@@ -58,6 +58,18 @@ export async function resolveAnnotationSource(
   path: string,
   options: ReaderRequestOptions = {},
 ): Promise<SourceId> {
+  const source = await annotationSourceAt(client, path, options);
+  if (source) {
+    return source;
+  }
+  throw new Error(`The source link in annotation ${path} does not resolve to a record.`);
+}
+
+export async function annotationSourceAt(
+  client: ReaderConnectClient,
+  path: string,
+  options: ReaderRequestOptions = {},
+): Promise<SourceId | undefined> {
   const input = withResolvedSource({
     types: ["reader-annotation"],
     where: `file.path == ${JSON.stringify(path)}`,
@@ -73,16 +85,16 @@ export async function resolveAnnotationSource(
     ? client.queryPages({ ...input, output: "metadata", includeBody: false }, paging)
     : client.queryPages(input, paging);
   for await (const outcome of pages) {
-    const [record] = outcomeValue<QueryPage | QueryMetadataPage>(
+    const record = outcomeValue<QueryPage | QueryMetadataPage>(
       outcome,
       "resolve annotation source",
-    ).results;
+    ).results.find((candidate) => candidate.path === path);
     const source = record ? annotationSourceFromResult(record) : undefined;
     if (source) {
       return source;
     }
   }
-  throw new Error(`The source link in annotation ${path} does not resolve to a record.`);
+  return undefined;
 }
 
 /**

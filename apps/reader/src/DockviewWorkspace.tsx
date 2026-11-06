@@ -139,6 +139,16 @@ export function DockviewWorkspace({
   const ready = (event: DockviewReadyEvent): void => {
     cleanup.current?.();
     cleanup.current = dock.attach(event.api);
+    for (const animation of engine.current?.getAnimations({ subtree: true }) ?? []) {
+      const effect = animation.effect;
+      if (
+        effect instanceof KeyframeEffect &&
+        effect.target instanceof HTMLElement &&
+        effect.target.classList.contains("dv-render-overlay")
+      ) {
+        animation.finish();
+      }
+    }
   };
   useEffect(() => () => cleanup.current?.(), []);
   return (

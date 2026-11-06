@@ -544,14 +544,6 @@ button {
   cursor: pointer;
 }
 
-.source-row::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 1px;
-  background: transparent;
-}
-
 .source-row:hover {
   background: var(--hover);
 }
@@ -568,10 +560,6 @@ button {
 
 .source-row.is-selected {
   background: var(--selected);
-}
-
-.source-row.is-selected::before {
-  background: var(--accent);
 }
 
 .source-format {
@@ -819,10 +807,6 @@ button {
   background: var(--reader-canvas);
   container-name: reader-pane;
   container-type: inline-size;
-}
-
-.workspace-pane.is-focused {
-  box-shadow: inset 0 1px color-mix(in oklch, var(--accent) 72%, transparent);
 }
 
 .html-viewer {
@@ -1140,8 +1124,7 @@ button {
   padding: 9px 11px;
   overflow: auto;
   border: 0;
-  border-left: 2px solid var(--reader-highlight);
-  border-radius: 0 5px 5px 0;
+  border-radius: 5px;
   color: var(--ink-soft);
   background: color-mix(in oklch, var(--reader-highlight) 8%, transparent);
   font-family: var(--serif);
@@ -1258,7 +1241,6 @@ button {
 .annotation-card blockquote {
   margin: 13px 0;
   padding-left: 12px;
-  border-left: 1px solid oklch(70% 0.11 82);
   color: var(--ink);
   font-family: var(--serif);
   font-size: 12.5px;
@@ -1823,7 +1805,6 @@ button {
 .annotation-card blockquote {
   margin-block: 15px;
   padding-left: 14px;
-  border-left-width: 2px;
   font-size: 13.5px;
   line-height: 1.52;
 }
@@ -1881,18 +1862,6 @@ button {
   grid-template-rows: 116px minmax(0, 1fr);
   border-color: var(--reader-hairline);
   border-radius: 10px;
-}
-
-.library-card-bookplate::before {
-  right: 22px;
-  bottom: 0;
-  width: 1px;
-  height: 70px;
-  border: 0;
-  border-radius: 0;
-  background: var(--format-color);
-  box-shadow: none;
-  opacity: 0.24;
 }
 
 .library-card-copy {

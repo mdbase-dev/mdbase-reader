@@ -20,12 +20,14 @@ import { createJournals } from "./create-journals.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { readerCollectionApp, ReaderMdbaseContext } from "./reader-collections.js";
 import { ReaderBoot } from "./ReaderBoot.js";
+
 import "@mdbase-dev/ui/collections.css";
 import "./reader-collections.css";
 
 const ReaderWorkspace = lazyFeature(
   async () => ({ default: (await import("./ReaderWorkspace.js")).ReaderWorkspace }),
   "the reading workspace",
+  ({ opened }) => <ReaderBoot collectionName={opened.collectionName} />,
 );
 
 export type ReaderSdk = Mdbase;

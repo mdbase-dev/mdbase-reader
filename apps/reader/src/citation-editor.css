@@ -435,7 +435,6 @@
   gap: 9px;
   padding: 11px;
   border: 1px solid var(--line);
-  border-left: 2px solid color-mix(in oklch, var(--accent) 55%, var(--line));
   border-radius: 4px;
   background: color-mix(in oklch, var(--canvas) 66%, var(--paper));
 }
@@ -733,7 +732,8 @@
   padding: 17px 19px 28px;
 }
 .citation-json .cm-editor.cm-focused {
-  box-shadow: inset 2px 0 var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .citation-feedback {

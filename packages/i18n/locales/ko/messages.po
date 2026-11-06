@@ -1228,6 +1228,10 @@ msgstr "첨부 파일 체크섬이 일치하지 않습니다({0}). 가져온 항
 msgid "Attachment totals mismatch."
 msgstr "첨부 파일 합계가 일치하지 않습니다."
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "ATTACHMENT_UPLOAD_SCOPE_CHANGED: Another upload is still attached to this session. This file’s transfer could not start."
+msgstr "ATTACHMENT_UPLOAD_SCOPE_CHANGED: 다른 업로드가 아직 이 세션에 연결되어 있습니다. 이 파일의 전송을 시작할 수 없습니다."
+
 #: apps/reader/src/CitationContributors.tsx
 msgid "Author"
 msgstr "저자"
@@ -1545,6 +1549,10 @@ msgstr "키보드 단축키 변경"
 msgid "Change needs attention"
 msgstr "확인이 필요한 변경 사항"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Change reading status"
+msgstr "읽기 상태 변경"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "다른 곳에서 변경됨"
@@ -1553,6 +1561,7 @@ msgstr "다른 곳에서 변경됨"
 msgid "Changes awaiting confirmation"
 msgstr "확인을 기다리는 변경 사항"
 
+#: apps/reader/src/ReaderHeader.tsx
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "Changes need attention"
 msgstr "확인이 필요한 변경 사항"
@@ -2359,6 +2368,10 @@ msgstr "연결"
 msgid "Connection diagnostics"
 msgstr "연결 진단"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Contact support about this change. Keep this browser’s data."
+msgstr "이 변경에 대해 지원팀에 문의하세요. 이 브라우저의 데이터를 보존하세요."
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container author"
@@ -2615,12 +2628,12 @@ msgid "Couldn’t change the colour."
 msgstr "색상을 변경할 수 없었습니다."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
-msgstr "이 파일이 추가되었는지 확인하지 못했습니다. 다시 연결한 다음, 보류 중인 변경 사항과 라이브러리를 확인한 후 다시 시도하세요."
+msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
+msgstr "이 파일이 추가되었는지 확인할 수 없습니다. 다시 시도하기 전에 대기 중인 변경 사항과 라이브러리를 확인하세요."
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
-msgstr "이 소스가 추가되었는지 확인하지 못했습니다. 다시 연결한 다음, 머리글의 보류 중인 변경 사항과 라이브러리를 확인한 후 다시 시도하세요."
+msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
+msgstr "이 자료가 추가되었는지 확인할 수 없습니다. 다시 시도하기 전에 헤더의 대기 중인 변경 사항과 라이브러리를 확인하세요."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -3726,6 +3739,10 @@ msgid "File transfer failed."
 msgstr "파일 전송에 실패했습니다."
 
 #: apps/reader/src/SourceImportDialog.tsx
+msgid "File transferred · Pending confirmation"
+msgstr "파일 전송 완료 · 확인 대기 중"
+
+#: apps/reader/src/SourceImportDialog.tsx
 msgid "File transferred. Waiting for the collection to confirm it…"
 msgstr "파일이 전송되었습니다. 컬렉션의 확인을 기다리는 중…"
 
@@ -4149,6 +4166,10 @@ msgstr "진행자"
 msgctxt "collection menu model"
 msgid "Hosted by mdbase"
 msgstr "mdbase에서 호스팅"
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: 컬렉션에서 파일 전송을 확인하지 않았습니다. 다시 시도하기 전에 대기 중인 변경 사항을 확인하세요."
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -4676,6 +4697,7 @@ msgid "Legislation"
 msgstr "법령"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Library"
 msgstr "라이브러리"
 
@@ -4723,6 +4745,10 @@ msgstr "라이브러리 텍스트: 저장된 페이지 {1}개 중 {0}개 확인�
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace interface"
 msgid "Library view"
+msgstr "라이브러리 보기"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Library views"
 msgstr "라이브러리 보기"
 
 #: apps/reader/src/LibraryNavigator.tsx
@@ -5371,6 +5397,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "신문 기사"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Next / previous source"
+msgstr "다음 / 이전 자료"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "다음 페이지"
@@ -5836,6 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "로그인 열기"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "출처 열기"
@@ -6423,6 +6455,7 @@ msgstr "미리보기 형식 "
 msgid "Preview the chapter citation with the book’s details"
 msgstr "책의 정보로 장 인용 미리보기"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "이전 페이지"
@@ -6884,6 +6917,10 @@ msgstr "Reader 작업 공간"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "이 컬렉션에 대한 Reader의 접근 권한이 변경되었습니다. 계속하려면 변경된 접근 권한을 검토해 주세요."
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Reading"
+msgstr "읽기"
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
@@ -7162,6 +7199,7 @@ msgid "Remove source"
 msgstr "자료 제거"
 
 #: apps/reader/src/LibraryRowMenu.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Remove source…"
 msgstr "자료 제거…"
 
@@ -7178,6 +7216,10 @@ msgstr "제거됨"
 #: apps/reader/src/use-source-removal.ts
 msgid "Removed “{0}”."
 msgstr "“{0}”을(를) 삭제했습니다."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Rename source"
+msgstr "자료 이름 바꾸기"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
@@ -7778,6 +7820,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "소스 검색 및 명령 실행 · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Search this view"
 msgstr "이 보기에서 검색"
 
@@ -7864,6 +7907,10 @@ msgstr "영역 선택"
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "파일 경로가 중복되지 않는 완전한 번들 폴더 하나를 선택하세요."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Select source"
+msgstr "자료 선택"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
@@ -8344,6 +8391,10 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "시작"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Start of document"
+msgstr "문서 시작"
+
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Start of publication"
 msgstr "출판물 시작"
@@ -8420,13 +8471,13 @@ msgstr "가져오기 중지"
 msgid "Stopped"
 msgstr "중지됨"
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Stopped adding. Check pending changes before trying again."
+msgstr "추가를 중지했습니다. 다시 시도하기 전에 대기 중인 변경 사항을 확인하세요."
+
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
 msgstr "중지되었습니다. 이미 반영된 데이터는 유지됩니다. 동일한 입력과 대상으로 이어서 진행하세요. 기존 레코드는 덮어쓰지 않습니다."
-
-#: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped. Nothing was added."
-msgstr "중지되었습니다. 추가된 항목이 없습니다."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."
@@ -8486,6 +8537,10 @@ msgstr "컬렉션 메뉴에서 컬렉션을 전환하거나 접근 권한을 관
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "컬렉션을 전환할까요?"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
+msgstr "동기화에 조치가 필요합니다. 로그아웃하거나 이 브라우저의 데이터를 지우기 전에 지원팀에 문의하세요."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -8684,8 +8739,12 @@ msgid "The collection connection changed. Try again."
 msgstr "컬렉션 연결이 변경되었습니다. 다시 시도하세요."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
-msgid "The collection refused some changes. Review them before signing out."
-msgstr "컬렉션이 일부 변경 사항을 거부했습니다. 로그아웃하기 전에 확인하세요."
+msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
+msgstr "컬렉션이 일부 변경 사항을 거부했습니다. 다른 변경 사항은 이 기기에서 아직 대기 중입니다. 로그아웃하기 전에 확인하세요."
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "The collection refused these changes. Review them before signing out."
+msgstr "컬렉션이 이 변경 사항을 거부했습니다. 로그아웃하기 전에 확인하세요."
 
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
@@ -8913,6 +8972,10 @@ msgid "These apply only to Reader in this browser."
 msgstr "이 설정은 이 브라우저의 Reader에만 적용됩니다."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
+msgid "These changes are still pending on this device. Waiting for the collection to confirm them."
+msgstr "이 변경 사항은 이 기기에서 아직 대기 중입니다. 컬렉션의 확인을 기다리고 있습니다."
+
+#: apps/reader/src/ReaderSaveStatus.tsx
 msgid "These changes have not reached the collection. This browser may remove its local copy."
 msgstr "이 변경 사항은 컬렉션에 도달하지 않았습니다. 이 브라우저가 로컬 사본을 삭제할 수 있습니다."
 
@@ -8952,6 +9015,10 @@ msgstr "이 주석에는 정본 경로와 리비전이 없습니다."
 #: apps/reader/src/annotation-navigation.ts
 msgid "This annotation has no supported link to a passage. Its text and original metadata are preserved."
 msgstr "이 주석은 지원되는 본문 구간 링크가 없습니다. 텍스트와 원본 메타데이터는 보존됩니다."
+
+#: apps/reader/src/errors.ts
+msgid "This annotation query is too large. Try again. If it still fails, contact support."
+msgstr "주석 검색 범위가 너무 큽니다. 다시 시도하세요. 계속 실패하면 지원팀에 문의하세요."
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."
@@ -9114,6 +9181,10 @@ msgstr "이 파일이 변경되었습니다. 장 범위는 이전 버전에 속�
 #: packages/core/src/application/source-records.ts
 msgid "This file is already attached here."
 msgstr "이 파일은 이미 여기에 첨부되어 있습니다."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "This file wasn’t added. Close this and try again."
+msgstr "이 파일은 추가되지 않았습니다. 이 창을 닫고 다시 시도하세요."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
@@ -9323,6 +9394,7 @@ msgid "Toggle Pointer Mode"
 msgstr "포인터 모드 전환"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "자료 사이드바 전환"
@@ -9762,10 +9834,6 @@ msgstr "mdbase 탭에서 승인을 기다리는 중…"
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "활성 탭을 기다리는 중"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Waiting for the collection to confirm these changes."
-msgstr "컬렉션이 이 변경 사항을 확인하기를 기다리는 중입니다."
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "We couldn’t check whether this page is already saved. Saving checks again."

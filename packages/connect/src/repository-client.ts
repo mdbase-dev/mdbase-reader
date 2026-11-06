@@ -146,6 +146,8 @@ export interface ReaderConnectClient {
 }
 
 export class ConnectRepositoryError extends Error {
+  readonly code: string;
+
   constructor(
     operation: string,
     code: string,
@@ -155,10 +157,16 @@ export class ConnectRepositoryError extends Error {
     readonly issues: readonly ConnectValidationIssue[] = [],
   ) {
     const summary = validationIssueSummary(issues);
+    const budgetExceeded =
+      code === "query_budget_exceeded" ||
+      (problem as ReaderConnectProblem | undefined)?.native?.reason === "query_budget_exceeded";
     super(
-      `mdbase Connect could not ${operation}: ${detail ?? code}${summary ? `: ${summary}` : ""}`,
+      budgetExceeded
+        ? "This annotation query is too large. Try again. If it still fails, contact support."
+        : `mdbase Connect could not ${operation}: ${detail ?? code}${summary ? `: ${summary}` : ""}`,
     );
     this.name = "ConnectRepositoryError";
+    this.code = budgetExceeded ? "query_budget_exceeded" : code;
   }
 }
 

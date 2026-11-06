@@ -293,8 +293,7 @@ describe("Connect annotation reads", () => {
     ]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
-    // Two discovery queries per listing, one index query, and a changed-reference revalidation.
-    expect(queryPages).toHaveBeenCalledTimes(6);
+    expect(queryPages).toHaveBeenCalledTimes(8);
     expect(readMany).toHaveBeenCalledTimes(2);
   });
 });

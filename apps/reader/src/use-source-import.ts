@@ -42,17 +42,26 @@ export function useSourceImport(
     setPickError(null);
     clearImportError();
   }, [clearImportError]);
+  const accept = useCallback(
+    (selected: PickedFile): void => {
+      clearError();
+      setStopped(false);
+      setProgress(null);
+      recoveryFile.current = null;
+      setFile(selected);
+    },
+    [clearError],
+  );
   const choose = useCallback(async (): Promise<void> => {
     if (!pickSourceFile) {
       return;
     }
-    setPickError(null);
-    clearImportError();
-    setStopped(false);
+    clearError();
     try {
       const selected = await pickSourceFile();
-      recoveryFile.current = null;
-      setFile(selected);
+      if (selected) {
+        accept(selected);
+      }
     } catch (reason) {
       setPickError(
         reason instanceof Error
@@ -60,17 +69,7 @@ export function useSourceImport(
           : t({ message: "Reader could not open the file picker." }),
       );
     }
-  }, [pickSourceFile, clearImportError]);
-  const accept = useCallback(
-    (selected: PickedFile): void => {
-      setPickError(null);
-      clearImportError();
-      setStopped(false);
-      recoveryFile.current = null;
-      setFile(selected);
-    },
-    [clearImportError],
-  );
+  }, [pickSourceFile, clearError, accept]);
   const cancel = useCallback((): void => {
     if (importController.current) {
       if (progress?.phase === "creating") {
@@ -110,6 +109,7 @@ export function useSourceImport(
           controller.signal,
         );
         if (imported) {
+          setProgress(null);
           recoveryFile.current = null;
           if (useCitation) {
             await storeSuggestedCitation(workspace, imported, found);
@@ -117,6 +117,7 @@ export function useSourceImport(
           setFile(null);
           onImported(imported.id);
         } else if (controller.signal.aborted) {
+          setProgress(null);
           recoveryFile.current = null;
           workspace.clearImportError();
           setStopped(true);
@@ -127,7 +128,6 @@ export function useSourceImport(
         if (importController.current === controller) {
           importController.current = null;
         }
-        setProgress(null);
       }
     },
     [file, onImported, suggestion, workspace],

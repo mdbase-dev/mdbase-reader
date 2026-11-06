@@ -220,7 +220,6 @@
   padding: 4px 6px 4px 14px;
   resize: none;
   border: 0;
-  border-left: 2px solid oklch(70% 0.11 82);
   border-radius: 0;
   background: transparent;
   color: var(--ink);

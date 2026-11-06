@@ -345,21 +345,9 @@ details.technical summary {
 .panel-tabs button:hover {
   color: var(--text-1);
 }
-.panel-tabs button::after {
-  position: absolute;
-  right: var(--sp-2);
-  bottom: -1px;
-  left: var(--sp-2);
-  height: 2px;
-  border-radius: 2px;
-  background: transparent;
-  content: "";
-}
 .panel-tabs button[aria-selected="true"] {
   color: var(--text-1);
-}
-.panel-tabs button[aria-selected="true"]::after {
-  background: var(--accent);
+  background: var(--selected);
 }
 .panel-tabs svg {
   width: 15px;
@@ -890,7 +878,6 @@ blockquote {
   margin: var(--sp-4) var(--gutter) 0;
   padding: var(--sp-3);
   border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--line));
-  border-left: 3px solid var(--danger);
   border-radius: var(--r-md);
   color: var(--text-1);
   background: var(--danger-soft);

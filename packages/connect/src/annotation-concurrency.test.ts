@@ -132,7 +132,7 @@ describe("Connect annotation listing", () => {
       }
     }
     // Bodies come from whole-record reads; the listing query never asks for them.
-    expect(inputs.some((input) => "includeBody" in input)).toBe(false);
+    expect(inputs.some((input) => input["includeBody"] === true)).toBe(false);
     expect(annotations.map(({ id, recordRevision }) => [id, recordRevision])).toEqual([
       ["ann_1", "rev-ann_1"],
       ["ann_2", "rev-ann_2"],

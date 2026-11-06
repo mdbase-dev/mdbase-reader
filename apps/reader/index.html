@@ -92,7 +92,11 @@
         failure.hidden = false;
         failure.textContent =
           "Reader could not start: " +
-          (event.reason?.message || event.message || "the application files could not load.");
+          (
+            event.reason?.message ||
+            event.message ||
+            "the application files could not load."
+          ).replace(/^Uncaught (?:Error:\s*)?/, "");
       }
       window.addEventListener("error", readerBootFailed, true);
       window.addEventListener("unhandledrejection", readerBootFailed);

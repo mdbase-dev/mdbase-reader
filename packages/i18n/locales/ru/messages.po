@@ -1228,6 +1228,10 @@ msgstr "Контрольная сумма вложения не совпадае
 msgid "Attachment totals mismatch."
 msgstr "Итоговые значения вложений не совпадают."
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "ATTACHMENT_UPLOAD_SCOPE_CHANGED: Another upload is still attached to this session. This file’s transfer could not start."
+msgstr "ATTACHMENT_UPLOAD_SCOPE_CHANGED: С этой сессией всё ещё связана другая загрузка. Не удалось начать передачу этого файла."
+
 #: apps/reader/src/CitationContributors.tsx
 msgid "Author"
 msgstr "Автор"
@@ -1545,6 +1549,10 @@ msgstr "Изменить сочетания клавиш"
 msgid "Change needs attention"
 msgstr "Изменение требует внимания"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Change reading status"
+msgstr "Изменить статус чтения"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "Изменено в другом месте"
@@ -1553,6 +1561,7 @@ msgstr "Изменено в другом месте"
 msgid "Changes awaiting confirmation"
 msgstr "Изменения ожидают подтверждения"
 
+#: apps/reader/src/ReaderHeader.tsx
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "Changes need attention"
 msgstr "Изменения требуют внимания"
@@ -2359,6 +2368,10 @@ msgstr "Подключение"
 msgid "Connection diagnostics"
 msgstr "Диагностика подключения"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Contact support about this change. Keep this browser’s data."
+msgstr "Обратитесь в поддержку по поводу этого изменения. Сохраните данные этого браузера."
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container author"
@@ -2615,12 +2628,12 @@ msgid "Couldn’t change the colour."
 msgstr "Не удалось изменить цвет."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
-msgstr "Не удалось подтвердить добавление этого файла. Восстановите соединение, затем проверьте ожидающие изменения и библиотеку, прежде чем повторить попытку."
+msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
+msgstr "Не удалось подтвердить добавление этого файла. Перед повторной попыткой проверьте ожидающие изменения и библиотеку."
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
-msgstr "Не удалось подтвердить добавление этого источника. Восстановите соединение, затем проверьте ожидающие изменения в верхней панели и библиотеку, прежде чем повторить попытку."
+msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
+msgstr "Не удалось подтвердить добавление этого источника. Перед повторной попыткой проверьте ожидающие изменения в заголовке и библиотеку."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -3726,6 +3739,10 @@ msgid "File transfer failed."
 msgstr "Не удалось передать файлы."
 
 #: apps/reader/src/SourceImportDialog.tsx
+msgid "File transferred · Pending confirmation"
+msgstr "Файл передан · Ожидается подтверждение"
+
+#: apps/reader/src/SourceImportDialog.tsx
 msgid "File transferred. Waiting for the collection to confirm it…"
 msgstr "Файл передан. Ожидание подтверждения коллекции…"
 
@@ -4149,6 +4166,10 @@ msgstr "Хост"
 msgctxt "collection menu model"
 msgid "Hosted by mdbase"
 msgstr "Размещено в mdbase"
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: Коллекция не подтвердила передачу файла. Перед повторной попыткой проверьте ожидающие изменения."
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -4676,6 +4697,7 @@ msgid "Legislation"
 msgstr "Законодательный акт"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Library"
 msgstr "Библиотека"
 
@@ -4724,6 +4746,10 @@ msgstr "Поиск по тексту библиотеки: проверено с
 msgctxt "LibraryWorkspace interface"
 msgid "Library view"
 msgstr "Представление библиотеки"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Library views"
+msgstr "Представления библиотеки"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Library views and sources"
@@ -5371,6 +5397,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "Статья в газете"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Next / previous source"
+msgstr "Следующий / предыдущий источник"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "Следующая страница"
@@ -5836,6 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "Открыть окно входа"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "Открыть источник"
@@ -6423,6 +6455,7 @@ msgstr "Предпросмотр в "
 msgid "Preview the chapter citation with the book’s details"
 msgstr "Предпросмотр ссылки главы с данными книги"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "Предыдущая страница"
@@ -6884,6 +6917,10 @@ msgstr "Рабочая область Reader"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "Доступ Reader к этой коллекции изменился. Для продолжения проверьте обновлённые разрешения."
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Reading"
+msgstr "Чтение"
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
@@ -7162,6 +7199,7 @@ msgid "Remove source"
 msgstr "Убрать источник"
 
 #: apps/reader/src/LibraryRowMenu.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Remove source…"
 msgstr "Убрать источник…"
 
@@ -7178,6 +7216,10 @@ msgstr "Удалено"
 #: apps/reader/src/use-source-removal.ts
 msgid "Removed “{0}”."
 msgstr "«{0}» удалено."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Rename source"
+msgstr "Переименовать источник"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
@@ -7778,6 +7820,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "Поиск источников и запуск команд · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Search this view"
 msgstr "Поиск в этом представлении"
 
@@ -7864,6 +7907,10 @@ msgstr "Выбрать область"
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "Выберите одну полную папку пакета с уникальными путями к файлам."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Select source"
+msgstr "Выбрать источник"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
@@ -8344,6 +8391,10 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "Начать"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Start of document"
+msgstr "Начало документа"
+
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Start of publication"
 msgstr "Дата начала публикации"
@@ -8420,13 +8471,13 @@ msgstr "Остановить импорт"
 msgid "Stopped"
 msgstr "Остановлено"
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Stopped adding. Check pending changes before trying again."
+msgstr "Добавление остановлено. Проверьте ожидающие изменения перед повторной попыткой."
+
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
 msgstr "Остановлено. Уже зафиксированные данные сохранены. Возобновите операцию с теми же входными данными и местом назначения; существующие записи не будут перезаписаны."
-
-#: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped. Nothing was added."
-msgstr "Остановлено. Ничего не добавлено."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."
@@ -8486,6 +8537,10 @@ msgstr "Переключайте коллекции, управляйте дос
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "Переключить коллекцию?"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
+msgstr "Синхронизация требует внимания. Обратитесь в службу поддержки, прежде чем выходить из аккаунта или очищать данные этого браузера."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -8684,8 +8739,12 @@ msgid "The collection connection changed. Try again."
 msgstr "Подключение к коллекции изменилось. Повторите попытку."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
-msgid "The collection refused some changes. Review them before signing out."
-msgstr "Коллекция отклонила некоторые изменения. Проверьте их перед выходом."
+msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
+msgstr "Коллекция отклонила некоторые изменения. Другие изменения ещё ожидают подтверждения на этом устройстве. Проверьте их перед выходом из аккаунта."
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "The collection refused these changes. Review them before signing out."
+msgstr "Коллекция отклонила эти изменения. Проверьте их перед выходом из аккаунта."
 
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
@@ -8913,6 +8972,10 @@ msgid "These apply only to Reader in this browser."
 msgstr "Применяется только к Reader в этом браузере."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
+msgid "These changes are still pending on this device. Waiting for the collection to confirm them."
+msgstr "Эти изменения ещё ожидают подтверждения на этом устройстве. Ожидается подтверждение коллекции."
+
+#: apps/reader/src/ReaderSaveStatus.tsx
 msgid "These changes have not reached the collection. This browser may remove its local copy."
 msgstr "Эти изменения не поступили в коллекцию. Браузер может удалить локальную копию."
 
@@ -8952,6 +9015,10 @@ msgstr "У этой аннотации нет канонического пут�
 #: apps/reader/src/annotation-navigation.ts
 msgid "This annotation has no supported link to a passage. Its text and original metadata are preserved."
 msgstr "У этой аннотации нет поддерживаемой ссылки на фрагмент. Её текст и исходные метаданные сохранены."
+
+#: apps/reader/src/errors.ts
+msgid "This annotation query is too large. Try again. If it still fails, contact support."
+msgstr "Запрос аннотаций слишком большой. Попробуйте снова. Если ошибка повторится, обратитесь в службу поддержки."
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."
@@ -9114,6 +9181,10 @@ msgstr "Файл изменился. Диапазон главы относит�
 #: packages/core/src/application/source-records.ts
 msgid "This file is already attached here."
 msgstr "Этот файл уже прикреплён здесь."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "This file wasn’t added. Close this and try again."
+msgstr "Этот файл не был добавлен. Закройте это окно и повторите попытку."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
@@ -9323,6 +9394,7 @@ msgid "Toggle Pointer Mode"
 msgstr "Включить режим указателя"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "Показать или скрыть боковую панель источников"
@@ -9762,10 +9834,6 @@ msgstr "Ожидание подтверждения во вкладке mdbase�
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "Ожидание активной вкладки"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Waiting for the collection to confirm these changes."
-msgstr "Ожидание подтверждения этих изменений коллекцией."
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "We couldn’t check whether this page is already saved. Saving checks again."

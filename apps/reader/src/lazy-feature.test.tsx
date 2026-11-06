@@ -66,6 +66,17 @@ it("shows loading state while a feature downloads", async () => {
   expect(host.textContent).toContain("Ready library");
 });
 
+it("uses the named boot surface instead of a second skeleton while loading", async () => {
+  const Workspace = lazyFeature<{ name: string }>(
+    () => new Promise(() => undefined),
+    "the reading workspace",
+    ({ name }) => <main className="reader-boot">{name}</main>,
+  );
+  await act(async () => root.render(<Workspace name="[test] Library" />));
+  expect(host.querySelector(".reader-boot")?.textContent).toBe("[test] Library");
+  expect(host.querySelector(".reader-feature-skeleton")).toBeNull();
+});
+
 it("retries a rejected import without reloading the reader", async () => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   const load = vi

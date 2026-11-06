@@ -1,7 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 
-import { PlusIcon } from "./icons.js";
+import { FileIcon, PlusIcon } from "./icons.js";
 import { sourceCreatorsText } from "./source-creators.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
@@ -49,8 +49,11 @@ export function NavigatorShortList({
                 }
               }}
             >
-              <span className={`navigator-format is-${sourceFormat(source)}`}>
-                {sourceFormat(source)}
+              <span
+                className={`navigator-format is-${sourceFormat(source)}`}
+                title={sourceFormat(source)}
+              >
+                <FileIcon />
               </span>
               <span>
                 <strong>{source.title}</strong>

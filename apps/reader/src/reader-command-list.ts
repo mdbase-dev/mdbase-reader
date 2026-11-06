@@ -19,12 +19,19 @@ import type { ReadingStatus, SourceSummary } from "@mdbase-reader/core";
 
 /** The palette's groups, in the order Reader shows them. */
 export type ReaderCommandGroup =
-  "Open tabs" | "Current source" | "Sources" | "Library" | "Workspace" | "Display";
+  | "Open tabs"
+  | "Current source"
+  | "Library views"
+  | "Sources"
+  | "Library"
+  | "Workspace"
+  | "Display";
 /** Group identity is stable, independently of its displayed language. */
 export function readerCommandGroupLabel(group: string): string {
   const labels: Record<ReaderCommandGroup, string> = {
     "Open tabs": translate`Open tabs`,
     "Current source": translate`Current source`,
+    "Library views": translate`Library views`,
     Sources: translate`Sources`,
     Library: translate`Library`,
     Workspace: translate`Workspace`,
@@ -71,7 +78,7 @@ export function readerCommands(input: ReaderCommandInput): readonly ReaderComman
     ...input.libraryViews.map((view): ReaderCommand => ({
       id: `library-view:${view.key}`,
       label: view.name,
-      group: "Current source",
+      group: "Library views",
       keywords: "library view sources",
       run: () => input.workspace.openLibrary(view.key, view.name),
     })),

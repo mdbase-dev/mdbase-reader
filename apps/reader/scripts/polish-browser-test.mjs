@@ -289,7 +289,7 @@ try {
           result.paletteLayout = await page.locator(".mdbase-command-palette").evaluate((panel) => {
             const help = panel.querySelector(".reader-shortcut-help").getBoundingClientRect();
             const footer = panel.getBoundingClientRect();
-            const active = panel.querySelector(".reader-shortcut-help button");
+            const active = panel.querySelector(".reader-shortcut-footer button");
             const bounds = active.getBoundingClientRect();
             return {
               helpTop: help.top,
@@ -308,8 +308,8 @@ try {
           });
           assert.ok(result.paletteLayout.helpTop >= result.paletteLayout.panelTop - 1);
           assert.ok(result.paletteLayout.helpBottom <= result.paletteLayout.footerTop + 1);
-          assert.ok(result.paletteLayout.activeTop >= result.paletteLayout.helpTop - 1);
-          assert.ok(result.paletteLayout.activeBottom <= result.paletteLayout.helpBottom + 1);
+          assert.ok(result.paletteLayout.activeTop >= result.paletteLayout.helpBottom - 1);
+          assert.ok(result.paletteLayout.activeBottom <= result.paletteLayout.footerTop + 1);
           assert.equal(result.paletteLayout.activeHit, true);
           await audit(page, `${name} palette`);
           await page.screenshot({ path: join(output, `${name}-palette.png`) });
