@@ -21,7 +21,7 @@ export interface GridKeyContext<Id extends string = SourceId> {
 
 /**
  * Keyboard use of the library grid: arrows, j/k, Page and Home/End move (Shift extends),
- * Space toggles, Ctrl/⌘+A selects all, Escape keeps only the focused row, Enter opens.
+ * Space toggles, Ctrl/⌘+A selects all, Escape clears selection, Enter opens.
  */
 export function handleGridKey<Id extends string>(
   event: KeyboardEvent,
@@ -65,7 +65,7 @@ function actOnKey<Id extends string>(event: KeyboardEvent, context: GridKeyConte
   }
   if (event.key === "Escape" && selection.ids.size > 1) {
     event.stopPropagation();
-    context.onSelectionChange(selectRow(selection, rowIds, active, "replace"));
+    context.onSelectionChange({ ...selection, ids: new Set(), touch: false });
   } else if (!modifier && !event.altKey && (event.key === " " || event.key.toLowerCase() === "x")) {
     event.preventDefault();
     context.onSelectionChange(selectRow(selection, rowIds, active, "toggle"));

@@ -607,9 +607,17 @@ export function LibraryWorkspace({
         </p>
       ) : null}
       <div
-        ref={resultsRef}
+        ref={
+          mode === "sources" && configuration.presentation === "table" && sources.length > 0
+            ? undefined
+            : resultsRef
+        }
         className="library-workspace-results"
-        onScroll={(event) => scrollPositions.set(view.key, event.currentTarget.scrollTop)}
+        onScrollCapture={(event) => {
+          if (event.target === resultsRef.current) {
+            scrollPositions.set(view.key, resultsRef.current.scrollTop);
+          }
+        }}
       >
         {mode === "annotations" ? (
           <LibraryAnnotations

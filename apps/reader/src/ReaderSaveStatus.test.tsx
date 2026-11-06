@@ -3,9 +3,11 @@ import { act } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { ReaderSaveStatus } from "./ReaderSaveStatus.js";
+import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { createRoot } from "./testing/i18n.js";
 
 import type { Mdbase } from "@mdbase-reader/connect/native";
+import type { SourceSummary } from "@mdbase-reader/core";
 
 let root: ReturnType<typeof createRoot>;
 afterEach(() => {
@@ -34,13 +36,26 @@ it("shows the actual pending change and drops the warning only when the ledger d
     getSnapshot: () => snapshot,
   } as unknown as Mdbase;
   root = createRoot(host);
-  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} />));
+  const source = {
+    title: "An owned source",
+    documents: [{ fileId: "owned-file" }],
+  } as unknown as SourceSummary;
+  act(() =>
+    root.render(
+      <SourceLibraryContext value={[source]}>
+        <ReaderSaveStatus mdbase={mdbase} connected={false} />
+      </SourceLibraryContext>,
+    ),
+  );
   act(() => host.querySelector("summary")?.click());
   expect(host.querySelector("details")?.open).toBe(true);
   expect(host.textContent).toContain("1 pending");
   expect(host.textContent).toContain("owned-write");
   expect(host.textContent).toContain("owned-file");
+  expect(host.querySelector(".reader-save-details li > span")?.textContent).toBe("An owned source");
   expect(host.textContent).toContain("This browser may remove its local copy");
+  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  expect(host.querySelector(".reader-save-details li details")?.hasAttribute("open")).toBe(false);
   act(() => {
     snapshot = { ...snapshot, writes: { pending: [], rejected: [] } };
     changed();

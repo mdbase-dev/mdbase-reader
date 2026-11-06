@@ -1,8 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { matchingCommands, shortcutLabel, type Command } from "@mdbase-dev/ui/command-palette";
+import { ReaderButton } from "@mdbase-reader/ui";
 import { Fragment, useEffect, useId, useRef, useState, type JSX } from "react";
 
 import { ModalDialog } from "./ModalDialog.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 
 export function ReaderCommandPalette(props: {
   readonly open: boolean;
@@ -15,9 +17,9 @@ export function ReaderCommandPalette(props: {
   readonly groupLabel: (group: string) => string;
 }): JSX.Element {
   return (
-    <div className="reader-overlay" data-state={props.open ? "open" : "closed"}>
-      <OpenPalette {...props} />
-    </div>
+    <OverlayPresence open={props.open}>
+      {props.shortcuts ? <ShortcutSheet {...props} /> : <OpenPalette {...props} />}
+    </OverlayPresence>
   );
 }
 
@@ -29,7 +31,6 @@ function OpenPalette({
   placeholder,
   showAll,
   groupLabel,
-  shortcuts,
 }: Parameters<typeof ReaderCommandPalette>[0]): JSX.Element {
   const { t } = useLingui();
   const [query, setQuery] = useState("");
@@ -41,11 +42,7 @@ function OpenPalette({
   const input = useRef<HTMLInputElement>(null);
   const results = useRef<HTMLDivElement>(null);
   const id = useId();
-  const matches = matchingCommands(
-    shortcuts ? commands.filter((command) => command.shortcut) : commands,
-    query,
-    shortcuts ? [...new Set(commands.map((command) => command.group))] : showAll,
-  ).toSorted((left, right) =>
+  const matches = matchingCommands(commands, query, showAll).toSorted((left, right) =>
     /^(keyboard|shortcuts|help)(\s+(shortcuts|help))?$/iu.test(query.trim())
       ? Number(right.id === "keyboard-shortcuts") - Number(left.id === "keyboard-shortcuts")
       : 0,
@@ -78,7 +75,7 @@ function OpenPalette({
           aria-autocomplete="list"
           aria-controls={`${id}-results`}
           aria-activedescendant={matches[selected] ? `${id}-${String(selected)}` : undefined}
-          aria-describedby={shortcuts ? undefined : `${id}-hint`}
+          aria-describedby={`${id}-hint`}
           value={query}
           placeholder={placeholder}
           onChange={(event) => {
@@ -99,7 +96,6 @@ function OpenPalette({
           }}
         />
       </label>
-      {shortcuts ? <ShortcutHelp /> : null}
       <div
         ref={results}
         id={`${id}-results`}
@@ -137,7 +133,7 @@ function OpenPalette({
           </p>
         ) : null}
       </div>
-      {!shortcuts && <PaletteHint id={`${id}-hint`} alternate={matches[selected]?.alternate} />}
+      <PaletteHint id={`${id}-hint`} alternate={matches[selected]?.alternate} />
     </ModalDialog>
   );
 }
@@ -186,26 +182,50 @@ function readerShortcutLabel(shortcut: string): string {
   );
 }
 
-function ShortcutHelp(): JSX.Element {
+function ShortcutSheet({
+  open,
+  commands,
+  onClose,
+  groupLabel,
+}: Parameters<typeof ReaderCommandPalette>[0]): JSX.Element {
+  const id = useId();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const shortcuts = commands.flatMap((command) =>
+    command.shortcut ? [{ ...command, shortcut: command.shortcut }] : [],
+  );
   return (
-    <section className="reader-shortcut-help">
-      <h3>
-        <Trans>Keyboard shortcuts</Trans>
-      </h3>
-      <p>
-        <Trans>
-          In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter
-          to open. Escape closes overlays and returns focus.
-        </Trans>
-      </p>
-      <p>
-        <Trans>
-          Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to
-          remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H
-          highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches
-          panes.
-        </Trans>
-      </p>
-    </section>
+    <ModalDialog
+      active={open}
+      className="mdbase-command-palette"
+      labelledBy={id}
+      initialFocus={heading}
+      onDismiss={onClose}
+    >
+      <section className="reader-shortcut-help">
+        <h2 ref={heading} id={id} tabIndex={-1}>
+          <Trans>Keyboard shortcuts</Trans>
+        </h2>
+        {[...new Set(shortcuts.map((command) => command.group))].map((group) => (
+          <section key={group}>
+            <h3>{groupLabel(group)}</h3>
+            <dl>
+              {shortcuts
+                .filter((command) => command.group === group)
+                .map((command) => (
+                  <div key={command.id}>
+                    <dt>{command.label}</dt>
+                    <dd>
+                      <kbd>{readerShortcutLabel(command.shortcut)}</kbd>
+                    </dd>
+                  </div>
+                ))}
+            </dl>
+          </section>
+        ))}
+        <ReaderButton type="button" onClick={onClose}>
+          <Trans context="Reader shortcuts">Close</Trans>
+        </ReaderButton>
+      </section>
+    </ModalDialog>
   );
 }

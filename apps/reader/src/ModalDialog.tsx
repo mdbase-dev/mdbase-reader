@@ -36,6 +36,7 @@ export function ModalDialog({
     }
     const focusedElement = document.activeElement;
     const before = document.querySelector(".workspace-pane.is-focused");
+    const beforeSession = before?.getAttribute("data-session-id");
     const opener = returnFocus ?? dialogInvoker(focusedElement);
     const element = dialog.current;
     if (element) {
@@ -46,21 +47,14 @@ export function ModalDialog({
     initialFocus?.current?.focus();
     return () => {
       mounted.current = false;
-      const restoreFocus = element?.contains(document.activeElement);
       const after = document.querySelector(".workspace-pane.is-focused");
-      const destination = after && (after !== before || !opener?.isConnected) ? after : opener;
+      const navigated =
+        after && (after !== before || after.getAttribute("data-session-id") !== beforeSession);
+      const restoreFocus = Boolean(element?.contains(document.activeElement)) || Boolean(navigated);
+      const destination = after && (Boolean(navigated) || !opener?.isConnected) ? after : opener;
       element?.close();
-      if (
-        restoreFocus &&
-        destination instanceof HTMLElement &&
-        destination.isConnected &&
-        !destination.closest('[inert], [hidden], [aria-hidden="true"]')
-      ) {
-        if (destination.matches(".workspace-pane")) {
-          focusReadingPane(destination);
-        } else {
-          destination.focus();
-        }
+      if (restoreFocus) {
+        queueMicrotask(() => restoreDialogFocus(destination));
       }
     };
   }, [initialFocus, returnFocus, active]);
@@ -113,6 +107,22 @@ export function ModalDialog({
       {children}
     </dialog>
   );
+}
+
+function restoreDialogFocus(destination: Element | null | undefined): void {
+  if (
+    !(destination instanceof HTMLElement) ||
+    !destination.isConnected ||
+    destination.closest('[inert], [hidden], [aria-hidden="true"]') ||
+    (document.querySelector("dialog[open]") && !destination.closest("dialog[open]"))
+  ) {
+    return;
+  }
+  if (destination.matches(".workspace-pane")) {
+    focusReadingPane(destination);
+  } else {
+    destination.focus();
+  }
 }
 
 export function dialogInvoker(focused: Element | null): Element | null | undefined {

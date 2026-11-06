@@ -23,7 +23,7 @@ import {
   htmlLocationTarget,
   resolveHtmlReadingRange,
 } from "./html-reading-range.js";
-import { scrollHtmlElement } from "./html-scroll.js";
+import { scrollHtmlElement, scrollHtmlKey } from "./html-scroll.js";
 import { applyHtmlTypography } from "./html-typography.js";
 
 import type {
@@ -75,8 +75,12 @@ export class HtmlDocumentRuntime {
     this.#motion.settle("resize");
     this.#markers.layout();
   };
-  readonly #onKeyDown = (event: KeyboardEvent): void =>
+  readonly #onKeyDown = (event: KeyboardEvent): void => {
+    if (scrollHtmlKey(event, this.#view)) {
+      return;
+    }
     forwardApplicationShortcut(event, this.#frame.ownerDocument);
+  };
   readonly #markers: MarginMarkers;
   readonly #targets: HtmlTargetLocator;
   // Images and fonts reflow the page after load; markers follow the text.

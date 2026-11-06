@@ -68,6 +68,10 @@
   box-shadow: var(--focus-ring);
 }
 
+.library-workspace .continue-reading-card:not(:has(.source-thumbnail)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .library-workspace .continue-reading-card:hover {
     transform: none;
@@ -344,7 +348,8 @@
   transition:
     background-color 200ms var(--ease-out),
     border-color 200ms var(--ease-out),
-    color 200ms var(--ease-out);
+    color 200ms var(--ease-out),
+    opacity 200ms var(--ease-out);
 }
 
 .library-workspace .library-status.is-queued .library-status-mark {

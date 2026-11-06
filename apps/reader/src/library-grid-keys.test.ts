@@ -26,3 +26,22 @@ it("moves the cursor without changing X selection, while Shift extends a range",
     ids: new Set(["first", "second"]),
   });
 });
+
+it("clears a multi-selection completely without moving the active row", () => {
+  const onSelectionChange = vi.fn();
+  handleGridKey({ key: "Escape", stopPropagation: vi.fn() } as unknown as KeyboardEvent, {
+    rowIds: ["first", "second"],
+    selection: { active: 1, anchor: 0, ids: new Set(["first", "second"]), touch: true },
+    pageSize: 10,
+    moveTo: vi.fn(),
+    onSelectionChange,
+    open: vi.fn(),
+    openBeside: vi.fn(),
+  });
+  expect(onSelectionChange).toHaveBeenCalledWith({
+    active: 1,
+    anchor: 0,
+    ids: new Set(),
+    touch: false,
+  });
+});

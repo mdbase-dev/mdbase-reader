@@ -1541,9 +1541,17 @@ msgstr "의장"
 msgid "Change keyboard shortcuts"
 msgstr "키보드 단축키 변경"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Change needs attention"
+msgstr "확인이 필요한 변경 사항"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "다른 곳에서 변경됨"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes awaiting confirmation"
+msgstr "확인을 기다리는 변경 사항"
 
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "Changes need attention"
@@ -2042,6 +2050,11 @@ msgstr "닫기"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
+msgid "Close"
+msgstr "닫기"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader shortcuts"
 msgid "Close"
 msgstr "닫기"
 
@@ -2601,6 +2614,14 @@ msgstr "페이지를 넘기지 못했습니다. 다시 시도해 주세요."
 msgid "Couldn’t change the colour."
 msgstr "색상을 변경할 수 없었습니다."
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
+msgstr "이 파일이 추가되었는지 확인하지 못했습니다. 다시 연결한 다음, 보류 중인 변경 사항과 라이브러리를 확인한 후 다시 시도하세요."
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
+msgstr "이 소스가 추가되었는지 확인하지 못했습니다. 다시 연결한 다음, 머리글의 보류 중인 변경 사항과 라이브러리를 확인한 후 다시 시도하세요."
+
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Couldn’t copy"
@@ -2868,6 +2889,7 @@ msgstr "설명"
 msgid "Destination checked. Start the import below to begin writing."
 msgstr "대상을 확인했습니다. 아래에서 가져오기를 시작하면 쓰기가 시작됩니다."
 
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgctxt "Reader interface"
 msgid "Details"
@@ -4252,10 +4274,6 @@ msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
 msgstr "노트에서"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter to open. Escape closes overlays and returns focus."
-msgstr "소스 및 주석 목록에서 화살표, Home, End, Page Up/Down 키로 이동하고 Enter 키로 엽니다. Escape 키는 겹쳐진 창을 닫고 포커스를 돌려줍니다."
-
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In source note"
 msgstr "자료 노트에 있음"
@@ -4715,10 +4733,6 @@ msgstr "라이브러리 보기 및 자료"
 msgctxt "DocumentWorkspace interface"
 msgid "Library workspace"
 msgstr "라이브러리 작업 공간"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches panes."
-msgstr "라이브러리: J/K로 이동, X로 선택, S로 상태 변경, A로 자료 추가, E로 내보내기, Delete로 삭제 확인, F2로 이름 변경. [로 자료 목록을 전환합니다. 읽기: Page Up/Down과 Space로 스크롤, H로 강조, 1–5로 색상을 선택합니다. Ctrl+Z로 표시된 실행 취소를 수행합니다. F6으로 패널에 들어가거나 패널을 전환합니다."
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Light appearance theme"
@@ -5915,10 +5929,6 @@ msgstr "문헌 노트를 여는 중…"
 msgid "Opening the new page…"
 msgstr "새 페이지를 여는 중…"
 
-#: apps/reader/src/ReaderWorkspace.tsx
-msgid "Opening your reading collection"
-msgstr "읽기 컬렉션을 여는 중"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
@@ -6274,10 +6284,6 @@ msgstr "PDF 텍스트 추출이 취소되었습니다."
 msgid "PDF, EPUB or saved web page"
 msgstr "PDF, EPUB 또는 저장된 웹 페이지"
 
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Pending change"
-msgstr "대기 중인 변경 사항"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performance"
@@ -6392,10 +6398,6 @@ msgstr "출판물을 준비하는 중…"
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing saved page…"
 msgstr "저장된 페이지를 준비하는 중…"
-
-#: apps/reader/src/ReaderWorkspace.tsx
-msgid "Preparing the reading workspace"
-msgstr "읽기 작업 공간을 준비하는 중"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser pages and the Chrome Web Store cannot be read by extensions."
@@ -8089,6 +8091,10 @@ msgstr "Chrome에서 사이트 접근이 제한되어 있어 Reader가 탭을 �
 msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
 msgstr "Chrome에서 사이트 접근이 제한되어 있어 사이드 패널이 탭을 따라갈 수 없고 저장된 페이지도 표시되지 않습니다. 페이지에서 Reader를 사용하려면 도구 모음 버튼을 누르세요."
 
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "Skip to sources"
+msgstr "소스로 건너뛰기"
+
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Slower with long lists"
 msgstr "긴 목록에서는 느림"
@@ -8417,6 +8423,10 @@ msgstr "중지됨"
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
 msgstr "중지되었습니다. 이미 반영된 데이터는 유지됩니다. 동일한 입력과 대상으로 이어서 진행하세요. 기존 레코드는 덮어쓰지 않습니다."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Stopped. Nothing was added."
+msgstr "중지되었습니다. 추가된 항목이 없습니다."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."

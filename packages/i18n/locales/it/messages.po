@@ -1540,9 +1540,17 @@ msgstr "Presidente"
 msgid "Change keyboard shortcuts"
 msgstr "Cambia le scorciatoie da tastiera"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Change needs attention"
+msgstr "Una modifica richiede attenzione"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "Cambiato altrove"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes awaiting confirmation"
+msgstr "Modifiche in attesa di conferma"
 
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "Changes need attention"
@@ -2041,6 +2049,11 @@ msgstr "Chiudi"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
+msgid "Close"
+msgstr "Chiudi"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader shortcuts"
 msgid "Close"
 msgstr "Chiudi"
 
@@ -2600,6 +2613,14 @@ msgstr "Impossibile cambiare pagina. Riprova."
 msgid "Couldn’t change the colour."
 msgstr "Impossibile cambiare il colore."
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
+msgstr "Non è stato possibile confermare l’aggiunta di questo file. Riconnettiti, poi controlla le modifiche in sospeso e la tua biblioteca prima di riprovare."
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
+msgstr "Non è stato possibile confermare l’aggiunta di questa fonte. Riconnettiti, poi controlla le modifiche in sospeso nell’intestazione e la tua biblioteca prima di riprovare."
+
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Couldn’t copy"
@@ -2867,6 +2888,7 @@ msgstr "Descrizione"
 msgid "Destination checked. Start the import below to begin writing."
 msgstr "Destinazione verificata. Avvia l'importazione qui sotto per iniziare a scrivere."
 
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgctxt "Reader interface"
 msgid "Details"
@@ -4251,10 +4273,6 @@ msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
 msgstr "In nota"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter to open. Escape closes overlays and returns focus."
-msgstr "Negli elenchi di fonti e annotazioni, usa le frecce, Home, Fine e Pagina su/giù per spostarti, poi Invio per aprire. Esc chiude le finestre sovrapposte e ripristina il focus."
-
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In source note"
 msgstr "Nella nota della fonte"
@@ -4714,10 +4732,6 @@ msgstr "Viste e fonti della biblioteca"
 msgctxt "DocumentWorkspace interface"
 msgid "Library workspace"
 msgstr "Spazio di lavoro della biblioteca"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches panes."
-msgstr "Biblioteca: J/K sposta, X seleziona, S cambia stato, A aggiunge una fonte, E esporta, Canc chiede conferma prima di rimuovere, F2 rinomina. [ mostra o nasconde Fonti. Lettura: Pag su/giù e Spazio scorrono, H evidenzia, 1–5 sceglie un colore. Ctrl+Z esegue l’Annulla visibile. F6 entra nei pannelli o cambia pannello."
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Light appearance theme"
@@ -5914,10 +5928,6 @@ msgstr "Apertura della nota bibliografica…"
 msgid "Opening the new page…"
 msgstr "Apertura della nuova pagina…"
 
-#: apps/reader/src/ReaderWorkspace.tsx
-msgid "Opening your reading collection"
-msgstr "Apertura della raccolta di lettura"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
@@ -6273,10 +6283,6 @@ msgstr "Estrazione del testo PDF annullata."
 msgid "PDF, EPUB or saved web page"
 msgstr "PDF, EPUB o pagina web salvata"
 
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Pending change"
-msgstr "Modifica in attesa"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performance"
@@ -6391,10 +6397,6 @@ msgstr "Preparazione della pubblicazione…"
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing saved page…"
 msgstr "Preparazione della pagina salvata…"
-
-#: apps/reader/src/ReaderWorkspace.tsx
-msgid "Preparing the reading workspace"
-msgstr "Preparazione dello spazio di lavoro di lettura"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser pages and the Chrome Web Store cannot be read by extensions."
@@ -8088,6 +8090,10 @@ msgstr "L'accesso al sito è limitato in Chrome, quindi Reader non può seguire 
 msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
 msgstr "L'accesso al sito è limitato in Chrome, quindi il pannello laterale non può seguire le schede e le pagine salvate non sono contrassegnate. Reader Ecco."
 
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "Skip to sources"
+msgstr "Vai alle fonti"
+
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Slower with long lists"
 msgstr "Più lento con elenchi lunghi"
@@ -8416,6 +8422,10 @@ msgstr "Interrotto"
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
 msgstr "Interrotto. I dati già salvati definitivamente vengono mantenuti. Riprendi con lo stesso input e la stessa destinazione; i record esistenti non verranno sovrascritti."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Stopped. Nothing was added."
+msgstr "Interrotto. Non è stato aggiunto nulla."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."

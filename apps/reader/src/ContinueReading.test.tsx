@@ -85,12 +85,11 @@ describe("Continue reading cards", () => {
     expect(card?.querySelector<HTMLElement>(".continue-reading-bar i")?.style.width).toBe("68%");
   });
 
-  it("keeps a typographic placeholder when thumbnails cannot be read", () => {
+  it("keeps the title without a letter tile when thumbnails cannot be read", () => {
     render([paper]);
     const thumbnail = document.querySelector(".source-thumbnail");
-    expect(thumbnail?.getAttribute("aria-hidden")).toBe("true");
-    expect(thumbnail?.querySelector(".source-thumbnail-title")?.textContent).toBe("A");
-    expect(thumbnail?.querySelector(".source-thumbnail-format")?.textContent).toBe("PDF");
+    expect(thumbnail).toBeNull();
+    expect(document.querySelector(".continue-reading-title")?.textContent).toContain(paper.title);
     act(() => {
       vi.runAllTimers();
     });

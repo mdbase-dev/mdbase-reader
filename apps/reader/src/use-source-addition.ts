@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { markPwaInstallEligible } from "./pwa-install.js";
 import { useSourceImport, type SourceImportFlow } from "./use-source-import.js";
 import { useWebCapture, type WebCaptureFlow } from "./use-web-capture.js";
 
@@ -49,6 +50,7 @@ export function useSourceAddition(
   const finish = useCallback(
     (sourceId: SourceId): void => {
       setDialogOpen(false);
+      markPwaInstallEligible();
       onImported(sourceId);
     },
     [onImported],
@@ -56,6 +58,19 @@ export function useSourceAddition(
   const fileImport = useSourceImport(workspace, pickSourceFile, finish);
   const webCapture = useWebCapture(workspace, finish, gateway);
   const [dropError, setDropError] = useState<string | null>(null);
+  const clearFileError = fileImport.clearError;
+  const clearWebError = webCapture.clearError;
+  const connection =
+    workspace.library.status === "ready" ? workspace.library.value.connectionState : null;
+  const previousConnection = useRef(connection);
+  useEffect(() => {
+    if (previousConnection.current !== connection && connection === "connected") {
+      clearFileError();
+      clearWebError();
+      setDropError(null);
+    }
+    previousConnection.current = connection;
+  }, [connection, clearFileError, clearWebError]);
   const close = useCallback((): void => setDialogOpen(false), []);
   const acceptFile = fileImport.accept;
   const addFile = useCallback(
@@ -79,6 +94,7 @@ export function useSourceAddition(
     error: dropError ?? webCapture.error,
     fileImport,
     open: () => {
+      fileImport.clearError();
       webCapture.clearError();
       setDropError(null);
       setDialogOpen(true);

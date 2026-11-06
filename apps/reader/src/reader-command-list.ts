@@ -9,6 +9,7 @@ import {
   libraryCommands,
 } from "./reader-app-commands.js";
 
+import type { MdbaseLibraryView } from "./mdbase-library-views.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
@@ -38,6 +39,7 @@ export interface ReaderCommand extends Command {
 
 export interface ReaderCommandInput {
   readonly sources: readonly SourceSummary[];
+  readonly libraryViews: readonly Pick<MdbaseLibraryView, "key" | "name">[];
   readonly activeSource: SourceSummary | null;
   readonly workspace: SourceWorkspaceController;
   readonly sourceExport: SourceExportController;
@@ -66,6 +68,13 @@ export interface ReaderCommandInput {
 export function readerCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   return [
     ...navigationCommands(input),
+    ...input.libraryViews.map((view): ReaderCommand => ({
+      id: `library-view:${view.key}`,
+      label: view.name,
+      group: "Current source",
+      keywords: "library view sources",
+      run: () => input.workspace.openLibrary(view.key, view.name),
+    })),
     ...libraryCommands(input),
     ...workspaceCommands(input),
     ...displayCommands(input),

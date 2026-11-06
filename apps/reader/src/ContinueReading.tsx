@@ -56,8 +56,7 @@ export function continueReadingSource(sources: readonly SourceSummary[]): Source
 
 /**
  * Up to three sources to pick up again, each shown as the object: a first-page render or
- * cover when one can be read cheaply, else a typographic placeholder. `readFile` enables
- * thumbnails; without it every card keeps its placeholder.
+ * cover when one can be read cheaply, else its title. `readFile` enables thumbnails.
  */
 export function ContinueReading({
   sources,
@@ -106,7 +105,7 @@ function ContinueReadingCard({
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element {
   useLocale();
-  const thumbnailRef = useRef<HTMLSpanElement>(null);
+  const thumbnailRef = useRef<HTMLButtonElement>(null);
   const thumbnail = useSourceThumbnail(source, readFile, thumbnailRef);
   const progress = readingProgressValue(source);
   const location = readingLocationLabel(source, thumbnail?.pageCount);
@@ -114,12 +113,13 @@ function ContinueReadingCard({
   const byline = [creators, publicationDateLabel(source.published)].filter(Boolean).join(" · ");
   return (
     <button
+      ref={thumbnailRef}
       className="continue-reading-card"
       type="button"
       title={source.title}
       onClick={() => onOpen(source.id)}
     >
-      <SourceThumbnailView ref={thumbnailRef} source={source} thumbnail={thumbnail} />
+      {thumbnail ? <SourceThumbnailView source={source} thumbnail={thumbnail} /> : null}
       <span className="continue-reading-copy">
         <span className="continue-reading-title">
           <span className="sr-only">{t`Continue reading ${source.title}`}</span>

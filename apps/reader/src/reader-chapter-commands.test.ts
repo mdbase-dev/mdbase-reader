@@ -15,6 +15,7 @@ function input(
     activeSource,
     createSourceParts,
     sources,
+    libraryViews: [],
     workspace: {
       layout: { panes: [{ id: "primary", tabs: [] }], focusedPaneId: "primary" },
       openSourceIds: [],

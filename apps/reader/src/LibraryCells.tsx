@@ -185,11 +185,20 @@ export function StatusPicker({
   const progress = readingProgress(source);
   const status = readingStatusOf(source);
   return (
-    <span className={`library-status is-${status} is-editable`}>
+    <span
+      className={`library-status is-${status} is-editable`}
+      onKeyDownCapture={(event) => {
+        if (event.key === "Escape") {
+          const row = event.currentTarget.closest<HTMLElement>("[data-row-index]");
+          requestAnimationFrame(() => row?.focus({ preventScroll: true }));
+        }
+      }}
+    >
       <i className="library-status-mark" aria-hidden="true" />
       <Select
         aria-label={t`Reading status of ${source.title}`}
         className="is-quiet"
+        tabIndex={-1}
         value={status}
         options={readingStatusOptions()}
         // The row owns clicks, double-clicks and grid keys; the picker keeps its own.
@@ -218,7 +227,8 @@ function statusLabel(source: SourceSummary): string {
 
 /** Progress shows only while reading; a finished or queued source's old figure would mislead. */
 function readingProgress(source: SourceSummary): number | null {
-  return readingStatusOf(source) === "reading" ? readingProgressValue(source) : null;
+  const progress = readingStatusOf(source) === "reading" ? readingProgressValue(source) : null;
+  return progress === 0 ? null : progress;
 }
 
 /** The source's format as a word, as the format filter names it. */

@@ -57,7 +57,23 @@ export async function readDocumentFileDetails(
       identifiers: { ...(isbn ? { isbn } : {}), ...(doi ? { doi } : {}) },
     };
   }
-  return { metadata: {}, identifiers: {} };
+  const title = htmlFileTitle(file);
+  return { ...(title ? { title } : {}), metadata: {}, identifiers: {} };
+}
+
+export function htmlFileTitle(file: {
+  readonly name: string;
+  readonly bytes: Uint8Array;
+  readonly mediaType?: string;
+}): string | undefined {
+  if (file.mediaType !== "text/html" && !/\.x?html?$/iu.test(file.name)) {
+    return undefined;
+  }
+  return (
+    new DOMParser()
+      .parseFromString(new TextDecoder().decode(file.bytes), "text/html")
+      .title.trim() || undefined
+  );
 }
 
 function isPdf(bytes: Uint8Array): boolean {

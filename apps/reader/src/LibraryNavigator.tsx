@@ -120,7 +120,11 @@ function NavigatorViews({
           </button>
         ))}
       </div>
-      {problem ? <p role="alert">{problem}</p> : null}
+      {problem ? (
+        <p className="is-error" role="alert">
+          {problem}
+        </p>
+      ) : null}
     </section>
   );
 }

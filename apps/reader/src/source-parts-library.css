@@ -1,9 +1,14 @@
 .library-part-spacer {
-  width: 32px;
+  width: 34px;
   flex-shrink: 0;
 }
 .library-card .library-part-spacer {
   display: none;
+}
+@media (max-width: 680px) {
+  .library-part-spacer {
+    width: 44px;
+  }
 }
 .library-part-disclosure {
   flex-shrink: 0;
@@ -12,6 +17,22 @@
 }
 .library-part-disclosure[aria-expanded="false"] svg {
   transform: rotate(-90deg);
+}
+.library-part-disclosure svg {
+  transition: transform 160ms var(--ease-out);
+}
+.library-table[role="treegrid"] .library-table-body {
+  transition: height 160ms var(--ease-out);
+}
+.library-table[role="treegrid"] .library-table-row:not(.is-header) {
+  transition: transform 160ms var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .library-part-disclosure svg,
+  .library-table[role="treegrid"] .library-table-body,
+  .library-table[role="treegrid"] .library-table-row:not(.is-header) {
+    transition: none;
+  }
 }
 .import-dialog.source-parts-dialog {
   position: fixed;

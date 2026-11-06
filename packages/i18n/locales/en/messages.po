@@ -1541,9 +1541,17 @@ msgstr "Chair"
 msgid "Change keyboard shortcuts"
 msgstr "Change keyboard shortcuts"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Change needs attention"
+msgstr "Change needs attention"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "Changed elsewhere"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes awaiting confirmation"
+msgstr "Changes awaiting confirmation"
 
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "Changes need attention"
@@ -2042,6 +2050,11 @@ msgstr "Close"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
+msgid "Close"
+msgstr "Close"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgctxt "Reader shortcuts"
 msgid "Close"
 msgstr "Close"
 
@@ -2601,6 +2614,14 @@ msgstr "Could not turn the page. Try again."
 msgid "Couldn’t change the colour."
 msgstr "Couldn’t change the colour."
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
+msgstr "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
+msgstr "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
+
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
 msgid "Couldn’t copy"
@@ -2868,6 +2889,7 @@ msgstr "Description"
 msgid "Destination checked. Start the import below to begin writing."
 msgstr "Destination checked. Start the import below to begin writing."
 
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgctxt "Reader interface"
 msgid "Details"
@@ -4252,10 +4274,6 @@ msgctxt "SourceNoteInsertMenu interface"
 msgid "In note"
 msgstr "In note"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter to open. Escape closes overlays and returns focus."
-msgstr "In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter to open. Escape closes overlays and returns focus."
-
 #: apps/reader/src/AnnotationCard.tsx
 msgid "In source note"
 msgstr "In source note"
@@ -4715,10 +4733,6 @@ msgstr "Library views and sources"
 msgctxt "DocumentWorkspace interface"
 msgid "Library workspace"
 msgstr "Library workspace"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches panes."
-msgstr "Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches panes."
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Light appearance theme"
@@ -5915,10 +5929,6 @@ msgstr "Opening the literature note…"
 msgid "Opening the new page…"
 msgstr "Opening the new page…"
 
-#: apps/reader/src/ReaderWorkspace.tsx
-msgid "Opening your reading collection"
-msgstr "Opening your reading collection"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
@@ -6274,10 +6284,6 @@ msgstr "PDF text extraction was cancelled."
 msgid "PDF, EPUB or saved web page"
 msgstr "PDF, EPUB or saved web page"
 
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Pending change"
-msgstr "Pending change"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Performance"
@@ -6392,10 +6398,6 @@ msgstr "Preparing publication…"
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Preparing saved page…"
 msgstr "Preparing saved page…"
-
-#: apps/reader/src/ReaderWorkspace.tsx
-msgid "Preparing the reading workspace"
-msgstr "Preparing the reading workspace"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Press the mdbase Reader toolbar button (Alt+Shift+S) to use Reader on this page. Browser pages and the Chrome Web Store cannot be read by extensions."
@@ -8089,6 +8091,10 @@ msgstr "Site access is limited in Chrome, so Reader cannot follow your tabs."
 msgid "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
 msgstr "Site access is limited in Chrome, so the side panel cannot follow your tabs and saved pages are not marked. Press the toolbar button on a page to use Reader there."
 
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "Skip to sources"
+msgstr "Skip to sources"
+
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Slower with long lists"
 msgstr "Slower with long lists"
@@ -8417,6 +8423,10 @@ msgstr "Stopped"
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
 msgstr "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Stopped. Nothing was added."
+msgstr "Stopped. Nothing was added."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."

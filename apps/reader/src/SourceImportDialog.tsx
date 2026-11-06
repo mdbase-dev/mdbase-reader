@@ -4,7 +4,9 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useRef, useState, type JSX } from "react";
 
+import { htmlFileTitle } from "./document-details.js";
 import { ModalDialog } from "./ModalDialog.js";
+import { SourceAdditionError } from "./SourceAddDialog.js";
 
 import type { FileImportSuggestion } from "./file-import-suggestion.js";
 import type { SourceImportFlow } from "./use-source-import.js";
@@ -18,6 +20,7 @@ export function SourceImportDialog({
   onCancel,
   onImport,
   suggestion = null,
+  stopped = false,
 }: {
   readonly file: PickedFile;
   readonly importing: boolean;
@@ -26,11 +29,15 @@ export function SourceImportDialog({
   readonly onCancel: () => void;
   readonly onImport: (title: string, useCitation: boolean) => void;
   readonly suggestion?: FileImportSuggestion | null;
+  readonly stopped?: boolean;
 }): JSX.Element {
   const { t } = useLingui();
   const [typedTitle, setTypedTitle] = useState<string | null>(null);
   const [useCitation, setUseCitation] = useState(true);
-  const title = typedTitle ?? suggestion?.title ?? titleFromName(file.name);
+  const [fileTitle] = useState(
+    () => htmlFileTitle({ ...file, bytes: new Uint8Array(file.bytes) }) ?? titleFromName(file.name),
+  );
+  const title = typedTitle ?? suggestion?.title ?? fileTitle;
   const titleInput = useRef<HTMLInputElement>(null);
   const isFinalizing = importing && progress?.phase === "creating";
   const submit = (): void => onImport(title, useCitation && Boolean(suggestion?.citation));
@@ -90,8 +97,16 @@ export function SourceImportDialog({
         onChange={setUseCitation}
       />
       {error ? (
-        <p className="import-error" role="alert">
-          {error}
+        <SourceAdditionError error={error}>
+          <Trans>
+            Couldn’t confirm this file was added. Reconnect, then check pending changes and your
+            library before trying again.
+          </Trans>
+        </SourceAdditionError>
+      ) : null}
+      {stopped ? (
+        <p role="status">
+          <Trans>Stopped. Nothing was added.</Trans>
         </p>
       ) : null}
       {importing ? <ImportProgress progress={progress} /> : null}
@@ -132,6 +147,7 @@ export function SourceImportOverlay({
       onCancel={flow.cancel}
       onImport={(title, useCitation) => void flow.importFile(title, useCitation)}
       suggestion={flow.suggestion}
+      stopped={flow.stopped}
     />
   ) : null;
 }

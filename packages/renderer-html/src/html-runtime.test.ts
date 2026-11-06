@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { annotationId } from "@mdbase-reader/core";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { prepareHtmlDocument } from "./html-document.js";
 import { HtmlDocumentRuntime } from "./html-runtime.js";
@@ -36,6 +36,45 @@ afterEach(() => {
 });
 
 describe("HtmlDocumentRuntime page text outside the article", () => {
+  it("interrupts native page scrolling for document-edge navigation, not editing", () => {
+    const { runtime: reader, document: frame } = runtime();
+    const scroll = vi.spyOn(frame.defaultView!, "scrollTo");
+    const home = new KeyboardEvent("keydown", {
+      key: "Home",
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    frame.body.dispatchEvent(home);
+    expect(home.defaultPrevented).toBe(true);
+    expect(scroll).toHaveBeenLastCalledWith({ top: 0, behavior: "instant" });
+    const input = frame.createElement("input");
+    frame.body.append(input);
+    scroll.mockClear();
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "End", ctrlKey: true, bubbles: true, cancelable: true }),
+    );
+    expect(scroll).not.toHaveBeenCalled();
+    const button = frame.createElement("button");
+    frame.body.append(button);
+    const activate = new KeyboardEvent("keydown", {
+      key: " ",
+      bubbles: true,
+      cancelable: true,
+    });
+    button.dispatchEvent(activate);
+    expect(activate.defaultPrevented).toBe(false);
+    const selectPage = new KeyboardEvent("keydown", {
+      key: "PageDown",
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    frame.body.dispatchEvent(selectPage);
+    expect(selectPage.defaultPrevented).toBe(false);
+    expect(scroll).not.toHaveBeenCalled();
+    reader.destroy();
+  });
   it("shows a hidden section while a highlight sits in it, and hides it again after", () => {
     const { runtime: reader, document: frame } = runtime();
     const aside = frame.querySelector("aside");

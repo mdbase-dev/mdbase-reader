@@ -42,6 +42,7 @@ it("stores an accepted local-file citation with its registry field provenance", 
     importSourceFile: vi.fn().mockResolvedValue(saved),
     saveNewSourceCitation,
     importStatus: "idle",
+    clearImportError: vi.fn(),
   } as unknown as ReaderWorkspaceController;
   const host = document.createElement("div");
   const root = createRoot(host);
@@ -77,6 +78,62 @@ it("stores an accepted local-file citation with its registry field provenance", 
     );
     expect(provenance["title"]).toEqual({ value: "Registry title", source: "registry:doi.org" });
     expect(provenance).not.toHaveProperty("id");
+  } finally {
+    await act(async () => root.unmount());
+  }
+});
+
+it("retries a stopped import with a fresh signal and without resuming its recovery session", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  mocks.suggestForFile.mockResolvedValue({ metadata: {} });
+  const importSourceFile = vi
+    .fn()
+    .mockImplementationOnce(
+      (_request, options: { signal: AbortSignal }) =>
+        new Promise((resolve) => {
+          options.signal.addEventListener("abort", () => resolve(null), { once: true });
+        }),
+    )
+    .mockResolvedValueOnce(partSource("Retry"));
+  const workspace = {
+    importSourceFile,
+    importStatus: "idle",
+    clearImportError: vi.fn(),
+  } as unknown as ReaderWorkspaceController;
+  const root = createRoot(document.createElement("div"));
+  let flow: ReturnType<typeof useSourceImport>;
+  function Harness(): React.JSX.Element {
+    flow = useSourceImport(workspace, undefined, vi.fn());
+    return <div />;
+  }
+  try {
+    await act(async () => root.render(<Harness />));
+    await act(async () =>
+      flow.accept({
+        name: "page.html",
+        mediaType: "text/html",
+        size: 0,
+        bytes: new ArrayBuffer(0),
+      }),
+    );
+    let pending: Promise<void>;
+    await act(async () => {
+      pending = flow.importFile("Retry");
+    });
+    await act(async () => {
+      flow.cancel();
+      await pending;
+    });
+    expect(flow!.stopped).toBe(true);
+    await act(async () => flow.importFile("Retry"));
+    const stopped = importSourceFile.mock.calls[0]![1] as { signal: AbortSignal };
+    const retried = importSourceFile.mock.calls[1]![1] as { signal: AbortSignal };
+    expect(stopped.signal.aborted).toBe(true);
+    expect(retried.signal.aborted).toBe(false);
+    expect(retried.signal).not.toBe(stopped.signal);
+    expect(retried).not.toHaveProperty("recoverExistingFiles");
+    expect(flow!.stopped).toBe(false);
+    expect(flow!.file).toBeNull();
   } finally {
     await act(async () => root.unmount());
   }

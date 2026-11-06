@@ -41,11 +41,27 @@ describe("Reader install engagement", () => {
     expect(document.querySelector(".pwa-install")).not.toBeNull();
   });
 
-  it("allows an invitation on a later visit after document use", () => {
+  it("does not carry eligibility from a previous visit", () => {
+    localStorage.setItem("mdbase:pwa-reader-used", "1");
     markPwaInstallEligible();
     stop = setupPwaInstall("Reader");
     offerInstall();
     vi.advanceTimersByTime(30_000);
+    expect(document.querySelector(".pwa-install")).toBeNull();
+  });
+
+  it("suppresses the invitation while a real overlay owns interaction", async () => {
+    stop = setupPwaInstall("Reader");
+    offerInstall();
+    const menu = document.createElement("details");
+    menu.className = "reader-menu";
+    menu.open = true;
+    document.body.append(menu);
+    markPwaInstallEligible();
+    vi.advanceTimersByTime(30_000);
+    expect(document.querySelector(".pwa-install")).toBeNull();
+    menu.remove();
+    await Promise.resolve();
     expect(document.querySelector(".pwa-install")).not.toBeNull();
   });
 

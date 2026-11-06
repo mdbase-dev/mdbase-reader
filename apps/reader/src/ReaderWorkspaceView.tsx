@@ -227,6 +227,21 @@ export function ReaderWorkspaceView({
       className={`reader-shell${notices ? " has-update" : ""}`}
       {...fileDrop.handlers}
     >
+      <a
+        hidden={!libraryTabActive(sourceWorkspace)}
+        className="reader-skip-link"
+        href="#reader-library-grid"
+        onClick={(event) => {
+          event.preventDefault();
+          shellRef.current
+            ?.querySelector<HTMLElement>(
+              '.workspace-pane.is-focused [data-row-index][tabindex="0"]',
+            )
+            ?.focus();
+        }}
+      >
+        <Trans>Skip to sources</Trans>
+      </a>
       {fileDrop.active ? (
         <div className="file-drop-overlay" aria-hidden="true">
           <div>
@@ -627,6 +642,7 @@ function useCommandsForView(
 ): ReturnType<typeof readerCommands> {
   const createSourceParts = useSourcePartCreation();
   return readerCommands({
+    libraryViews: model.libraryViews.views,
     sources: model.library.sources,
     activeSource: model.source,
     workspace: model.sourceWorkspace,

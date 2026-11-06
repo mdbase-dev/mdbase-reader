@@ -668,7 +668,7 @@
   }
 }
 
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 680px) {
   .annotation-card-actions > button:not(.icon-button),
   .annotation-card-actions .icon-button,
   .annotation-card-actions .reader-menu > summary.icon-button,

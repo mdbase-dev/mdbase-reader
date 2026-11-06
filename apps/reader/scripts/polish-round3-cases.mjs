@@ -215,6 +215,7 @@ export async function sampleAction(page, action, selector, shadow = false) {
             easing: animation.effect.getTiming().easing,
             keyframeEasings: animation.effect.getKeyframes().map(({ easing }) => easing),
             target: animation.effect.target?.className,
+            edge: animation.effect.target?.getAttribute("data-reader-edge"),
           })),
         });
         await new Promise(globalThis.requestAnimationFrame);

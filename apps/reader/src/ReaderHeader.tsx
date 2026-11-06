@@ -147,7 +147,7 @@ function LibraryHeader({
           />
         )}
         <ConnectionState state={connectionState} directAccess={directAccess} />
-        <ReaderSaveStatus mdbase={mdbase} />
+        <ReaderSaveStatus mdbase={mdbase} connected={connectionState === "connected"} />
       </div>
       <div className="reader-header-actions">
         <button

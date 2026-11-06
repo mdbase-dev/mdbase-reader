@@ -14,6 +14,8 @@ export interface SourceImportFlow {
   readonly importing: boolean;
   readonly progress: SourceImportProgress | null;
   readonly error: string | null;
+  readonly stopped: boolean;
+  readonly clearError: () => void;
   readonly choose: () => Promise<void>;
   readonly accept: (file: PickedFile) => void;
   readonly cancel: () => void;
@@ -30,15 +32,23 @@ export function useSourceImport(
 ): SourceImportFlow {
   const [file, setFile] = useState<PickedFile | null>(null);
   const [pickError, setPickError] = useState<string | null>(null);
+  const [stopped, setStopped] = useState(false);
   const [progress, setProgress] = useState<SourceImportProgress | null>(null);
   const importController = useRef<AbortController | null>(null);
   const recoveryFile = useRef<PickedFile | null>(null);
   const suggestion = useFileSuggestion(file);
+  const clearImportError = workspace.clearImportError;
+  const clearError = useCallback(() => {
+    setPickError(null);
+    clearImportError();
+  }, [clearImportError]);
   const choose = useCallback(async (): Promise<void> => {
     if (!pickSourceFile) {
       return;
     }
     setPickError(null);
+    clearImportError();
+    setStopped(false);
     try {
       const selected = await pickSourceFile();
       recoveryFile.current = null;
@@ -50,24 +60,30 @@ export function useSourceImport(
           : t({ message: "Reader could not open the file picker." }),
       );
     }
-  }, [pickSourceFile]);
-  const accept = useCallback((selected: PickedFile): void => {
-    setPickError(null);
-    recoveryFile.current = null;
-    setFile(selected);
-  }, []);
+  }, [pickSourceFile, clearImportError]);
+  const accept = useCallback(
+    (selected: PickedFile): void => {
+      setPickError(null);
+      clearImportError();
+      setStopped(false);
+      recoveryFile.current = null;
+      setFile(selected);
+    },
+    [clearImportError],
+  );
   const cancel = useCallback((): void => {
     if (importController.current) {
       if (progress?.phase === "creating") {
         return;
       }
-      recoveryFile.current = file;
       importController.current.abort();
       return;
     }
     recoveryFile.current = null;
+    clearImportError();
+    setStopped(false);
     setFile(null);
-  }, [file, progress?.phase]);
+  }, [progress?.phase, clearImportError]);
   const importFile = useCallback(
     async (title: string, useCitation = false): Promise<void> => {
       if (!file) {
@@ -77,6 +93,7 @@ export function useSourceImport(
       const controller = new AbortController();
       importController.current = controller;
       setProgress(null);
+      setStopped(false);
       try {
         // The workspace reports failures and returns null; a stopped import ends quietly.
         const imported = await withMarkProgress(
@@ -99,7 +116,11 @@ export function useSourceImport(
           }
           setFile(null);
           onImported(imported.id);
-        } else if (!controller.signal.aborted) {
+        } else if (controller.signal.aborted) {
+          recoveryFile.current = null;
+          workspace.clearImportError();
+          setStopped(true);
+        } else {
           recoveryFile.current = file;
         }
       } finally {
@@ -116,6 +137,8 @@ export function useSourceImport(
     importing: workspace.importStatus === "importing",
     progress,
     error: workspace.importError ?? pickError,
+    stopped,
+    clearError,
     choose,
     accept,
     cancel,

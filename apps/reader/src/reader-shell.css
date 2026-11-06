@@ -697,8 +697,11 @@
 
 .navigator-view-section > p {
   margin: 6px 16px 0;
-  color: var(--danger);
+  color: var(--muted);
   font-size: var(--ui-meta);
+}
+.navigator-view-section > p.is-error {
+  color: var(--danger);
 }
 
 .navigator-source-section {
@@ -1136,6 +1139,84 @@
   min-width: 100%;
 }
 
+.library-workspace-results:has(> .library-table-frame) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.library-workspace-results > .continue-reading {
+  flex: 0 0 auto;
+}
+.library-table-frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+}
+
+.reader-skip-link {
+  position: fixed;
+  z-index: 1000;
+  top: 8px;
+  left: 8px;
+  padding: 12px 16px;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow: var(--focus-ring);
+  transform: translateY(-200%);
+}
+.reader-skip-link:focus {
+  transform: none;
+}
+
+.library-save-button,
+.navigator-add-source,
+.navigator-view-section button {
+  transition:
+    background-color 120ms var(--ease-out),
+    transform 120ms var(--ease-out);
+}
+.library-save-button:active,
+.navigator-add-source:active:not(:disabled),
+.navigator-view-section button:active:not(:disabled) {
+  background-color: var(--wash);
+  transform: translateY(1px);
+}
+
+@container library (max-width: 760px) {
+  .library-header-trailing .reader-menu:has(> summary.library-save-button),
+  .library-header-trailing .library-actions,
+  .library-header-trailing .library-result-count {
+    display: none;
+  }
+  .library-workspace-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .library-workspace-search {
+    max-width: none;
+  }
+  .library-header-trailing {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .library-table-row .library-status.is-editable .mdbase-select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .reader-dock .dv-tabs-and-actions-container.dv-single-tab {
+    display: none;
+  }
+}
+
+.reader-dock .dv-single-tab:has([data-tab-panel-id="reader:navigator"]) .dv-tabs-container {
+  visibility: hidden;
+}
+
 .library-table-head {
   position: sticky;
   z-index: 4;
@@ -1489,6 +1570,10 @@
   box-sizing: border-box;
   border: 1.5px solid var(--line-strong);
   border-radius: 50%;
+  transition:
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    opacity 160ms var(--ease-out);
 }
 .library-status.is-queued .library-status-mark {
   border-color: var(--action);
@@ -3459,13 +3544,6 @@
     padding-inline: 8px;
     min-height: 44px;
   }
-  .library-header-trailing .reader-menu:has(> summary.library-save-button),
-  .library-header-trailing .library-actions {
-    display: none;
-  }
-  .library-header-trailing .library-result-count {
-    display: none;
-  }
   .library-annotation-toolbar-host {
     grid-column: 1 / -1;
   }
@@ -3813,7 +3891,14 @@
   }
 }
 
-body:has(.workspace-pane.is-focused.is-document-pane) .pwa-install {
+body:has(
+    .workspace-pane.is-focused.is-document-pane,
+    dialog[open],
+    details.reader-menu[open],
+    .library-row-menu,
+    [popover]:popover-open
+  )
+  .pwa-install {
   display: none;
 }
 
