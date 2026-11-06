@@ -18,7 +18,7 @@ export async function intakeCopy(target = "staging") {
     const lock = parseYaml(await readFile("pnpm-lock.yaml", "utf8"));
     const uiIntegrity = lock.packages[`@mdbase-dev/ui@${uiVersion}`].resolution.integrity;
     const liveSdk = JSON.parse(
-      await readFile("packages/connect/vendor/sdk-production-beta157.json", "utf8"),
+      await readFile("packages/connect/vendor/sdk-production-beta158.json", "utf8"),
     );
     const approvedSdk = JSON.parse(
       await readFile("packages/connect/vendor/sdk-production-beta141.json", "utf8"),
@@ -56,7 +56,7 @@ export async function intakeCopy(target = "staging") {
     replacements.push(
       [currentSdk.split("/").at(-1), intakeSdk.split("/").at(-1)],
       [sri(await readFile(currentSdk)), sri(await readFile(intakeSdk))],
-      ["@mdbase-dev/sdk@0.1.0-beta.157", `@mdbase-dev/sdk@file:${intakeSdk}`],
+      ["@mdbase-dev/sdk@0.1.0-beta.158", `@mdbase-dev/sdk@file:${intakeSdk}`],
       [
         `resolution: {integrity: ${sri(await readFile(intakeSdk))}}`,
         `resolution: {integrity: ${sri(await readFile(intakeSdk))}, tarball: file:${intakeSdk}}`,

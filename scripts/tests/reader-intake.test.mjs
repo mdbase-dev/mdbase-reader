@@ -10,17 +10,17 @@ import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved
 import { assertExtensionManifests } from "../lib/reader-extension.mjs";
 test("Reader pins the published beta157 SDK with beta141 trust", async () => {
   const vendor = "packages/connect/vendor/";
-  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta157.json", "utf8"));
+  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta158.json", "utf8"));
   const archive = vendor + pin.artifact;
   const bytes = await readFile(archive);
-  assert.equal(pin.sourceCommit, "493d29ca2a3494c5d59677e8b83e309b44a28c31");
+  assert.equal(pin.sourceCommit, "373c4a4e78e821e45a330e156a019a7aa635cfe8");
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "c44bce54c56239a6489e3f909638a8b900e48e41d286d77e9d9732c7172d199c",
+    "3742d3770953f2da5381d94265b0bb7c85103ad8690f7ddaa7d2c8b583538e24",
   );
   for (const owner of ["apps/reader", "apps/extension", "packages/connect"]) {
     const pkg = JSON.parse(await readFile(owner + "/package.json", "utf8"));
-    assert.equal(pkg.dependencies["@mdbase-dev/sdk"], "0.1.0-beta.157");
+    assert.equal(pkg.dependencies["@mdbase-dev/sdk"], "0.1.0-beta.158");
   }
   const member = (path) => execFileSync("tar", ["-xOzf", archive, "package/dist/" + path]);
   const trust = JSON.parse(
