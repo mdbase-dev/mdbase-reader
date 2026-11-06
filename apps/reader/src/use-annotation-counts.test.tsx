@@ -4,6 +4,10 @@ import { act, type JSX } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { TableValue } from "./LibraryCells.js";
+import {
+  useLibraryAnnotationCounts,
+  type ReaderWorkspaceViewModel,
+} from "./ReaderWorkspaceView.js";
 import { partSource } from "./source-parts.fixtures.js";
 import { createRoot } from "./testing/i18n.js";
 import { useAnnotationCounts } from "./use-annotation-counts.js";
@@ -17,6 +21,50 @@ afterEach(() => {
   document.body.replaceChildren();
   vi.unstubAllGlobals();
 });
+
+it.each(["error", "idle"] as const)(
+  "resumes collection counts when selected-source Notes become %s",
+  async (status) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const source = partSource("book");
+    const annotationCounts = vi.fn().mockResolvedValue(new Map([[source.id, 9]]));
+    const model = {
+      gateway: { annotationCounts },
+      library: { sources: [source], sourceIndex: { complete: true } },
+      workspace: {
+        sourceRecord: { status: "ready", value: source },
+        annotations: { status: "loading" },
+      },
+    } as unknown as ReaderWorkspaceViewModel;
+    const host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    function Harness({ model }: { model: ReaderWorkspaceViewModel }): JSX.Element {
+      const counts = useLibraryAnnotationCounts(model);
+      return <span>{counts?.get(source.id) ?? "unknown"}</span>;
+    }
+    act(() => root.render(<Harness model={model} />));
+    expect(annotationCounts).not.toHaveBeenCalled();
+    expect(host.textContent).toBe("unknown");
+    await act(async () => {
+      root.render(
+        <Harness
+          model={{
+            ...model,
+            workspace: {
+              ...model.workspace,
+              annotations:
+                status === "error" ? { status, message: "Notes unavailable" } : { status },
+            },
+          }}
+        />,
+      );
+      await Promise.resolve();
+    });
+    expect(annotationCounts).toHaveBeenCalledOnce();
+    expect(host.textContent).toBe("9");
+  },
+);
 
 it("aborts collection counts while source annotations load and never substitutes zero", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);

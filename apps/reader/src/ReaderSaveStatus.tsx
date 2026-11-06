@@ -12,7 +12,7 @@ const noop = (): void => undefined;
 
 export function ReaderSaveStatus({
   mdbase,
-  online,
+  online: browserOnline,
 }: {
   readonly mdbase: Mdbase | null;
   readonly online: boolean;
@@ -27,18 +27,17 @@ export function ReaderSaveStatus({
     () => mdbase?.getSnapshot() ?? null,
     () => null,
   );
+  const online = browserOnline && snapshot?.sync?.kind !== "offline";
   const { pending, rejected } = snapshot?.writes ?? { pending: [], rejected: [] };
   const incidents = sdkSyncIncidents(snapshot);
+  const needsAttention = rejected.length + incidents.length > 0;
   const oldest = Math.min(...pending.map((entry) => entry.createdAt));
   const stalled = useSustained(online && Boolean(pending.length), 30_000, oldest);
-  if (!pending.length && !rejected.length && !incidents.length) {
+  if (!pending.length && !needsAttention) {
     return null;
   }
   const entries = [...pending, ...rejected];
-  const label =
-    rejected.length || incidents.length
-      ? t`Changes need attention`
-      : t`${String(pending.length)} pending`;
+  const label = needsAttention ? t`Changes need attention` : t`${String(pending.length)} pending`;
   return (
     <Menu
       className="reader-save-status"
@@ -55,7 +54,7 @@ export function ReaderSaveStatus({
         />
         <SyncIncidentList incidents={incidents} />
         <SaveStatusEntries entries={entries} />
-        {online && (stalled || incidents.length || rejected.length) ? (
+        {online && (stalled || needsAttention) ? (
           <button
             className="connection-secondary"
             type="button"

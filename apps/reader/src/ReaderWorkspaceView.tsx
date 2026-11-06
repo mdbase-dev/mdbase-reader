@@ -542,7 +542,7 @@ function useShellChrome(
 }
 
 /** The index's counts, corrected by the annotations already loaded for the selected source. */
-function useLibraryAnnotationCounts(
+export function useLibraryAnnotationCounts(
   model: ReaderWorkspaceViewModel,
 ): ReadonlyMap<SourceId, number> | null {
   const loaded = model.workspace.annotations;
@@ -550,7 +550,7 @@ function useLibraryAnnotationCounts(
     model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
   const counts = useAnnotationCounts(
     model.gateway,
-    model.library.sourceIndex?.complete !== false && (!sourceId || loaded.status === "ready"),
+    model.library.sourceIndex?.complete !== false && (!sourceId || loaded.status !== "loading"),
   );
   return useMemo(() => {
     const known = counts

@@ -128,6 +128,49 @@ it("stays calm offline and starts the stalled timer only on reconnect", async ()
   );
 });
 
+it.each(["saved_on_device", "saving"])(
+  "keeps SDK-offline %s writes calm while the browser is online",
+  async (saveState) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.useFakeTimers();
+    expect(navigator.onLine).toBe(true);
+    const host = document.createElement("div");
+    document.body.append(host);
+    let changed: () => void = () => undefined;
+    let snapshot = {
+      phase: { kind: "starting" },
+      sync: { kind: "offline" },
+      saveWarning: "storage_may_be_evicted",
+      writes: {
+        saveState,
+        pending: [{ mutationId: "offline-sdk", records: [], createdAt: Date.now() }],
+        rejected: [],
+      },
+    };
+    const mdbase = {
+      subscribe: (listener: () => void) => {
+        changed = listener;
+        return () => undefined;
+      },
+      getSnapshot: () => snapshot,
+    } as unknown as Mdbase;
+    root = createRoot(host);
+    act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={navigator.onLine} />));
+    await act(() => vi.advanceTimersByTime(60_000));
+    expect(host.textContent).toContain("still pending on this device");
+    expect(host.textContent).not.toContain("may remove");
+    expect(host.querySelector(".reader-save-details > button")).toBeNull();
+    act(() => {
+      snapshot = { ...snapshot, sync: { kind: "synced" } };
+      changed();
+    });
+    await act(() => vi.advanceTimersByTime(30_001));
+    expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
+      "Reload Reader",
+    );
+  },
+);
+
 it.each([
   [0, 1, "The collection refused these changes."],
   [1, 1, "The collection refused some changes. Other changes are still pending on this device."],
