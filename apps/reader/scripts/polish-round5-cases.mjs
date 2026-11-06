@@ -42,14 +42,27 @@ export async function round5Library(page) {
     });
   assert.deepEqual(checkSize, { width: "14px", height: "14px" });
   const motion = await page.locator(".highlight-saved").evaluate((element) => {
-    const style = globalThis.getComputedStyle(element);
-    return { name: style.animationName, curve: style.animationTimingFunction };
+    const effect = element
+      .getAnimations()
+      .find(
+        (animation) =>
+          animation.effect?.target === element && animation.transitionProperty === "translate",
+      )?.effect;
+    return {
+      effectCurve: effect?.getTiming().easing,
+      duration: effect?.getTiming().duration,
+      translations: effect
+        ?.getKeyframes()
+        .map((frame) => frame.translate)
+        .filter(Boolean),
+    };
   });
   if (
     await page.evaluate(() => !globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches)
   ) {
-    assert.equal(motion.name, "composer-appear");
-    assert.equal(motion.curve, "cubic-bezier(0.22, 1, 0.36, 1)");
+    assert.equal(motion.effectCurve, "cubic-bezier(0.22, 1, 0.36, 1)");
+    assert.equal(motion.duration, 220);
+    assert.deepEqual(motion.translations, ["0px 8px", "none"]);
   }
   await page.keyboard.press("Control+z");
   await expect(page.locator("#reader-notices")).toContainText("Restored the status");

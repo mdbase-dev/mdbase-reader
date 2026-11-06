@@ -4,6 +4,16 @@ import { describe, expect, it } from "vitest";
 import { readerErrorMessage } from "./errors.js";
 
 describe("readerErrorMessage", () => {
+  it("replaces engine budget errors with a plain next step", () => {
+    const error = new ConnectRepositoryError(
+      "query annotations",
+      "query_budget_exceeded",
+      "ordinary selection exceeds its bounded source or retained-value query budget",
+    );
+    expect(readerErrorMessage(error, "Try again.")).toBe(
+      "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support.",
+    );
+  });
   it("preserves actionable operation errors", () => {
     expect(readerErrorMessage(new Error("The operation timed out."), "Try again.")).toBe(
       "The operation timed out.",

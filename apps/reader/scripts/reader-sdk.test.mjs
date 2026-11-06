@@ -35,7 +35,11 @@ test("all three original archives match installed bytes and packaged target trus
     assert.equal(sdk.receipt.cpOrigin, readerDeployments[target].connectUrl);
     const pkg = JSON.parse(await readFile(join(repo, "apps/reader/package.json"), "utf8"));
     const name = target === "production" ? "@mdbase-dev/sdk" : "@mdbase-dev/sdk-" + target;
-    assert.ok(pkg.dependencies[name].endsWith(sdk.receipt.artifact));
+    if (target === "production") {
+      assert.equal(pkg.dependencies[name], "0.1.0-beta.157");
+    } else {
+      assert.ok(pkg.dependencies[name].endsWith(sdk.receipt.artifact));
+    }
     assert.ok(sdk.offlineShellUrl.endsWith("/dist/offline-shell-build.js"));
     for (const id of ["@mdbase-dev/sdk", "@mdbase-dev/sdk/browser", "@mdbase-dev/sdk/testing"]) {
       assert.equal(sdk.aliases.filter((alias) => alias.find.test(id)).length, 1);
@@ -56,8 +60,8 @@ async function fixture(t, name = "@mdbase-dev/sdk-lab") {
     join(repo, "apps/reader/node_modules", name),
     join(root, "apps/reader/node_modules/@mdbase-dev/sdk-lab"),
   );
-  const path = join(root, vendor, "sdk-lab-eaa4e697.json");
-  await cp(join(repo, vendor, "sdk-lab-eaa4e697.json"), path);
+  const path = join(root, vendor, "sdk-lab-beta157.json");
+  await cp(join(repo, vendor, "sdk-lab-beta157.json"), path);
   const pin = JSON.parse(await readFile(path, "utf8"));
   await cp(join(repo, vendor, pin.artifact), join(root, vendor, pin.artifact));
   return { root, path, pin };
@@ -72,7 +76,7 @@ test("archive tampering refuses before any SDK import", async (t) => {
 
 test("a rehashed production archive cannot masquerade as LAB", async (t) => {
   const { root, path, pin } = await fixture(t, "@mdbase-dev/sdk");
-  const production = "sdk-4370800f-production-beta156.tgz";
+  const production = "sdk-493d29ca-production-beta157.tgz";
   const bytes = await readFile(join(repo, vendor, production));
   await cp(join(repo, vendor, production), join(root, vendor, production));
   await writeFile(

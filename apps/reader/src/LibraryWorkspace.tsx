@@ -50,6 +50,7 @@ import { ReaderNotice } from "./ReaderNotice.js";
 import { useInspectedLibraryRow } from "./use-inspected-library-row.js";
 import { layoutOf, useLibraryLayoutDraft } from "./use-library-layout-draft.js";
 import { useLibraryWrites } from "./use-library-writes.js";
+import { useRovingControls } from "./use-roving-controls.js";
 import "./library.css";
 
 import type { BibliographyExportController } from "./use-bibliography-export.js";
@@ -116,6 +117,7 @@ export function LibraryWorkspace({
   readonly onAddSource: () => void;
 }): JSX.Element {
   const { t } = useLingui();
+  const trailingControls = useRovingControls();
   const collectionKey = allSources[0]?.collectionId ?? "library";
   const [layout, setLayout] = useLibraryLayoutDraft(collectionKey, view);
   const [filter, setFilter] = useState(view.configuration.filter);
@@ -307,7 +309,17 @@ export function LibraryWorkspace({
   };
 
   return (
-    <section className="library-workspace" aria-label={t`${view.name} library view`}>
+    <section
+      className="library-workspace"
+      aria-label={t`${view.name} library view`}
+      onFocusCapture={(event) => {
+        const row = (event.target as Element).closest<HTMLElement>("[data-row-index]");
+        const source = row ? sources[Number(row.dataset["rowIndex"])] : undefined;
+        if (source) {
+          onInspectSource?.(source.id);
+        }
+      }}
+    >
       <h1 className="sr-only">{view.name}</h1>
       <header className="library-workspace-header">
         <label className="library-view-identity">
@@ -333,7 +345,16 @@ export function LibraryWorkspace({
             <button
               key={value}
               type="button"
+              tabIndex={mode === value ? 0 : -1}
               aria-pressed={mode === value}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                  event.preventDefault();
+                  setMode(mode === "sources" ? "annotations" : "sources");
+                  const buttons = event.currentTarget.parentElement?.querySelectorAll("button");
+                  buttons?.[mode === "sources" ? 1 : 0]?.focus();
+                }
+              }}
               onClick={() => setMode(value)}
             >
               {value === "sources"
@@ -395,7 +416,12 @@ export function LibraryWorkspace({
                 onChange={setSearchScope}
               />
             </div>
-            <div className="library-header-trailing">
+            <div
+              ref={trailingControls}
+              className="library-header-trailing"
+              role="toolbar"
+              aria-label={t`Library actions`}
+            >
               {searchScope === "sources" ? (
                 <span className="library-result-count" role="status">
                   {loading

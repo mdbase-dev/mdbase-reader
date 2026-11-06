@@ -268,11 +268,10 @@ describe("Connect annotation reads", () => {
     expect(queryPages).toHaveBeenCalledWith(
       {
         types: ["reader-annotation"],
-        where:
-          'has(record.source) && source != null && source.asFile() == null && source.contains("src_01")',
         frontmatterMode: "effective",
+        includeBody: false,
       },
-      { firstPageSize: 100, pageSize: 100 },
+      { pageSize: 500 },
     );
     // Revisionless bodies are batched by the SDK; missing query rows still require a read.
     expect(readMany).toHaveBeenCalledWith(["annotations/matching.md"], {
@@ -294,7 +293,7 @@ describe("Connect annotation reads", () => {
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
     // Two discovery queries per listing, one index query, and a changed-reference revalidation.
-    expect(queryPages).toHaveBeenCalledTimes(6);
+    expect(queryPages).toHaveBeenCalledTimes(10);
     expect(readMany).toHaveBeenCalledTimes(2);
   });
 });
@@ -303,7 +302,7 @@ describe("Connect annotation listing fallback", () => {
   it("reads each matched annotation when the body query is refused", async () => {
     const queryPages = vi.fn((input: { where?: string }) => {
       return queryStream(
-        input.where?.includes("contains")
+        !input.where || input.where.startsWith("file.path ==")
           ? [
               {
                 path: "annotations/matching.md",

@@ -87,7 +87,7 @@ test("ALL installed SDK, npm UI candidate, protocol and peers match original mem
   const repoRoot = process.cwd();
   const installerEvidence = [];
   const sdk = JSON.parse(
-    await readFile("packages/connect/vendor/sdk-production-beta156.json", "utf8"),
+    await readFile("packages/connect/vendor/sdk-production-beta157.json", "utf8"),
   );
   const sdkMembers = originalMembers(`packages/connect/vendor/${sdk.artifact}`);
   // Generated from npm's integrity-verified beta.149 archive, not from the
@@ -158,14 +158,14 @@ test("ALL installed SDK, npm UI candidate, protocol and peers match original mem
     "installed protocol differs",
     { ...options, protocol: true, originalSdkRoot: sdkRoot, originalSdkMembers: sdkMembers },
   );
-  assert.equal(sdkMembers.length, 900);
+  assert.equal(sdkMembers.length, 903);
   assert.equal(uiMembers.length, 96);
   assert.equal(protocolMembers.length, 67);
   assert.ok(installerEvidence.some((r) => r.package === "protocol"));
   assert.ok(installerEvidence.length > 0);
   for (const r of installerEvidence) {
-    assert.equal(r.originalSdkMembers, 900);
-    assert.equal(r.originalPackageMembers, r.package === "sdk" ? 900 : 67);
+    assert.equal(r.originalSdkMembers, 903);
+    assert.equal(r.originalPackageMembers, r.package === "sdk" ? 903 : 67);
     assert.equal(r.totalInstalledFiles, r.originalPackageMembers + 1);
     assert.equal(r.originalYamlMembers, 233);
     assert.equal(r.manager, "pnpm@10.7.0");

@@ -389,18 +389,6 @@
   background: var(--bg-hover);
 }
 
-/* The highlight's ink runs down the left of a card that carries a passage. */
-.annotation-list .annotation-card:has(> blockquote)::before {
-  content: "";
-  position: absolute;
-  top: var(--sp-3);
-  bottom: var(--sp-3);
-  left: var(--sp-2);
-  width: 3px;
-  border-radius: 3px;
-  background: var(--hl-ink, var(--ink-yellow));
-}
-
 /* The selected card and its passage share the wash, so the eye can match them. */
 .annotation-list .annotation-card.is-selected,
 .annotation-list .annotation-card.is-selected:hover {

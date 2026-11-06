@@ -43,6 +43,29 @@ function stored(id: string, source: string, body = `Note ${id}`): StoredAnnotati
 }
 
 /** An authority whose queries and reads agree, as mdbase reports them. */
+const queryFile = (path: string, record: StoredAnnotation): QueryRecord["file"] => ({
+  size: record.body.length + JSON.stringify(record.frontmatter).length,
+  mtime: `2026-08-09T00:00:0${String(record.version)}Z`,
+  path,
+});
+
+const storedContent = (
+  path: string,
+  record: StoredAnnotation,
+): Omit<RecordDocument, "revision"> => ({
+  path,
+  types: ["reader-annotation"],
+  frontmatter: structuredClone(record.frontmatter),
+  effectiveFrontmatter: structuredClone(record.frontmatter),
+  body: record.body,
+  file: queryFile(path, record),
+});
+
+const storedDocument = (path: string, record: StoredAnnotation): RecordDocument => ({
+  ...storedContent(path, record),
+  revision: `rev-${path}-${String(record.version)}`,
+});
+
 function authority(
   annotations: Map<string, StoredAnnotation>,
   links: Readonly<Record<string, string | null>>,
@@ -55,11 +78,6 @@ function authority(
   read: Mock<(input: ReadInput) => Promise<ConnectOutcome<RecordDocument>>>;
   client: ReaderConnectClient;
 } {
-  const file = (path: string, record: StoredAnnotation): QueryRecord["file"] => ({
-    size: record.body.length + JSON.stringify(record.frontmatter).length,
-    mtime: `2026-08-09T00:00:0${String(record.version)}Z`,
-    path,
-  });
   const queryPages = vi.fn(async function* (
     input: QueryInput,
     _options?: QueryPagesOptions,
@@ -73,25 +91,40 @@ function authority(
     const id = quoted(/^id == ("[^"]*")$/u);
     const target = quoted(/record\["source"\]\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
     const contained = quoted(/source\.contains\(("[^"]*")\)$/u);
+    const exactPath = quoted(/^file\.path == ("[^"]*")$/u);
     const results: QueryRecord[] =
       id !== undefined
         ? [{ path: "sources/one.md", effectiveFrontmatter: { id }, types: [], file: {} }]
         : [...annotations]
-            .filter(([, record]) => {
+            .filter(([path, record]) => {
               const reference = String(record.frontmatter["source"]);
               const link = links[reference] ?? null;
-              return target !== undefined
-                ? link === target
-                : link === null && contained !== undefined && reference.includes(contained);
+              return exactPath !== undefined
+                ? path === exactPath
+                : !where
+                  ? true
+                  : target !== undefined
+                    ? link === target
+                    : link === null && contained !== undefined && reference.includes(contained);
             })
             .map(([path, record]) => ({
               path,
               types: ["reader-annotation"],
-              file: file(path, record),
+              file: queryFile(path, record),
               ...(input.frontmatterMode === "effective"
                 ? {}
                 : { frontmatter: structuredClone(record.frontmatter) }),
               effectiveFrontmatter: structuredClone(record.frontmatter),
+              ...(input.projections
+                ? {
+                    values: {
+                      reader_source_id:
+                        links[String(record.frontmatter["source"])] === "sources/one.md"
+                          ? "src_1"
+                          : null,
+                    },
+                  }
+                : {}),
               ...(input.includeBody ? { body: record.body } : {}),
             }));
     yield await Promise.resolve(
@@ -110,17 +143,7 @@ function authority(
     if (!record) {
       throw new Error(`Unexpected read of ${input.path}`);
     }
-    return Promise.resolve(
-      success<RecordDocument>({
-        path: input.path,
-        revision: `rev-${input.path}-${String(record.version)}`,
-        types: ["reader-annotation"],
-        frontmatter: structuredClone(record.frontmatter),
-        effectiveFrontmatter: structuredClone(record.frontmatter),
-        body: record.body,
-        file: file(input.path, record),
-      }),
-    );
+    return Promise.resolve(success(storedDocument(input.path, record)));
   });
   const readMany = vi.fn<ReaderConnectClient["readMany"]>((paths) =>
     Promise.resolve(
@@ -131,14 +154,7 @@ function authority(
             ? {
                 status: "found" as const,
                 path,
-                record: {
-                  path,
-                  types: ["reader-annotation"],
-                  file: file(path, record),
-                  frontmatter: structuredClone(record.frontmatter),
-                  effectiveFrontmatter: structuredClone(record.frontmatter),
-                  body: record.body,
-                },
+                record: storedContent(path, record),
               }
             : { status: "missing" as const, path };
         }),
@@ -192,7 +208,7 @@ describe("Connect annotations for one source", () => {
     const second = await repository.listForSource(collection, sourceId("src_1"));
     expect(read).not.toHaveBeenCalled();
     // The source lookup and its two link queries; body batching belongs to readMany.
-    expect(queryPages).toHaveBeenCalledTimes(3);
+    expect(queryPages).toHaveBeenCalledTimes(21);
     expect(readMany).toHaveBeenCalledTimes(2);
     expect(second).toEqual(first);
     expect(second[0]?.recordRevision).toBe("rev-annotations/ann_0.md-1");
@@ -285,7 +301,7 @@ describe("Connect annotation batch failure and legacy references", () => {
     const controller = new AbortController();
     const annotations = new Map([["annotations/a.md", stored("ann_a", "src_1")]]);
     const { client, read } = authority(annotations, {}, (input) => {
-      if (input.where?.includes("contains")) {
+      if (input.projections) {
         controller.abort();
       }
     });

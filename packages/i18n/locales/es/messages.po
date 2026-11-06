@@ -1228,6 +1228,10 @@ msgstr "La suma de verificación del adjunto no coincide ({0}). No se ha importa
 msgid "Attachment totals mismatch."
 msgstr "Los totales de adjuntos no coinciden."
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "ATTACHMENT_UPLOAD_SCOPE_CHANGED: Another upload is still attached to this session. This file’s transfer could not start."
+msgstr "ATTACHMENT_UPLOAD_SCOPE_CHANGED: Otra carga sigue vinculada a esta sesión. No se pudo iniciar la transferencia de este archivo."
+
 #: apps/reader/src/CitationContributors.tsx
 msgid "Author"
 msgstr "Autor"
@@ -1545,6 +1549,10 @@ msgstr "Cambiar atajos de teclado"
 msgid "Change needs attention"
 msgstr "Un cambio requiere atención"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Change reading status"
+msgstr "Cambiar estado de lectura"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "Modificado en otro lugar"
@@ -1553,6 +1561,7 @@ msgstr "Modificado en otro lugar"
 msgid "Changes awaiting confirmation"
 msgstr "Cambios pendientes de confirmación"
 
+#: apps/reader/src/ReaderHeader.tsx
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "Changes need attention"
 msgstr "Hay cambios que requieren atención"
@@ -2359,6 +2368,10 @@ msgstr "Conexión"
 msgid "Connection diagnostics"
 msgstr "Diagnósticos de conexión"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Contact support about this change. Keep this browser’s data."
+msgstr "Contacta con soporte sobre este cambio. Conserva los datos de este navegador."
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container author"
@@ -2615,12 +2628,12 @@ msgid "Couldn’t change the colour."
 msgstr "No se pudo cambiar el color."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
-msgstr "No se pudo confirmar que se haya añadido este archivo. Vuelve a conectarte y revisa los cambios pendientes y tu biblioteca antes de intentarlo de nuevo."
+msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
+msgstr "No se pudo confirmar que se añadiera este archivo. Revisa los cambios pendientes y tu biblioteca antes de volver a intentarlo."
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
-msgstr "No se pudo confirmar que se haya añadido esta fuente. Vuelve a conectarte y revisa los cambios pendientes en la cabecera y tu biblioteca antes de intentarlo de nuevo."
+msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
+msgstr "No se pudo confirmar que se añadiera esta fuente. Revisa los cambios pendientes en la cabecera y tu biblioteca antes de volver a intentarlo."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -3726,6 +3739,10 @@ msgid "File transfer failed."
 msgstr "Error en la transferencia del archivo."
 
 #: apps/reader/src/SourceImportDialog.tsx
+msgid "File transferred · Pending confirmation"
+msgstr "Archivo transferido · Confirmación pendiente"
+
+#: apps/reader/src/SourceImportDialog.tsx
 msgid "File transferred. Waiting for the collection to confirm it…"
 msgstr "Archivo transferido. Esperando la confirmación de la colección…"
 
@@ -4149,6 +4166,10 @@ msgstr "Presentador"
 msgctxt "collection menu model"
 msgid "Hosted by mdbase"
 msgstr "Alojado por mdbase"
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: La colección no ha confirmado la transferencia del archivo. Revisa los cambios pendientes antes de volver a intentarlo."
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -4676,6 +4697,7 @@ msgid "Legislation"
 msgstr "Legislación"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Library"
 msgstr "Biblioteca"
 
@@ -4724,6 +4746,10 @@ msgstr "Texto de la biblioteca: {0} de {1} páginas guardadas comprobadas{skippe
 msgctxt "LibraryWorkspace interface"
 msgid "Library view"
 msgstr "Vista de la biblioteca"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Library views"
+msgstr "Vistas de biblioteca"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Library views and sources"
@@ -5371,6 +5397,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "Artículo de periódico"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Next / previous source"
+msgstr "Fuente siguiente / anterior"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "Página siguiente"
@@ -5836,6 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "Abrir inicio de sesión"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "Abrir fuente"
@@ -6423,6 +6455,7 @@ msgstr "Vista previa en "
 msgid "Preview the chapter citation with the book’s details"
 msgstr "Previsualiza la cita del capítulo con los datos del libro"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "Página anterior"
@@ -6884,6 +6917,10 @@ msgstr "Espacio de trabajo de Reader"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "El acceso de Reader a esta colección ha cambiado. Revisa el acceso actualizado para continuar."
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Reading"
+msgstr "Lectura"
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
@@ -7162,6 +7199,7 @@ msgid "Remove source"
 msgstr "Quitar fuente"
 
 #: apps/reader/src/LibraryRowMenu.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Remove source…"
 msgstr "Quitar fuente…"
 
@@ -7178,6 +7216,10 @@ msgstr "Eliminado"
 #: apps/reader/src/use-source-removal.ts
 msgid "Removed “{0}”."
 msgstr "Se ha eliminado «{0}»."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Rename source"
+msgstr "Renombrar fuente"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
@@ -7778,6 +7820,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "Buscar fuentes y ejecutar comandos · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Search this view"
 msgstr "Buscar en esta vista"
 
@@ -7864,6 +7907,10 @@ msgstr "Seleccionar área"
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "Selecciona una carpeta de paquete completa con rutas de archivo únicas."
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Select source"
+msgstr "Seleccionar fuente"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
@@ -8344,6 +8391,10 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "Inicio"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Start of document"
+msgstr "Inicio del documento"
+
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Start of publication"
 msgstr "Inicio de la publicación"
@@ -8420,13 +8471,13 @@ msgstr "Detener importación"
 msgid "Stopped"
 msgstr "Detenido"
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Stopped adding. Check pending changes before trying again."
+msgstr "Se detuvo la adición. Revisa los cambios pendientes antes de volver a intentarlo."
+
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
 msgstr "Detenido. Los datos ya confirmados se conservan. Reanuda con la misma entrada y el mismo destino; los registros existentes no se sobrescribirán."
-
-#: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped. Nothing was added."
-msgstr "Detenido. No se ha añadido nada."
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."
@@ -8486,6 +8537,10 @@ msgstr "Cambia de colección, administra el acceso o cierra sesión desde el men
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "¿Cambiar de colección?"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
+msgstr "La sincronización necesita atención. Contacta con soporte antes de cerrar sesión o borrar los datos de este navegador."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -8684,8 +8739,12 @@ msgid "The collection connection changed. Try again."
 msgstr "Cambió la conexión con la colección. Inténtalo de nuevo."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
-msgid "The collection refused some changes. Review them before signing out."
-msgstr "La colección ha rechazado algunos cambios. Revísalos antes de cerrar sesión."
+msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
+msgstr "La colección rechazó algunos cambios. Otros cambios siguen pendientes en este dispositivo. Revísalos antes de cerrar sesión."
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "The collection refused these changes. Review them before signing out."
+msgstr "La colección rechazó estos cambios. Revísalos antes de cerrar sesión."
 
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
@@ -8913,6 +8972,10 @@ msgid "These apply only to Reader in this browser."
 msgstr "Estos ajustes solo se aplican a Reader en este navegador."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
+msgid "These changes are still pending on this device. Waiting for the collection to confirm them."
+msgstr "Estos cambios siguen pendientes en este dispositivo. Esperando la confirmación de la colección."
+
+#: apps/reader/src/ReaderSaveStatus.tsx
 msgid "These changes have not reached the collection. This browser may remove its local copy."
 msgstr "Estos cambios no han llegado a la colección. Este navegador puede eliminar su copia local."
 
@@ -8952,6 +9015,10 @@ msgstr "Esta anotación no tiene una ruta y una revisión canónicas."
 #: apps/reader/src/annotation-navigation.ts
 msgid "This annotation has no supported link to a passage. Its text and original metadata are preserved."
 msgstr "Esta anotación no tiene un enlace compatible a un pasaje. Se conservan su texto y metadatos originales."
+
+#: apps/reader/src/errors.ts
+msgid "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support."
+msgstr "Esta consulta de anotaciones es demasiado grande. Abre las notas de una sola fuente e inténtalo de nuevo. Si sigue fallando, contacta con el soporte."
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."
@@ -9114,6 +9181,10 @@ msgstr "Este archivo cambió. El intervalo del capítulo pertenece a una revisi�
 #: packages/core/src/application/source-records.ts
 msgid "This file is already attached here."
 msgstr "Este archivo ya está adjunto aquí."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "This file wasn’t added. Close this and try again."
+msgstr "Este archivo no se añadió. Cierra esta ventana y vuelve a intentarlo."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
@@ -9323,6 +9394,7 @@ msgid "Toggle Pointer Mode"
 msgstr "Alternar modo de puntero"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "Mostrar u ocultar la barra lateral de fuentes"
@@ -9762,10 +9834,6 @@ msgstr "Esperando aprobación en la pestaña de mdbase…"
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "Esperando la pestaña activa"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Waiting for the collection to confirm these changes."
-msgstr "Esperando a que la colección confirme estos cambios."
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "We couldn’t check whether this page is already saved. Saving checks again."

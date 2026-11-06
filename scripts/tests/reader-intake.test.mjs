@@ -8,23 +8,19 @@ import { intakeCopy } from "./helpers/reader-intake.mjs";
 import { loadOriginals, protectedHashes } from "../lib/native-originals.mjs";
 import { approvedHashes, approvedProductionHashes } from "../lib/reader-approved-intake.mjs";
 import { assertExtensionManifests } from "../lib/reader-extension.mjs";
-test("Reader pins the published beta149 SDK with beta141 trust", async () => {
+test("Reader pins the published beta157 SDK with beta141 trust", async () => {
   const vendor = "packages/connect/vendor/";
-  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta156.json", "utf8"));
+  const pin = JSON.parse(await readFile(vendor + "sdk-production-beta157.json", "utf8"));
   const archive = vendor + pin.artifact;
   const bytes = await readFile(archive);
-  assert.equal(pin.sourceCommit, "4370800f0622e0a176118fc26115d2451fe202d5");
+  assert.equal(pin.sourceCommit, "493d29ca2a3494c5d59677e8b83e309b44a28c31");
   assert.equal(
     createHash("sha256").update(bytes).digest("hex"),
-    "33ae4974f40606bfb0c75255a91669e81cd28adf972935e8a96ba2efac820115",
+    "c44bce54c56239a6489e3f909638a8b900e48e41d286d77e9d9732c7172d199c",
   );
-  for (const [owner, path] of [
-    ["apps/reader", "../../" + archive],
-    ["apps/extension", "../../" + archive],
-    ["packages/connect", "vendor/" + pin.artifact],
-  ]) {
+  for (const owner of ["apps/reader", "apps/extension", "packages/connect"]) {
     const pkg = JSON.parse(await readFile(owner + "/package.json", "utf8"));
-    assert.equal(pkg.dependencies["@mdbase-dev/sdk"], "file:" + path);
+    assert.equal(pkg.dependencies["@mdbase-dev/sdk"], "0.1.0-beta.157");
   }
   const member = (path) => execFileSync("tar", ["-xOzf", archive, "package/dist/" + path]);
   const trust = JSON.parse(
@@ -93,9 +89,6 @@ test("production intake binds approved archive originals and the unchanged beta1
   );
 });
 test("native approval refuses the published SDK and npm UI without an approved file intake", async () => {
-  // npm installation is intentionally not native-release qualification. Passing
-  // member checks must never silently grant native approval. The beta149 SDK
-  // is refused first; the historical-intake tests cover the UI file pin.
   await assert.rejects(
     loadOriginals({
       target: "production",
@@ -103,7 +96,7 @@ test("native approval refuses the published SDK and npm UI without an approved f
       hashes: approvedProductionHashes,
       installed: true,
     }),
-    /sdk protected archive hash mismatch/,
+    /@mdbase-dev\/sdk must remain a file pin/,
   );
 });
 test("native approval refuses an npm UI beside the approved SDK", async (t) => {

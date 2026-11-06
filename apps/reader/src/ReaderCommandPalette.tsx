@@ -1,3 +1,4 @@
+import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { matchingCommands, shortcutLabel, type Command } from "@mdbase-dev/ui/command-palette";
 import { ReaderButton } from "@mdbase-reader/ui";
@@ -201,10 +202,54 @@ function ShortcutSheet({
       initialFocus={heading}
       onDismiss={onClose}
     >
-      <section className="reader-shortcut-help">
+      <section className="reader-shortcut-help" aria-labelledby={id}>
         <h2 ref={heading} id={id} tabIndex={-1}>
           <Trans>Keyboard shortcuts</Trans>
         </h2>
+        <section>
+          <h3>
+            <Trans>Library</Trans>
+          </h3>
+          <dl>
+            {[
+              ["J / K", translate`Next / previous source`],
+              ["X", translate`Select source`],
+              ["S", translate`Change reading status`],
+              ["F2", translate`Rename source`],
+              ["Delete", translate`Remove source…`],
+              ["Enter", translate`Open source`],
+              ["/", translate`Search this view`],
+              ["[", translate`Toggle Sources sidebar`],
+              ["?", translate`Keyboard shortcuts`],
+            ].map(([key, label]) => (
+              <div key={key}>
+                <dt>{label}</dt>
+                <dd>
+                  <kbd>{key}</kbd>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+        <section>
+          <h3>
+            <Trans>Reading</Trans>
+          </h3>
+          <dl>
+            {[
+              ["PageDown / Space", translate`Next page`],
+              ["PageUp / Shift+Space", translate`Previous page`],
+              ["Ctrl+Home", translate`Start of document`],
+            ].map(([key, label]) => (
+              <div key={key}>
+                <dt>{label}</dt>
+                <dd>
+                  <kbd>{key}</kbd>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
         {[...new Set(shortcuts.map((command) => command.group))].map((group) => (
           <section key={group}>
             <h3>{groupLabel(group)}</h3>
@@ -222,10 +267,12 @@ function ShortcutSheet({
             </dl>
           </section>
         ))}
+      </section>
+      <footer className="reader-shortcut-footer">
         <ReaderButton type="button" onClick={onClose}>
           <Trans context="Reader shortcuts">Close</Trans>
         </ReaderButton>
-      </section>
+      </footer>
     </ModalDialog>
   );
 }

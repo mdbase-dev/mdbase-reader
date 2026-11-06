@@ -75,6 +75,7 @@ try {
   await page.reload();
   await page.getByText("The Principles of Psychology", { exact: true }).first().waitFor();
   assert.equal(await page.title(), "mdbase reader");
+  const onlineFailedRequests = [...failed];
   await context.setOffline(true);
   const offline = await page.reload();
   await page.getByText("The Principles of Psychology", { exact: true }).first().waitFor();
@@ -86,6 +87,7 @@ try {
       active: true,
       cachedHtmlStatuses: cached,
       failedRequests: failed,
+      onlineFailedRequests,
       offlineReload: offline.status(),
       pageErrors,
     }),

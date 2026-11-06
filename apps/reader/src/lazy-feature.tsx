@@ -9,6 +9,7 @@ import type { ComponentType, JSX, ReactNode } from "react";
 export function lazyFeature<Props extends object>(
   importFeature: () => Promise<{ default: ComponentType<Props> }>,
   label: string,
+  renderLoading?: (props: Props) => ReactNode,
 ): ComponentType<Props> & { preload: () => void } {
   let pending: ReturnType<typeof importFeature> | undefined;
   const load = (): ReturnType<typeof importFeature> => {
@@ -36,16 +37,20 @@ export function lazyFeature<Props extends object>(
       <FeatureBoundary key={attempt} label={label} retry={retry} onError={onError}>
         <Suspense
           fallback={
-            <div
-              className="reader-feature-skeleton"
-              role="status"
-              aria-label={translate`Loading ${label}…`}
-            >
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
+            renderLoading ? (
+              renderLoading(props)
+            ) : (
+              <div
+                className="reader-feature-skeleton"
+                role="status"
+                aria-label={translate`Loading ${label}…`}
+              >
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            )
           }
         >
           <Surface {...props} />

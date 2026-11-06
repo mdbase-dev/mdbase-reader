@@ -1,4 +1,3 @@
-import { linksTo } from "@mdbase-dev/connect";
 import { sourceId } from "@mdbase-reader/core";
 import { expect, it, vi } from "vitest";
 
@@ -31,25 +30,23 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
       const value = pattern.exec(where)?.[1];
       return value === undefined ? undefined : (JSON.parse(value) as string);
     };
-    const id = quoted(/^id == ("[^"]*")$/u);
-    const target = quoted(/record\["source"\]\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
-    const unresolved = quoted(/source\.asFile\(\) == null && source\.contains\(("[^"]*")\)$/u);
-    const references = Object.keys(links);
-    const results =
-      id !== undefined
-        ? [{ path: sourcePath, effectiveFrontmatter: { id: "src_1" }, file: {}, types: [] }]
-        : references
-            .map((source, i) => ({
-              path: `annotations/${String(i)}.md`,
-              effectiveFrontmatter: { source },
-              file: {},
-              types: ["reader-annotation"],
-            }))
-            .filter(({ effectiveFrontmatter: { source } }) =>
-              target !== undefined
-                ? links[source] === target
-                : links[source] === null && source.includes(unresolved!),
-            );
+    const exactPath = quoted(/^file\.path == ("[^"]*")$/u);
+    const results = Object.keys(links)
+      .map((source, index) => ({
+        path: `annotations/${String(index)}.md`,
+        effectiveFrontmatter: { id: `ann_${String(index)}`, source },
+        file: {},
+        types: ["reader-annotation"],
+        ...(input.projections
+          ? {
+              values: {
+                reader_source_id:
+                  links[source] === sourcePath ? "src_1" : links[source] ? "other" : null,
+              },
+            }
+          : {}),
+      }))
+      .filter((record) => exactPath === undefined || record.path === exactPath);
     yield await Promise.resolve({ ok: true, value: { results }, diagnostics: [] });
   });
   const client = {
@@ -64,10 +61,17 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
     "annotations/2.md",
     "annotations/3.md",
   ]);
-  expect(queryPages).toHaveBeenCalledTimes(3);
-  expect(queryPages.mock.calls.map(([input]) => input.where)).toContain(
-    linksTo("source", sourcePath),
-  );
+  expect(queryPages).toHaveBeenCalledTimes(7);
+  expect(queryPages.mock.calls[0]?.[0]).toEqual({
+    types: ["reader-annotation"],
+    frontmatterMode: "effective",
+    includeBody: false,
+  });
+  expect(
+    queryPages.mock.calls
+      .slice(1)
+      .every(([input]) => input.projections && input.where?.startsWith("file.path ==")),
+  ).toBe(true);
   expect(queryPages).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining(options));
 
   sourcePath = "sources/Renamed.md";

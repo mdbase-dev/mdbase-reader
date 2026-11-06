@@ -10,9 +10,9 @@ import { useReaderFeedbackContext } from "./FeedbackRoot.js";
 import { bindHighlightSettings } from "./highlight-colors.js";
 import { importHref } from "./import-navigation.js";
 import { inspectorSourceForTab } from "./inspector-source.js";
-import { InspectorPane, type InspectorTab } from "./InspectorPane.js";
-import { lazyFeature } from "./lazy-feature.js";
+import { InspectorPane, preloadInspectorTools, type InspectorTab } from "./InspectorPane.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
+import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { OverlayPresence } from "./OverlayPresence.js";
 import { useReaderMdbase } from "./reader-collections.js";
@@ -35,6 +35,7 @@ import {
   useWorkspaceShellPreferences,
   type WorkspaceShellPreferencesController,
 } from "./use-workspace-shell-preferences.js";
+import { whenIdle } from "./when-idle.js";
 import { annotationDocumentTarget } from "./workspace-annotation-navigation.js";
 import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
@@ -101,11 +102,6 @@ interface PendingWorkspaceAnnotation {
   readonly sourceId: SourceId;
 }
 
-const LibraryWorkspace = lazyFeature(
-  async () => ({ default: (await import("./LibraryWorkspace.js")).LibraryWorkspace }),
-  "the library view",
-);
-
 /** Every open tab is listed; other groups show a few until the reader types. */
 const paletteShowsAll = ["Open tabs", "Sources"];
 
@@ -151,6 +147,7 @@ export function ReaderWorkspaceView({
     workspace.selectedSource,
   );
   const sourceToolsOpen = dock.isSidebarVisible("right");
+  useEffect(() => whenIdle(preloadInspectorTools), []);
   const mobile = useMediaQuery("(max-width: 680px)");
   const libraryOpen = dock.isSidebarVisible("left");
   useEffect(() => {
@@ -640,7 +637,10 @@ function useCommandsForView(
   return readerCommands({
     libraryViews: model.libraryViews.views,
     sources: model.library.sources,
-    activeSource: model.source,
+    activeSource:
+      model.sourceWorkspace.activeTab?.kind === "library"
+        ? model.workspace.selectedSource
+        : model.source,
     workspace: model.sourceWorkspace,
     sourceExport: model.sourceExport,
     removeSource: model.sourceRemoval.request,

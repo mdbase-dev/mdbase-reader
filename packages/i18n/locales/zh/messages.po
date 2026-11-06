@@ -1228,6 +1228,10 @@ msgstr "附件校验和不匹配（{0}）。未导入任何内容。"
 msgid "Attachment totals mismatch."
 msgstr "附件总数不匹配。"
 
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "ATTACHMENT_UPLOAD_SCOPE_CHANGED: Another upload is still attached to this session. This file’s transfer could not start."
+msgstr "ATTACHMENT_UPLOAD_SCOPE_CHANGED: 另一个上传仍关联着此会话。此文件的传输无法开始。"
+
 #: apps/reader/src/CitationContributors.tsx
 msgid "Author"
 msgstr "作者"
@@ -1545,6 +1549,10 @@ msgstr "更改键盘快捷键"
 msgid "Change needs attention"
 msgstr "更改需要处理"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Change reading status"
+msgstr "更改阅读状态"
+
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "已在其他位置更改"
@@ -1553,6 +1561,7 @@ msgstr "已在其他位置更改"
 msgid "Changes awaiting confirmation"
 msgstr "等待确认的更改"
 
+#: apps/reader/src/ReaderHeader.tsx
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "Changes need attention"
 msgstr "有更改需要处理"
@@ -2359,6 +2368,10 @@ msgstr "连接"
 msgid "Connection diagnostics"
 msgstr "连接诊断"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Contact support about this change. Keep this browser’s data."
+msgstr "请就此更改联系支持团队。请保留此浏览器的数据。"
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Container author"
@@ -2615,12 +2628,12 @@ msgid "Couldn’t change the colour."
 msgstr "无法更改颜色。"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Reconnect, then check pending changes and your library before trying again."
-msgstr "无法确认此文件是否已添加。请重新连接，然后检查待处理的更改和文献库，再重试。"
+msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
+msgstr "无法确认此文件是否已添加。请先检查待处理更改和资料库，再重试。"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Reconnect, then check pending changes in the header and your library before trying again."
-msgstr "无法确认此来源是否已添加。请重新连接，然后检查顶栏中的待处理更改和文献库，再重试。"
+msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
+msgstr "无法确认此资料是否已添加。请先检查页眉中的待处理更改和资料库，再重试。"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -3726,6 +3739,10 @@ msgid "File transfer failed."
 msgstr "文件传输失败。"
 
 #: apps/reader/src/SourceImportDialog.tsx
+msgid "File transferred · Pending confirmation"
+msgstr "文件已传输 · 等待确认"
+
+#: apps/reader/src/SourceImportDialog.tsx
 msgid "File transferred. Waiting for the collection to confirm it…"
 msgstr "文件已传输。正在等待资料集确认…"
 
@@ -4149,6 +4166,10 @@ msgstr "主持人"
 msgctxt "collection menu model"
 msgid "Hosted by mdbase"
 msgstr "由 mdbase 托管"
+
+#: apps/reader/src/SourceAddDialog.tsx
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: 集合尚未确认文件传输。请先检查待处理更改，再重试。"
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -4676,6 +4697,7 @@ msgid "Legislation"
 msgstr "法规"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Library"
 msgstr "文献库"
 
@@ -4724,6 +4746,10 @@ msgstr "文献库文本：已检查 {1} 个已保存网页中的 {0} 个{skipped
 msgctxt "LibraryWorkspace interface"
 msgid "Library view"
 msgstr "文献库视图"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Library views"
+msgstr "资料库视图"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgid "Library views and sources"
@@ -5371,6 +5397,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "报纸文章"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Next / previous source"
+msgstr "下一个 / 上一个资料"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "下一页"
@@ -5836,6 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "打开登录页面"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "打开来源"
@@ -6423,6 +6455,7 @@ msgstr "以"
 msgid "Preview the chapter citation with the book’s details"
 msgstr "使用书籍详情预览章节引文"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "上一页"
@@ -6884,6 +6917,10 @@ msgstr "Reader 工作区"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "Reader 对此集合的访问权限已更改。请审阅更新后的访问权限以继续。"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Reading"
+msgstr "阅读"
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Reading"
@@ -7162,6 +7199,7 @@ msgid "Remove source"
 msgstr "移除来源"
 
 #: apps/reader/src/LibraryRowMenu.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Remove source…"
 msgstr "移除来源…"
 
@@ -7178,6 +7216,10 @@ msgstr "已移除"
 #: apps/reader/src/use-source-removal.ts
 msgid "Removed “{0}”."
 msgstr "已移除“{0}”。"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Rename source"
+msgstr "重命名资料"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
@@ -7778,6 +7820,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "搜索来源并运行命令 · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Search this view"
 msgstr "在此视图中搜索"
 
@@ -7864,6 +7907,10 @@ msgstr "选择区域"
 #: apps/reader/src/import-controller.ts
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "请选择一个完整的数据包文件夹，且文件路径不得重复。"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Select source"
+msgstr "选择资料"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "Select text on the page to highlight it."
@@ -8344,6 +8391,10 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "开始"
 
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Start of document"
+msgstr "文档开头"
+
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Start of publication"
 msgstr "出版物开头"
@@ -8420,13 +8471,13 @@ msgstr "停止导入"
 msgid "Stopped"
 msgstr "已停止"
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "Stopped adding. Check pending changes before trying again."
+msgstr "已停止添加。请先检查待处理的更改，然后再重试。"
+
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
 msgstr "已停止。已提交的数据会保留。请使用相同的输入和目标位置继续；现有记录不会被覆盖。"
-
-#: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped. Nothing was added."
-msgstr "已停止。未添加任何内容。"
 
 #: packages/core/src/application/citation-citekey.ts
 msgid "Store the bare DOI rather than its https://doi.org/ URL."
@@ -8486,6 +8537,10 @@ msgstr "从集合菜单切换集合、管理访问权限或退出登录。"
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "切换集合？"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
+msgstr "同步需要处理。请在退出登录或清除此浏览器的数据之前联系支持人员。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -8684,8 +8739,12 @@ msgid "The collection connection changed. Try again."
 msgstr "集合连接已更改。请重试。"
 
 #: apps/reader/src/ReaderSaveStatus.tsx
-msgid "The collection refused some changes. Review them before signing out."
-msgstr "资料集拒绝了部分更改。请在退出登录前检查。"
+msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
+msgstr "集合拒绝了部分更改。其他更改仍在此设备上等待确认。请在退出登录之前检查这些更改。"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "The collection refused these changes. Review them before signing out."
+msgstr "集合拒绝了这些更改。请在退出登录之前检查这些更改。"
 
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
@@ -8913,6 +8972,10 @@ msgid "These apply only to Reader in this browser."
 msgstr "这些设置仅适用于此浏览器中的 Reader。"
 
 #: apps/reader/src/ReaderSaveStatus.tsx
+msgid "These changes are still pending on this device. Waiting for the collection to confirm them."
+msgstr "这些更改仍在此设备上等待确认。正在等待集合确认。"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
 msgid "These changes have not reached the collection. This browser may remove its local copy."
 msgstr "这些更改尚未到达资料集。此浏览器可能会删除其本地副本。"
 
@@ -8952,6 +9015,10 @@ msgstr "此注释没有规范路径和修订版本。"
 #: apps/reader/src/annotation-navigation.ts
 msgid "This annotation has no supported link to a passage. Its text and original metadata are preserved."
 msgstr "此注释没有受支持的段落链接。其文本和原始元数据已保留。"
+
+#: apps/reader/src/errors.ts
+msgid "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support."
+msgstr "此批注查询过大。请打开单个来源的笔记后重试。如果仍然失败，请联系支持团队。"
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."
@@ -9114,6 +9181,10 @@ msgstr "此文件已更改。章节范围属于较早的修订版本，无法应
 #: packages/core/src/application/source-records.ts
 msgid "This file is already attached here."
 msgstr "此文件已附加在这里。"
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "This file wasn’t added. Close this and try again."
+msgstr "此文件未添加。请关闭此窗口后重试。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
@@ -9323,6 +9394,7 @@ msgid "Toggle Pointer Mode"
 msgstr "切换指针模式"
 
 #: apps/reader/src/reader-command-list.ts
+#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "切换来源侧边栏"
@@ -9762,10 +9834,6 @@ msgstr "正在 mdbase 标签页中等待批准…"
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "正在等待活动标签页"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Waiting for the collection to confirm these changes."
-msgstr "正在等待资料集确认这些更改。"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "We couldn’t check whether this page is already saved. Saving checks again."

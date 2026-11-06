@@ -363,6 +363,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.mdbase-select-chevron,
+.mdbase-select.is-quiet {
+  transition-timing-function: var(--ease-out);
+}
+.library-navigator svg {
+  width: 16px;
+  height: 16px;
+}
 
 .reader-header-actions {
   display: flex;
@@ -678,8 +686,7 @@
 }
 .navigator-view-section > div > button[aria-current="page"] {
   color: var(--accent);
-  background: var(--active);
-  box-shadow: inset 2px 0 var(--accent);
+  background: var(--selected);
 }
 
 .navigator-view-section button svg {
@@ -1410,11 +1417,11 @@
 }
 
 .library-column-header.is-drop-before {
-  box-shadow: inset 2px 0 var(--accent);
+  background: var(--selected);
 }
 
 .library-column-header.is-drop-after {
-  box-shadow: inset -2px 0 var(--accent);
+  background: var(--selected);
 }
 
 .library-column-header.is-add {
@@ -1891,23 +1898,9 @@
   }
 }
 
-.inspector-tabs button::after {
-  content: "";
-  position: absolute;
-  right: 8px;
-  bottom: 0;
-  left: 8px;
-  height: 2px;
-  border-radius: 1px;
-  background: transparent;
-}
-
 .inspector-tabs button[aria-selected="true"] {
   color: var(--ink);
-}
-
-.inspector-tabs button[aria-selected="true"]::after {
-  background: var(--accent);
+  background: var(--selected);
 }
 
 .inspector-tabs button:disabled {
@@ -3559,6 +3552,28 @@
   }
   .reader-notices {
     bottom: calc(64px + env(safe-area-inset-bottom));
+    width: calc(100% - 32px);
+    align-items: stretch;
+  }
+  .reader-notices .highlight-saved {
+    min-height: 44px;
+    height: auto;
+    padding-block: 8px;
+  }
+  .reader-notices .highlight-saved > [role="status"] {
+    flex: 1;
+    min-width: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .reader-notices .highlight-saved > button {
+    flex: none;
+  }
+  .reader-header-context:has(.reader-save-status) > .connection-state {
+    display: none;
   }
 }
 
@@ -3881,7 +3896,13 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .highlight-saved {
-    animation: composer-appear 220ms var(--ease-out) both;
+    transition:
+      opacity 220ms var(--ease-out),
+      translate 220ms var(--ease-out);
+    @starting-style {
+      opacity: 0;
+      translate: 0 8px;
+    }
   }
 }
 

@@ -8,6 +8,7 @@
     "build": "node scripts/package-zotero.mjs && pnpm manifest && pnpm manifest:validate && vite build && node scripts/check-bundle.mjs",
     "build:report": "READER_BUNDLE_REPORT=1 pnpm build",
     "build:lab": "VITE_MDBASE_ENV=lab MDBASE_READER_ORIGIN=https://lab.mdbase-reader.pages.dev pnpm build",
+    "build:feedback-test": "VITE_MDBASE_FEEDBACK_URL=http://127.0.0.1:8891/v1/feedback VITE_MDBASE_ENV=lab pnpm build",
     "deploy:dev": "node scripts/deploy-pages.mjs",
     "deploy:prod": "MDBASE_READER_DEPLOY_TARGET=production node scripts/deploy-pages.mjs",
     "dev": "VITE_MDBASE_ENV=lab MDBASE_READER_ORIGIN=http://127.0.0.1:5173 pnpm dev:lab",
@@ -23,13 +24,14 @@
     "test:pdf-touch": "node scripts/run-pdf-touch-audits.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test:a11y": "node scripts/audit-accessibility.mjs",
-    "test:polish": "node scripts/polish-browser-test.mjs && node scripts/polish-round6-test.mjs && node scripts/polish-round6-focus-test.mjs"
+    "test:polish": "node scripts/polish-browser-test.mjs && node scripts/polish-round6-test.mjs && node scripts/polish-round6-focus-test.mjs && node scripts/polish-round7-test.mjs",
+    "test:lab:write": "node scripts/polish-live-lab-test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/source-serif-4": "^5.3.1",
-    "@mdbase-dev/sdk": "file:../../packages/connect/vendor/sdk-4370800f-production-beta156.tgz",
-    "@mdbase-dev/sdk-lab": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-lab.tgz",
-    "@mdbase-dev/sdk-staging": "file:../../packages/connect/vendor/sdk-dev-eaa4e697-staging.tgz",
+    "@mdbase-dev/sdk": "0.1.0-beta.157",
+    "@mdbase-dev/sdk-lab": "file:../../packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz",
+    "@mdbase-dev/sdk-staging": "file:../../packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz",
     "@mdbase-dev/i18n": "0.1.0-beta.149",
     "@citation-js/plugin-csl": "0.9.0",
     "@lingui/core": "6.10.1",

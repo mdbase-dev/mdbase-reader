@@ -2,7 +2,9 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useContext, useSyncExternalStore, type JSX } from "react";
 
 import { Menu } from "./Menu.js";
+import { sdkSyncIncidents } from "./sdk-connection-state.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
+import { useSustained } from "./use-sustained.js";
 
 import type { Mdbase } from "@mdbase-reader/connect/native";
 
@@ -27,13 +29,17 @@ export function ReaderSaveStatus({
     () => null,
   );
   const writes = snapshot?.writes;
+  const incidents = sdkSyncIncidents(snapshot);
+  const oldest = Math.min(...(writes?.pending.map((entry) => entry.createdAt) ?? []));
+  const stalled = useSustained(Boolean(writes?.pending.length), 30_000, oldest);
   if (!writes || (!writes.pending.length && !writes.rejected.length)) {
     return null;
   }
   const entries = [...writes.pending, ...writes.rejected];
-  const label = writes.rejected.length
-    ? t`Changes need attention`
-    : t`${String(writes.pending.length)} pending`;
+  const label =
+    writes.rejected.length || incidents.length
+      ? t`Changes need attention`
+      : t`${String(writes.pending.length)} pending`;
   return (
     <Menu
       className="reader-save-status"
@@ -42,13 +48,13 @@ export function ReaderSaveStatus({
       triggerClassName="reader-save-trigger"
     >
       <div className="reader-save-details">
-        <p role="status">
-          {writes.rejected.length
-            ? t`The collection refused some changes. Review them before signing out.`
-            : snapshot.saveWarning
-              ? t`These changes have not reached the collection. This browser may remove its local copy.`
-              : t`Waiting for the collection to confirm these changes.`}
-        </p>
+        <SaveStatusMessage
+          incidents={incidents.length}
+          pending={writes.pending.length}
+          refused={writes.rejected.length}
+          storageWarning={Boolean(snapshot.saveWarning)}
+        />
+        <SyncIncidentList incidents={incidents} />
         <ul>
           {entries.map((entry) => (
             <li key={entry.mutationId}>
@@ -77,6 +83,11 @@ export function ReaderSaveStatus({
                 </summary>
                 <code>{entry.mutationId}</code>
                 {entry.problem ? <p>{entry.problem.message}</p> : null}
+                {entry.problem?.recovery === "contact_support" ? (
+                  <p>
+                    <Trans>Contact support about this change. Keep this browser’s data.</Trans>
+                  </p>
+                ) : null}
                 {entry.records.length ? (
                   <small>
                     {t`Record or file`}: {entry.records.join(", ")}
@@ -86,12 +97,82 @@ export function ReaderSaveStatus({
             </li>
           ))}
         </ul>
-        {connected ? (
+        {connected || stalled || incidents.length || writes.rejected.length ? (
           <button type="button" onClick={() => window.location.reload()}>
             <Trans>Reload Reader to check again</Trans>
           </button>
         ) : null}
       </div>
     </Menu>
+  );
+}
+
+function SaveStatusMessage({
+  incidents,
+  pending,
+  refused,
+  storageWarning,
+}: {
+  readonly incidents: number;
+  readonly pending: number;
+  readonly refused: number;
+  readonly storageWarning: boolean;
+}): JSX.Element {
+  const { t } = useLingui();
+  const message = refused
+    ? pending
+      ? t`The collection refused some changes. Other changes are still pending on this device. Review them before signing out.`
+      : t`The collection refused these changes. Review them before signing out.`
+    : storageWarning
+      ? t`These changes have not reached the collection. This browser may remove its local copy.`
+      : t`These changes are still pending on this device. Waiting for the collection to confirm them.`;
+  return (
+    <p role="status">
+      {message}
+      {incidents ? (
+        <>
+          {" "}
+          <Trans>
+            Sync needs attention. Contact support before signing out or clearing this browser’s
+            data.
+          </Trans>
+        </>
+      ) : null}
+    </p>
+  );
+}
+
+function SyncIncidentList({
+  incidents,
+}: {
+  readonly incidents: ReturnType<typeof sdkSyncIncidents>;
+}): JSX.Element | null {
+  if (!incidents.length) {
+    return null;
+  }
+  return (
+    <ul className="reader-sync-incidents">
+      {incidents.map((incident, index) => {
+        const details = incident.details;
+        const fields: JSX.Element[] = [];
+        if (details instanceof Map) {
+          for (const [key, value] of details) {
+            if (
+              typeof key === "string" &&
+              ["service_code", "code", "reason"].includes(key) &&
+              typeof value === "string"
+            ) {
+              fields.push(<code key={key}>{value}</code>);
+            }
+          }
+        }
+        return (
+          <li key={`${incident.kind}-${String(index)}`}>
+            <code>{incident.kind}</code>
+            {fields}
+          </li>
+        );
+      })}
+    </ul>
   );
 }

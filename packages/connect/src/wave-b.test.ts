@@ -12,6 +12,7 @@ import type {
   QueryInput,
   QueryMetadataInput,
   QueryMetadataPage,
+  QueryPage,
   ReadManyRecord,
 } from "@mdbase-dev/connect";
 
@@ -23,7 +24,9 @@ function fixture(count = 2): {
   records: ReadManyRecord[];
   readMany: Mock<ReaderConnectClient["readMany"]>;
   queryPages: Mock<
-    (input: QueryInput | QueryMetadataInput) => AsyncGenerator<ConnectOutcome<QueryMetadataPage>>
+    (
+      input: QueryInput | QueryMetadataInput,
+    ) => AsyncGenerator<ConnectOutcome<QueryMetadataPage | QueryPage>>
   >;
   read: Mock<ReaderConnectClient["read"]>;
   repository: ConnectAnnotationRepository;
@@ -50,22 +53,29 @@ function fixture(count = 2): {
   );
   const queryPages = vi.fn(async function* (
     input: QueryInput | QueryMetadataInput,
-  ): AsyncGenerator<ConnectOutcome<QueryMetadataPage>> {
-    expect(input.output).toBe("metadata");
+  ): AsyncGenerator<ConnectOutcome<QueryMetadataPage | QueryPage>> {
+    if (input.output !== "metadata") {
+      expect(input.select).toBeUndefined();
+      expect(input.projections).toBeUndefined();
+      yield ok({ results: records, page: 0, offset: 0, loaded: records.length, complete: true });
+      return;
+    }
     const results = input.where?.startsWith("id ==")
       ? [{ path: "sources/one.md", types: [], revision: "source-rev", values: { id: "src_1" } }]
       : input.where?.includes('record["source"]')
         ? []
-        : records.map((record) => ({
-            path: record.path,
-            revision: record.revision!,
-            types: record.types,
-            values: {
-              id: String(record.effectiveFrontmatter!["id"]),
-              source: "src_1",
-              reader_source_id: null,
-            },
-          }));
+        : records
+            .filter((record) => input.where === `file.path == ${JSON.stringify(record.path)}`)
+            .map((record) => ({
+              path: record.path,
+              revision: record.revision!,
+              types: record.types,
+              values: {
+                id: String(record.effectiveFrontmatter!["id"]),
+                source: record.effectiveFrontmatter!["source"],
+                reader_source_id: null,
+              },
+            }));
     yield await Promise.resolve(
       ok({
         output: "metadata" as const,
@@ -144,35 +154,15 @@ describe("wave B annotation hydration", () => {
   });
 
   it("re-evaluates a source reference changed during hydration", async () => {
-    const { repository, records, queryPages, read } = fixture(1);
-    const original = queryPages.getMockImplementation()!;
-    queryPages.mockImplementation(async function* (input) {
-      if (input.where?.startsWith("file.path ==")) {
-        yield ok({
-          output: "metadata" as const,
-          results: [
-            {
-              path: records[0]!.path,
-              revision: "moved-rev",
-              types: [],
-              values: { source: "src_2", reader_source_id: "src_2" },
-            },
-          ],
-          page: 0,
-          offset: 0,
-          loaded: 1,
-          complete: true,
-        });
-      } else {
-        yield* original(input);
-        if (input.where?.includes("contains")) {
-          records[0] = {
-            ...records[0]!,
-            revision: "moved-rev",
-            effectiveFrontmatter: { ...records[0]!.effectiveFrontmatter, source: "src_2" },
-          };
-        }
-      }
+    const { repository, records, readMany, read } = fixture(1);
+    const hydrate = readMany.getMockImplementation()!;
+    readMany.mockImplementation((paths, options) => {
+      records[0] = {
+        ...records[0]!,
+        revision: "moved-rev",
+        effectiveFrontmatter: { ...records[0]!.effectiveFrontmatter, source: "src_2" },
+      };
+      return hydrate(paths, options);
     });
     expect(await repository.listForSource(collection, sourceId("src_1"))).toEqual([]);
     expect(read).not.toHaveBeenCalled();

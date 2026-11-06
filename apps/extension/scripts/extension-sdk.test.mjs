@@ -13,7 +13,7 @@ const repo = new URL("../../../", import.meta.url).pathname;
 async function packagedTrust(sdk) {
   const entry = sdk.aliases.find((alias) => alias.find.test("@mdbase-dev/sdk")).replacement;
   let root = dirname(entry);
-  while (!root.endsWith("/@mdbase-dev/sdk")) {
+  while (!/@mdbase-dev\/sdk(?:-lab|-staging)?$/u.test(root)) {
     assert.notEqual(root, dirname(root), "SDK alias outside an installed package");
     root = dirname(root);
   }
@@ -29,7 +29,11 @@ test("each extension build resolves its own environment's packaged SDK", async (
     const name = target === "production" ? "@mdbase-dev/sdk" : "@mdbase-dev/sdk-" + target;
     assert.equal(sdk.receipt.environment, target);
     assert.equal(sdk.receipt.cpOrigin, readerDeployments[target].connectUrl);
-    assert.ok(extension.dependencies[name].endsWith(sdk.receipt.artifact));
+    if (target === "production") {
+      assert.equal(extension.dependencies[name], "0.1.0-beta.157");
+    } else {
+      assert.ok(extension.dependencies[name].endsWith(sdk.receipt.artifact));
+    }
     // The same original Reader's web build bundles for this environment.
     assert.equal(extension.dependencies[name], reader.dependencies[name]);
     const trust = await packagedTrust(sdk);

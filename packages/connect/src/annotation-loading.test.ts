@@ -145,9 +145,8 @@ describe("progressive scoped annotation loading", () => {
     const documents = Array.from({ length: 205 }, (_, index) => document(index));
     const { repo, queryPages } = repository(documents);
     await repo.listAll(collection, { paths: new Set(documents.map((entry) => entry.path)) });
-    expect(queryPages).toHaveBeenCalledTimes(3);
-    expect(queryPages.mock.calls.map(([input]) => input.where?.split(" || ").length)).toEqual([
-      100, 100, 5,
-    ]);
+    const discovery = queryPages.mock.calls.filter(([input]) => !input.projections);
+    expect(discovery).toHaveLength(3);
+    expect(discovery.map(([input]) => input.where?.split(" || ").length)).toEqual([100, 100, 5]);
   });
 });

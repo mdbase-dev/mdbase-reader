@@ -89,14 +89,18 @@ export function DocumentWorkspace({
         // Activation by a click or Tab inside the pane leaves focus on that control.
         if (!host.current?.contains(host.current.ownerDocument.activeElement)) {
           if (host.current) {
-            focusReadingPane(host.current);
+            if (tab.kind === "library" && !host.current.querySelector("[data-active-row]")) {
+              host.current.focus({ preventScroll: true });
+            } else {
+              focusReadingPane(host.current);
+            }
           }
         }
       });
       return () => cancelAnimationFrame(frame);
     }
     return undefined;
-  }, [document, focused, visible]);
+  }, [document, focused, visible, tab.kind]);
   useEffect(() => {
     const pane = host.current;
     if (!pane) {

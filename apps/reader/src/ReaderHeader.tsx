@@ -334,13 +334,15 @@ function ConnectionState({
 }
 
 /** saved_on_device: the SDK keeps changes on this device until it can sync them. */
-export type ReaderConnectionState = "connected" | "offline" | "syncing" | "saved_on_device" | null;
+export type ReaderConnectionState =
+  "connected" | "offline" | "syncing" | "saved_on_device" | "attention" | null;
 
 export const connectionLabels = {
   connected: "Connected",
   offline: "Offline",
   syncing: "Syncing…",
   saved_on_device: "Saved on this device; waiting for sync",
+  attention: "Changes need attention",
 } as const;
 
 function PlainConnectionState({
@@ -354,6 +356,7 @@ function PlainConnectionState({
     offline: t`Offline`,
     syncing: t`Syncing…`,
     saved_on_device: t`Saved on this device; waiting for sync`,
+    attention: t`Changes need attention`,
   };
   // Connected is the normal state: a quiet dot, with the words kept for assistive technology.
   return (

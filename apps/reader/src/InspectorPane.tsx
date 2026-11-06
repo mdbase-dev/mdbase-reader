@@ -1,7 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useCallback, useEffect, useState, type JSX } from "react";
+import { useCallback, useState, type JSX } from "react";
 
 import { AnnotationEditingContext } from "./AnnotationEditingContext.js";
 import { AnnotationList } from "./AnnotationList.js";
@@ -11,7 +11,6 @@ import { requestConfirmation } from "./confirmation.js";
 import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { publishSharedAnnotation } from "./shared-annotation-resource.js";
-import { whenIdle } from "./when-idle.js";
 
 import type { AnnotationFileReader } from "./AnnotationImage.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
@@ -27,6 +26,12 @@ const SourceNoteEditor = lazyFeature(
   async () => ({ default: (await import("./SourceNoteEditor.js")).SourceNoteEditor }),
   "the source note editor",
 );
+
+export function preloadInspectorTools(): void {
+  CitationEditor.preload();
+  SourceNoteEditor.preload();
+  preloadCitations();
+}
 
 export type InspectorTab = "note" | "annotations" | "citation";
 
@@ -62,16 +67,6 @@ export function InspectorPane({
   onOpenSourceView,
 }: InspectorPaneProps): JSX.Element {
   const { t } = useLingui();
-  const sourceId = source?.id;
-  useEffect(() => {
-    if (!sourceId) {
-      return undefined;
-    }
-    return whenIdle(() => {
-      CitationEditor.preload();
-      preloadCitations();
-    });
-  }, [sourceId]);
   return (
     <aside
       id="reader-source-tools"

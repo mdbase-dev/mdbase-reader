@@ -18,7 +18,7 @@ export async function intakeCopy(target = "staging") {
     const lock = parseYaml(await readFile("pnpm-lock.yaml", "utf8"));
     const uiIntegrity = lock.packages[`@mdbase-dev/ui@${uiVersion}`].resolution.integrity;
     const liveSdk = JSON.parse(
-      await readFile("packages/connect/vendor/sdk-production-beta156.json", "utf8"),
+      await readFile("packages/connect/vendor/sdk-production-beta157.json", "utf8"),
     );
     const approvedSdk = JSON.parse(
       await readFile("packages/connect/vendor/sdk-production-beta141.json", "utf8"),
@@ -56,6 +56,11 @@ export async function intakeCopy(target = "staging") {
     replacements.push(
       [currentSdk.split("/").at(-1), intakeSdk.split("/").at(-1)],
       [sri(await readFile(currentSdk)), sri(await readFile(intakeSdk))],
+      ["@mdbase-dev/sdk@0.1.0-beta.157", `@mdbase-dev/sdk@file:${intakeSdk}`],
+      [
+        `resolution: {integrity: ${sri(await readFile(intakeSdk))}}`,
+        `resolution: {integrity: ${sri(await readFile(intakeSdk))}, tarball: file:${intakeSdk}}`,
+      ],
     );
     for (const path of paths.filter((path) => /(?:package\.json|pnpm-lock\.yaml)$/.test(path))) {
       let bytes = await readFile(join(root, path), "utf8");
@@ -65,6 +70,12 @@ export async function intakeCopy(target = "staging") {
         if (pkg.dependencies?.["@mdbase-dev/ui"]) {
           pkg.dependencies["@mdbase-dev/ui"] = `file:../../${approvedUiArchive}`;
         }
+        if (pkg.dependencies?.["@mdbase-dev/sdk"]) {
+          const relative = path.startsWith("apps/")
+            ? "../../" + intakeSdk
+            : "vendor/" + intakeSdk.split("/").at(-1);
+          pkg.dependencies["@mdbase-dev/sdk"] = "file:" + relative;
+        }
         bytes = JSON.stringify(pkg, null, 2) + "\n";
       } else {
         // Only disposable historical UI importer entries become file pins;
@@ -72,6 +83,14 @@ export async function intakeCopy(target = "staging") {
         bytes = bytes.replace(
           /('@mdbase-dev\/ui':\n {8}specifier: )[^\n]+\n {8}version: [^(\n]+/g,
           `$1file:../../${approvedUiArchive}\n        version: file:${approvedUiArchive}`,
+        );
+        bytes = bytes.replace(
+          /('@mdbase-dev\/sdk':\n {8}specifier: )[^\n]+\n {8}version: [^(\n]+/g,
+          `$1file:../../${intakeSdk}\n        version: file:${intakeSdk}`,
+        );
+        bytes = bytes.replace(
+          /(\n {2}packages\/connect:\n[\s\S]*?'@mdbase-dev\/sdk':\n {8}specifier: )[^\n]+/,
+          `$1file:vendor/${intakeSdk.split("/").at(-1)}`,
         );
       }
       await writeFile(join(root, path), bytes);

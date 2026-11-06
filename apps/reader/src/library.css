@@ -37,7 +37,7 @@
   min-width: 0;
   flex: 1 1 auto;
   display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   align-items: start;
   gap: var(--sp-4);
   padding: var(--sp-3);
@@ -71,6 +71,16 @@
 .library-workspace .continue-reading-card:not(:has(.source-thumbnail)) {
   grid-template-columns: minmax(0, 1fr);
 }
+.continue-reading-card .source-thumbnail {
+  height: 64px;
+  width: 48px;
+}
+.continue-reading-card .source-thumbnail-title {
+  display: none;
+}
+.library-table-frame[data-clipped="true"] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 12px), transparent);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .library-workspace .continue-reading-card:hover {
@@ -80,7 +90,7 @@
 
 .library-workspace .continue-reading-copy {
   min-width: 0;
-  min-height: 100px;
+  min-height: 64px;
   display: flex;
   flex-direction: column;
   gap: var(--sp-0-5);
@@ -118,7 +128,7 @@
   font-style: italic;
   line-height: 19px;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
 }
 
 .library-workspace .continue-reading-progress {
@@ -213,15 +223,6 @@
   color: var(--text-3);
   font-size: var(--text-xs);
   line-height: var(--lh-xs);
-}
-
-/* A book has a spine; a saved page has a browser's top edge. */
-.source-thumbnail.is-epub:not(.has-image)::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 5px;
-  width: 1px;
-  background: var(--line-strong);
 }
 
 .source-thumbnail.is-web:not(.has-image) {

@@ -63,6 +63,31 @@ test("Skip to sources reaches cards in Visual library", async () => {
   }
 });
 
+test("row context menus stay open without outer-pane scrolling (12 pointer trials)", async () => {
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const page = await browser.newPage({ viewport: { width: 1042, height: 662 } });
+    try {
+      await page.goto(origin);
+      await page.locator('.library-table[aria-label="Sources"]').waitFor();
+      await page.clock.install();
+      await page.evaluate(() => {
+        globalThis.window.dispatchEvent(new Event("beforeinstallprompt", { cancelable: true }));
+        globalThis.window.dispatchEvent(new Event("mdbase:reader-document-opened"));
+      });
+      await page.clock.runFor(30001);
+      await expect(page.locator(".pwa-install")).toBeVisible();
+      await page.locator('.library-table-row[data-row-index="0"]').click({ button: "right" });
+      const remove = page.getByRole("menuitem", { name: "Remove source…", exact: true });
+      await expect(remove).toBeVisible();
+      assert.equal(await page.locator(".reader-main").evaluate((element) => element.scrollLeft), 0);
+      await page.keyboard.press("Escape");
+      await expect(remove).toBeHidden();
+    } finally {
+      await page.close();
+    }
+  }
+});
+
 test("Skip to sources reaches the results region for empty Table, Cards and text search", async () => {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
   try {

@@ -1,6 +1,7 @@
 import { useState, type JSX, type ReactNode } from "react";
 
 import { HeaderCell } from "./LibraryTableHeader.js";
+import { useRovingControls } from "./use-roving-controls.js";
 import { clampWidth, type ColumnsTable } from "./use-table-columns.js";
 
 import type { RowData } from "@tanstack/react-table";
@@ -36,6 +37,7 @@ export function TableHeadRow<Row extends RowData>({
   readonly trailing?: ReactNode;
 }): JSX.Element {
   const ids = columns.map(({ id }) => id);
+  const controls = useRovingControls();
   const [dragging, setDragging] = useState<string | null>(null);
   const [drop, setDrop] = useState<{ column: string; side: "before" | "after" } | null>(null);
   const headers = table.getHeaderGroups()[0]?.headers ?? [];
@@ -56,6 +58,7 @@ export function TableHeadRow<Row extends RowData>({
     <div role="rowgroup" className="library-table-head">
       <div
         className="library-table-row is-header"
+        ref={controls}
         role="row"
         aria-rowindex={1}
         style={{ gridTemplateColumns }}

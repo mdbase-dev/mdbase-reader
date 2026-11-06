@@ -7,7 +7,14 @@
 }
 @media (max-width: 680px) {
   .library-part-spacer {
-    width: 44px;
+    display: none;
+  }
+  .library-table-row[aria-level="1"] > .is-title {
+    padding-inline-start: 8px !important;
+  }
+  .library-table-row > .is-title .library-part-disclosure {
+    order: 2;
+    margin-inline-start: auto;
   }
 }
 .library-part-disclosure {

@@ -103,7 +103,7 @@ function NavigatorViews({
   return (
     <section className="navigator-view-section">
       {viewsLoading ? (
-        <p role="status">
+        <p role="status" className="sr-only">
           <Trans>Loading views…</Trans>
         </p>
       ) : null}

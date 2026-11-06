@@ -85,7 +85,7 @@ function collectionOf(
           (record) =>
             !target(record) && String(record.effectiveFrontmatter["source"]).includes(unresolved),
         );
-      } else if (onePath !== undefined || (!where && input.projections)) {
+      } else if (onePath !== undefined || !where) {
         results = annotations.filter((record) => onePath === undefined || record.path === onePath);
       } else {
         throw new Error(`Unexpected query: ${JSON.stringify(input)}`);
@@ -141,7 +141,7 @@ describe("annotation source links", () => {
     // readMany fetched the bodies; the individual reads above each resolved the source again.
     expect(
       queries.filter((query) => query.where === 'file.path == "annotations/ann_1.md"'),
-    ).toHaveLength(2);
+    ).toHaveLength(6);
     expect(() => annotationFromDocument(collection, source)).toThrow();
   });
 

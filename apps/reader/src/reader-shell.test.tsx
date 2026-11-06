@@ -111,7 +111,7 @@ describe("command palette", () => {
       setDensity: () => undefined,
     } as unknown as ReaderCommandInput;
     const commands = readerCommands(input);
-    expect(matchingCommands(commands, "Visual library")[0]?.group).toBe("Current source");
+    expect(matchingCommands(commands, "Visual library")[0]?.group).toBe("Library views");
     const openSettings = vi.fn();
     const configured = readerCommands({ ...input, openSettings });
     matchingCommands(configured, "settings")[0]?.run();
