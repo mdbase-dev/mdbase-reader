@@ -8,6 +8,47 @@ assert.ok(
 );
 const browser = await chromium.launch({ headless: true });
 const evidence = [];
+
+async function paintedPixels(page, icon) {
+  const box = await icon.boundingBox();
+  const painted = await page.screenshot({ clip: box });
+  await icon.evaluate((element) => {
+    element.style.visibility = "hidden";
+  });
+  const blank = await page.screenshot({ clip: box });
+  await icon.evaluate((element) => {
+    element.style.removeProperty("visibility");
+  });
+  return page.evaluate(
+    async ([painted, blank]) => {
+      const pixels = async (bytes) => {
+        const image = new globalThis.Image();
+        image.src = `data:image/png;base64,${bytes}`;
+        await image.decode();
+        const canvas = globalThis.document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+        return context.getImageData(0, 0, image.width, image.height).data;
+      };
+      const before = await pixels(painted);
+      const after = await pixels(blank);
+      let changed = 0;
+      for (let offset = 0; offset < before.length; offset += 4) {
+        if (
+          before
+            .slice(offset, offset + 3)
+            .some((value, channel) => Math.abs(value - after[offset + channel]) > 12)
+        )
+          changed += 1;
+      }
+      return changed;
+    },
+    [painted.toString("base64"), blank.toString("base64")],
+  );
+}
+
 try {
   for (const width of [1440, 390]) {
     for (const colorScheme of ["light", "dark"]) {
@@ -23,6 +64,13 @@ try {
         await expect(page.locator(".workspace-pane.is-focused")).toBeFocused();
         const result = { width, colorScheme, reducedMotion };
         if (width === 1440) {
+          result.glyphPixels = [];
+          for (const icon of await page.locator(".navigator-view-section button > svg").all()) {
+            const pixels = await paintedPixels(page, icon);
+            assert.ok(pixels >= 12, `Invisible sidebar glyph: ${pixels} painted pixels`);
+            result.glyphPixels.push(pixels);
+          }
+          assert.equal(result.glyphPixels.length, 3);
           result.activeFill = await page
             .locator('.navigator-view-section button[aria-current="page"]')
             .evaluate(async (element) => {
@@ -162,12 +210,20 @@ try {
           "Delete",
           "Enter",
           "/",
-          "[",
-          "?",
           "PageDown / Space",
           "Ctrl+Home",
         ])
           assert.ok(result.shortcuts.includes(key), key);
+        for (const [label, alias] of [
+          ["Keyboard shortcuts", "?"],
+          ["Toggle Sources sidebar", "["],
+        ]) {
+          const entry = dialog
+            .locator("dl > div")
+            .filter({ has: page.locator("dt", { hasText: label }) });
+          await expect(entry).toHaveCount(1);
+          assert.ok((await entry.locator("kbd").textContent()).includes(alias));
+        }
         await page.keyboard.press("Tab");
         const close = dialog.getByRole("button", { name: "Close", exact: true });
         await expect(close).toBeFocused();

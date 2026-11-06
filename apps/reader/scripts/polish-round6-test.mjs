@@ -25,15 +25,30 @@ async function layoutAndTouchEvidence() {
   const firstNotes = await sampleAction(desktop, () => notes.click(), ".library-table");
   evidence.firstNotesMotion = firstNotes
     .flatMap(({ animations }) => animations)
-    .filter(({ property, edge }) => property === "transform" && edge === "right");
+    .filter(({ property, edge }) => property === "width" && edge === "right");
   assert.ok(evidence.firstNotesMotion.some(({ duration }) => duration === 220));
   await notes.click();
   await desktop.waitForTimeout(250);
   const laterNotes = await sampleAction(desktop, () => notes.click(), ".library-table");
   evidence.laterNotesMotion = laterNotes
     .flatMap(({ animations }) => animations)
-    .filter(({ property, edge }) => property === "transform" && edge === "right");
+    .filter(({ property, edge }) => property === "width" && edge === "right");
   assert.ok(evidence.laterNotesMotion.some(({ duration }) => duration === 220));
+  evidence.notesOpeningWidths = [firstNotes, laterNotes].map((samples) =>
+    samples
+      .filter(({ notes }) => notes && notes.visibility === "visible" && !notes.closing)
+      .map(({ notes }) => notes.width),
+  );
+  for (const widths of evidence.notesOpeningWidths) {
+    assert.ok(
+      widths.some((width) => width > 0 && width < 320),
+      JSON.stringify(widths),
+    );
+    assert.ok(
+      widths.some((width) => width >= 339),
+      JSON.stringify(widths),
+    );
+  }
   assert.ok(
     [...evidence.firstNotesMotion, ...evidence.laterNotesMotion].every(
       ({ easing }) => easing === "cubic-bezier(0.22, 1, 0.36, 1)",

@@ -74,8 +74,8 @@
 .annotation-source-chip svg {
   position: absolute;
   right: 7px;
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
   pointer-events: none;
 }
 @media (forced-colors: active) {

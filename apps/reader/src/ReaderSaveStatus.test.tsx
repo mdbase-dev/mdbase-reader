@@ -34,7 +34,7 @@ it("offers a reload for old pending writes even while syncing", async () => {
     },
   };
   root = createRoot(host);
-  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} connected={false} />));
+  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
   await act(() => vi.advanceTimersByTime(29_999));
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
@@ -72,7 +72,7 @@ it("shows the actual pending change and drops the warning only when the ledger d
   act(() =>
     root.render(
       <SourceLibraryContext value={[source]}>
-        <ReaderSaveStatus mdbase={mdbase} connected={false} />
+        <ReaderSaveStatus mdbase={mdbase} online={true} />
       </SourceLibraryContext>,
     ),
   );
@@ -81,7 +81,12 @@ it("shows the actual pending change and drops the warning only when the ledger d
   expect(host.textContent).toContain("1 pending");
   expect(host.textContent).toContain("owned-write");
   expect(host.textContent).toContain("owned-file");
-  expect(host.querySelector(".reader-save-details li > span")?.textContent).toBe("An owned source");
+  expect(host.querySelector(".reader-save-details li > strong")?.textContent).toBe(
+    "Changes to An owned source",
+  );
+  expect(host.querySelector(".reader-save-details li > span")?.textContent).toBe(
+    "Waiting for confirmation",
+  );
   expect(host.textContent).toContain("This browser may remove its local copy");
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
   expect(host.querySelector(".reader-save-details li details")?.hasAttribute("open")).toBe(false);
@@ -92,11 +97,46 @@ it("shows the actual pending change and drops the warning only when the ledger d
   expect(host.querySelector("details")).toBeNull();
 });
 
+it("stays calm offline and starts the stalled timer only on reconnect", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.useFakeTimers();
+  const host = document.createElement("div");
+  document.body.append(host);
+  const snapshot = {
+    phase: { kind: "starting" },
+    saveWarning: "storage_may_be_evicted",
+    writes: {
+      pending: [{ mutationId: "offline", records: [], createdAt: Date.now() - 60_000 }],
+      rejected: [],
+    },
+  };
+  const mdbase = {
+    subscribe: () => () => undefined,
+    getSnapshot: () => snapshot,
+  } as unknown as Mdbase;
+  root = createRoot(host);
+  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={false} />));
+  await act(() => vi.advanceTimersByTime(60_000));
+  expect(host.textContent).toContain("still pending on this device");
+  expect(host.textContent).not.toContain("may remove");
+  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
+  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  await act(() => vi.advanceTimersByTime(30_001));
+  expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
+    "Reload Reader",
+  );
+});
+
 it.each([
   [0, 1, "The collection refused these changes."],
   [1, 1, "The collection refused some changes. Other changes are still pending on this device."],
   [1, 0, "These changes are still pending on this device."],
-  [0, 0, ""],
+  [
+    0,
+    0,
+    "You can keep reading. Sync needs attention; keep this browser’s data until it is resolved.",
+  ],
 ])(
   "reports inventory truthfully with a sync incident: %i pending, %i rejected",
   (pending, rejected, message) => {
@@ -117,6 +157,7 @@ it.each([
                     ["reason", "collection_read_only"],
                   ]),
                 },
+                { kind: "log_regressed", details: new Map() },
               ],
             },
           },
@@ -141,18 +182,20 @@ it.each([
       getSnapshot: () => snapshot,
     } as unknown as Mdbase;
     root = createRoot(host);
-    act(() => root.render(<ReaderSaveStatus mdbase={mdbase} connected={false} />));
-    if (!pending && !rejected) {
-      expect(host.textContent).toBe("");
-      return;
-    }
+    act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
     expect(host.textContent).toContain("Changes need attention");
     expect(host.textContent).toContain(message);
     expect(host.textContent.includes("pending on this device")).toBe(Boolean(pending));
     expect(host.textContent.includes("The collection refused")).toBe(Boolean(rejected));
-    expect(host.textContent).toContain("Contact support before signing out");
+    expect(host.querySelector(".reader-save-details > details")?.hasAttribute("open")).toBe(false);
+    expect(host.querySelector(".reader-save-details > button")?.className).toBe(
+      "connection-secondary",
+    );
     expect(host.textContent).toContain("append_refused");
     expect(host.textContent).toContain("collection_read_only");
+    expect(host.querySelector(".reader-save-details > details")?.textContent).toContain(
+      "log_regressed",
+    );
     expect(snapshot.writes.pending).toHaveLength(pending);
     expect(snapshot.writes.rejected).toHaveLength(rejected);
   },

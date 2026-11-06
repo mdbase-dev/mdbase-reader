@@ -255,7 +255,7 @@ msgstr "{0} open tabs"
 msgid "{0} parts of {1}"
 msgstr "{0} parts of {1}"
 
-#. placeholder {0}: String(writes.pending.length)
+#. placeholder {0}: String(pending.length)
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "{0} pending"
 msgstr "{0} pending"
@@ -948,6 +948,11 @@ msgstr "and"
 msgid "Annotation"
 msgstr "Annotation"
 
+#: apps/reader/src/InspectorPane.tsx
+#: apps/reader/src/LibraryCells.tsx
+msgid "Annotation count not yet known"
+msgstr "Annotation count not yet known"
+
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} could not be resolved."
 msgstr "Annotation embed {reference} could not be resolved."
@@ -1569,6 +1574,10 @@ msgstr "Changes need attention"
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
 msgstr "Changes need review"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes to {title}"
+msgstr "Changes to {title}"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Changing a colour’s meaning also relabels the highlights already in that colour. Hiding a colour only stops Reader offering it: highlights already in it keep their colour."
@@ -2628,12 +2637,12 @@ msgid "Couldn’t change the colour."
 msgstr "Couldn’t change the colour."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
-msgstr "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
+msgid "Couldn’t confirm this file was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "Couldn’t confirm this file was added. Open the pending changes menu in the header and check your library before trying again."
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
-msgstr "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
+msgid "Couldn’t confirm this source was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "Couldn’t confirm this source was added. Open the pending changes menu in the header and check your library before trying again."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -4168,8 +4177,8 @@ msgid "Hosted by mdbase"
 msgstr "Hosted by mdbase"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
-msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Open the pending changes menu in the header before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Open the pending changes menu in the header before trying again."
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -8472,8 +8481,8 @@ msgid "Stopped"
 msgstr "Stopped"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped adding. Check pending changes before trying again."
-msgstr "Stopped adding. Check pending changes before trying again."
+msgid "Stopped adding. Open the pending changes menu in the header before trying again."
+msgstr "Stopped adding. Open the pending changes menu in the header before trying again."
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
@@ -8537,10 +8546,6 @@ msgstr "Switch collections, manage access or sign out from the collection menu."
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "Switch collections?"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
-msgstr "Sync needs attention. Contact support before signing out or clearing this browser’s data."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -9183,12 +9188,16 @@ msgid "This file is already attached here."
 msgstr "This file is already attached here."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "This file wasn’t added. Close this and try again."
-msgstr "This file wasn’t added. Close this and try again."
+msgid "This file wasn’t added. Try again."
+msgstr "This file wasn’t added. Try again."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
 msgstr "This is mdbase Reader"
+
+#: apps/reader/src/errors.ts
+msgid "This list may be incomplete. Reader could not verify all results. Try again after the collection finishes syncing."
+msgstr "This list may be incomplete. Reader could not verify all results. Try again after the collection finishes syncing."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
@@ -9394,7 +9403,6 @@ msgid "Toggle Pointer Mode"
 msgstr "Toggle Pointer Mode"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "Toggle Sources sidebar"
@@ -9831,6 +9839,10 @@ msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
 msgstr "Waiting for approval in the mdbase tab…"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for confirmation"
+msgstr "Waiting for confirmation"
+
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "Waiting for the active tab"
@@ -9973,6 +9985,10 @@ msgstr "You can change the collection and shortcuts at any time in <0>Settings</
 msgid "You can close this window."
 msgstr "You can close this window."
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "You can keep reading. Sync needs attention; keep this browser’s data until it is resolved."
+msgstr "You can keep reading. Sync needs attention; keep this browser’s data until it is resolved."
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
@@ -9981,6 +9997,10 @@ msgstr "You can view multiple documents using tabs."
 #: apps/reader/src/DocumentRendererStage.tsx
 msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
 msgstr "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "You're offline. This file wasn't added. Try again when you're back online."
+msgstr "You're offline. This file wasn't added. Try again when you're back online."
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

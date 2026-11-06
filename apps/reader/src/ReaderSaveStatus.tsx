@@ -6,19 +6,18 @@ import { sdkSyncIncidents } from "./sdk-connection-state.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { useSustained } from "./use-sustained.js";
 
-import type { Mdbase } from "@mdbase-reader/connect/native";
+import type { Mdbase, MdbaseSnapshot } from "@mdbase-reader/connect/native";
 
 const noop = (): void => undefined;
 
 export function ReaderSaveStatus({
   mdbase,
-  connected,
+  online,
 }: {
   readonly mdbase: Mdbase | null;
-  readonly connected: boolean;
+  readonly online: boolean;
 }): JSX.Element | null {
   const { t } = useLingui();
-  const sources = useContext(SourceLibraryContext);
   const subscribe = useCallback(
     (listener: () => void) => mdbase?.subscribe(listener) ?? noop,
     [mdbase],
@@ -28,18 +27,18 @@ export function ReaderSaveStatus({
     () => mdbase?.getSnapshot() ?? null,
     () => null,
   );
-  const writes = snapshot?.writes;
+  const { pending, rejected } = snapshot?.writes ?? { pending: [], rejected: [] };
   const incidents = sdkSyncIncidents(snapshot);
-  const oldest = Math.min(...(writes?.pending.map((entry) => entry.createdAt) ?? []));
-  const stalled = useSustained(Boolean(writes?.pending.length), 30_000, oldest);
-  if (!writes || (!writes.pending.length && !writes.rejected.length)) {
+  const oldest = Math.min(...pending.map((entry) => entry.createdAt));
+  const stalled = useSustained(online && Boolean(pending.length), 30_000, oldest);
+  if (!pending.length && !rejected.length && !incidents.length) {
     return null;
   }
-  const entries = [...writes.pending, ...writes.rejected];
+  const entries = [...pending, ...rejected];
   const label =
-    writes.rejected.length || incidents.length
+    rejected.length || incidents.length
       ? t`Changes need attention`
-      : t`${String(writes.pending.length)} pending`;
+      : t`${String(pending.length)} pending`;
   return (
     <Menu
       className="reader-save-status"
@@ -50,60 +49,80 @@ export function ReaderSaveStatus({
       <div className="reader-save-details">
         <SaveStatusMessage
           incidents={incidents.length}
-          pending={writes.pending.length}
-          refused={writes.rejected.length}
-          storageWarning={Boolean(snapshot.saveWarning)}
+          pending={pending.length}
+          refused={rejected.length}
+          storageWarning={online && Boolean(snapshot?.saveWarning)}
         />
         <SyncIncidentList incidents={incidents} />
-        <ul>
-          {entries.map((entry) => (
-            <li key={entry.mutationId}>
-              <strong>
-                {entry.problem ? t`Change needs attention` : t`Changes awaiting confirmation`}
-              </strong>
-              <span>
-                {entry.records
-                  .map(
-                    (record) =>
-                      sources.find(
-                        (source) =>
-                          source.id === record ||
-                          source.documents.some((document) => document.fileId === record),
-                      )?.title,
-                  )
-                  .filter(Boolean)
-                  .join(", ")}
-              </span>
-              <time dateTime={new Date(entry.createdAt).toISOString()}>
-                {new Date(entry.createdAt).toLocaleTimeString()}
-              </time>
-              <details>
-                <summary>
-                  <Trans context="Reader interface">Details</Trans>
-                </summary>
-                <code>{entry.mutationId}</code>
-                {entry.problem ? <p>{entry.problem.message}</p> : null}
-                {entry.problem?.recovery === "contact_support" ? (
-                  <p>
-                    <Trans>Contact support about this change. Keep this browser’s data.</Trans>
-                  </p>
-                ) : null}
-                {entry.records.length ? (
-                  <small>
-                    {t`Record or file`}: {entry.records.join(", ")}
-                  </small>
-                ) : null}
-              </details>
-            </li>
-          ))}
-        </ul>
-        {connected || stalled || incidents.length || writes.rejected.length ? (
-          <button type="button" onClick={() => window.location.reload()}>
+        <SaveStatusEntries entries={entries} />
+        {online && (stalled || incidents.length || rejected.length) ? (
+          <button
+            className="connection-secondary"
+            type="button"
+            onClick={() => window.location.reload()}
+          >
             <Trans>Reload Reader to check again</Trans>
           </button>
         ) : null}
       </div>
     </Menu>
+  );
+}
+
+function SaveStatusEntries({
+  entries,
+}: {
+  readonly entries: NonNullable<MdbaseSnapshot["writes"]>["pending"];
+}): JSX.Element {
+  const { t } = useLingui();
+  const sources = useContext(SourceLibraryContext);
+  return (
+    <ul>
+      {entries.map((entry) => {
+        const title = sources
+          .filter((source) =>
+            entry.records.some(
+              (record) =>
+                source.id === record ||
+                source.documents.some((document) => document.fileId === record),
+            ),
+          )
+          .map((source) => source.title)
+          .join(", ");
+        return (
+          <li key={entry.mutationId}>
+            <strong>
+              {title
+                ? t`Changes to ${title}`
+                : entry.problem
+                  ? t`Change needs attention`
+                  : t`Changes awaiting confirmation`}
+            </strong>
+            <span>{entry.problem ? t`Change needs attention` : t`Waiting for confirmation`}</span>
+            <time dateTime={new Date(entry.createdAt).toISOString()}>
+              {new Date(entry.createdAt).toLocaleTimeString()}
+            </time>
+            <details>
+              <summary>
+                <Trans context="Reader interface">Details</Trans>
+              </summary>
+              <code>{entry.mutationId}</code>
+              {entry.problem ? <p>{entry.problem.message}</p> : null}
+              {entry.problem?.recovery === "contact_support" ? (
+                <p>
+                  <Trans>Contact support about this change. Keep this browser’s data.</Trans>
+                </p>
+              ) : null}
+              {entry.records.length ? (
+                <small>
+                  {t`Record or file`}: {entry.records.join(", ")}
+                </small>
+              ) : null}
+            </details>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -123,23 +142,12 @@ function SaveStatusMessage({
     ? pending
       ? t`The collection refused some changes. Other changes are still pending on this device. Review them before signing out.`
       : t`The collection refused these changes. Review them before signing out.`
-    : storageWarning
-      ? t`These changes have not reached the collection. This browser may remove its local copy.`
-      : t`These changes are still pending on this device. Waiting for the collection to confirm them.`;
-  return (
-    <p role="status">
-      {message}
-      {incidents ? (
-        <>
-          {" "}
-          <Trans>
-            Sync needs attention. Contact support before signing out or clearing this browser’s
-            data.
-          </Trans>
-        </>
-      ) : null}
-    </p>
-  );
+    : !pending && incidents
+      ? t`You can keep reading. Sync needs attention; keep this browser’s data until it is resolved.`
+      : storageWarning
+        ? t`These changes have not reached the collection. This browser may remove its local copy.`
+        : t`These changes are still pending on this device. Waiting for the collection to confirm them.`;
+  return <p role="status">{message}</p>;
 }
 
 function SyncIncidentList({
@@ -151,28 +159,33 @@ function SyncIncidentList({
     return null;
   }
   return (
-    <ul className="reader-sync-incidents">
-      {incidents.map((incident, index) => {
-        const details = incident.details;
-        const fields: JSX.Element[] = [];
-        if (details instanceof Map) {
-          for (const [key, value] of details) {
-            if (
-              typeof key === "string" &&
-              ["service_code", "code", "reason"].includes(key) &&
-              typeof value === "string"
-            ) {
-              fields.push(<code key={key}>{value}</code>);
+    <details>
+      <summary>
+        <Trans context="Reader interface">Details</Trans>
+      </summary>
+      <ul className="reader-sync-incidents">
+        {incidents.map((incident, index) => {
+          const details = incident.details;
+          const fields: JSX.Element[] = [];
+          if (details instanceof Map) {
+            for (const [key, value] of details) {
+              if (
+                typeof key === "string" &&
+                ["service_code", "code", "reason"].includes(key) &&
+                typeof value === "string"
+              ) {
+                fields.push(<code key={key}>{value}</code>);
+              }
             }
           }
-        }
-        return (
-          <li key={`${incident.kind}-${String(index)}`}>
-            <code>{incident.kind}</code>
-            {fields}
-          </li>
-        );
-      })}
-    </ul>
+          return (
+            <li key={`${incident.kind}-${String(index)}`}>
+              <code>{incident.kind}</code>
+              {fields}
+            </li>
+          );
+        })}
+      </ul>
+    </details>
   );
 }

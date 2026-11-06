@@ -5,6 +5,7 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { annotationPathsForSource } from "./annotation-query.js";
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
+import { annotationSourcePages } from "./annotation-source-pages.js";
 import { withResolvedSource } from "./annotation-source.js";
 import { connectProblemFor } from "./native/native-mapping.js";
 import { outcomeValue } from "./repository-client.js";
@@ -124,6 +125,20 @@ function fixture(count: number): {
 }
 
 describe("annotation request-wide projection budget", () => {
+  it("resolves a 233-annotation collection in one bulk query before hydrating", async () => {
+    const { client, queryPages } = fixture(233);
+    const repository = new ConnectAnnotationRepository(client);
+    expect(await repository.annotationCountsBySource(collectionId("reading"))).toEqual(
+      new Map([[sourceId("book"), 233]]),
+    );
+    expect(queryPages).toHaveBeenCalledOnce();
+    expect(queryPages.mock.calls[0]?.[0]).toMatchObject(
+      withResolvedSource({ types: ["reader-annotation"], select: ["id", "source"] }),
+    );
+    queryPages.mockClear();
+    expect(await repository.listAll(collectionId("reading"))).toHaveLength(233);
+    expect(queryPages).toHaveBeenCalledOnce();
+  });
   it.each([600, 1501])(
     "lists all %i large annotations without an unbounded selection or link projection",
     async (count) => {
@@ -144,7 +159,9 @@ describe("annotation request-wide projection budget", () => {
       expect(await repository.annotationCountsBySource(collectionId("reading"))).toEqual(
         new Map([[sourceId("book"), count]]),
       );
-      for (const [input] of queryPages.mock.calls) {
+      expect(queryPages.mock.calls[0]?.[0]).toHaveProperty("projections");
+      expect(queryPages.mock.calls[0]?.[0]).not.toHaveProperty("where");
+      for (const [input] of queryPages.mock.calls.slice(1, count + 2)) {
         if (input.select || input.projections) {
           expect(input.where).toMatch(/^file\.path == ".+"$/u);
         } else {
@@ -156,6 +173,28 @@ describe("annotation request-wide projection budget", () => {
 });
 
 describe("single-source annotation query compatibility", () => {
+  it("does not restart discovery after publishing a projected page", async () => {
+    const { client, queryPages, documents, failure } = fixture(2);
+    queryPages.mockImplementation(async function* () {
+      yield await Promise.resolve({
+        ok: true as const,
+        diagnostics: [],
+        value: {
+          results: [{ ...documents[0]!, values: { reader_source_id: "book" } }],
+          complete: false,
+          page: 0,
+          offset: 0,
+          loaded: 1,
+        },
+      });
+      yield await Promise.resolve(failure());
+    });
+    const pages = annotationSourcePages(client, {});
+    expect((await pages.next()).value).toHaveLength(1);
+    await expect(pages.next()).rejects.toMatchObject({ code: "query_budget_exceeded" });
+    expect(queryPages).toHaveBeenCalledOnce();
+  });
+
   it.each([1, 100, 400])(
     "uses three queries and no per-annotation resolutions for %i under-budget rows",
     async (count) => {
@@ -180,14 +219,14 @@ describe("single-source annotation query compatibility", () => {
         sourceId("book"),
       );
       expect(listed.map((annotation) => annotation.path)).toEqual(["annotations/0.md"]);
-      expect(queryPages).toHaveBeenCalledTimes(count + 4);
+      expect(queryPages).toHaveBeenCalledTimes(count + 5);
       expect(queryPages.mock.calls.slice(0, 3).map(([input]) => input.where)).toEqual([
         'id == "book"',
         expect.stringContaining('record["source"].asFile()'),
         expect.stringContaining("source.asFile() == null"),
       ]);
       expect(queryPages.mock.calls[3]?.[0]).not.toHaveProperty("where");
-      expect(queryPages.mock.calls.filter(([input]) => input.projections)).toHaveLength(count);
+      expect(queryPages.mock.calls.filter(([input]) => input.projections)).toHaveLength(count + 1);
     },
   );
 
@@ -198,7 +237,10 @@ describe("single-source annotation query compatibility", () => {
     }
     const query = queryPages.getMockImplementation()!;
     queryPages.mockImplementation(async function* (input) {
-      if (input.projections && input.where === 'file.path == "annotations/1.md"') {
+      if (
+        input.projections &&
+        (!input.where || input.where === 'file.path == "annotations/1.md"')
+      ) {
         yield await Promise.resolve(failure());
         return;
       }

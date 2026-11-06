@@ -92,7 +92,7 @@ export function LibraryWorkspace({
   readonly onRemoveSource?: (source: SourceSummary) => void;
   /** Opens an annotation in its source's document; defaults to opening the source. */
   readonly onOpenAnnotation?: (annotation: Annotation, beside: boolean) => void;
-  readonly annotationCounts?: ReadonlyMap<SourceId, number>;
+  readonly annotationCounts?: ReadonlyMap<SourceId, number> | null;
   readonly bibliographyExport: BibliographyExportController;
   readonly onSourceChanged?: (source: Source) => void;
   readonly changeStatus?: ((source: SourceSummary, status: ReadingStatus) => void) | undefined;

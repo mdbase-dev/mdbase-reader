@@ -21,7 +21,7 @@ import type { JSX } from "react";
 
 const empty = <span className="library-empty-value">—</span>;
 
-type CellRenderer = (source: SourceSummary, annotations: number) => JSX.Element;
+type CellRenderer = (source: SourceSummary, annotations: number | undefined) => JSX.Element;
 
 /**
  * The title leads; people, format and, for a part, its book follow on one quieter line. A
@@ -58,7 +58,14 @@ const builtinCells: Record<BuiltinLibraryColumn, CellRenderer> = {
   format: (source) => <>{formatLabel(source)}</>,
   tags: (source) => <>{source.tags.map(String).join(", ") || "—"}</>,
   annotations: (_source, annotations) =>
-    annotations > 0 ? (
+    annotations === undefined ? (
+      <span
+        className="library-empty-value"
+        aria-label={t({ message: "Annotation count not yet known" })}
+      >
+        …
+      </span>
+    ) : annotations > 0 ? (
       <span className="library-count" title={countLabel(annotations, "annotation")}>
         {annotations.toLocaleString(i18n.locale)}
       </span>
@@ -87,7 +94,7 @@ export function TableValue({
   readonly source: SourceSummary;
   readonly column: LibraryColumn;
   readonly context?: string | undefined;
-  readonly annotations: number;
+  readonly annotations: number | undefined;
   /** Values a saved view selected for this source, keyed by field. */
   readonly selected?: Readonly<Record<string, unknown>> | undefined;
 }): JSX.Element {

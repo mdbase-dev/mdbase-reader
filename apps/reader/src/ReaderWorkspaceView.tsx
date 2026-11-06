@@ -544,18 +544,24 @@ function useShellChrome(
 /** The index's counts, corrected by the annotations already loaded for the selected source. */
 function useLibraryAnnotationCounts(
   model: ReaderWorkspaceViewModel,
-): ReadonlyMap<SourceId, number> {
+): ReadonlyMap<SourceId, number> | null {
   const loaded = model.workspace.annotations;
-  const counts = useAnnotationCounts(model.gateway, model.library.sourceIndex?.complete !== false);
   const sourceId =
     model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
+  const counts = useAnnotationCounts(
+    model.gateway,
+    model.library.sourceIndex?.complete !== false && (!sourceId || loaded.status === "ready"),
+  );
   return useMemo(() => {
+    const known = counts
+      ? new Map(model.library.sources.map(({ id }) => [id, counts.get(id) ?? 0]))
+      : null;
     if (!sourceId || loaded.status !== "ready") {
-      return counts;
+      return known;
     }
     const ownedCount = loaded.value.filter((annotation) => annotation.sourceId === sourceId).length;
-    return counts.get(sourceId) === ownedCount ? counts : new Map(counts).set(sourceId, ownedCount);
-  }, [counts, loaded, sourceId]);
+    return (known ?? new Map()).set(sourceId, ownedCount);
+  }, [counts, loaded, sourceId, model.library.sources]);
 }
 
 /** Keeps every open reflowable document on the reader's chosen type settings. */

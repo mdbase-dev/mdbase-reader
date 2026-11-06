@@ -255,7 +255,7 @@ msgstr "開いているタブ：{0}件"
 msgid "{0} parts of {1}"
 msgstr "{1}件中{0}件の部分"
 
-#. placeholder {0}: String(writes.pending.length)
+#. placeholder {0}: String(pending.length)
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "{0} pending"
 msgstr "{0} 件保留中"
@@ -948,6 +948,11 @@ msgstr "と"
 msgid "Annotation"
 msgstr "注釈"
 
+#: apps/reader/src/InspectorPane.tsx
+#: apps/reader/src/LibraryCells.tsx
+msgid "Annotation count not yet known"
+msgstr "注釈の数はまだ不明です"
+
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} could not be resolved."
 msgstr "埋め込み注釈{reference}を解決できませんでした。"
@@ -1569,6 +1574,10 @@ msgstr "確認が必要な変更があります"
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
 msgstr "変更内容を確認してください"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes to {title}"
+msgstr "{title} の変更"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Changing a colour’s meaning also relabels the highlights already in that colour. Hiding a colour only stops Reader offering it: highlights already in it keep their colour."
@@ -2628,12 +2637,12 @@ msgid "Couldn’t change the colour."
 msgstr "色を変更できませんでした。"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
-msgstr "このファイルが追加されたか確認できませんでした。再試行する前に、保留中の変更とライブラリを確認してください。"
+msgid "Couldn’t confirm this file was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "このファイルが追加されたか確認できませんでした。ヘッダーの保留中の変更メニューを開き、ライブラリを確認してから再試行してください。"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
-msgstr "この資料が追加されたか確認できませんでした。再試行する前に、ヘッダーの保留中の変更とライブラリを確認してください。"
+msgid "Couldn’t confirm this source was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "このソースが追加されたか確認できませんでした。ヘッダーの保留中の変更メニューを開き、ライブラリを確認してから再試行してください。"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -4168,8 +4177,8 @@ msgid "Hosted by mdbase"
 msgstr "mdbase がホスト"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
-msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: コレクションはファイル転送を確認していません。再試行する前に保留中の変更を確認してください。"
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Open the pending changes menu in the header before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: コレクションでファイルの転送が確認されていません。ヘッダーの保留中の変更メニューを開いてから再試行してください。"
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -8472,8 +8481,8 @@ msgid "Stopped"
 msgstr "停止しました"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped adding. Check pending changes before trying again."
-msgstr "追加を停止しました。再試行する前に保留中の変更を確認してください。"
+msgid "Stopped adding. Open the pending changes menu in the header before trying again."
+msgstr "追加を停止しました。ヘッダーの保留中の変更メニューを開いてから再試行してください。"
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
@@ -8537,10 +8546,6 @@ msgstr "コレクションメニューからコレクションの切り替え、
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "コレクションを切り替えますか？"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
-msgstr "同期に対応が必要です。サインアウトしたり、このブラウザーのデータを消去したりする前に、サポートにお問い合わせください。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -9183,12 +9188,16 @@ msgid "This file is already attached here."
 msgstr "このファイルはすでにここに添付されています。"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "This file wasn’t added. Close this and try again."
-msgstr "このファイルは追加されませんでした。この画面を閉じて再試行してください。"
+msgid "This file wasn’t added. Try again."
+msgstr "このファイルは追加されませんでした。再試行してください。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
 msgstr "これはmdbase Readerです"
+
+#: apps/reader/src/errors.ts
+msgid "This list may be incomplete. Reader could not verify all results. Try again after the collection finishes syncing."
+msgstr "このリストは不完全な可能性があります。Reader はすべての結果を確認できませんでした。コレクションの同期が完了してから再試行してください。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
@@ -9394,7 +9403,6 @@ msgid "Toggle Pointer Mode"
 msgstr "ポインターモードを切り替え"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "資料サイドバーの表示を切り替え"
@@ -9831,6 +9839,10 @@ msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
 msgstr "mdbase タブでの承認を待っています…"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for confirmation"
+msgstr "確認待ち"
+
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "アクティブなタブを待機中"
@@ -9973,6 +9985,10 @@ msgstr "コレクションとショートカットはいつでも<0>設定</0>�
 msgid "You can close this window."
 msgstr "このウィンドウは閉じてかまいません。"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "You can keep reading. Sync needs attention; keep this browser’s data until it is resolved."
+msgstr "引き続き読むことができます。同期に対応が必要です。解決するまでこのブラウザーのデータを保持してください。"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
@@ -9981,6 +9997,10 @@ msgstr "タブを使って複数の文書を表示できます。"
 #: apps/reader/src/DocumentRendererStage.tsx
 msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
 msgstr "オフラインです。このファイルはまだダウンロードされていません。インターネットに接続して再試行してください。"
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "You're offline. This file wasn't added. Try again when you're back online."
+msgstr "オフラインです。このファイルは追加されませんでした。オンラインに戻ってから再試行してください。"
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

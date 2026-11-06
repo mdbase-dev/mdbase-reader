@@ -167,6 +167,11 @@ export class DockviewSidePanels {
     if (this.mobile()) {
       return;
     }
+    if (!api.getPanel(inspectorPanelId) && !this.edgeHasPanels(api, "right")) {
+      const group = edgeGroup(api, inspectorPanelId, 340);
+      api.setEdgeGroupVisible("right", false);
+      this.mount(api, inspectorPanelId, false, group);
+    }
     for (const position of positions) {
       api.getEdgeGroup(position)?.setHeaderPosition("top");
     }
@@ -199,10 +204,20 @@ export class DockviewSidePanels {
       }
       return;
     }
-    const group = this.mobile()
-      ? api.activeGroup
-      : edgeGroup(api, id, id === navigatorPanelId ? 260 : 340);
-    api.addPanel({
+    this.mount(
+      api,
+      id,
+      activate,
+      this.mobile() ? api.activeGroup : edgeGroup(api, id, id === navigatorPanelId ? 260 : 340),
+    );
+  }
+  private mount(
+    api: DockviewApi,
+    id: string,
+    activate: boolean,
+    group: DockviewGroupPanel | undefined,
+  ): IDockviewPanel {
+    return api.addPanel({
       id,
       component: id === navigatorPanelId ? "navigator" : "inspector",
       title: sidePanelTitle(id),

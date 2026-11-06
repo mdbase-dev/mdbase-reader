@@ -165,7 +165,7 @@ function ViewGlyph({ presentation }: { readonly presentation: "table" | "cards" 
       <rect x="9" y="9" width="5" height="5" />
     </svg>
   ) : (
-    <svg viewBox="0 0 16 16" aria-hidden="true">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
       <path d="M2 3h12M2 8h12M2 13h12M6 3v10" />
     </svg>
   );

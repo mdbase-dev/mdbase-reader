@@ -219,8 +219,6 @@ function ShortcutSheet({
               ["Delete", translate`Remove source…`],
               ["Enter", translate`Open source`],
               ["/", translate`Search this view`],
-              ["[", translate`Toggle Sources sidebar`],
-              ["?", translate`Keyboard shortcuts`],
             ].map(([key, label]) => (
               <div key={key}>
                 <dt>{label}</dt>
@@ -260,7 +258,14 @@ function ShortcutSheet({
                   <div key={command.id}>
                     <dt>{command.label}</dt>
                     <dd>
-                      <kbd>{readerShortcutLabel(command.shortcut)}</kbd>
+                      <kbd>
+                        {command.id === "keyboard-shortcuts"
+                          ? "? / "
+                          : command.id === "toggle-library"
+                            ? "[ / "
+                            : ""}
+                        {readerShortcutLabel(command.shortcut)}
+                      </kbd>
                     </dd>
                   </div>
                 ))}

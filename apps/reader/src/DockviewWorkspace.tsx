@@ -138,17 +138,23 @@ export function DockviewWorkspace({
   const hydrated = useProgressiveWorkspaceTabs(hydrationLayout);
   const ready = (event: DockviewReadyEvent): void => {
     cleanup.current?.();
-    cleanup.current = dock.attach(event.api);
-    for (const animation of engine.current?.getAnimations({ subtree: true }) ?? []) {
-      const effect = animation.effect;
-      if (
-        effect instanceof KeyframeEffect &&
-        effect.target instanceof HTMLElement &&
-        effect.target.classList.contains("dv-render-overlay")
-      ) {
-        animation.finish();
+    const detach = dock.attach(event.api);
+    const frame = requestAnimationFrame(() => {
+      for (const animation of engine.current?.getAnimations({ subtree: true }) ?? []) {
+        const effect = animation.effect;
+        if (
+          effect instanceof KeyframeEffect &&
+          effect.target instanceof HTMLElement &&
+          effect.target.classList.contains("dv-render-overlay")
+        ) {
+          animation.finish();
+        }
       }
-    }
+    });
+    cleanup.current = () => {
+      cancelAnimationFrame(frame);
+      detach();
+    };
   };
   useEffect(() => () => cleanup.current?.(), []);
   return (

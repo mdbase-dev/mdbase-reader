@@ -60,7 +60,7 @@ export function LibraryTableRow({
   useLocale();
   const part = partRows?.get(source.id);
   const context = part?.diagnostic ?? part?.context;
-  const annotations = annotationCounts.get(source.id) ?? 0;
+  const annotations = annotationCounts?.get(source.id);
   const selected = selection.ids.has(source.id);
   const pressHandlers = press.bind(onLongPress);
   const editable = (column: LibraryColumn): boolean =>
