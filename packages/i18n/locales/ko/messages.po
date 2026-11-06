@@ -9017,8 +9017,8 @@ msgid "This annotation has no supported link to a passage. Its text and original
 msgstr "이 주석은 지원되는 본문 구간 링크가 없습니다. 텍스트와 원본 메타데이터는 보존됩니다."
 
 #: apps/reader/src/errors.ts
-msgid "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support."
-msgstr "주석 검색 범위가 너무 큽니다. 소스 하나의 노트를 열고 다시 시도하세요. 계속 실패하면 지원팀에 문의하세요."
+msgid "This annotation query is too large. Try again. If it still fails, contact support."
+msgstr "주석 검색 범위가 너무 큽니다. 다시 시도하세요. 계속 실패하면 지원팀에 문의하세요."
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."

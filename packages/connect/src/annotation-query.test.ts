@@ -31,7 +31,10 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
       return value === undefined ? undefined : (JSON.parse(value) as string);
     };
     const exactPath = quoted(/^file\.path == ("[^"]*")$/u);
-    const results = Object.keys(links)
+    const id = quoted(/^id == ("[^"]*")$/u);
+    const target = quoted(/record\["source"\]\.asFile\(\)\.file\.path == ("(?:[^"\\]|\\.)*")$/u);
+    const contained = quoted(/source\.contains\(("[^"]*")\)$/u);
+    const annotations = Object.keys(links)
       .map((source, index) => ({
         path: `annotations/${String(index)}.md`,
         effectiveFrontmatter: { id: `ann_${String(index)}`, source },
@@ -46,7 +49,20 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
             }
           : {}),
       }))
-      .filter((record) => exactPath === undefined || record.path === exactPath);
+      .filter((record) => {
+        const reference = record.effectiveFrontmatter.source;
+        return exactPath !== undefined
+          ? record.path === exactPath
+          : target !== undefined
+            ? links[reference] === target
+            : contained !== undefined
+              ? links[reference] === null && reference.includes(contained)
+              : !where;
+      });
+    const results =
+      id === undefined
+        ? annotations
+        : [{ path: sourcePath, effectiveFrontmatter: { id }, file: {}, types: [] }];
     yield await Promise.resolve({ ok: true, value: { results }, diagnostics: [] });
   });
   const client = {
@@ -61,16 +77,15 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
     "annotations/2.md",
     "annotations/3.md",
   ]);
-  expect(queryPages).toHaveBeenCalledTimes(7);
+  expect(queryPages).toHaveBeenCalledTimes(3);
   expect(queryPages.mock.calls[0]?.[0]).toEqual({
-    types: ["reader-annotation"],
+    where: 'id == "src_1"',
     frontmatterMode: "effective",
-    includeBody: false,
   });
   expect(
     queryPages.mock.calls
       .slice(1)
-      .every(([input]) => input.projections && input.where?.startsWith("file.path ==")),
+      .every(([input]) => !input.projections && input.where?.includes(".asFile()")),
   ).toBe(true);
   expect(queryPages).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining(options));
 

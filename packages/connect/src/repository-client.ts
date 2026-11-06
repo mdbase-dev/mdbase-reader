@@ -162,7 +162,7 @@ export class ConnectRepositoryError extends Error {
       (problem as ReaderConnectProblem | undefined)?.native?.reason === "query_budget_exceeded";
     super(
       budgetExceeded
-        ? "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support."
+        ? "This annotation query is too large. Try again. If it still fails, contact support."
         : `mdbase Connect could not ${operation}: ${detail ?? code}${summary ? `: ${summary}` : ""}`,
     );
     this.name = "ConnectRepositoryError";

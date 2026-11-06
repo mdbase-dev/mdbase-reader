@@ -5,4 +5,5 @@
 - Show offline and pending-change recovery honestly using the SDK's existing incidents and inventory, without inventing rejected writes or claiming a stopped upload never committed.
 - Keep rejected-only, mixed, and pending-only save messages distinct when a sync incident is present; an incident does not prove a change is pending.
 - Bound annotation source resolution per record instead of projecting the entire collection; show a plain query-budget error without silently returning an incomplete list.
+- Preserve main's constant-query source Notes filtering; only coded query-budget failures use discovery until the runtime serves canonical backlinks. Keep failures explicit and advice appropriate inside source Notes.
 - Replace rounded active-item and callout edge stripes with plain fills, preserving pane dividers and square in-document reading rules.

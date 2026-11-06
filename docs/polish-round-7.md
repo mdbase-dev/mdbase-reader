@@ -34,26 +34,30 @@ worktree `.tmp/` directory for both while running, then move retained evidence o
   rejected-only, mixed, pending-only, and empty inventories have separate tests.
   The six-test save-status suite failed 2/6 against `a187d35e7` (rejected-only and
   mixed inventory) and passes 6/6 after the change. No inventory is mutated.
-- **Single-source annotation isolation remains blocked, not fixed.** The current
-  implementation still resolves unrelated annotations: a temporary reproduction
-  measured 1,501 exact-path resolutions for 1,501 annotations with one relevant
-  row, and an unrelated budget refusal still rejected the healthy source's list.
-  Whole-collection refusal also propagated. The reproduction and log are retained
-  outside the repo alongside the raw evidence, not as a passing regression gate.
-  SDK beta.157's source at
-  Connect `493d29ca` explicitly lists `backlinks` as unserved by the native frame
-  dispatch (`runtime/packages/sdk/test/runtime-method-contract.test.ts`). Its
-  runtime-method manifest pins runtime `3e433313e0a234513478789686a4f4274e4dd76c`.
-  Do not ship a Reader call to that method based on a MemoryReplica-only test.
-  `linksTo("source", path)` uses `asFile()` and does not lower to an indexed
-  source-field candidate. `file.hasLink()` cannot provide that guarantee either:
-  the pinned runtime deliberately disables link-index candidate pruning when an
-  ID field is configured (`runtime/crates/core/src/query/lower.rs`, `links_to`).
-  Both take the request-wide budgeted projected path; paging is not a fix. A
-  bounded canonical inverse-source lookup needs runtime support. Reader must not
-  guess link targets, ignore unrelated failures, or silently return partial rows.
+- **Single-source Notes restores main's filter-first path.** The authority resolves
+  the source path, then evaluates `linksTo("source", path)` and the legacy bare-ID
+  filter. Under-budget collections of 1, 100, and 400 annotations make exactly
+  three queries (one source lookup plus two filters), with no per-annotation
+  resolution. Before this follow-up, 100/400 annotations made 101/401 queries;
+  now each makes three. An unrelated annotation's exact-path budget failure no
+  longer breaks a healthy under-budget source. Whole-collection failures still
+  propagate rather than omitting rows.
+- Only a structured `query_budget_exceeded` code enables the discovery fallback;
+  other errors propagate, even when their message contains that text. The code
+  names single-source Notes as its consumer and deletion when runtime backlinks
+  is served as its removal condition. No Reader link-target guessing is added.
+- **Known limit, not a full isolation fix:** an already over-budget collection
+  still requires N authoritative resolutions in the fallback, and an unrelated
+  failed resolution can fail the whole source listing. The 600/1,501-record tests
+  return the one relevant annotation after the budget refusal using 600/1,501
+  resolutions (604/1,505 total queries). Main fails outright in this case. The
+  runtime needs to serve canonical backlinks with bounded source-scoped discovery
+  and pagination, preserving its authoritative link semantics. SDK beta.157's
+  pinned runtime does not serve backlinks; Reader does not call that unsupported
+  method. Failure advice now says retry and contact support, not to open the
+  source Notes that is already failing. All ten translations are refreshed.
 
-Follow-up validation: `rpnpm lint`, `rpnpm typecheck`, `rpnpm test`, and
+Previous follow-up validation: `rpnpm lint`, `rpnpm typecheck`, `rpnpm test`, and
 `rpnpm i18n:check` pass. Reader has 1,102 Vitest and 55 script tests; Connect has
 324 and the extension 332. The fresh LAB build passes with 164 precached assets.
 The full local `test:polish` passes: original 8/8 matrix, round-6 checks, 4/4 focus
@@ -96,15 +100,18 @@ runtime request. `pageSize: 500` did not reduce that request's full-source budge
 The replacement ordinary `reader-annotation` discovery has **no select or projection**;
 source resolution uses an authoritative exact `file.path` scope per annotation, at most
 four concurrent requests, with an initial batch of 16 and subsequent batches of 64.
-All-source lists/counts/indexes and per-source lists share this path. No Reader link
+All-source lists/counts/indexes use this path unchanged. Single-source lists use it
+only after main's source-first filters return a coded budget refusal. No Reader link
 resolver, guessed ID/path, budget increase, or partial-list success fallback is added.
 
 The budget-enforcing regression reproduces the old failure with 600 × 2,048-byte
 annotations (1,228,800 bytes), and with 1,501 records (3,074,048 body bytes). It then
-requires all 600/1,501 annotations and matching counts from the replacement. Selected/
-projected requests must have exact path scopes. Native `too_large` with reason
+requires all 600/1,501 annotations and matching counts from whole-collection listing.
+Its selected/projected requests must have exact path scopes. Single-source tests
+separately assert the normal constant query count, conditional fallback, relevant
+results, and propagation of whole-collection and fallback failures. Native `too_large` with reason
 `query_budget_exceeded` is normalized before panel rendering and translated through
-the existing error path: open one source's Notes, retry, then contact support.
+the existing error path: retry, then contact support.
 Failures propagate rather than pretending an overview is complete.
 
 This is **not** a real-runtime large-fixture reproduction. A single annotation plus

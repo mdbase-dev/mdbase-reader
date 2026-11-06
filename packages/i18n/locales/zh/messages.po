@@ -9017,8 +9017,8 @@ msgid "This annotation has no supported link to a passage. Its text and original
 msgstr "此注释没有受支持的段落链接。其文本和原始元数据已保留。"
 
 #: apps/reader/src/errors.ts
-msgid "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support."
-msgstr "此批注查询过大。请打开单个来源的笔记后重试。如果仍然失败，请联系支持团队。"
+msgid "This annotation query is too large. Try again. If it still fails, contact support."
+msgstr "此批注查询过大。请重试。如果仍然失败，请联系支持团队。"
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."

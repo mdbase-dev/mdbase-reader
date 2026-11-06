@@ -141,7 +141,7 @@ describe("annotation source links", () => {
     // readMany fetched the bodies; the individual reads above each resolved the source again.
     expect(
       queries.filter((query) => query.where === 'file.path == "annotations/ann_1.md"'),
-    ).toHaveLength(6);
+    ).toHaveLength(5);
     expect(() => annotationFromDocument(collection, source)).toThrow();
   });
 

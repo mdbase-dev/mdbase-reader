@@ -65,7 +65,13 @@ function fixture(count = 2): {
       : input.where?.includes('record["source"]')
         ? []
         : records
-            .filter((record) => input.where === `file.path == ${JSON.stringify(record.path)}`)
+            .filter((record) =>
+              input.where?.includes("source.asFile() == null")
+                ? input.where.endsWith(
+                    `source.contains(${JSON.stringify(record.effectiveFrontmatter!["source"])})`,
+                  )
+                : input.where === `file.path == ${JSON.stringify(record.path)}`,
+            )
             .map((record) => ({
               path: record.path,
               revision: record.revision!,

@@ -9017,8 +9017,8 @@ msgid "This annotation has no supported link to a passage. Its text and original
 msgstr "この注釈には箇所への対応するリンクがありません。テキストと元のメタデータは保持されます。"
 
 #: apps/reader/src/errors.ts
-msgid "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support."
-msgstr "注釈の検索対象が多すぎます。1つのソースのノートを開いて再試行してください。それでも失敗する場合は、サポートにお問い合わせください。"
+msgid "This annotation query is too large. Try again. If it still fails, contact support."
+msgstr "注釈の検索対象が多すぎます。再試行してください。それでも失敗する場合は、サポートにお問い合わせください。"
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."

@@ -208,7 +208,7 @@ describe("Connect annotations for one source", () => {
     const second = await repository.listForSource(collection, sourceId("src_1"));
     expect(read).not.toHaveBeenCalled();
     // The source lookup and its two link queries; body batching belongs to readMany.
-    expect(queryPages).toHaveBeenCalledTimes(21);
+    expect(queryPages).toHaveBeenCalledTimes(3);
     expect(readMany).toHaveBeenCalledTimes(2);
     expect(second).toEqual(first);
     expect(second[0]?.recordRevision).toBe("rev-annotations/ann_0.md-1");
@@ -301,7 +301,7 @@ describe("Connect annotation batch failure and legacy references", () => {
     const controller = new AbortController();
     const annotations = new Map([["annotations/a.md", stored("ann_a", "src_1")]]);
     const { client, read } = authority(annotations, {}, (input) => {
-      if (input.projections) {
+      if (input.where?.includes(".asFile()")) {
         controller.abort();
       }
     });

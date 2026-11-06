@@ -9017,8 +9017,8 @@ msgid "This annotation has no supported link to a passage. Its text and original
 msgstr "Esta anotação não tem um link compatível para um trecho. O texto e os metadados originais foram preservados."
 
 #: apps/reader/src/errors.ts
-msgid "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support."
-msgstr "Esta consulta de anotações é demasiado grande. Abra as notas de uma única fonte e tente novamente. Se continuar a falhar, contacte o suporte."
+msgid "This annotation query is too large. Try again. If it still fails, contact support."
+msgstr "Esta consulta de anotações é demasiado grande. Tente novamente. Se continuar a falhar, contacte o suporte."
 
 #: apps/extension/src/capture-errors.ts
 msgid "This browser cannot display highlights. Open the saved copy in Reader."

@@ -11,7 +11,7 @@ describe("readerErrorMessage", () => {
       "ordinary selection exceeds its bounded source or retained-value query budget",
     );
     expect(readerErrorMessage(error, "Try again.")).toBe(
-      "This annotation query is too large. Open one source’s Notes and try again. If it still fails, contact support.",
+      "This annotation query is too large. Try again. If it still fails, contact support.",
     );
   });
   it("preserves actionable operation errors", () => {
