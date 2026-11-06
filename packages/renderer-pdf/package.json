@@ -19,8 +19,8 @@
     "@embedpdf/plugin-search": "^2.15.1",
     "@embedpdf/plugin-selection": "^2.15.1",
     "@embedpdf/react-pdf-viewer": "^2.15.1",
-    "@lingui/core": "6.10.1",
-    "@lingui/react": "6.10.1",
+    "@lingui/core": "6.12.0",
+    "@lingui/react": "6.12.0",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/reading-surface": "workspace:*",
     "react": "^19.3.1"
