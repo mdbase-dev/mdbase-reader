@@ -47,7 +47,7 @@ describe("user text is rendered literally", () => {
     const removal: SourceRemovalController = {
       notice: null,
       request: null,
-      pending: { source, status: "confirming", plan: null, problem: null },
+      pending: { source, status: "confirming", plan: null, problem: null, invoker: null },
       cancel: vi.fn(),
       confirm: vi.fn(),
     };

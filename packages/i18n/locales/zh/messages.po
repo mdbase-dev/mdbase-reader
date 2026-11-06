@@ -108,6 +108,11 @@ msgstr "。统计数据在此设备上计算，不会发送或保留任何内容
 msgid ". Create a metadata-only chapter with its own DOI and citation; no PDF page range is inferred."
 msgstr "。创建包含独立 DOI 和引文、仅有元数据的章节；不会推断 PDF 页码范围。"
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-status.tsx
+msgid "“{0}” — {label}"
+msgstr "“{0}”：{label}"
+
 #. placeholder {0}: item.label
 #: apps/reader/src/CreateFollowThroughNotice.tsx
 msgid "“{0}” could not be added to your collection: another record already uses each name Reader tried."
@@ -214,11 +219,6 @@ msgstr "已隐藏 {0}。"
 #: apps/reader/src/InspectorPane.tsx
 msgid "{0} is open in {1}."
 msgstr "{0} 已在 {1} 中打开。"
-
-#. placeholder {0}: this.props.label
-#: apps/reader/src/lazy-feature.tsx
-msgid "{0} is unavailable"
-msgstr "{0} 不可用"
 
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
@@ -374,10 +374,9 @@ msgstr "找到 {count} 个结果"
 msgid "{environment} environment"
 msgstr "{environment} 环境"
 
-#. placeholder {0}: state.message
 #: apps/reader/src/DocumentRendererStage.tsx
-msgid "{errorName} could not render this file: {0}"
-msgstr "{errorName}无法渲染此文件：{0}"
+msgid "{errorName} could not open this file. Check your connection and try again."
+msgstr "{errorName}无法打开此文件。请检查连接并重试。"
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "{failures, plural, one {# loaded document could not be indexed} other {# loaded documents could not be indexed}}. Reopen document search to retry."
@@ -845,6 +844,13 @@ msgstr "所有页面"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 #: apps/reader/src/mdbase-library-views.ts
+#: apps/reader/src/source-workspace-layout.ts
+#: apps/reader/src/workspace-tab-display.ts
+msgid "All sources"
+msgstr "所有来源"
+
+#: apps/reader/src/dockview-workspace.ts
+msgctxt "dockview workspace"
 msgid "All sources"
 msgstr "所有来源"
 
@@ -1392,10 +1398,6 @@ msgstr "书签"
 #: packages/migration/src/readwise.ts
 msgid "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open."
 msgstr "来自 Kindle、Apple Books、Instapaper、播客及其他经典 Readwise 来源的书籍只会作为元数据和高亮导入；Readwise 不提供它们的文本或文件。它们的位置是 Readwise 的标签（例如 Kindle 位置），而非 Reader 可以打开的位置。"
-
-#: apps/reader/src/ImportPageView.tsx
-msgid "Bring your library with you."
-msgstr "带上你的文献库。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2676,6 +2678,10 @@ msgstr "CSL-JSON 引文详情"
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "CSL-JSON 有错误——请修复或放弃"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Ctrl+/ for shortcuts"
+msgstr "按Ctrl+/查看快捷键"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4638,28 +4644,8 @@ msgstr "法规"
 msgid "Library"
 msgstr "文献库"
 
-#: apps/reader/src/dockview-workspace.ts
-msgctxt "dockview workspace"
-msgid "Library"
-msgstr "文献库"
-
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace searchScopeOptions"
-msgid "Library"
-msgstr "文献库"
-
-#: apps/reader/src/source-workspace-layout.ts
-msgctxt "source workspace layout"
-msgid "Library"
-msgstr "文献库"
-
 #: apps/reader/src/source-workspace-persistence.ts
 msgctxt "source workspace persistence"
-msgid "Library"
-msgstr "文献库"
-
-#: apps/reader/src/workspace-tab-display.ts
-msgctxt "workspace tab display"
 msgid "Library"
 msgstr "文献库"
 
@@ -4712,6 +4698,10 @@ msgstr "文献库视图和来源"
 msgctxt "DocumentWorkspace interface"
 msgid "Library workspace"
 msgstr "文献库工作区"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches panes."
+msgstr "资料库：J/K移动，X选择，S更改状态，A添加来源，E导出，Delete请求删除，F2重命名。[切换来源列表。阅读：Page Up/Down和空格滚动，H高亮，1–5选择颜色。Ctrl+Z执行显示的撤销操作。F6进入或切换窗格。"
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Light appearance theme"
@@ -5873,6 +5863,10 @@ msgstr "正在打开 {0}"
 msgid "Opening {0}…"
 msgstr "正在打开{0}…"
 
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Opening {title}"
+msgstr "正在打开{title}"
+
 #: apps/reader/src/preview.tsx
 msgid "Opening An anthology of attention…"
 msgstr "正在打开 An anthology of attention…"
@@ -6623,7 +6617,7 @@ msgstr "Reader 无法捕获该页面。"
 msgid "Reader could not change its colour."
 msgstr "Reader 无法更改其颜色。"
 
-#: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/use-source-status.tsx
 msgid "Reader could not change the reading status."
 msgstr "Reader 无法更改阅读状态。"
 
@@ -6896,6 +6890,10 @@ msgstr "正在读取页面…"
 msgid "Reading the table of contents…"
 msgstr "正在读取目录…"
 
+#: apps/reader/src/lazy-feature.tsx
+msgid "Reading tool unavailable"
+msgstr "阅读工具不可用"
+
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium cannot open an EPUB with an empty reading order."
 msgstr "Readium 无法打开阅读顺序为空的 EPUB。"
@@ -7000,6 +6998,11 @@ msgstr "Readwise 令牌已清除。请重新连接以继续。"
 #: packages/migration/src/readwise.ts
 msgid "Readwise tweets"
 msgstr "Readwise 推文"
+
+#. placeholder {0}: source?.title ?? ""
+#: apps/reader/src/DocumentWorkspace.tsx
+msgid "Ready to read {0}"
+msgstr "已准备好阅读{0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
@@ -7235,6 +7238,11 @@ msgstr "恢复文档窗格"
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Restore document panes · {0}"
 msgstr "恢复文档窗格 · {0}"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-status.tsx
+msgid "Restored the status of “{0}”."
+msgstr "已恢复“{0}”的状态。"
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved changes from earlier."
@@ -7572,10 +7580,6 @@ msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
 msgstr "已保存的网页"
 
-#: apps/reader/src/RenderedSourceDocument.tsx
-msgid "Saved web page · original headings below are unchanged"
-msgstr "已保存网页 · 下方原始标题未更改"
-
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Saved web pages"
@@ -7710,10 +7714,6 @@ msgstr "搜索"
 msgctxt "PDF viewer search"
 msgid "Search"
 msgstr "搜索"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Search “shortcuts” for keyboard help"
-msgstr "搜索“shortcuts”以查看键盘帮助"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Search above covers all annotations"
@@ -7901,6 +7901,11 @@ msgstr "设置字段…"
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set reading status of the selected sources"
 msgstr "设置所选来源的阅读状态"
+
+#. placeholder {0}: readingStatusLabel(status)
+#: apps/reader/src/reader-command-list.ts
+msgid "Set status: {0}"
+msgstr "设置状态：{0}"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
@@ -9103,6 +9108,10 @@ msgstr "此 PDF 大于 {maximumMb} MB。请下载后在 Reader 中导入该文�
 msgid "This Reader connection cannot store annotation images."
 msgstr "此 Reader 连接无法存储注释图片。"
 
+#: apps/reader/src/lazy-feature.tsx
+msgid "This reading tool could not be loaded. Connect to the internet and try again."
+msgstr "无法加载此阅读工具。请连接互联网后重试。"
+
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "This record only uses the core fields above."
 msgstr "此记录只使用上面的核心字段。"
@@ -9344,6 +9353,7 @@ msgstr "重试"
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/CreateFollowThroughNotice.tsx
+#: apps/reader/src/DocumentRendererStage.tsx
 #: apps/reader/src/lazy-feature.tsx
 #: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
@@ -9426,6 +9436,7 @@ msgstr "无日期"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/use-source-status.tsx
 msgctxt "Reader interface"
 msgid "Undo"
 msgstr "撤销"
@@ -9867,6 +9878,10 @@ msgstr "你可以关闭此窗口。"
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
 msgstr "你可以使用标签页查看多个文档。"
+
+#: apps/reader/src/DocumentRendererStage.tsx
+msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
+msgstr "您已离线。此文件尚未下载。请连接互联网后重试。"
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

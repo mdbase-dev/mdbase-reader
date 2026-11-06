@@ -45,7 +45,7 @@ export function ImportPageView({
       ) : null}
       <h1>
         {service === "home"
-          ? t({ message: "Bring your library with you." })
+          ? t({ message: "Import a library" })
           : t`Import from ${service === "zotero" ? "Zotero" : "Readwise Reader"}`}
       </h1>
       <p className="import-intro">

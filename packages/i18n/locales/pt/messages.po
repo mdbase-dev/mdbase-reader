@@ -108,6 +108,11 @@ msgstr ". As contagens são calculadas neste dispositivo; nada é enviado nem ar
 msgid ". Create a metadata-only chapter with its own DOI and citation; no PDF page range is inferred."
 msgstr ". Crie um capítulo apenas com metadados, com DOI e citação próprios; nenhum intervalo de páginas do PDF será inferido."
 
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-status.tsx
+msgid "“{0}” — {label}"
+msgstr "“{0}”: {label}"
+
 #. placeholder {0}: item.label
 #: apps/reader/src/CreateFollowThroughNotice.tsx
 msgid "“{0}” could not be added to your collection: another record already uses each name Reader tried."
@@ -214,11 +219,6 @@ msgstr "{0} oculto."
 #: apps/reader/src/InspectorPane.tsx
 msgid "{0} is open in {1}."
 msgstr "{0} está aberto em {1}."
-
-#. placeholder {0}: this.props.label
-#: apps/reader/src/lazy-feature.tsx
-msgid "{0} is unavailable"
-msgstr "{0} está indisponível"
 
 #. placeholder {0}: file.name
 #: apps/reader/src/use-document-attachment.ts
@@ -374,10 +374,9 @@ msgstr "{count} resultados encontrados"
 msgid "{environment} environment"
 msgstr "ambiente {environment}"
 
-#. placeholder {0}: state.message
 #: apps/reader/src/DocumentRendererStage.tsx
-msgid "{errorName} could not render this file: {0}"
-msgstr "{errorName} não conseguiu exibir este arquivo: {0}"
+msgid "{errorName} could not open this file. Check your connection and try again."
+msgstr "{errorName} não conseguiu abrir este arquivo. Verifique sua conexão e tente novamente."
 
 #: apps/reader/src/use-open-document-search.ts
 msgid "{failures, plural, one {# loaded document could not be indexed} other {# loaded documents could not be indexed}}. Reopen document search to retry."
@@ -845,6 +844,13 @@ msgstr "Todas as páginas"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 #: apps/reader/src/mdbase-library-views.ts
+#: apps/reader/src/source-workspace-layout.ts
+#: apps/reader/src/workspace-tab-display.ts
+msgid "All sources"
+msgstr "Todas as fontes"
+
+#: apps/reader/src/dockview-workspace.ts
+msgctxt "dockview workspace"
 msgid "All sources"
 msgstr "Todas as fontes"
 
@@ -1392,10 +1398,6 @@ msgstr "Marcadores"
 #: packages/migration/src/readwise.ts
 msgid "Books from Kindle, Apple Books, Instapaper, podcasts and other classic Readwise sources are imported as metadata and highlights only; Readwise does not provide their text or files. Their locations are Readwise's labels (such as Kindle locations), not positions Reader can open."
 msgstr "Livros do Kindle, Apple Books, Instapaper, podcasts e outras fontes clássicas do Readwise são importados apenas como metadados e destaques; o Readwise não fornece o texto nem os arquivos deles. As localizações são os rótulos do Readwise (como as posições do Kindle), não posições que o Reader pode abrir."
-
-#: apps/reader/src/ImportPageView.tsx
-msgid "Bring your library with you."
-msgstr "Leve sua biblioteca com você."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2676,6 +2678,10 @@ msgstr "Detalhes da citação em CSL-JSON"
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "O CSL-JSON contém erros — corrija-os ou descarte-o"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Ctrl+/ for shortcuts"
+msgstr "Ctrl+/ para atalhos"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4638,28 +4644,8 @@ msgstr "Legislação"
 msgid "Library"
 msgstr "Biblioteca"
 
-#: apps/reader/src/dockview-workspace.ts
-msgctxt "dockview workspace"
-msgid "Library"
-msgstr "Biblioteca"
-
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace searchScopeOptions"
-msgid "Library"
-msgstr "Biblioteca"
-
-#: apps/reader/src/source-workspace-layout.ts
-msgctxt "source workspace layout"
-msgid "Library"
-msgstr "Biblioteca"
-
 #: apps/reader/src/source-workspace-persistence.ts
 msgctxt "source workspace persistence"
-msgid "Library"
-msgstr "Biblioteca"
-
-#: apps/reader/src/workspace-tab-display.ts
-msgctxt "workspace tab display"
 msgid "Library"
 msgstr "Biblioteca"
 
@@ -4712,6 +4698,10 @@ msgstr "Visualizações e fontes da biblioteca"
 msgctxt "DocumentWorkspace interface"
 msgid "Library workspace"
 msgstr "Área de trabalho da biblioteca"
+
+#: apps/reader/src/ReaderCommandPalette.tsx
+msgid "Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches panes."
+msgstr "Biblioteca: J/K move, X seleciona, S muda o status, A adiciona uma fonte, E exporta, Delete pede confirmação para remover, F2 renomeia. [ mostra ou oculta Fontes. Leitura: Page Up/Down e Espaço rolam, H destaca, 1–5 escolhe uma cor. Ctrl+Z executa o Desfazer visível. F6 entra nos painéis ou alterna entre eles."
 
 #: apps/extension/src/OptionsApp.tsx
 msgctxt "Light appearance theme"
@@ -5873,6 +5863,10 @@ msgstr "Abrindo {0}"
 msgid "Opening {0}…"
 msgstr "Abrindo {0}…"
 
+#: apps/reader/src/DockviewWorkspace.tsx
+msgid "Opening {title}"
+msgstr "Abrindo {title}"
+
 #: apps/reader/src/preview.tsx
 msgid "Opening An anthology of attention…"
 msgstr "Abrindo An anthology of attention…"
@@ -6623,7 +6617,7 @@ msgstr "O Reader não conseguiu capturar essa página."
 msgid "Reader could not change its colour."
 msgstr "O Reader não conseguiu alterar a cor."
 
-#: apps/reader/src/LibraryWorkspace.tsx
+#: apps/reader/src/use-source-status.tsx
 msgid "Reader could not change the reading status."
 msgstr "O Reader não conseguiu alterar o status de leitura."
 
@@ -6896,6 +6890,10 @@ msgstr "Lendo a página…"
 msgid "Reading the table of contents…"
 msgstr "Lendo o sumário…"
 
+#: apps/reader/src/lazy-feature.tsx
+msgid "Reading tool unavailable"
+msgstr "Ferramenta de leitura indisponível"
+
 #: packages/renderer-epub/src/readium-runtime.ts
 msgid "Readium cannot open an EPUB with an empty reading order."
 msgstr "O Readium não pode abrir um EPUB com a ordem de leitura vazia."
@@ -7000,6 +6998,11 @@ msgstr "O token do Readwise foi limpo. Reconecte para continuar."
 #: packages/migration/src/readwise.ts
 msgid "Readwise tweets"
 msgstr "Tweets do Readwise"
+
+#. placeholder {0}: source?.title ?? ""
+#: apps/reader/src/DocumentWorkspace.tsx
+msgid "Ready to read {0}"
+msgstr "Pronto para ler {0}"
 
 #: apps/reader/src/LibraryNavigator.tsx
 msgctxt "LibraryNavigator interface"
@@ -7235,6 +7238,11 @@ msgstr "Restaurar os painéis do documento"
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Restore document panes · {0}"
 msgstr "Restaurar os painéis do documento · {0}"
+
+#. placeholder {0}: source.title
+#: apps/reader/src/use-source-status.tsx
+msgid "Restored the status of “{0}”."
+msgstr "O status de “{0}” foi restaurado."
 
 #: apps/extension/src/NotePanel.tsx
 msgid "Restored your unsaved changes from earlier."
@@ -7572,10 +7580,6 @@ msgctxt "LibraryWorkspace formatFilterOptions"
 msgid "Saved web page"
 msgstr "Página da web salva"
 
-#: apps/reader/src/RenderedSourceDocument.tsx
-msgid "Saved web page · original headings below are unchanged"
-msgstr "Página da web salva · os títulos originais abaixo não foram alterados"
-
 #: apps/reader/src/library-lenses.ts
 msgctxt "library lenses"
 msgid "Saved web pages"
@@ -7710,10 +7714,6 @@ msgstr "Pesquisar"
 msgctxt "PDF viewer search"
 msgid "Search"
 msgstr "Pesquisar"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Search “shortcuts” for keyboard help"
-msgstr "Pesquise «shortcuts» para ver os atalhos de teclado"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Search above covers all annotations"
@@ -7901,6 +7901,11 @@ msgstr "Definir o campo…"
 #: apps/reader/src/LibraryBulkBar.tsx
 msgid "Set reading status of the selected sources"
 msgstr "Definir o status de leitura das fontes selecionadas"
+
+#. placeholder {0}: readingStatusLabel(status)
+#: apps/reader/src/reader-command-list.ts
+msgid "Set status: {0}"
+msgstr "Definir status: {0}"
 
 #: apps/reader/src/LibraryBulkBar.tsx
 msgctxt "LibraryBulkBar interface"
@@ -9103,6 +9108,10 @@ msgstr "Este PDF é maior que {maximumMb} MB. Baixe-o e importe o arquivo no Rea
 msgid "This Reader connection cannot store annotation images."
 msgstr "Esta conexão do Reader não pode armazenar imagens de anotações."
 
+#: apps/reader/src/lazy-feature.tsx
+msgid "This reading tool could not be loaded. Connect to the internet and try again."
+msgstr "Não foi possível carregar esta ferramenta de leitura. Conecte-se à internet e tente novamente."
+
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "This record only uses the core fields above."
 msgstr "Este registro usa apenas os campos principais acima."
@@ -9344,6 +9353,7 @@ msgstr "Tentar novamente"
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/CreateFollowThroughNotice.tsx
+#: apps/reader/src/DocumentRendererStage.tsx
 #: apps/reader/src/lazy-feature.tsx
 #: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
@@ -9426,6 +9436,7 @@ msgstr "Sem data"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/use-source-status.tsx
 msgctxt "Reader interface"
 msgid "Undo"
 msgstr "Desfazer"
@@ -9867,6 +9878,10 @@ msgstr "Você pode fechar esta janela."
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
 msgstr "Você pode ver vários documentos usando abas."
+
+#: apps/reader/src/DocumentRendererStage.tsx
+msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
+msgstr "Você está offline. Este arquivo ainda não foi baixado. Conecte-se à internet e tente novamente."
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

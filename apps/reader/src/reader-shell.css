@@ -970,11 +970,14 @@
 }
 
 .library-save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: var(--ui-control-height);
   padding: 0 10px;
-  border: 1px solid color-mix(in oklch, var(--accent) 40%, var(--line));
+  border: 1px solid transparent;
   border-radius: var(--ui-radius);
-  color: var(--action);
+  color: var(--ink-soft);
   background: transparent;
   font-size: var(--ui-control);
   cursor: pointer;
@@ -1527,10 +1530,10 @@
 
   .library-table-row {
     /* Overrides the per-view column template set inline. */
-    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-columns: minmax(0, 1fr) auto auto !important;
   }
 
-  .library-table-row > span:not(.is-title, .is-actions) {
+  .library-table-row > span:not(.is-title, .is-status, .is-actions) {
     display: none;
   }
 
@@ -1553,19 +1556,18 @@
   }
 
   .library-workspace-header {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
     padding-inline: 12px;
   }
 
   /* Second line: search beside its filter and add buttons, not below them. */
   .library-workspace-search {
-    order: 3;
     max-width: none;
-    flex: 1 1 calc(100% - 92px);
   }
 
   .library-header-trailing {
-    order: 4;
     margin-left: 0;
   }
 
@@ -1762,28 +1764,26 @@
 .reader-feature-skeleton span:nth-child(even) {
   width: 72%;
 }
-.reader-operation-notice {
+.reader-notices {
   position: fixed;
   z-index: 80;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-50%);
+  translate: -50% 0;
   max-width: calc(100% - 32px);
-  padding: 12px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--ink);
-  background: var(--paper);
-  animation: composer-appear 220ms var(--ease-out);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.reader-notices > * {
+  pointer-events: auto;
 }
 @media (prefers-reduced-motion: reduce) {
   .reader-header,
   .reader-dock .dv-tabs-and-actions-container {
     transition: none;
-  }
-
-  .reader-operation-notice {
-    animation: none;
   }
 }
 .source-add-dialog > .menu-note {
@@ -3084,7 +3084,7 @@
 @keyframes composer-appear {
   from {
     opacity: 0;
-    translate: 0 4px;
+    translate: 0 8px;
   }
 }
 
@@ -3418,11 +3418,84 @@
 /* Library mode switch and the annotations view. */
 
 .library-mode {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .library-mode button {
   min-height: 26px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.library-annotation-toolbar-host {
+  flex: 1;
+  min-width: 0;
+}
+.library-annotation-toolbar-host .library-annotations-toolbar {
+  border: 0;
+  padding: 0;
+  flex-wrap: nowrap;
+}
+.inspector-citation-resident:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.reader-shell :is(.icon-button, .segmented-control button) {
+  transition:
+    background-color 120ms var(--ease-out),
+    color 120ms var(--ease-out),
+    box-shadow 120ms var(--ease-out);
+}
+.reader-shell :is(.icon-button, .segmented-control button):active {
+  background: color-mix(in oklch, var(--ink) 8%, var(--paper));
+  transition-duration: 80ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader-shell :is(.icon-button, .segmented-control button),
+  .library-status-mark {
+    transition: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .library-workspace-header .library-view-identity {
+    min-width: 0;
+  }
+  .library-mode {
+    max-width: 100%;
+  }
+  .library-mode button {
+    padding-inline: 8px;
+    min-height: 44px;
+  }
+  .library-header-trailing .reader-menu:has(> summary.library-save-button),
+  .library-header-trailing .library-actions {
+    display: none;
+  }
+  .library-header-trailing .library-result-count {
+    display: none;
+  }
+  .library-annotation-toolbar-host {
+    grid-column: 1 / -1;
+  }
+  .library-source-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .library-part-disclosure,
+  .library-row-more {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .reader-notices {
+    bottom: calc(64px + env(safe-area-inset-bottom));
+  }
 }
 
 .library-annotations-toolbar {
@@ -3633,7 +3706,7 @@
   mix-blend-mode: multiply;
   animation:
     highlight-sweep 260ms var(--ease-out, ease-out) forwards,
-    highlight-sweep-settle 420ms ease 260ms forwards;
+    highlight-sweep-settle 420ms var(--ease-out) 260ms forwards;
 }
 
 :root[data-theme="dark"] .highlight-sweep {

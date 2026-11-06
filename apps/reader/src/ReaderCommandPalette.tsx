@@ -3,7 +3,6 @@ import { matchingCommands, shortcutLabel, type Command } from "@mdbase-dev/ui/co
 import { Fragment, useEffect, useId, useRef, useState, type JSX } from "react";
 
 import { ModalDialog } from "./ModalDialog.js";
-import { OverlayPresence } from "./OverlayPresence.js";
 
 export function ReaderCommandPalette(props: {
   readonly open: boolean;
@@ -16,13 +15,14 @@ export function ReaderCommandPalette(props: {
   readonly groupLabel: (group: string) => string;
 }): JSX.Element {
   return (
-    <OverlayPresence open={props.open}>
+    <div className="reader-overlay" data-state={props.open ? "open" : "closed"}>
       <OpenPalette {...props} />
-    </OverlayPresence>
+    </div>
   );
 }
 
 function OpenPalette({
+  open,
   commands,
   onClose,
   label,
@@ -34,6 +34,10 @@ function OpenPalette({
   const { t } = useLingui();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  if (!open && query) {
+    setQuery("");
+    setActive(0);
+  }
   const input = useRef<HTMLInputElement>(null);
   const results = useRef<HTMLDivElement>(null);
   const id = useId();
@@ -56,6 +60,7 @@ function OpenPalette({
   };
   return (
     <ModalDialog
+      active={open}
       className="mdbase-command-palette"
       labelledBy={`${id}-title`}
       initialFocus={input}
@@ -73,7 +78,7 @@ function OpenPalette({
           aria-autocomplete="list"
           aria-controls={`${id}-results`}
           aria-activedescendant={matches[selected] ? `${id}-${String(selected)}` : undefined}
-          aria-describedby={`${id}-hint`}
+          aria-describedby={shortcuts ? undefined : `${id}-hint`}
           value={query}
           placeholder={placeholder}
           onChange={(event) => {
@@ -132,7 +137,7 @@ function OpenPalette({
           </p>
         ) : null}
       </div>
-      <PaletteHint id={`${id}-hint`} alternate={matches[selected]?.alternate} />
+      {!shortcuts && <PaletteHint id={`${id}-hint`} alternate={matches[selected]?.alternate} />}
     </ModalDialog>
   );
 }
@@ -165,7 +170,7 @@ function PaletteHint({
         <Trans context="Reader commands">to close</Trans>
       </span>
       <span>
-        <Trans>Search “shortcuts” for keyboard help</Trans>
+        <Trans>Ctrl+/ for shortcuts</Trans>
       </span>
     </footer>
   );
@@ -191,6 +196,14 @@ function ShortcutHelp(): JSX.Element {
         <Trans>
           In source and annotation lists, use arrows, Home, End and Page Up/Down to move, then Enter
           to open. Escape closes overlays and returns focus.
+        </Trans>
+      </p>
+      <p>
+        <Trans>
+          Library: J/K move, X selects, S changes status, A adds a source, E exports, Delete asks to
+          remove, F2 renames. [ toggles Sources. Reading: Page Up/Down and Space scroll, H
+          highlights, 1–5 choose a colour. Ctrl+Z performs the visible Undo. F6 enters or switches
+          panes.
         </Trans>
       </p>
     </section>

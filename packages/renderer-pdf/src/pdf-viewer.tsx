@@ -73,7 +73,6 @@ export function PdfViewerSurface({
           createEmbedPdfRuntime(registry, adjustments, () => containerRef.current),
         );
         surfaceRef.current = surface;
-        onSurfaceReady(surface);
 
         const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
         if (!manager) {
@@ -89,9 +88,12 @@ export function PdfViewerSurface({
               containerRef.current,
               registry.getEngine(),
               current,
+              () => {
+                onDocumentReady?.();
+                onSurfaceReady(surface);
+              },
             );
           }
-          onDocumentReady?.();
         };
         const translations = registry.getPlugin<I18nPlugin>(I18nPlugin.id)?.provides();
         subscriptionsRef.current = [

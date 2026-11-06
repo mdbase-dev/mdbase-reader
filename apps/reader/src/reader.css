@@ -2045,20 +2045,25 @@ button {
 
 /* Central library --------------------------------------------------------- */
 
-.library-card-bookplate.is-pdf {
+.library-card-bookplate.is-pdf,
+.source-thumbnail.is-pdf {
   --format-color: oklch(58% 0.14 28);
 }
 
-.library-card-bookplate.is-epub {
+.library-card-bookplate.is-epub,
+.source-thumbnail.is-epub {
   --format-color: oklch(55% 0.11 262);
 }
 
-.library-card-bookplate.is-web {
+.library-card-bookplate.is-web,
+.source-thumbnail.is-web {
   --format-color: oklch(56% 0.1 174);
 }
 
 .library-card-bookplate.is-note,
-.library-card-bookplate.is-file {
+.library-card-bookplate.is-file,
+.source-thumbnail.is-note,
+.source-thumbnail.is-file {
   --format-color: var(--muted);
 }
 

@@ -18,7 +18,6 @@ import {
   type RowSelection,
 } from "./library-row-selection.js";
 import { ReadingStatus, shortFormatLabel } from "./LibraryCells.js";
-import { LibraryPartDisclosure } from "./LibraryPartDisclosure.js";
 import { useOffsetTop } from "./LibraryTable.js";
 import { sourceFormat } from "./mdbase-library-views.js";
 import { hasModifier, itemClick, useLongPress, type LongPress } from "./use-long-press.js";
@@ -39,11 +38,9 @@ export function LibraryCards({
   onOpen,
   scrollRef,
   partRows,
-  onTogglePart,
 }: {
   readonly sources: readonly SourceSummary[];
   readonly partRows?: ReadonlyMap<SourceId, LibraryPartRow>;
-  readonly onTogglePart?: (id: SourceId) => void;
   readonly selection: RowSelection;
   readonly onSelectionChange: (selection: RowSelection) => void;
   readonly onOpen: (id: SourceId) => void;
@@ -97,7 +94,6 @@ export function LibraryCards({
                   key={source.id}
                   source={source}
                   part={partRows?.get(source.id)}
-                  onToggle={onTogglePart ? () => onTogglePart(source.id) : undefined}
                   selected={selection.ids.has(source.id)}
                   press={press}
                   touchSelecting={selection.touch === true}
@@ -129,10 +125,8 @@ function LibraryCard({
   onLongPress,
   onOpen,
   part,
-  onToggle,
 }: {
   readonly part: LibraryPartRow | undefined;
-  readonly onToggle: (() => void) | undefined;
   readonly source: SourceSummary;
   readonly selected: boolean;
   readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
@@ -180,10 +174,7 @@ function LibraryCard({
           {source.creators.join(", ") ||
             t({ message: "Unknown creator", context: "LibraryCards interface" })}
         </span>
-        <h3>
-          <LibraryPartDisclosure source={source} row={part} onToggle={onToggle} />
-          {source.title}
-        </h3>
+        <h3>{source.title}</h3>
         {(part?.diagnostic ?? part?.context) ? (
           <small>{part.diagnostic ?? part.context}</small>
         ) : null}

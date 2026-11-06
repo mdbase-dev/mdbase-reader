@@ -64,6 +64,7 @@ export interface ReaderShortcutActions {
   readonly navigate: (direction: -1 | 1) => void;
   readonly toggleSidebar: () => void;
   readonly toggleNotes: () => void;
+  readonly addSource?: () => void;
 }
 
 export function useReaderShortcuts(actions: ReaderShortcutActions): void {
@@ -98,7 +99,7 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
   const modifier = event.metaKey || event.ctrlKey;
   const editing =
     event.target instanceof Element &&
-    Boolean(event.target.closest("input, textarea, [contenteditable='true']"));
+    Boolean(event.target.closest("input, select, textarea, [contenteditable='true']"));
   if (handleLibraryShortcut(event, actions, editing, modifier)) {
     return true;
   }
@@ -135,10 +136,29 @@ function handleLibraryShortcut(
     actions.openShortcuts();
     return true;
   }
-  if (!editing && !modifier && !event.altKey && /^[jk]$/iu.test(event.key)) {
-    const row = document.querySelector<HTMLElement>(
-      '.library-table-row:not(.is-header)[tabindex="0"]',
-    );
+  if (editing || modifier || event.altKey) {
+    return false;
+  }
+  const list =
+    event.target instanceof Element
+      ? event.target.closest(
+          ".workspace-pane.is-focused .library-workspace :is(.library-table, .library-card-grid)",
+        )
+      : null;
+  if (!list) {
+    return false;
+  }
+  if (["[", "a"].includes(event.key.toLowerCase())) {
+    event.preventDefault();
+    if (event.key === "[") {
+      actions.toggleSidebar();
+    } else {
+      actions.addSource?.();
+    }
+    return true;
+  }
+  if (/^[jk]$/iu.test(event.key)) {
+    const row = list.querySelector<HTMLElement>('.library-table-row:not(.is-header)[tabindex="0"]');
     if (row) {
       event.preventDefault();
       row.focus();

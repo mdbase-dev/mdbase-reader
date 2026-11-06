@@ -168,7 +168,7 @@
   overflow: hidden;
   padding: 10px 6px 6px;
   border-radius: 3px;
-  background: var(--bg-paper);
+  background: color-mix(in oklch, var(--format-color) 7%, var(--paper));
   /* A second sheet peeks out behind the first. */
   box-shadow:
     0 0 0 1px var(--line-strong),
@@ -230,7 +230,7 @@
 .library-workspace
   .library-table:not(.library-annotation-table)
   .library-table-row:not(.is-header) {
-  height: 56px;
+  height: 48px;
   border-bottom-color: var(--line);
   color: var(--text-2);
   font-size: var(--ui-control);
@@ -257,7 +257,7 @@
 
 /* The title column header lines up with the titles, now that no badge precedes them. */
 .library-workspace .library-column-header.is-title {
-  padding-left: var(--sp-2);
+  padding-left: 56px;
 }
 
 .library-workspace .library-table-row:focus-visible {
@@ -341,6 +341,10 @@
   border-style: solid;
   background: transparent;
   opacity: 1;
+  transition:
+    background-color 200ms var(--ease-out),
+    border-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
 }
 
 .library-workspace .library-status.is-queued .library-status-mark {

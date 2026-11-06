@@ -195,6 +195,7 @@ function PdfStage({
 }): JSX.Element {
   const { t } = useLingui();
   const [state, setState] = useState<RendererState>({ status: "opening" });
+  const [attempt, setAttempt] = useState(0);
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
@@ -202,9 +203,14 @@ function PdfStage({
       state={state}
       openingLabel={translate({ message: "Preparing PDF pages…" })}
       errorName="EmbedPDF"
+      onRetry={() => {
+        setState({ status: "opening" });
+        setAttempt((value) => value + 1);
+      }}
     >
       <Suspense fallback={<DocumentMessage label={t({ message: "Loading the PDF renderer…" })} />}>
         <PdfViewerSurface
+          key={attempt}
           className="pdf-viewer"
           document={document}
           onDocumentError={failed}
@@ -225,6 +231,7 @@ function EpubStage({
 }): JSX.Element {
   const { t } = useLingui();
   const [state, setState] = useState<RendererState>({ status: "opening" });
+  const [attempt, setAttempt] = useState(0);
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
@@ -235,9 +242,14 @@ function EpubStage({
         context: "ConnectedDocument status or action",
       })}
       errorName="Readium"
+      onRetry={() => {
+        setState({ status: "opening" });
+        setAttempt((value) => value + 1);
+      }}
     >
       <Suspense fallback={<DocumentMessage label={t({ message: "Loading the EPUB renderer…" })} />}>
         <EpubViewerSurface
+          key={attempt}
           className="epub-viewer"
           document={document}
           onDocumentError={failed}
@@ -258,6 +270,7 @@ function HtmlStage({
 }): JSX.Element {
   const { t } = useLingui();
   const [state, setState] = useState<RendererState>({ status: "opening" });
+  const [attempt, setAttempt] = useState(0);
   const ready = useCallback(() => setState({ status: "ready" }), []);
   const failed = useCallback((message: string) => setState({ status: "error", message }), []);
   return (
@@ -265,9 +278,14 @@ function HtmlStage({
       state={state}
       openingLabel={translate({ message: "Preparing saved page…" })}
       errorName="HTML reader"
+      onRetry={() => {
+        setState({ status: "opening" });
+        setAttempt((value) => value + 1);
+      }}
     >
       <Suspense fallback={<DocumentMessage label={t({ message: "Loading the HTML renderer…" })} />}>
         <HtmlViewerSurface
+          key={attempt}
           className="html-viewer"
           document={document}
           onDocumentError={failed}

@@ -35,8 +35,13 @@ dialog.mdbase-feedback-dialog,
   display: flex;
   flex-direction: column;
   transition:
-    opacity 90ms ease-out,
-    transform 160ms var(--ease-out);
+    opacity 90ms var(--ease-out),
+    transform 160ms var(--ease-out),
+    display 120ms allow-discrete,
+    overlay 120ms allow-discrete;
+}
+.reader-overlay > .mdbase-command-palette:not([open]) {
+  display: none;
 }
 .reader-overlay .mdbase-command-search {
   grid-template-columns: minmax(0, 1fr);
@@ -63,8 +68,14 @@ dialog.mdbase-feedback-dialog,
 .reader-shortcut-help p {
   margin-top: 4px;
 }
-.reader-overlay .mdbase-command-results [aria-selected="true"] :is(small, kbd),
-.reader-overlay .mdbase-command-results [aria-selected="true"] .mdbase-command-alternate {
+.reader-overlay
+  .mdbase-command-results
+  [role="option"]:is([aria-selected="true"], :hover, :focus-visible)
+  :is(small, kbd),
+.reader-overlay
+  .mdbase-command-results
+  [role="option"]:is([aria-selected="true"], :hover, :focus-visible)
+  .mdbase-command-alternate {
   color: var(--ink);
 }
 .reader-overlay > dialog::backdrop,

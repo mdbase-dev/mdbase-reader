@@ -14,17 +14,58 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>mdbase reader</title>
+    <style>
+      .reader-boot {
+        color: light-dark(#343431, #e2ded8);
+        background: light-dark(#f7f4f0, #1c1d1c);
+        font: 16px/1.5 system-ui;
+        min-height: calc(100dvh - 48px);
+        padding: 24px;
+      }
+      .reader-boot header {
+        border-bottom: 1px solid light-dark(#dedbd5, #44443e);
+        padding-bottom: 16px;
+      }
+      .reader-boot-bars {
+        max-width: 720px;
+        margin: 40px auto;
+      }
+      .reader-boot-bars span {
+        display: block;
+        height: 24px;
+        margin-block: 20px;
+        background: light-dark(#e5e2dc, #343530);
+        border-radius: 3px;
+      }
+      .reader-boot-bars span:nth-child(2) {
+        width: 72%;
+      }
+      .reader-boot details {
+        max-width: 720px;
+        margin: 40px auto;
+      }
+      body:has(.reader-boot) {
+        margin: 0;
+      }
+    </style>
   </head>
   <body>
-    <!--
-      THESIS: The reading surface owns the room; library and annotation tools live at its edges instead of competing as equal panels.
-      OWN-WORLD: Restrained mdbase neutral planes, blue structural signals, Atkinson text, Azeret metadata, fine rules, and compact square controls.
-      STORY: Find a source in the library rail, read without delay in the dominant canvas, then capture and revisit thinking in the contextual margin.
-      FIRST VIEWPORT: A compact command strip spans a 272px library rail, an expansive document, and a 320px inspector; focus mode collapses both rails.
-      FORM: Continuous reading workbench, grounded structure 7, seed 584e8e7e.
-      FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
-    -->
-    <div id="root"></div>
+    <div id="root">
+      <main class="reader-boot" aria-label="Loading Reader">
+        <header>mdbase reader</header>
+        <div class="reader-boot-bars" role="status">
+          Loading Reader…
+          <span aria-hidden="true"></span><span aria-hidden="true"></span
+          ><span aria-hidden="true"></span>
+        </div>
+        <details>
+          <summary>Reader not opening?</summary>
+          <p>
+            Check your connection, then <a href="">reload Reader</a>. JavaScript must be enabled.
+          </p>
+        </details>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

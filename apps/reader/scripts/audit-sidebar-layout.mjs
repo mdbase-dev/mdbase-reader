@@ -19,7 +19,7 @@ export async function auditSidebarLayout(page, { screenshot, measurements }) {
         name: new RegExp(`^\\[test\\] Research ${String(n).padStart(4, "0")}`),
       })
       .click();
-    await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+    await expect(page.locator(".mdbase-command-palette")).toBeHidden();
     await expect(tab(n)).toBeVisible();
   };
   const menu = async (n, label) => {

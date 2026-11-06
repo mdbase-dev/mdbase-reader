@@ -7,6 +7,14 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import {
+  round4Library,
+  readingKeys,
+  desktopPdfNavigation,
+  offlinePdf,
+  staticBoot,
+  retainedCitation,
+} from "./polish-round4-cases.mjs";
+import {
   addSourceTiming,
   geometry,
   keyboardLibrary,
@@ -30,6 +38,14 @@ const browser = await chromium.launch({ headless: true });
 const results = [];
 
 async function audit(page, state) {
+  await page.evaluate(async () => {
+    await Promise.all(
+      globalThis.document
+        .getAnimations()
+        .filter((animation) => animation.effect.getTiming().iterations !== Infinity)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
   const violations = await page.evaluate(async () => {
     const result = await globalThis.axe.run(globalThis.document, {
       runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
@@ -66,7 +82,7 @@ async function trace(
         const panel = globalThis.document.querySelector(selector);
         samples.push({
           time: performance.now() - start,
-          present: Boolean(panel),
+          present: Boolean(panel?.checkVisibility()),
           opacity: panel ? Number(globalThis.getComputedStyle(panel, pseudo).opacity) : null,
           transform: panel ? globalThis.getComputedStyle(panel, pseudo).transform : null,
           transitionDuration: panel
@@ -124,6 +140,16 @@ async function desktopPanes(page, output, name, reducedMotion) {
   const inspector = page.getByRole("complementary", { name: "Source workspace" });
   console.log(`${name}: pane resizing`);
   await expect.poll(async () => Math.round((await inspector.boundingBox()).width)).toBe(340);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          globalThis.document
+            .getAnimations()
+            .filter((animation) => animation.effect.getTiming().iterations !== Infinity).length,
+      ),
+    )
+    .toBe(0);
   const initialBounds = await inspector.boundingBox();
   console.log(`${name}: inspector bounds ${JSON.stringify(initialBounds)}`);
   await page.mouse.move(initialBounds.x, initialBounds.y + initialBounds.height / 2);
@@ -170,6 +196,7 @@ async function desktopPanes(page, output, name, reducedMotion) {
   );
   await page.screenshot({ path: join(output, `${name}-citation-180.png`) });
   await inspector.getByRole("button", { name: "Back to citation", exact: true }).click();
+  await retainedCitation(page);
   const maximize = await geometry(page, "Maximize document", reducedMotion);
   const restore = await geometry(page, "Restore document panes", reducedMotion);
   return {
@@ -195,10 +222,11 @@ async function command(page, query) {
     new RegExp(query, "iu"),
   );
   await page.keyboard.press("Enter");
-  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0, { timeout: 30_000 });
+  await expect(page.locator(".mdbase-command-palette")).toBeHidden({ timeout: 30_000 });
 }
 
 try {
+  await staticBoot(browser, origin);
   for (const viewport of [
     { width: 1440, height: 900 },
     { width: 390, height: 844 },
@@ -222,6 +250,7 @@ try {
           await expect(page.getByRole("note")).toContainText("no collection connected");
           await expect(page.getByRole("button", { name: /Switch collection/u })).toHaveCount(0);
           await expect(page.locator(".connection-state")).toHaveCount(0);
+          await round4Library(page);
           await audit(page, `${name} library`);
           await page.screenshot({ path: join(output, `${name}-library.png`) });
           await keyboardLibrary(page);
@@ -254,14 +283,14 @@ try {
           result.paletteLayout = await page.locator(".mdbase-command-palette").evaluate((panel) => {
             const help = panel.querySelector(".reader-shortcut-help").getBoundingClientRect();
             const results = panel.querySelector(".mdbase-command-results").getBoundingClientRect();
-            const footer = panel.querySelector(".mdbase-command-footer").getBoundingClientRect();
+            const footer = panel.getBoundingClientRect();
             const active = panel.querySelector('[aria-selected="true"]');
             const bounds = active.getBoundingClientRect();
             return {
               helpBottom: help.bottom,
               resultsTop: results.top,
               resultsBottom: results.bottom,
-              footerTop: footer.top,
+              footerTop: footer.bottom,
               activeTop: bounds.top,
               activeBottom: bounds.bottom,
               activeHit: active.contains(
@@ -329,7 +358,7 @@ try {
           result.settingsEnter = await trace(page, "observe", "dialog.settings-page");
           await page.locator("dialog.settings-page").waitFor();
           assertMotion(result.settingsEnter, 160, reducedMotion);
-          await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+          await expect(page.locator(".mdbase-command-palette")).toBeHidden();
           await audit(page, `${name} settings`);
           await page.keyboard.press("Escape");
           result.settingsExit = await trace(page, "observe", "dialog.settings-page");
@@ -368,9 +397,12 @@ try {
           await page.keyboard.press("Enter");
           await page.locator("iframe.html-viewer").waitFor();
           await expect(
-            page.getByRole("status").filter({ hasText: "Opened The Principles of Psychology" }),
+            page
+              .getByRole("status")
+              .filter({ hasText: "Ready to read The Principles of Psychology" }),
           ).toHaveCount(1, { timeout: 30_000 });
-          await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+          await expect(page.locator(".mdbase-command-palette")).toBeHidden();
+          await readingKeys(page);
           await audit(page, `${name} HTML`);
           await page.screenshot({ path: join(output, `${name}-reading.png`) });
           if (viewport.width === 1440)
@@ -410,10 +442,11 @@ try {
             .locator("embedpdf-container")
             .getByRole("textbox", { name: "Page", exact: true })
             .waitFor();
-          await page
-            .locator("embedpdf-container")
-            .getByRole("region", { name: "PDF pages", exact: true })
-            .focus();
+          await expect(
+            page
+              .locator("embedpdf-container")
+              .getByRole("region", { name: "PDF pages", exact: true }),
+          ).toBeFocused();
           await page.keyboard.press("PageDown");
           await expect
             .poll(() =>
@@ -431,6 +464,7 @@ try {
           if (viewport.width === 390)
             result.pdfSheet = await pdfSheet(page, reducedMotion, true, audit);
           if (viewport.width === 1440) await pdfHighlightKey(page);
+          if (viewport.width === 1440) await desktopPdfNavigation(page);
           result.pdf = await page.locator("embedpdf-container").evaluate((host) => ({
             pages: host.shadowRoot.querySelectorAll("article section").length,
             firstText: host.shadowRoot.querySelector("article p").textContent,
@@ -449,6 +483,7 @@ try {
             true,
           );
           await page.screenshot({ path: join(output, `${name}-pdf.png`) });
+          await offlinePdf(context, origin, command);
           result.passed = true;
         } catch (error) {
           console.error(name, error);

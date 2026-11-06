@@ -52,7 +52,7 @@ describe("Reader title and library polish", () => {
     expect(renamed).toContain("<h1>[test] Newly renamed</h1>");
     expect(renamed).not.toContain(source.title);
     expect(renamed).toContain("<h1>Original saved heading</h1>");
-    expect(renamed).toContain("Saved web page · original headings below are unchanged");
+    expect(renamed).not.toContain("original headings below are unchanged");
   });
 
   it("does not describe a PDF as a saved page with original headings", () => {

@@ -44,6 +44,18 @@ it("offers chapter creation for a PDF book row when chapter creation is availabl
   expect(onCreateChapters).toHaveBeenCalledExactlyOnceWith(book);
 });
 
+it("passes the displayed source to status changes rather than requiring a global lookup", () => {
+  const source = { ...partSource("unindexed"), readingStatus: "queued" as const };
+  const onChangeStatus = vi.fn();
+  menu(source, { onChangeStatus });
+  const finished = [...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]')].find(
+    ({ textContent }) => textContent === "Finished",
+  );
+  expect(finished).toBeDefined();
+  act(() => finished!.click());
+  expect(onChangeStatus).toHaveBeenCalledExactlyOnceWith(source, "finished");
+});
+
 it("leaves chapter creation out when it is off or the source has no PDF/EPUB", () => {
   const book = partSource("book");
   expect(menu(book, {}).some(({ textContent }) => textContent.includes("chapters"))).toBe(false);

@@ -25,6 +25,15 @@ export function installReaderPdfChrome(container: EmbedPdfContainer): Unsubscrib
 }
 
 export const readerPdfChromeCss = `
+[data-sidebar-id="sidebar-panel"] [role="tab"][aria-selected="true"] {
+  color: var(--color-text) !important;
+  background: var(--color-selected) !important;
+  border-color: var(--color-accent) !important;
+}
+[data-sidebar-id="sidebar-panel"] [role="button"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
 .reader-pdf-text {
   position: absolute;
   width: 1px;
@@ -67,6 +76,9 @@ div[style*="background: rgb(33, 150, 243)"] {
 }
 
 @media (max-width: 680px), (pointer: coarse) {
+  [data-sidebar-id="sidebar-panel"] [role="tab"] {
+    min-height: 44px;
+  }
   [data-epdf-i="reader-navigation"],
   [data-epdf-i="reader-page-controls"] {
     min-height: 44px;

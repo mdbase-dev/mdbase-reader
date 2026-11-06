@@ -5,13 +5,13 @@ import { Select, type SelectItems } from "@mdbase-dev/ui/select";
 import {
   citationStyleLabel,
   citationStyles,
-  renderCitation,
   renderedCitationText,
   type RenderedCitation,
 } from "@mdbase-reader/ui/citation";
 import { useEffect, useRef, useState, type JSX } from "react";
 
 import { writeCitationDrag } from "./citation-drag.js";
+import { renderCitation } from "./citation-renderer.js";
 import { CheckIcon, CopyIcon } from "./icons.js";
 import { copyText } from "./selection-copy.js";
 import { useSessionChoice } from "./use-session-choice.js";

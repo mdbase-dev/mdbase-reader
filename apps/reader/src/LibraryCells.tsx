@@ -16,11 +16,7 @@ import { publicationDateLabel } from "./library-publication-date.js";
 import { sourceFormat } from "./mdbase-library-views.js";
 import { readingProgressValue, readingStatusOf } from "./reading-progress.js";
 
-import type {
-  ReadingStatus as ReadingStatusValue,
-  SourceId,
-  SourceSummary,
-} from "@mdbase-reader/core";
+import type { ReadingStatus as ReadingStatusValue, SourceSummary } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 const empty = <span className="library-empty-value">—</span>;
@@ -183,7 +179,7 @@ export function StatusPicker({
   onChange,
 }: {
   readonly source: SourceSummary;
-  readonly onChange: (id: SourceId, status: ReadingStatusValue) => void;
+  readonly onChange: (source: SourceSummary, status: ReadingStatusValue) => void;
 }): JSX.Element {
   const { t } = useLingui();
   const progress = readingProgress(source);
@@ -200,7 +196,7 @@ export function StatusPicker({
         onClick={(event) => event.stopPropagation()}
         onDoubleClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
-        onChange={(next) => onChange(source.id, next)}
+        onChange={(next) => onChange(source, next)}
       />
       {progress !== null ? <ProgressNumber progress={progress} /> : null}
     </span>

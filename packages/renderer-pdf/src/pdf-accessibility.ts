@@ -10,6 +10,7 @@ export function installPdfAccessibility(
   container: EmbedPdfContainer,
   engine: PdfEngine,
   document: PdfDocumentObject,
+  onViewportReady: () => void,
 ): Unsubscribe {
   const root = container.shadowRoot;
   if (!root) {
@@ -22,7 +23,10 @@ export function installPdfAccessibility(
   const isActive = (): boolean => !lifetime.signal.aborted;
   let allPagesHaveText = true;
   let complete = false;
+  let viewportReady = false;
   const updateSheet = pdfSheetAccessibility(root);
+  const keydown = (event: Event): void => pdfNavigationKey(root, event as KeyboardEvent);
+  root.addEventListener("keydown", keydown, true);
   const update = (): void => {
     updateSheet();
     const scroller = findPdfScroller(root);
@@ -34,6 +38,11 @@ export function installPdfAccessibility(
       viewport.tabIndex = 0;
       viewport.setAttribute("role", "region");
       viewport.setAttribute("aria-label", t`PDF pages`);
+      viewport.setAttribute("data-reader-pdf-viewport", "");
+      if (!viewportReady) {
+        viewportReady = true;
+        onViewportReady();
+      }
     }
     root
       .querySelector('[data-epdf-i="reader-page-controls"] input')
@@ -84,14 +93,55 @@ export function installPdfAccessibility(
   return () => {
     lifetime.abort();
     observer.disconnect();
+    root.removeEventListener("keydown", keydown, true);
     text.remove();
   };
+}
+
+function namePdfNavigation(root: ShadowRoot): void {
+  const sidebar = root.querySelector<HTMLElement>('[data-sidebar-id="sidebar-panel"]');
+  if (sidebar) {
+    const tabs = Array.from(sidebar.querySelectorAll<HTMLElement>('[role="tab"]'));
+    tabs[0]?.setAttribute("aria-label", t`Thumbnails`);
+    tabs[1]?.setAttribute("aria-label", t`Outline`);
+    tabs[0]?.parentElement?.setAttribute("role", "tablist");
+    tabs[0]?.parentElement?.setAttribute("aria-label", t`PDF navigation`);
+    const active = tabs.find((tab) => tab.getAttribute("aria-selected") === "true") ?? tabs[0];
+    const panel = sidebar.querySelector<HTMLElement>(
+      '[style*="overflow-y: auto"], .overflow-y-auto',
+    );
+    tabs.forEach((tab, index) => {
+      tab.id = `reader-pdf-nav-${String(index)}`;
+      tab.tabIndex = tab === active ? 0 : -1;
+      tab.setAttribute("aria-controls", "reader-pdf-navigation-panel");
+    });
+    if (panel && active) {
+      panel.id = "reader-pdf-navigation-panel";
+      panel.tabIndex = 0;
+      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute("aria-labelledby", active.id);
+      namePdfThumbnails(panel);
+    }
+  }
+}
+
+function namePdfThumbnails(panel: HTMLElement): void {
+  for (const thumbnail of panel.querySelectorAll<HTMLElement>('div[style*="cursor: pointer"]')) {
+    const number = thumbnail.querySelector("span")?.textContent.trim();
+    if (thumbnail.querySelector("img") && number && /^\d+$/u.test(number)) {
+      thumbnail.tabIndex = 0;
+      thumbnail.classList.add("reader-pdf-thumbnail");
+      thumbnail.setAttribute("role", "button");
+      thumbnail.setAttribute("aria-label", t`Page ${number}`);
+    }
+  }
 }
 
 function pdfSheetAccessibility(root: ShadowRoot): () => void {
   let current: Element | null = null;
   let returnTo: HTMLElement | null = null;
   return () => {
+    namePdfNavigation(root);
     const sheet = root.querySelector<HTMLElement>(
       '.bg-bg-overlay + [data-sidebar-id="sidebar-panel"]',
     );
@@ -100,14 +150,6 @@ function pdfSheetAccessibility(root: ShadowRoot): () => void {
       sheet.setAttribute("role", "dialog");
       sheet.setAttribute("aria-modal", "true");
       sheet.setAttribute("aria-label", t`PDF navigation`);
-      const tabs = sheet.querySelectorAll<HTMLElement>('[role="tab"]');
-      tabs[0]?.setAttribute("aria-label", t`Thumbnails`);
-      tabs[1]?.setAttribute("aria-label", t`Outline`);
-      for (const scroller of sheet.querySelectorAll<HTMLElement>('[style*="overflow-y: auto"]')) {
-        scroller.tabIndex = 0;
-        scroller.setAttribute("role", "region");
-        scroller.setAttribute("aria-label", t`Thumbnails`);
-      }
     }
     if (sheet === current) {
       return;
@@ -142,4 +184,45 @@ function pdfSheetAccessibility(root: ShadowRoot): () => void {
       }
     });
   };
+}
+
+function pdfNavigationKey(root: ShadowRoot, event: KeyboardEvent): void {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return;
+  }
+  if (target.matches('[role="tab"]')) {
+    const tabs = Array.from(
+      target.parentElement?.querySelectorAll<HTMLElement>('[role="tab"]') ?? [],
+    );
+    const index = tabs.indexOf(target);
+    const destination = pdfTabDestination(event.key, index, tabs.length);
+    if (destination !== null) {
+      event.preventDefault();
+      event.stopPropagation();
+      tabs[destination]?.click();
+      tabs[destination]?.focus();
+    }
+  } else if (target.matches(".reader-pdf-thumbnail") && root.contains(target)) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      event.stopPropagation();
+      target.click();
+    }
+  }
+}
+
+function pdfTabDestination(key: string, index: number, count: number): number | null {
+  switch (key) {
+    case "ArrowRight":
+      return (index + 1) % count;
+    case "ArrowLeft":
+      return (index - 1 + count) % count;
+    case "Home":
+      return 0;
+    case "End":
+      return count - 1;
+    default:
+      return null;
+  }
 }

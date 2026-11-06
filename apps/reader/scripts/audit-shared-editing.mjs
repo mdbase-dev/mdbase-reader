@@ -85,7 +85,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   };
   await searchSources(page, "Research 0000");
   await page.getByRole("option", { name: /^\[test\] Research 0000/u }).click();
-  await expect(page.locator(".mdbase-command-palette")).toHaveCount(0);
+  await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   const documentId = await page
     .locator(".reader-dock-tab:not(.is-side)")
     .filter({ hasText: "[test] Research 0000" })

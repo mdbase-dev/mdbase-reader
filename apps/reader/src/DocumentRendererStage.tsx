@@ -9,11 +9,13 @@ export function RendererStage({
   state,
   openingLabel,
   errorName,
+  onRetry,
   children,
 }: {
   readonly state: RendererState;
   readonly openingLabel: string;
   readonly errorName: string;
+  readonly onRetry?: () => void;
   readonly children: ReactNode;
 }): JSX.Element {
   const { t } = useLingui();
@@ -34,8 +36,20 @@ export function RendererStage({
       {state.status === "error" ? (
         <div className="document-renderer-status">
           <DocumentMessage
-            label={t`${errorName} could not render this file: ${state.message}`}
+            label={
+              !navigator.onLine
+                ? t`You’re offline. This file isn’t downloaded yet. Connect to the internet and try again.`
+                : t`${errorName} could not open this file. Check your connection and try again.`
+            }
             tone="error"
+            {...(onRetry
+              ? {
+                  action: {
+                    label: t({ message: "Try again", context: "Reader interface" }),
+                    run: onRetry,
+                  },
+                }
+              : {})}
           />
         </div>
       ) : null}

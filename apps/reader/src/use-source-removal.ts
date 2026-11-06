@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
+import { dialogInvoker } from "./ModalDialog.js";
 
 import type { SourceDeletionPlan, SourceId, SourceSummary } from "@mdbase-reader/core";
 
@@ -10,6 +11,7 @@ export interface PendingSourceRemoval {
   readonly status: "checking" | "confirming" | "removing";
   readonly plan: SourceDeletionPlan | null;
   readonly problem: string | null;
+  readonly invoker: Element | null;
 }
 
 export interface SourceRemovalController {
@@ -51,17 +53,19 @@ export function useSourceRemoval(
         return;
       }
       const current = ++attempt.current;
-      setPending({ source, status: "checking", plan: null, problem: null });
+      const invoker = dialogInvoker(document.activeElement) ?? null;
+      setPending({ source, status: "checking", plan: null, problem: null, invoker });
       void plan(source.id).then(
         (checked) => {
           if (attempt.current === current) {
-            setPending({ source, status: "confirming", plan: checked, problem: null });
+            setPending({ source, status: "confirming", plan: checked, problem: null, invoker });
           }
         },
         (reason: unknown) => {
           if (attempt.current === current) {
             setPending({
               source,
+              invoker,
               status: "confirming",
               plan: null,
               problem: readerErrorMessage(
@@ -99,6 +103,7 @@ export function useSourceRemoval(
           // The check is spent; asking again checks the source afresh.
           setPending({
             source,
+            invoker: pending.invoker,
             status: "confirming",
             plan: null,
             problem: readerErrorMessage(

@@ -28,8 +28,12 @@ export function lazyFeature<Props extends object>(
     const retry = (): void => {
       setFeature((current) => ({ attempt: current.attempt + 1, Surface: lazy(load) }));
     };
+    const onError =
+      "onDocumentError" in props && typeof props.onDocumentError === "function"
+        ? (props.onDocumentError as (message: string) => void)
+        : undefined;
     return (
-      <FeatureBoundary key={attempt} label={label} retry={retry}>
+      <FeatureBoundary key={attempt} label={label} retry={retry} onError={onError}>
         <Suspense
           fallback={
             <div
@@ -58,7 +62,12 @@ export function lazyFeature<Props extends object>(
 }
 
 class FeatureBoundary extends Component<
-  { readonly label: string; readonly retry: () => void; readonly children: ReactNode },
+  {
+    readonly label: string;
+    readonly retry: () => void;
+    readonly children: ReactNode;
+    readonly onError: ((message: string) => void) | undefined;
+  },
   { readonly failed: boolean }
 > {
   override state = { failed: false };
@@ -67,10 +76,19 @@ class FeatureBoundary extends Component<
     return { failed: true };
   }
 
+  override componentDidCatch(): void {
+    this.props.onError?.(
+      translate`This reading tool could not be loaded. Connect to the internet and try again.`,
+    );
+  }
+
   override render(): ReactNode {
+    if (this.state.failed && this.props.onError) {
+      return null;
+    }
     return this.state.failed ? (
       <div className="connected-document-message is-error" role="alert">
-        <h2>{translate`${this.props.label} is unavailable`}</h2>
+        <h2>{translate`Reading tool unavailable`}</h2>
         <p>{translate`Connect to the internet and try again to load this reading tool.`}</p>
         <button type="button" onClick={this.props.retry}>
           <Trans context="Reader interface">Try again</Trans>

@@ -85,9 +85,6 @@
   min-height: 0;
   min-width: 0;
 }
-.reader-dock-sidebar[hidden] {
-  display: none;
-}
 .reader-dock .dv-render-overlay {
   transition:
     width 220ms var(--ease-out),
@@ -95,16 +92,46 @@
     left 220ms var(--ease-out),
     top 220ms var(--ease-out);
 }
+.reader-dock:not([data-mobile]) .dv-render-overlay:has([data-reader-edge="right"]) {
+  left: auto !important;
+  right: 0;
+}
 /* Always-mounted edge panels can retain phone geometry while a hidden shell is 0px wide.
    Hide the renderer overlay too: its empty React wrapper must not intercept other tabs. */
-.reader-dock .dv-render-overlay:has(.reader-dock-sidebar[hidden]),
+.reader-dock .dv-render-overlay:has(.reader-dock-sidebar[data-visible="false"]),
 .reader-dock .dv-render-overlay:has(.workspace-pane[aria-hidden="true"]) {
-  visibility: hidden !important;
   pointer-events: none !important;
+}
+.reader-dock .dv-render-overlay:has(.reader-dock-sidebar[data-visible="false"]) {
+  opacity: 0;
+  transition:
+    width 220ms var(--ease-out),
+    opacity 220ms var(--ease-out);
+}
+.reader-dock:not([data-mobile]) .dv-render-overlay:has([data-reader-edge]) {
+  visibility: visible !important;
+  transition:
+    width 220ms var(--ease-out),
+    left 220ms var(--ease-out),
+    top 220ms var(--ease-out),
+    transform 220ms var(--ease-out),
+    opacity 220ms var(--ease-out);
+}
+.reader-dock:not([data-mobile])
+  .dv-render-overlay:has([data-reader-edge="left"][data-visible="false"]) {
+  transform: translateX(-100%);
+}
+.reader-dock:not([data-mobile])
+  .dv-render-overlay:has([data-reader-edge="right"][data-visible="false"]) {
+  transform: translateX(100%);
+}
+.reader-dock .dv-render-overlay:has(.workspace-pane[aria-hidden="true"]),
+.reader-dock[data-mobile] .dv-render-overlay:has(.reader-dock-sidebar[data-visible="false"]) {
+  visibility: hidden !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .reader-dock .dv-render-overlay {
-    transition: none;
+    transition: none !important;
   }
 }
 .reader-dock .dv-tab:focus-visible,

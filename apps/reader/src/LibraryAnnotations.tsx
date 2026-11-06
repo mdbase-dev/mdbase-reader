@@ -1,5 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import { useMemo, useState, type JSX, type RefObject } from "react";
+import { createPortal } from "react-dom";
 
 import { annotationEntries, annotationTags, type AnnotationFilter } from "./annotation-overview.js";
 import {
@@ -31,6 +32,7 @@ import type { Annotation, AnnotationId, SourceSummary } from "@mdbase-reader/cor
 
 /** Every annotation in the collection, filterable by its own fields and by its source's. */
 interface LibraryAnnotationsProps {
+  readonly toolbarHost?: HTMLElement | null;
   readonly gateway: ReaderWorkspaceGateway;
   readonly view: MdbaseLibraryView;
   readonly controller: MdbaseLibraryViewsController;
@@ -44,6 +46,7 @@ interface LibraryAnnotationsProps {
 }
 
 export function LibraryAnnotations({
+  toolbarHost,
   gateway,
   view,
   controller,
@@ -83,31 +86,36 @@ export function LibraryAnnotations({
   const savedLayout = annotationLayoutOf(saved);
   return (
     <div className="library-annotations">
-      <AnnotationToolbar
-        filter={filter}
-        onFilterChange={setFilter}
-        layout={layout}
-        onLayoutChange={setLayout}
-        count={load.status === "loading" ? null : entries.length}
-        tags={tags}
-        propertyKeys={propertyKeys}
-        sources={sources}
-        actions={{
-          ...(saving.saveOver ? { onSave: saving.saveOver } : {}),
-          saving: controller.saving,
-          onRefresh: retry,
-          onSaveAs: saving.startNaming,
-          ...(JSON.stringify(layout) !== JSON.stringify(savedLayout)
-            ? {
-                onReset: () => {
-                  setLayout(savedLayout);
-                  setLayoutResets((count) => count + 1);
-                },
-              }
-            : {}),
-          sourceAnnotationsView,
-        }}
-      />
+      {toolbarHost
+        ? createPortal(
+            <AnnotationToolbar
+              filter={filter}
+              onFilterChange={setFilter}
+              layout={layout}
+              onLayoutChange={setLayout}
+              count={load.status === "loading" ? null : entries.length}
+              tags={tags}
+              propertyKeys={propertyKeys}
+              sources={sources}
+              actions={{
+                ...(saving.saveOver ? { onSave: saving.saveOver } : {}),
+                saving: controller.saving,
+                onRefresh: retry,
+                onSaveAs: saving.startNaming,
+                ...(JSON.stringify(layout) !== JSON.stringify(savedLayout)
+                  ? {
+                      onReset: () => {
+                        setLayout(savedLayout);
+                        setLayoutResets((count) => count + 1);
+                      },
+                    }
+                  : {}),
+                sourceAnnotationsView,
+              }}
+            />,
+            toolbarHost,
+          )
+        : null}
       <AnnotationProblem load={load} executionProblem={execution.problem} onRetry={retry} />
       {load.status === "ready" && !load.loading && entries.length === 0 ? (
         <div className="library-workspace-empty">

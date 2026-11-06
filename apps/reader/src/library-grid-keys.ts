@@ -64,7 +64,7 @@ function actOnKey<Id extends string>(event: KeyboardEvent, context: GridKeyConte
   if (event.key === "Escape" && selection.ids.size > 1) {
     event.stopPropagation();
     context.onSelectionChange(selectRow(selection, rowIds, active, "replace"));
-  } else if (event.key === " ") {
+  } else if (!modifier && !event.altKey && (event.key === " " || event.key.toLowerCase() === "x")) {
     event.preventDefault();
     context.onSelectionChange(selectRow(selection, rowIds, active, "toggle"));
   } else if (event.key === "Enter") {
