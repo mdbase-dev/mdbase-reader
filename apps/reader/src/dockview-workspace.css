@@ -109,13 +109,15 @@
     opacity 220ms var(--ease-out);
 }
 .reader-dock:not([data-mobile]) .dv-render-overlay:has([data-reader-edge]) {
-  visibility: visible !important;
   transition:
     width 220ms var(--ease-out),
     left 220ms var(--ease-out),
     top 220ms var(--ease-out),
     transform 220ms var(--ease-out),
     opacity 220ms var(--ease-out);
+}
+.reader-dock:not([data-mobile]) .dv-render-overlay:has([data-reader-edge][data-visible="false"]) {
+  visibility: visible !important;
 }
 .reader-dock:not([data-mobile])
   .dv-render-overlay:has([data-reader-edge="left"][data-visible="false"]) {

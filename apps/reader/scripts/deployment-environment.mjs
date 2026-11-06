@@ -4,20 +4,41 @@ export const readerDeployments = Object.freeze({
     connectUrl: "https://connect-lab.mdbase.dev",
     loopbackUrl: "http://127.0.0.1:28487",
     branch: "lab",
+    editorUrl: "https://editor-lab.mdbase.dev",
+    writerUrl: "https://lab.mdbase-writer.pages.dev",
   }),
   staging: Object.freeze({
     origin: "https://staging.mdbase-reader.pages.dev",
     connectUrl: "https://connect-staging.mdbase.dev",
     loopbackUrl: "http://127.0.0.1:28486",
     branch: "staging",
+    editorUrl: "https://editor-staging.mdbase.dev",
+    writerUrl: "https://staging.mdbase-writer.pages.dev",
   }),
   production: Object.freeze({
     origin: "https://reader.mdbase.dev",
     connectUrl: "https://connect.mdbase.dev",
     loopbackUrl: "http://127.0.0.1:28485",
     branch: "main",
+    editorUrl: "https://editor.mdbase.dev",
+    writerUrl: "https://writer.mdbase.dev",
   }),
 });
+
+export function readerAppUrls(target, deployments = readerDeployments) {
+  const deployment = deployments[target];
+  const urls = {
+    reader: deployment?.origin,
+    editor: deployment?.editorUrl,
+    writer: deployment?.writerUrl,
+  };
+  for (const [app, value] of Object.entries(urls)) {
+    if (!value || new URL(value).protocol !== "https:") {
+      throw new Error(`Reader ${target} requires an HTTPS ${app} URL.`);
+    }
+  }
+  return urls;
+}
 
 export function readerDeploymentFor(environment) {
   if (

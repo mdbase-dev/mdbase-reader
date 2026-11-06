@@ -90,7 +90,7 @@ describe("removing a source", () => {
     expect(host.querySelector("[role=alertdialog]")).toBeNull();
   });
 
-  it("routes native dismissal through cancel and refuses it while removal is writing", async () => {
+  it("dismisses before confirmation and immediately confirms while removal is writing", async () => {
     const opener = document.createElement("button");
     document.body.append(opener);
     opener.focus();
@@ -109,12 +109,9 @@ describe("removing a source", () => {
       }),
     );
     await act(async () => button("Remove source")?.click());
-    await act(async () => {
-      const dialog = host.querySelector("dialog")!;
-      dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
-      dialog.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: -1 }));
-    });
-    expect(host.querySelector("dialog")?.open).toBe(true);
+    expect(host.querySelector("dialog")).toBeNull();
+    expect(removal.notice).toContain("Removed “Imported by mistake”.");
+    expect(onRemoved).not.toHaveBeenCalled();
     await act(async () => finish());
     expect(host.querySelector("dialog")).toBeNull();
     opener.remove();
@@ -130,5 +127,23 @@ describe("removing a source", () => {
     expect(host.querySelector("li")?.textContent).toBe("Linking source");
     expect(host.querySelector("li")?.getAttribute("title")).toBe("annotations/a1.md");
     expect(host.textContent).toContain("use Move annotation to source on it first");
+  });
+
+  it("withdraws optimistic success and offers a fresh check when removal fails", async () => {
+    let refuse!: (reason: Error) => void;
+    remove.mockReturnValueOnce(
+      new Promise<void>((_resolve, reject) => {
+        refuse = reject;
+      }),
+    );
+    await act(async () => removal.request?.(source));
+    await act(async () => button("Remove source")?.click());
+    expect(removal.notice).toContain("Removed");
+    await act(async () => refuse(new Error("Removal refused")));
+    expect(removal.notice).toBeNull();
+    expect(host.textContent).toContain("Removal refused");
+    expect(button("Check again")).toBeDefined();
+    expect(button("Remove source")?.disabled).toBe(true);
+    expect(onRemoved).not.toHaveBeenCalled();
   });
 });

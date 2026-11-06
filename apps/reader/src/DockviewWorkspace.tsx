@@ -73,6 +73,7 @@ function SidePanel({
   return (
     <div
       className="reader-dock-sidebar"
+      data-panel-id={id}
       data-reader-edge={location?.type === "edge" ? location.position : undefined}
       data-visible={visible}
       inert={!visible}
@@ -231,14 +232,25 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
   const { document, inspectorTitle } = useDockContext();
   const label = useId();
   const element = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const tab = element.current?.closest('[role="tab"]');
-    tab?.setAttribute("aria-labelledby", label);
-    return () => tab?.removeAttribute("aria-labelledby");
-  }, [label]);
-  const tab = props.params.tab;
-  const close = (): void => document.sourceWorkspace.dock.close(props.api.id);
+  const dock = document.sourceWorkspace.dock;
   const side = sidePanelIds.has(props.api.id);
+  useLayoutEffect(() => {
+    const tab = element.current?.closest<HTMLElement>('[role="tab"]');
+    const close = (event: KeyboardEvent): void => {
+      if (!side && ["Delete", "Backspace"].includes(event.key)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        dock.close(props.api.id);
+      }
+    };
+    tab?.setAttribute("aria-labelledby", label);
+    tab?.addEventListener("keydown", close, true);
+    return () => {
+      tab?.removeAttribute("aria-labelledby");
+      tab?.removeEventListener("keydown", close, true);
+    };
+  }, [dock, label, props.api.id, side]);
+  const tab = props.params.tab;
   const title = side
     ? sidePanelTitle(props.api.id)
     : (props.api.title ??
@@ -251,7 +263,6 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
   return (
     // A tab is one control, so its close affordance is pointer-only; the keyboard uses Delete,
     // the tab's context menu or the pane menu, all of which go through the dirty-tab guard.
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       ref={element}
       id={label}
@@ -259,12 +270,6 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
       data-panel-id={props.api.id}
       title={t`${title} · Drag to move or split · Right-click for pane actions · Delete closes the tab`}
       onDoubleClick={() => document.sourceWorkspace.dock.patch(props.api.id, { preview: false })}
-      onKeyDown={(event) => {
-        if (event.key === "Delete" && !side) {
-          event.preventDefault();
-          close();
-        }
-      }}
     >
       {tab?.pinned ? (
         <span

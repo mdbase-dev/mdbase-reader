@@ -86,7 +86,7 @@ it.each(["Display settings", "Language"])(
   },
 );
 
-it.each(["[data-toolbar]", "[data-outside]"])("does not run list commands from %s", (selector) => {
+it.each(["[data-outside]"])("does not run list commands from %s", (selector) => {
   const target = host.querySelector<HTMLElement>(selector)!;
   for (const key of ["a", "[", "j", "k"]) {
     expect(press(target, key).defaultPrevented).toBe(false);
@@ -96,13 +96,34 @@ it.each(["[data-toolbar]", "[data-outside]"])("does not run list commands from %
   expect(actions.toggleSidebar).not.toHaveBeenCalled();
 });
 
-it.each([".library-table-row", "[data-card]"])(
+it.each([".library-table-row", "[data-card]", "[data-toolbar]", ".workspace-pane", "body"])(
   "keeps list commands available from %s",
   (selector) => {
-    const target = host.querySelector<HTMLElement>(selector)!;
+    const target = selector === "body" ? document.body : host.querySelector<HTMLElement>(selector)!;
     expect(press(target, "a").defaultPrevented).toBe(true);
     expect(actions.addSource).toHaveBeenCalledOnce();
     expect(press(target, "[").defaultPrevented).toBe(true);
     expect(actions.toggleSidebar).toHaveBeenCalledOnce();
   },
 );
+
+it("cycles panes from an editing control before its local key handler", () => {
+  const select = host.querySelector<HTMLElement>('select[aria-label="Display settings"]')!;
+  select.addEventListener("keydown", (event) => event.stopPropagation());
+  expect(press(select, "F6").defaultPrevented).toBe(true);
+  expect(actions.focusNextPane).toHaveBeenCalledOnce();
+});
+
+it("does not move panes behind a modal", () => {
+  const modal = document.createElement("div");
+  modal.setAttribute("aria-modal", "true");
+  host.append(modal);
+  expect(press(document.body, "F6").defaultPrevented).toBe(false);
+  expect(actions.focusNextPane).not.toHaveBeenCalled();
+});
+
+it("preserves Enter on a library toolbar button", () => {
+  const button = host.querySelector<HTMLElement>("[data-toolbar]")!;
+  expect(press(button, "Enter").defaultPrevented).toBe(false);
+  expect(document.activeElement).toBe(button);
+});

@@ -216,7 +216,8 @@
   border: 0;
 }
 
-.display-choice legend {
+.display-choice legend,
+.reader-language-setting > label {
   float: left;
   padding: 0 0 6px;
   color: var(--muted);
@@ -1279,8 +1280,8 @@
 }
 
 .library-column-menu > summary svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 .library-column-menu .reader-menu-panel {
@@ -1588,12 +1589,6 @@
 
   .library-search-scope .mdbase-select-chevron {
     opacity: 1 !important;
-  }
-
-  /* A status is one short word; it keeps it whole rather than the title's room. */
-  .library-table-row .library-status {
-    width: max-content;
-    grid-template-columns: auto auto;
   }
 
   /* A percentage cap against a content-sized status would cut the word short. */
@@ -1908,7 +1903,8 @@
 
 [role="gridcell"].annotation-kind {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  align-self: start;
   gap: 7px;
   color: var(--ink-soft);
   font-size: var(--ui-meta);
@@ -2442,16 +2438,6 @@
   font: 600 10px/1 var(--mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.library-card-bookplate strong {
-  align-self: end;
-  justify-self: end;
-  color: color-mix(in oklch, var(--format-color) 45%, transparent);
-  font-family: var(--serif);
-  font-size: 40px;
-  font-weight: 400;
-  line-height: 1;
 }
 
 .library-card-copy > span {
@@ -3302,8 +3288,8 @@
 }
 
 .library-condition .icon-button svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 .reader-menu-panel .library-condition-add {
@@ -3764,8 +3750,8 @@
 }
 
 .highlight-saved-check svg {
-  width: 11px;
-  height: 11px;
+  width: 14px;
+  height: 14px;
 }
 
 .highlight-saved > button {
@@ -3825,6 +3811,10 @@
   .highlight-sweep {
     display: none;
   }
+}
+
+body:has(.workspace-pane.is-focused.is-document-pane) .pwa-install {
+  display: none;
 }
 
 .selection-toolbar-layer.is-anchored > .selection-toolbar {

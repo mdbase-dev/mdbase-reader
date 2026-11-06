@@ -255,6 +255,11 @@ msgstr "Открытых вкладок: {0}"
 msgid "{0} parts of {1}"
 msgstr "Частей: {0} из {1}"
 
+#. placeholder {0}: String(writes.pending.length)
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "{0} pending"
+msgstr "Ожидают: {0}"
+
 #. placeholder {0}: summary.removedFields
 #: apps/reader/src/CitationQualitySummary.tsx
 msgid "{0} removed fields. Edited counts compare current values with their recorded evidence, not a history of changes. Online lookups include web pages read through an online service."
@@ -1045,6 +1050,10 @@ msgstr "Аннотации и заметки"
 msgid "Annotations made inside a chapter belong to"
 msgstr "Аннотации, созданные внутри главы, относятся к"
 
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "Annotations of a removed source will no longer appear in Reader."
+msgstr "Аннотации удалённого источника больше не будут отображаться в Reader."
+
 #: apps/reader/src/reader-command-list.ts
 msgid "Annotations, source note and citation"
 msgstr "Аннотации, заметка об источнике и ссылка"
@@ -1535,6 +1544,10 @@ msgstr "Изменить сочетания клавиш"
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "Изменено в другом месте"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes need attention"
+msgstr "Изменения требуют внимания"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
@@ -3690,6 +3703,10 @@ msgstr "Страницы файла {0}–{1}"
 msgid "File transfer failed."
 msgstr "Не удалось передать файлы."
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "File transferred. Waiting for the collection to confirm it…"
+msgstr "Файл передан. Ожидание подтверждения коллекции…"
+
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
 msgstr "Файлы: {completed} из {total}"
@@ -4789,10 +4806,6 @@ msgstr "Загрузка источников…"
 msgid "Loading the EPUB renderer…"
 msgstr "Загрузка средства чтения EPUB…"
 
-#: apps/reader/src/ReaderApp.tsx
-msgid "Loading the first sources; the rest of the library will load in the background"
-msgstr "Загрузка первых источников; остальная часть библиотеки загрузится в фоновом режиме"
-
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Loading the HTML renderer…"
 msgstr "Загрузка средства чтения HTML…"
@@ -4801,8 +4814,11 @@ msgstr "Загрузка средства чтения HTML…"
 msgid "Loading the PDF renderer…"
 msgstr "Загрузка средства чтения PDF…"
 
-#: apps/reader/src/AnnotationEditor.tsx
 #: apps/reader/src/LibraryNavigator.tsx
+msgid "Loading views…"
+msgstr "Загрузка представлений…"
+
+#: apps/reader/src/AnnotationEditor.tsx
 msgid "Loading…"
 msgstr "Загрузка…"
 
@@ -5853,11 +5869,6 @@ msgstr "Откройте библиотеку в mdbase Reader"
 msgid "Opened {title}"
 msgstr "Открыто: {title}"
 
-#. placeholder {0}: original.displayName
-#: apps/reader/src/SdkReaderRoot.tsx
-msgid "Opening {0}"
-msgstr "Открытие {0}"
-
 #. placeholder {0}: source.title
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Opening {0}…"
@@ -5904,7 +5915,6 @@ msgstr "Открытие заметки о литературе…"
 msgid "Opening the new page…"
 msgstr "Открытие новой страницы…"
 
-#: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Opening your reading collection"
 msgstr "Открытие коллекции для чтения"
@@ -6263,6 +6273,10 @@ msgstr "Извлечение текста PDF отменено."
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "PDF, EPUB or saved web page"
 msgstr "PDF, EPUB или сохранённая веб-страница"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Pending change"
+msgstr "Ожидающее изменение"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -7033,6 +7047,10 @@ msgstr "Получатель"
 msgid "Record connection timings"
 msgstr "Записывать время подключения"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Record or file"
+msgstr "Запись или файл"
+
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
 msgstr "Запись ведётся только на этой панели. Текст страниц, пути, запросы, идентификаторы и учётные данные не записываются. Данные никуда не отправляются. При остановке или закрытии запись удаляется."
@@ -7076,6 +7094,10 @@ msgstr "Перезагрузить"
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
 msgstr "Перезагрузить Reader"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Reload Reader to check again"
+msgstr "Перезагрузить Reader для повторной проверки"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reload the page, then press the mdbase Reader toolbar button again. Browser pages and the Chrome Web Store can’t be read by extensions."
@@ -7154,11 +7176,6 @@ msgstr "Удалено"
 #: apps/reader/src/use-source-removal.ts
 msgid "Removed “{0}”."
 msgstr "«{0}» удалено."
-
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgctxt "SourceRemovalDialog interface"
-msgid "Removing…"
-msgstr "Удаление…"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
@@ -8337,10 +8354,6 @@ msgstr "Начальная страница должна быть целым ч�
 msgid "Start section"
 msgstr "Начальный раздел"
 
-#: apps/reader/src/main.tsx
-msgid "Starting mdbase Reader…"
-msgstr "Запуск mdbase Reader…"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Static ordering"
@@ -8660,6 +8673,10 @@ msgstr "Коллекция изменилась во время редактир
 msgid "The collection connection changed. Try again."
 msgstr "Подключение к коллекции изменилось. Повторите попытку."
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "The collection refused some changes. Review them before signing out."
+msgstr "Коллекция отклонила некоторые изменения. Проверьте их перед выходом."
+
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
 msgstr "Подключение к этой коллекции изменилось. Выберите коллекцию снова."
@@ -8884,6 +8901,10 @@ msgstr "Тема"
 #: apps/reader/src/SettingsSections.tsx
 msgid "These apply only to Reader in this browser."
 msgstr "Применяется только к Reader в этом браузере."
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "These changes have not reached the collection. This browser may remove its local copy."
+msgstr "Эти изменения не поступили в коллекцию. Браузер может удалить локальную копию."
 
 #. placeholder {0}: duplicate.title
 #: packages/core/src/application/import-source-file.ts
@@ -9703,10 +9724,6 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
 msgstr "Параметры представления"
 
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Views"
-msgstr "Представления"
-
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
@@ -9735,6 +9752,10 @@ msgstr "Ожидание подтверждения во вкладке mdbase�
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "Ожидание активной вкладки"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for the collection to confirm these changes."
+msgstr "Ожидание подтверждения этих изменений коллекцией."
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "We couldn’t check whether this page is already saved. Saving checks again."

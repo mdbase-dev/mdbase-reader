@@ -153,7 +153,7 @@ function readerStyle(document: Document): HTMLStyleElement {
     .social-post figure { margin-inline: 0; }
     .quoted-post .post-part { border-top: 0; padding-top: 0; }
     h1, h2, h3, h4 { color: inherit; font-family: ui-sans-serif, system-ui, sans-serif; line-height: 1.15; letter-spacing: -0.025em; }
-    h1 { margin: 0 0 2.4rem; font-size: clamp(2.15rem, 6vw, 3.7rem); }
+    h1 { font-family: inherit; font-weight: 600; margin: 0 0 2rem; font-size: clamp(1.8rem, 5vw, 3rem); }
     h2 { margin-top: 2.8rem; font-size: 1.65rem; }
     p, li, blockquote { text-wrap: pretty; }
     img, svg, video { max-width: 100%; height: auto; }

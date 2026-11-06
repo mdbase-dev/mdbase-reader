@@ -102,16 +102,11 @@ function NavigatorViews({
 >): JSX.Element {
   return (
     <section className="navigator-view-section">
-      <header>
-        <span>
-          <Trans>Views</Trans>
-        </span>
-        {viewsLoading ? (
-          <small>
-            <Trans>Loading…</Trans>
-          </small>
-        ) : null}
-      </header>
+      {viewsLoading ? (
+        <p role="status">
+          <Trans>Loading views…</Trans>
+        </p>
+      ) : null}
       <div>
         {views.map((view) => (
           <button

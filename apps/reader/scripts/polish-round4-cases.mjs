@@ -50,8 +50,19 @@ export async function round4Library(page) {
 }
 
 export async function readingKeys(page) {
+  const viewport = page.viewportSize();
+  if (viewport.width > 680) {
+    await page.setViewportSize({ ...viewport, height: 600 });
+  }
   const frame = page.locator("iframe.html-viewer");
   const scroll = () => frame.evaluate((element) => element.contentWindow.scrollY);
+  await expect
+    .poll(() =>
+      frame.evaluate(
+        (element) => element.contentDocument.documentElement.scrollHeight > element.clientHeight,
+      ),
+    )
+    .toBe(true);
   await expect
     .poll(() =>
       frame.evaluate(
@@ -64,6 +75,7 @@ export async function readingKeys(page) {
   await expect.poll(scroll).toBeGreaterThan(before);
   await page.keyboard.press("Control+Home");
   await expect.poll(scroll).toBe(0);
+  await page.setViewportSize(viewport);
   await page
     .frameLocator("iframe.html-viewer")
     .locator("body")
@@ -141,6 +153,14 @@ export async function offlinePdf(context, origin, command) {
     const problem = page.locator('.document-renderer-status [role="alert"]');
     await expect(problem).toContainText("offline");
     await expect(page.locator('.document-renderer-status [role="status"]')).toHaveCount(0);
+    await expect(page.locator("embedpdf-container")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Close Document", exact: true })).toHaveCount(0);
+    await problem.getByRole("button", { name: "Try again", exact: true }).focus();
+    await page.keyboard.press("Tab");
+    assert.notEqual(
+      await page.evaluate(() => globalThis.document.activeElement?.getAttribute("aria-label")),
+      "Close Document",
+    );
     await expect(page.locator(".workspace-pane.is-focused .document-canvas")).not.toContainText(
       "TypeError",
     );

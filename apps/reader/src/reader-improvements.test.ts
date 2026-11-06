@@ -44,7 +44,9 @@ describe("reading defaults and search excerpts", () => {
   it("chooses recently opened, unfinished readable sources", () => {
     const finished = { ...source, readingStatus: "finished" as const };
     const note = { ...source, documents: [] };
-    expect(continueReadingSource([finished, note, source])).toBe(source);
+    const started = { ...source, reading: { status: "reading" as const, progress: 0.2 } };
+    expect(continueReadingSource([finished, note, source, started])).toBe(started);
+    expect(continueReadingSource([source])).toBeNull();
     expect(continueReadingSource([finished, note])).toBeNull();
   });
   it("leaves sources that were only opened, not started, out of continue reading", () => {

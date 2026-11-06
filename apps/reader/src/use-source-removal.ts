@@ -8,7 +8,7 @@ import type { SourceDeletionPlan, SourceId, SourceSummary } from "@mdbase-reader
 
 export interface PendingSourceRemoval {
   readonly source: SourceSummary;
-  readonly status: "checking" | "confirming" | "removing";
+  readonly status: "checking" | "confirming";
   readonly plan: SourceDeletionPlan | null;
   readonly problem: string | null;
   readonly invoker: Element | null;
@@ -81,7 +81,7 @@ export function useSourceRemoval(
   );
   const cancel = useCallback((): void => {
     attempt.current += 1;
-    setPending((current) => (current?.status === "removing" ? current : null));
+    setPending(null);
   }, []);
   const confirm = (): void => {
     if (!remove || pending?.status !== "confirming" || !pending.plan) {
@@ -89,17 +89,18 @@ export function useSourceRemoval(
     }
     const { source, plan: checked } = pending;
     const current = ++attempt.current;
-    setPending({ ...pending, status: "removing", problem: null });
+    setPending(null);
+    setNotice(t`Removed “${source.title}”.`);
     void remove(checked).then(
       () => {
         if (attempt.current === current) {
           setPending(null);
         }
         onRemoved(source.id);
-        setNotice(t`Removed “${source.title}”.`);
       },
       (reason: unknown) => {
         if (attempt.current === current) {
+          setNotice(null);
           // The check is spent; asking again checks the source afresh.
           setPending({
             source,

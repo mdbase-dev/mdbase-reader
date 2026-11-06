@@ -85,12 +85,68 @@ it("does not claim success or offer Undo after a rejected status write", async (
   await act(async () => {
     root?.render(<Harness />);
     await Promise.resolve();
+    await Promise.resolve();
   });
   await act(async () => {
     host.querySelector("button")?.click();
+    await Promise.resolve();
     await Promise.resolve();
   });
   expect(reconcile).not.toHaveBeenCalled();
   expect(host.textContent).toContain("write rejected");
   expect(host.textContent).not.toContain("Undo");
+});
+
+it("offers Undo before acknowledgement and serializes an early Undo after the first write", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const source = partSource("Attention");
+  let acknowledge!: (value: typeof source) => void;
+  const save = vi
+    .fn()
+    .mockReturnValueOnce(
+      new Promise((resolve) => {
+        acknowledge = resolve;
+      }),
+    )
+    .mockResolvedValue(source);
+  const reconcile = vi.fn();
+  const host = document.createElement("div");
+  document.body.append(host);
+  function Harness(): React.JSX.Element {
+    const status = useSourceStatus(
+      { saveReadingStatus: save } as unknown as ReaderWorkspaceGateway,
+      reconcile,
+    );
+    return (
+      <>
+        <button onClick={() => status.change?.(source, "reading")}>Change</button>
+        {status.notice}
+      </>
+    );
+  }
+  root = createRoot(host);
+  await act(async () => {
+    root?.render(<Harness />);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    host.querySelector("button")?.click();
+    await Promise.resolve();
+  });
+  expect(host.textContent).toContain("Reading");
+  expect(reconcile).not.toHaveBeenCalled();
+  const undo = [...host.querySelectorAll("button")].find((button) => button.textContent === "Undo");
+  expect(undo).toBeDefined();
+  await act(async () => {
+    undo?.click();
+    await Promise.resolve();
+  });
+  expect(save).toHaveBeenCalledTimes(1);
+  await act(async () => {
+    acknowledge(source);
+    await Promise.resolve();
+  });
+  expect(save).toHaveBeenCalledTimes(2);
+  expect(save).toHaveBeenLastCalledWith(source.id, source.readingStatus ?? "inbox");
+  expect(reconcile).toHaveBeenCalledExactlyOnceWith(source);
 });

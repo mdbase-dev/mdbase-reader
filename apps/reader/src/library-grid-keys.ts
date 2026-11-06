@@ -44,7 +44,9 @@ function moveByKey<Id extends string>(event: KeyboardEvent, context: GridKeyCont
   event.preventDefault();
   context.moveTo(
     target,
-    selectRow(selection, rowIds, target, event.shiftKey ? "range" : "replace"),
+    event.shiftKey
+      ? selectRow(selection, rowIds, target, "range")
+      : { ...selection, active: target },
   );
   return true;
 }

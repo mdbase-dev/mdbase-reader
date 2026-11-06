@@ -255,6 +255,11 @@ msgstr "開いているタブ：{0}件"
 msgid "{0} parts of {1}"
 msgstr "{1}件中{0}件の部分"
 
+#. placeholder {0}: String(writes.pending.length)
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "{0} pending"
+msgstr "{0} 件保留中"
+
 #. placeholder {0}: summary.removedFields
 #: apps/reader/src/CitationQualitySummary.tsx
 msgid "{0} removed fields. Edited counts compare current values with their recorded evidence, not a history of changes. Online lookups include web pages read through an online service."
@@ -1045,6 +1050,10 @@ msgstr "注釈とノート"
 msgid "Annotations made inside a chapter belong to"
 msgstr "章内で作成した注釈の所属先"
 
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "Annotations of a removed source will no longer appear in Reader."
+msgstr "削除した資料の注釈は Reader に表示されなくなります。"
+
 #: apps/reader/src/reader-command-list.ts
 msgid "Annotations, source note and citation"
 msgstr "注釈、資料ノート、引用"
@@ -1535,6 +1544,10 @@ msgstr "キーボードショートカットを変更"
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "別の場所で変更されました"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes need attention"
+msgstr "確認が必要な変更があります"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
@@ -3690,6 +3703,10 @@ msgstr "ファイルの{0}～{1}ページ"
 msgid "File transfer failed."
 msgstr "ファイルの転送に失敗しました。"
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "File transferred. Waiting for the collection to confirm it…"
+msgstr "ファイルを転送しました。コレクションの確認を待っています…"
+
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
 msgstr "ファイル：{total}件中{completed}件"
@@ -4789,10 +4806,6 @@ msgstr "出典を読み込み中…"
 msgid "Loading the EPUB renderer…"
 msgstr "EPUBビューアーを読み込み中…"
 
-#: apps/reader/src/ReaderApp.tsx
-msgid "Loading the first sources; the rest of the library will load in the background"
-msgstr "最初の資料を読み込み中です。残りのライブラリはバックグラウンドで読み込まれます"
-
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Loading the HTML renderer…"
 msgstr "HTMLビューアーを読み込み中…"
@@ -4801,8 +4814,11 @@ msgstr "HTMLビューアーを読み込み中…"
 msgid "Loading the PDF renderer…"
 msgstr "PDFビューアーを読み込み中…"
 
-#: apps/reader/src/AnnotationEditor.tsx
 #: apps/reader/src/LibraryNavigator.tsx
+msgid "Loading views…"
+msgstr "ビューを読み込み中…"
+
+#: apps/reader/src/AnnotationEditor.tsx
 msgid "Loading…"
 msgstr "読み込み中…"
 
@@ -5853,11 +5869,6 @@ msgstr "mdbase Readerでライブラリを開く"
 msgid "Opened {title}"
 msgstr "{title}を開きました"
 
-#. placeholder {0}: original.displayName
-#: apps/reader/src/SdkReaderRoot.tsx
-msgid "Opening {0}"
-msgstr "{0}を開いています"
-
 #. placeholder {0}: source.title
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Opening {0}…"
@@ -5904,7 +5915,6 @@ msgstr "文献ノートを開いています…"
 msgid "Opening the new page…"
 msgstr "新しいページを開いています…"
 
-#: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Opening your reading collection"
 msgstr "読書用コレクションを開いています"
@@ -6263,6 +6273,10 @@ msgstr "PDFのテキスト抽出がキャンセルされました。"
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "PDF, EPUB or saved web page"
 msgstr "PDF、EPUB、または保存済みWebページ"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Pending change"
+msgstr "保留中の変更"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -7033,6 +7047,10 @@ msgstr "受信者"
 msgid "Record connection timings"
 msgstr "接続の所要時間を記録"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Record or file"
+msgstr "レコードまたはファイル"
+
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
 msgstr "所要時間はこのパネル内だけで記録します。ページのテキスト、パス、検索語、ID、認証情報は記録されません。アップロードも行われません。停止または閉じると記録は消去されます。"
@@ -7076,6 +7094,10 @@ msgstr "再読み込み"
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
 msgstr "Readerを再読み込み"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Reload Reader to check again"
+msgstr "Reader を再読み込みして再確認"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reload the page, then press the mdbase Reader toolbar button again. Browser pages and the Chrome Web Store can’t be read by extensions."
@@ -7154,11 +7176,6 @@ msgstr "削除済み"
 #: apps/reader/src/use-source-removal.ts
 msgid "Removed “{0}”."
 msgstr "「{0}」を削除しました。"
-
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgctxt "SourceRemovalDialog interface"
-msgid "Removing…"
-msgstr "削除中…"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
@@ -8337,10 +8354,6 @@ msgstr "開始ページには1～{pageCount}の整数を入力してください
 msgid "Start section"
 msgstr "開始セクション"
 
-#: apps/reader/src/main.tsx
-msgid "Starting mdbase Reader…"
-msgstr "mdbase Readerを起動中…"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Static ordering"
@@ -8660,6 +8673,10 @@ msgstr "編集中にコレクションが変更されました。続行するに
 msgid "The collection connection changed. Try again."
 msgstr "コレクションの接続が変更されました。再試行してください。"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "The collection refused some changes. Review them before signing out."
+msgstr "コレクションが一部の変更を拒否しました。サインアウトする前に確認してください。"
+
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
 msgstr "このコレクションへの接続が変更されました。コレクションをもう一度選択してください。"
@@ -8884,6 +8901,10 @@ msgstr "テーマ"
 #: apps/reader/src/SettingsSections.tsx
 msgid "These apply only to Reader in this browser."
 msgstr "これらはこのブラウザーのReaderにのみ適用されます。"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "These changes have not reached the collection. This browser may remove its local copy."
+msgstr "これらの変更はコレクションに届いていません。このブラウザーがローカルコピーを削除する可能性があります。"
 
 #. placeholder {0}: duplicate.title
 #: packages/core/src/application/import-source-file.ts
@@ -9703,10 +9724,6 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
 msgstr "ビューのオプション"
 
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Views"
-msgstr "ビュー"
-
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
@@ -9735,6 +9752,10 @@ msgstr "mdbase タブでの承認を待っています…"
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "アクティブなタブを待機中"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for the collection to confirm these changes."
+msgstr "コレクションがこれらの変更を確認するのを待っています。"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "We couldn’t check whether this page is already saved. Saving checks again."

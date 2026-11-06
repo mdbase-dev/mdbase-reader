@@ -70,24 +70,30 @@ export interface ReaderShortcutActions {
 export function useReaderShortcuts(actions: ReaderShortcutActions): void {
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent): void => handleReaderShortcut(event, actions);
+    const focusPane = (event: KeyboardEvent): void => {
+      if (event.key === "F6" && !document.querySelector('dialog[open], [aria-modal="true"]')) {
+        event.preventDefault();
+        event.stopPropagation();
+        actions.focusNextPane();
+      }
+    };
+    window.addEventListener("keydown", focusPane, true);
     window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
+    return () => {
+      window.removeEventListener("keydown", focusPane, true);
+      window.removeEventListener("keydown", handleShortcut);
+    };
   }, [actions]);
 }
 
 function handleReaderShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): void {
-  if (event.defaultPrevented) {
+  if (event.defaultPrevented || document.querySelector('dialog[open], [aria-modal="true"]')) {
     return;
   }
   if (handleCommandShortcut(event, actions) || handleTabShortcut(event, actions)) {
     return;
   }
   if (handleHistoryShortcut(event, actions)) {
-    return;
-  }
-  if (event.key === "F6") {
-    event.preventDefault();
-    actions.focusNextPane();
     return;
   }
   if (event.key === "Escape" && actions.focusMode) {
@@ -139,12 +145,10 @@ function handleLibraryShortcut(
   if (editing || modifier || event.altKey) {
     return false;
   }
-  const list =
-    event.target instanceof Element
-      ? event.target.closest(
-          ".workspace-pane.is-focused .library-workspace :is(.library-table, .library-card-grid)",
-        )
-      : null;
+  if (isNativeActivation(event)) {
+    return false;
+  }
+  const list = focusedLibraryList(event.target);
   if (!list) {
     return false;
   }
@@ -157,15 +161,51 @@ function handleLibraryShortcut(
     }
     return true;
   }
-  if (/^[jk]$/iu.test(event.key)) {
-    const row = list.querySelector<HTMLElement>('.library-table-row:not(.is-header)[tabindex="0"]');
-    if (row) {
-      event.preventDefault();
-      row.focus();
-    }
+  if (/^[jksx]$/iu.test(event.key) || ["Enter", "Delete", "F2"].includes(event.key)) {
+    forwardLibraryRowKey(list, event);
     return true;
   }
   return false;
+}
+
+function isNativeActivation(event: KeyboardEvent): boolean {
+  return (
+    event.key === "Enter" &&
+    event.target instanceof Element &&
+    Boolean(event.target.closest("button, summary, a"))
+  );
+}
+
+function focusedLibraryList(target: EventTarget | null): HTMLElement | null {
+  const pane = document.querySelector<HTMLElement>(".workspace-pane.is-focused");
+  if (target !== document.body && !(target instanceof Node && pane?.contains(target))) {
+    return null;
+  }
+  return (
+    pane?.querySelector<HTMLElement>(
+      ".library-workspace .library-table, .library-workspace .library-card-grid",
+    ) ?? null
+  );
+}
+
+function forwardLibraryRowKey(list: HTMLElement, event: KeyboardEvent): void {
+  const row = list.querySelector<HTMLElement>('.library-table-row:not(.is-header)[tabindex="0"]');
+  if (!row) {
+    return;
+  }
+  event.preventDefault();
+  row.focus();
+  if (!(event.target instanceof Element && event.target.closest(".library-table"))) {
+    row.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: event.key,
+        code: event.code,
+        shiftKey: event.shiftKey,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }
 }
 
 /** Reading mode, the two side panels, and reopening a closed tab. */

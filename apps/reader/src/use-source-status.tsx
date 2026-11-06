@@ -34,24 +34,29 @@ export function useSourceStatus(
         return;
       }
       const previous = source.reading?.status ?? source.readingStatus ?? "inbox";
-      setNotice(null);
       const fail = (reason: unknown): void =>
         setNotice({
           message: readerErrorMessage(reason, t`Reader could not change the reading status.`),
         });
-      void save(source.id, status).then((updated) => {
-        reconcile(updated);
-        const label = readingStatusLabel(status);
-        setNotice({
-          message: t`“${source.title}” — ${label}`,
-          undo: () => {
-            setNotice(null);
-            void save(source.id, previous).then((restored) => {
+      let undone = false;
+      const saving = save(source.id, status);
+      const label = readingStatusLabel(status);
+      setNotice({
+        message: t`“${source.title}” — ${label}`,
+        undo: () => {
+          undone = true;
+          setNotice({ message: t`Restored the status of “${source.title}”.` });
+          void saving
+            .then(() => save(source.id, previous))
+            .then((restored) => {
               reconcile(restored);
-              setNotice({ message: t`Restored the status of “${source.title}”.` });
             }, fail);
-          },
-        });
+        },
+      });
+      void saving.then((updated) => {
+        if (!undone) {
+          reconcile(updated);
+        }
       }, fail);
     },
     [gateway, reconcile],

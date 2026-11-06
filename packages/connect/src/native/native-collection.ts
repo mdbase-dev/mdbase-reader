@@ -66,7 +66,7 @@ export function nativeReaderCollection(
     current,
     options.receiptWaitMs === undefined ? {} : { receiptWaitMs: options.receiptWaitMs },
   );
-  const files = nativeReaderFiles(connection.files, current);
+  const files = nativeReaderFiles(connection.records, current);
   const creates = new CreateFollowThrough(client, {
     ...(options.creates ? { journal: options.creates } : {}),
     collectionId: connection.id,

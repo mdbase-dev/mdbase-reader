@@ -5,8 +5,23 @@ import {
   assertReproducibleDeployment,
   readerDeploymentFor,
   readerDeployments,
+  readerAppUrls,
   uncommittedBuildInputs,
 } from "./deployment-environment.mjs";
+
+test("app destinations stay in each environment and missing URLs fail the build", () => {
+  assert.equal(readerAppUrls("lab").editor, "https://editor-lab.mdbase.dev");
+  assert.equal(readerAppUrls("lab").writer, "https://lab.mdbase-writer.pages.dev");
+  assert.equal(readerAppUrls("staging").editor, "https://editor-staging.mdbase.dev");
+  assert.equal(readerAppUrls("staging").writer, "https://staging.mdbase-writer.pages.dev");
+  assert.equal(readerAppUrls("production").editor, "https://editor.mdbase.dev");
+  for (const field of ["editorUrl", "writerUrl"]) {
+    assert.throws(
+      () => readerAppUrls("lab", { lab: { ...readerDeployments.lab, [field]: undefined } }),
+      /requires an HTTPS/,
+    );
+  }
+});
 
 test("Reader deploy:dev targets lab by default", () => {
   assert.deepEqual(readerDeploymentFor({}), {

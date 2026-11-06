@@ -889,9 +889,7 @@ button {
   visibility: hidden;
   pointer-events: none;
   opacity: 0;
-  transition:
-    opacity 120ms ease-out,
-    visibility 120ms allow-discrete;
+  transition: opacity 120ms var(--ease-out);
 }
 
 .document-session.is-active {

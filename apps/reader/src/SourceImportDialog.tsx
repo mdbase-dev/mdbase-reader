@@ -200,12 +200,16 @@ function ImportProgress({
 }): JSX.Element {
   const { t } = useLingui();
   const value =
-    progress?.phase === "uploading" && progress.totalBytes
+    progress?.phase === "uploading" &&
+    progress.totalBytes &&
+    progress.completedBytes < progress.totalBytes
       ? Math.round((progress.completedBytes / progress.totalBytes) * 100)
       : undefined;
   const label =
     progress?.phase === "uploading"
-      ? t`Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
+      ? progress.completedBytes >= progress.totalBytes
+        ? t`File transferred. Waiting for the collection to confirm it…`
+        : t`Uploading file ${String(progress.fileIndex)} of ${String(progress.fileCount)}`
       : progress?.phase === "recovering"
         ? translate({ message: "Checking previously added files" })
         : progress?.phase === "creating"

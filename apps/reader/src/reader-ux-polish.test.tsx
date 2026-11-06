@@ -77,12 +77,31 @@ describe("Reader title and library polish", () => {
     expect(markup).not.toContain("Saved");
   });
 
-  it("shows zero progress once and exposes the full card title", () => {
+  it("omits zero-progress cards and exposes the full title once reading has started", () => {
+    expect(
+      renderToStaticMarkup(<ContinueReading sources={[source]} onOpen={() => undefined} />),
+    ).toBe("");
     const markup = renderToStaticMarkup(
-      <ContinueReading sources={[source]} onOpen={() => undefined} />,
+      <ContinueReading
+        sources={[{ ...source, reading: { status: "reading", progress: 0.2 } }]}
+        onOpen={() => undefined}
+      />,
     );
-    expect(markup.match(/0%/g)).toHaveLength(1);
+    expect(markup.match(/>20%</g)).toHaveLength(1);
     expect(markup).toContain(`title="${source.title}"`);
+  });
+
+  it("resumes a saved PDF page even when its percentage is unknown", () => {
+    const markup = renderToStaticMarkup(
+      <ContinueReading
+        sources={[
+          { ...source, reading: { status: "reading", position: { kind: "pdf", pageIndex: 41 } } },
+        ]}
+        onOpen={() => undefined}
+      />,
+    );
+    expect(markup).toContain("Page 42");
+    expect(markup).not.toContain("continue-reading-bar");
   });
 
   it("omits an unknown creator rather than inventing metadata", () => {

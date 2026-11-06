@@ -65,13 +65,6 @@ export function focusNextDockGroup(api: DockviewApi | null): void {
   if (!api) {
     return;
   }
-  if (document.activeElement === document.body) {
-    const pane = document.querySelector<HTMLElement>(".workspace-pane.is-focused");
-    if (pane) {
-      focusReadingPane(pane);
-      return;
-    }
-  }
   const groups = api.groups.filter(
     (group) =>
       group.activePanel &&
@@ -81,6 +74,18 @@ export function focusNextDockGroup(api: DockviewApi | null): void {
   const next = groups[(index + 1) % groups.length]?.activePanel;
   next?.api.setActive();
   next?.focus();
+  const tab = next && panelTab(next);
+  const pane = tab
+    ? document.querySelector<HTMLElement>(`[data-session-id="${CSS.escape(tab.id)}"]`)
+    : null;
+  if (pane) {
+    focusReadingPane(pane);
+  } else if (next) {
+    const sidebar = document.querySelector<HTMLElement>(
+      `.reader-dock-sidebar[data-panel-id="${CSS.escape(next.id)}"]`,
+    );
+    sidebar?.querySelector<HTMLElement>("input, textarea, button, [tabindex='0']")?.focus();
+  }
 }
 export function switchDockTab(group: DockviewGroupPanel | undefined, direction: -1 | 1): void {
   if (!group?.panels.length) {

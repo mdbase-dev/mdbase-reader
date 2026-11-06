@@ -33,15 +33,21 @@ export function continueReadingSources(
       (source) =>
         source.documents.length > 0 &&
         !["finished", "archived", "abandoned"].includes(readingStatusOf(source)) &&
-        (readingStatusOf(source) === "reading" ||
-          source.readingStatus === "reading" ||
-          source.reading?.position !== undefined ||
-          (readingProgressValue(source) ?? 0) > 0),
+        hasReadingPosition(source),
     )
     .sort((left, right) =>
       (right.reading?.lastOpenedAt ?? "").localeCompare(left.reading?.lastOpenedAt ?? ""),
     )
     .slice(0, limit);
+}
+
+function hasReadingPosition(source: SourceSummary): boolean {
+  const progress = readingProgressValue(source);
+  if (progress !== null) {
+    return progress > 0;
+  }
+  const position = source.reading?.position;
+  return position?.kind === "pdf" && position.pageIndex > 0;
 }
 
 export function continueReadingSource(sources: readonly SourceSummary[]): SourceSummary | null {

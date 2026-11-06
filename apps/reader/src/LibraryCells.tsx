@@ -196,7 +196,16 @@ export function StatusPicker({
         onClick={(event) => event.stopPropagation()}
         onDoubleClick={(event) => event.stopPropagation()}
         onKeyDown={(event) => event.stopPropagation()}
-        onChange={(next) => onChange(source, next)}
+        onChange={(next) => {
+          onChange(source, next);
+          requestAnimationFrame(() => {
+            document
+              .querySelector<HTMLElement>(
+                '.workspace-pane.is-focused [data-row-index][tabindex="0"]',
+              )
+              ?.focus();
+          });
+        }}
       />
       {progress !== null ? <ProgressNumber progress={progress} /> : null}
     </span>
