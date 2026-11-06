@@ -35,6 +35,13 @@ function fixture(count: number): {
       body: "x".repeat(2048),
     };
   });
+  // Index the fixture's exact path predicates once. Repeated linear scans and
+  // JSON serialization made the 1501-record assertion time out on hosted CI;
+  // the response documents, request budget and all assertions remain unchanged.
+  const byPath = new Map(documents.map((record) => [record.path, record]));
+  const byPredicate = new Map(
+    documents.map((record) => [`file.path == ${JSON.stringify(record.path)}`, [record]]),
+  );
   const success = <Value>(value: Value): ConnectOutcome<Value> => ({
     ok: true,
     value,
@@ -73,9 +80,7 @@ function fixture(count: number): {
               (record) => linked && record.effectiveFrontmatter["source"] === "[[sources/book.md]]",
             )
           : input.where
-            ? documents.filter(
-                (record) => input.where === `file.path == ${JSON.stringify(record.path)}`,
-              )
+            ? (byPredicate.get(input.where) ?? [])
             : documents;
     const budgeted = sourceFilter ? documents : scoped;
     if (
@@ -114,7 +119,7 @@ function fixture(count: number): {
           results: paths.map((path) => ({
             status: "found",
             path,
-            record: documents.find((record) => record.path === path)!,
+            record: byPath.get(path)!,
           })),
           errors: [],
         }),
