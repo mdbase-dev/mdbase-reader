@@ -1,6 +1,6 @@
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 import { readingStatusLabel } from "./LibraryCells.js";
@@ -16,6 +16,7 @@ export function useSourceStatus(
   readonly change: ((source: SourceSummary, status: ReadingStatus) => void) | undefined;
   readonly notice: ReactNode;
 } {
+  const intents = useRef(new Map<SourceSummary["id"], symbol>());
   const [notice, setNotice] = useState<{
     readonly message: string;
     readonly undo?: () => void;
@@ -33,28 +34,43 @@ export function useSourceStatus(
       if (!save) {
         return;
       }
+      const intent = Symbol();
+      intents.current.set(source.id, intent);
+      const isCurrent = (): boolean => intents.current.get(source.id) === intent;
       const previous = source.reading?.status ?? source.readingStatus ?? "inbox";
-      const fail = (reason: unknown): void =>
-        setNotice({
-          message: readerErrorMessage(reason, t`Reader could not change the reading status.`),
-        });
+      const fail = (reason: unknown): void => {
+        if (isCurrent()) {
+          setNotice({
+            message: readerErrorMessage(reason, t`Reader could not change the reading status.`),
+          });
+        }
+      };
       let undone = false;
       const saving = save(source.id, status);
       const label = readingStatusLabel(status);
       setNotice({
         message: t`“${source.title}” — ${label}`,
         undo: () => {
+          if (!isCurrent()) {
+            return;
+          }
           undone = true;
           setNotice({ message: t`Restored the status of “${source.title}”.` });
           void saving
-            .then(() => save(source.id, previous))
-            .then((restored) => {
-              reconcile(restored);
-            }, fail);
+            .then(async () => {
+              if (!isCurrent()) {
+                return;
+              }
+              const restored = await save(source.id, previous);
+              if (isCurrent()) {
+                reconcile(restored);
+              }
+            })
+            .catch(fail);
         },
       });
       void saving.then((updated) => {
-        if (!undone) {
+        if (!undone && isCurrent()) {
           reconcile(updated);
         }
       }, fail);

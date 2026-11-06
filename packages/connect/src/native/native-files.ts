@@ -5,12 +5,11 @@ import { connectProblemFor } from "./native-mapping.js";
 
 import type { ReaderAssetClient } from "../annotation-assets.js";
 import type { ReaderFileClient } from "../documents.js";
-import type { ReaderSourceFileClient } from "../source-files.js";
+import type { ReaderSourceFileClient, ReaderSourceFileListOptions } from "../source-files.js";
 import type {
   CollectionFileDescriptor,
   ConnectOutcome,
   ConnectRequestOptions,
-  MdbaseFileListOptions,
   MdbaseFileStatTarget,
   MdbaseFileUploadOptions,
 } from "@mdbase-dev/connect";
@@ -126,7 +125,7 @@ export function nativeReaderFiles(
       return new Blob([bytes as BlobPart], file.mediaType ? { type: file.mediaType } : {});
     },
     upload,
-    async *list(options: MdbaseFileListOptions = {}) {
+    async *list(options: ReaderSourceFileListOptions = {}) {
       check(options.signal);
       for await (const view of files.list({
         ...(options.folder ? { folder: options.folder } : {}),
@@ -134,6 +133,9 @@ export function nativeReaderFiles(
         ...(options.signal ? { signal: options.signal } : {}),
       })) {
         check(options.signal);
+        if (options.contentDigests && !options.contentDigests.includes(view.digest)) {
+          continue;
+        }
         if (client.ledger.stateOf(view.id) !== "saved") {
           throw new MdbaseError({
             code: "outcome_unknown",

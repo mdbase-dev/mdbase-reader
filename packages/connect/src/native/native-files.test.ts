@@ -1,7 +1,11 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
 
+import { digest, plan, recordDocument, success } from "../source-imports.fixtures.js";
+import { ConnectSourceImportRepository } from "../source-imports.js";
+
 import { nativeReaderFiles, type NativeReaderFileClient } from "./native-files.js";
 
+import type { ReaderConnectClient } from "../repository-client.js";
 import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
 import type { MdbaseClient, FileView } from "@mdbase-dev/sdk";
 
@@ -91,4 +95,49 @@ describe("native file confirmation", () => {
     await expect(collect()).rejects.toThrow("still waiting for confirmation");
     expect(files.upload).not.toHaveBeenCalled();
   });
+
+  it("recovers a matching confirmed upload despite an unrelated pending file", async () => {
+    const { adapter, files, stateOf } = fixture();
+    files.list = async function* () {
+      const view = (await files.get()) as FileView;
+      yield { ...view, id: "pending-file", digest: "sha256:unrelated" };
+      yield { ...view, digest };
+    };
+    stateOf.mockImplementation((id: string) => (id === "pending-file" ? "saving" : "saved"));
+    const create = vi.fn().mockResolvedValue(success(recordDocument()));
+    const repository = new ConnectSourceImportRepository(
+      { create } as unknown as ReaderConnectClient,
+      adapter,
+    );
+    await expect(
+      repository.commitFile(plan(), { recoverExistingFiles: true }),
+    ).resolves.toMatchObject({
+      id: "src_import",
+    });
+    expect(create).toHaveBeenCalledOnce();
+    expect(files.upload).not.toHaveBeenCalled();
+    expect(stateOf).not.toHaveBeenCalledWith("pending-file");
+  });
+
+  it.each(["saving", "saved_on_device", "rejected"])(
+    "does not duplicate a matching %s upload during recovery",
+    async (state) => {
+      const { adapter, files, stateOf } = fixture();
+      files.list = async function* () {
+        const view = (await files.get()) as FileView;
+        yield { ...view, digest };
+      };
+      stateOf.mockReturnValue(state);
+      const create = vi.fn();
+      const repository = new ConnectSourceImportRepository(
+        { create } as unknown as ReaderConnectClient,
+        adapter,
+      );
+      await expect(repository.commitFile(plan(), { recoverExistingFiles: true })).rejects.toThrow(
+        "still waiting for confirmation",
+      );
+      expect(files.upload).not.toHaveBeenCalled();
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
 });

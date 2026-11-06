@@ -7,8 +7,12 @@ import {
 
 import type { PlannedSourceRepresentation } from "@mdbase-reader/core";
 
+export interface ReaderSourceFileListOptions extends MdbaseFileListOptions {
+  readonly contentDigests?: readonly string[];
+}
+
 export interface ReaderSourceFileClient {
-  list?(options?: MdbaseFileListOptions): AsyncIterable<CollectionFileDescriptor>;
+  list?(options?: ReaderSourceFileListOptions): AsyncIterable<CollectionFileDescriptor>;
   upload(
     path: string,
     source: Blob,

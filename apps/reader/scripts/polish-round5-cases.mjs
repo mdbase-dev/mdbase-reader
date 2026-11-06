@@ -97,6 +97,13 @@ export async function round5Library(page) {
   await round5AnnotationAlignment(page);
   await page.reload();
   await page.locator('.library-table[aria-label="Sources"]').waitFor();
+  const add = page.getByRole("button", { name: "Add source…", exact: true }).first();
+  await add.focus();
+  for (const key of ["Delete", "F2"]) {
+    await page.keyboard.press(key);
+    await expect(add).toBeFocused();
+    await expect(page.locator("dialog[open]")).toHaveCount(0);
+  }
 }
 
 async function bodyFocus(page) {

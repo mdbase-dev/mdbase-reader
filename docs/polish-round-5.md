@@ -118,3 +118,37 @@ are this repository's available gates; no Connect-server CI, native qualificatio
 production/staging testing, or deployment of this branch is claimed. The owned
 local preview is stopped after validation; the LAB desk and fixture are already
 cleaned up.
+
+## PR review follow-up
+
+- Reading-status intents are tracked per source. A newer intent invalidates a
+  deferred Undo before it submits, and stale acknowledgements, Undo completions
+  and failures cannot reconcile or replace that source's newer notice. Tests
+  cover Reading → Undo → Finished before acknowledgement, an already-submitted
+  Undo completing late, and late completion/refusal without Undo.
+- Recovery supplies the planned content digests to the native file scan. Only
+  matching candidates must be confirmed; an unrelated pending file cannot block
+  a confirmed match. Repository/adapter tests also verify that matching saving,
+  saved-on-device and rejected files still prevent duplicate upload or source
+  creation.
+- The removal attempt guard now protects preflight only. A confirmed deletion
+  always reports refusal and replaces its optimistic success with the failure;
+  neither success nor refusal replaces a newer removal dialog. Tests cover a
+  newer active/cancelled dialog and a cancelled preflight completing late.
+- Delete and F2 require a library row and exclude toolbar, menu and row-action
+  controls. Pane-wide navigation remains available. Unit tests check both
+  boundaries, and the browser library gate sends real Delete/F2 keystrokes to
+  Add source and verifies unchanged focus with no removal dialog.
+
+Follow-up validation passes `rpnpm lint`, `rpnpm typecheck` and `rpnpm test`.
+The Reader suite passes all 198 files / 1,077 tests, including a fresh Reader-only
+run after the final test-harness and shortcut refactor. The architecture gate
+retains only the existing `create-follow-through.ts` cohesion warning.
+
+The final production build and strict preview on 5193 pass `pnpm test:polish`
+from `apps/reader`: all eight desktop/phone, light/dark, normal/reduced-motion
+cells pass, including real Delete/F2 keystrokes on Add source. Every cell has an
+empty page-error array. One-minute host load was 14.10 at the start and 14.68 at
+the end; neither timing nor scroll thresholds were changed. The owned preview
+is stopped. No LAB desk, production or staging was used for this follow-up, and
+there are no new product strings or catalog changes.

@@ -181,6 +181,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     for await (const file of this.files.list({
       folder: "files/reader",
       pageSize: 500,
+      contentDigests: plan.representations.map(({ contentDigest }) => contentDigest),
       ...(options.signal ? { signal: options.signal } : {}),
     })) {
       const matches = byDigest.get(file.contentDigest) ?? [];
@@ -193,7 +194,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
   /**
    * Creates the source note at the first of its candidate paths that no other record has.
    * The files are uploaded first and are confirmed by then (`native-files.ts` waits for
-   * `write.confirmed`), so only the record can still be refused later; the follow-through
+   * its receipt), so only the record can still be refused later; the follow-through
    * keeps it until the collection confirms it.
    */
   private async createRecord(

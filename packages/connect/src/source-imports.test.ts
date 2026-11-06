@@ -192,7 +192,11 @@ describe("ConnectSourceImportRepository recovery", () => {
 
     await repository.commitFile(plan(), { recoverExistingFiles: true });
 
-    expect(list).toHaveBeenCalledWith({ folder: "files/reader", pageSize: 500 });
+    expect(list).toHaveBeenCalledWith({
+      folder: "files/reader",
+      pageSize: 500,
+      contentDigests: [digest],
+    });
     expect(upload).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({

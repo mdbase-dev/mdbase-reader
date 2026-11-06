@@ -145,7 +145,7 @@ function handleLibraryShortcut(
   if (editing || modifier || event.altKey) {
     return false;
   }
-  if (isNativeActivation(event)) {
+  if (isLibraryControlKey(event)) {
     return false;
   }
   const list = focusedLibraryList(event.target);
@@ -168,7 +168,20 @@ function handleLibraryShortcut(
   return false;
 }
 
-function isNativeActivation(event: KeyboardEvent): boolean {
+function isLibraryRowContext(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    Boolean(target.closest(".library-table-row:not(.is-header)")) &&
+    !target.closest(
+      "button, summary, a, [role=toolbar], [role=menu], [role^=menuitem], [role=separator]",
+    )
+  );
+}
+
+function isLibraryControlKey(event: KeyboardEvent): boolean {
+  if (["Delete", "F2"].includes(event.key)) {
+    return !isLibraryRowContext(event.target);
+  }
   return (
     event.key === "Enter" &&
     event.target instanceof Element &&

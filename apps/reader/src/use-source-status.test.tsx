@@ -150,3 +150,97 @@ it("offers Undo before acknowledgement and serializes an early Undo after the fi
   expect(save).toHaveBeenLastCalledWith(source.id, source.readingStatus ?? "inbox");
   expect(reconcile).toHaveBeenCalledExactlyOnceWith(source);
 });
+
+it.each(["acknowledged", "rejected", "deferred Undo", "submitted Undo"])(
+  "keeps Finished newer than an earlier action that is %s",
+  async (earlier) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const source = { ...partSource("Attention"), readingStatus: "queued" as const };
+    const reading = { ...source, readingStatus: "reading" as const };
+    const finished = { ...source, readingStatus: "finished" as const };
+    let acknowledgeReading!: (value: typeof reading) => void;
+    let refuseReading!: (reason: Error) => void;
+    let acknowledgeUndo!: (value: typeof source) => void;
+    const save = vi.fn((_id: string, status: string) => {
+      if (status === "reading") {
+        return new Promise((resolve, reject) => {
+          acknowledgeReading = resolve;
+          refuseReading = reject;
+        });
+      }
+      if (status === "queued") {
+        return new Promise((resolve) => {
+          acknowledgeUndo = resolve;
+        });
+      }
+      return Promise.resolve(finished);
+    });
+    const reconcile = vi.fn();
+    const host = document.createElement("div");
+    document.body.append(host);
+    function Harness(): React.JSX.Element {
+      const status = useSourceStatus(
+        { saveReadingStatus: save } as unknown as ReaderWorkspaceGateway,
+        reconcile,
+      );
+      return (
+        <>
+          <button onClick={() => status.change?.(source, "reading")}>Read</button>
+          <button onClick={() => status.change?.(source, "finished")}>Finish</button>
+          {status.notice}
+        </>
+      );
+    }
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(<Harness />);
+      await Promise.resolve();
+    });
+    await act(async () => {
+      host.querySelector("button")?.click();
+      await Promise.resolve();
+    });
+    if (earlier.includes("Undo")) {
+      await act(async () => {
+        [...host.querySelectorAll("button")]
+          .find((button) => button.textContent === "Undo")
+          ?.click();
+        await Promise.resolve();
+      });
+    }
+    if (earlier === "submitted Undo") {
+      await act(async () => {
+        acknowledgeReading(reading);
+        await Promise.resolve();
+      });
+      expect(save).toHaveBeenLastCalledWith(source.id, "queued");
+    }
+    await act(async () => {
+      host.querySelectorAll("button")[1]?.click();
+      await Promise.resolve();
+    });
+    expect(reconcile).toHaveBeenCalledExactlyOnceWith(finished);
+    if (earlier === "submitted Undo") {
+      await act(async () => {
+        acknowledgeUndo(source);
+        await Promise.resolve();
+      });
+    } else if (earlier === "rejected") {
+      await act(async () => {
+        refuseReading(new Error("Old status refused"));
+        await Promise.resolve();
+      });
+    } else {
+      await act(async () => {
+        acknowledgeReading(reading);
+        await Promise.resolve();
+      });
+    }
+    expect(save.mock.calls.map(([, status]) => status)).toEqual(
+      earlier === "submitted Undo" ? ["reading", "queued", "finished"] : ["reading", "finished"],
+    );
+    expect(reconcile).toHaveBeenCalledExactlyOnceWith(finished);
+    expect(host.textContent).toContain("Finished");
+    expect(host.textContent).not.toContain("Old status refused");
+  },
+);

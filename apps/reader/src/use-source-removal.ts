@@ -88,31 +88,28 @@ export function useSourceRemoval(
       return;
     }
     const { source, plan: checked } = pending;
-    const current = ++attempt.current;
     setPending(null);
     setNotice(t`Removed “${source.title}”.`);
     void remove(checked).then(
       () => {
-        if (attempt.current === current) {
-          setPending(null);
-        }
         onRemoved(source.id);
       },
       (reason: unknown) => {
-        if (attempt.current === current) {
-          setNotice(null);
-          // The check is spent; asking again checks the source afresh.
-          setPending({
-            source,
-            invoker: pending.invoker,
-            status: "confirming",
-            plan: null,
-            problem: readerErrorMessage(
-              reason,
-              t({ message: "Reader could not remove this source." }),
-            ),
-          });
-        }
+        const problem = readerErrorMessage(
+          reason,
+          t({ message: "Reader could not remove this source." }),
+        );
+        setNotice(problem);
+        setPending(
+          (current) =>
+            current ?? {
+              source,
+              invoker: pending.invoker,
+              status: "confirming",
+              plan: null,
+              problem,
+            },
+        );
       },
     );
   };
