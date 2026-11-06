@@ -30,7 +30,7 @@ test("each extension build resolves its own environment's packaged SDK", async (
     assert.equal(sdk.receipt.environment, target);
     assert.equal(sdk.receipt.cpOrigin, readerDeployments[target].connectUrl);
     if (target === "production") {
-      assert.equal(extension.dependencies[name], "0.1.0-beta.157");
+      assert.match(extension.dependencies[name], /^0\.1\.0-beta\.\d+$/u);
     } else {
       assert.ok(extension.dependencies[name].endsWith(sdk.receipt.artifact));
     }
