@@ -41,9 +41,26 @@ export function readerSdkTarget(environment) {
  * SDK producer and target trust before execution. */
 export async function verifiedReaderSdk(target, repoRoot = root, app = "apps/reader") {
   assert.ok(Object.hasOwn(pins, target), "Unsupported Reader SDK environment: " + target);
-  const [name, manifest] = pins[target];
-  const pin = JSON.parse(await readFile(join(repoRoot, vendor, manifest), "utf8"));
-  const archive = join(repoRoot, vendor, pin.artifact);
+  let [name, manifest] = pins[target];
+  let pin = JSON.parse(await readFile(join(repoRoot, vendor, manifest), "utf8"));
+  let archive = join(repoRoot, vendor, pin.artifact);
+  // App CD has authenticated this immutable plan before install/build. Normal
+  // local/extension builds retain their side-by-side committed target pins.
+  if (process.env.READER_PUBLICATION_PLAN) {
+    const plan = JSON.parse(await readFile(process.env.READER_PUBLICATION_PLAN, "utf8"));
+    assert.equal(plan.target, target, "Publication target mismatch");
+    assert.equal(plan.sdkTrust.environment, target, "Publication SDK target mismatch");
+    const original = plan.sdkTrust.archives.sdk;
+    name = "@mdbase-dev/sdk";
+    archive = join(repoRoot, target === "staging" ? "vendor/sdk-staging.tgz" : original.path);
+    pin = {
+      artifact: archive.split("/").at(-1),
+      bytes: original.bytes,
+      sha256: original.sha256,
+      environment: target,
+      trust: plan.sdkTrust.trust,
+    };
+  }
   const bytes = await readFile(archive);
   assert.equal(bytes.length, pin.bytes, "Reader SDK archive length mismatch");
   assert.equal(hash(bytes), pin.sha256, "Reader SDK archive hash mismatch");

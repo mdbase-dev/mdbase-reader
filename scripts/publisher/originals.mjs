@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { lstat, readFile, readdir, realpath } from "node:fs/promises";
 import { readFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { authenticateProduction, stagingArchive, publicBytes } from "./authentication.mjs";
 const hash = (bytes, algorithm = "sha256") =>
@@ -150,15 +150,11 @@ export async function loadOriginals({
   const lockBytes = await readFile(join(repoRoot, "pnpm-lock.yaml")),
     lock = lockBytes.toString();
   const auth = await authenticate(pin, production, { fetchImpl });
-  const archives = {
-    production: {
-      name: "@mdbase-dev/sdk",
-      path: "packages/connect/vendor/" + pin.artifact,
-      sha256: hash(production),
-    },
-  };
+  const archives = {};
+  const productionPath = "packages/connect/vendor/" + pin.artifact;
   const sdkEntry = lock.split(`\n  '@mdbase-dev/sdk@${spec}':\n`)[1]?.split(/\n {2}[^ ]/)[0];
   assert(sdkEntry?.includes(`resolution: {integrity: ${pin.sri}}`), "frozen SDK integrity");
+  const sdkImporters = [];
   for (const { path, pkg } of await workspaces(repoRoot))
     if (pkg.dependencies?.["@mdbase-dev/sdk"]) {
       assert.equal(pkg.dependencies["@mdbase-dev/sdk"], spec, "SDK peer pin mismatch");
@@ -169,29 +165,29 @@ export async function loadOriginals({
           ?.includes(`'@mdbase-dev/sdk':\n        specifier: ${spec}\n        version: ${spec}`),
         "frozen SDK peer importer",
       );
+      sdkImporters.push(path);
     }
   let bytes = production,
-    authentication = auth;
+    authentication = auth,
+    sdkPath = productionPath;
   if (target === "staging") {
     const verified = await stage(pin, { fetchImpl });
     bytes = verified.bytes;
     authentication = verified.authentication;
-    const pkg = await json(join(repoRoot, "apps/reader/package.json"));
-    const path = relative(
-      repoRoot,
-      resolve(repoRoot, "apps/reader", pkg.dependencies["@mdbase-dev/sdk-staging"].slice(5)),
+    sdkPath = verified.path;
+    assert.equal(authentication.source, pin.sourceCommit, "staging producer mismatch");
+    assert.match(
+      sdkPath,
+      /^https:\/\/github.com\/mdbase-dev\/mdbase-connect\/releases\/download\/sdk-v[\w.-]+\/sdk-staging.tgz$/,
     );
-    assert(
-      (await regular(repoRoot, path)).equals(bytes),
-      "staging original must equal authenticated producer archive",
-    );
-    const sri = "sha512-" + hash(bytes, "sha512");
-    assert(
-      lock.includes(`resolution: {integrity: ${sri}, tarball: file:${path}}`),
-      "staging frozen integrity",
-    );
-    archives.staging = { name: "@mdbase-dev/sdk-staging", path, sha256: hash(bytes) };
   }
+  archives.sdk = {
+    name: "@mdbase-dev/sdk",
+    path: sdkPath,
+    bytes: bytes.length,
+    sha256: hash(bytes),
+    sri: "sha512-" + hash(bytes, "sha512"),
+  };
   const pkg = await json(join(repoRoot, "apps/reader/package.json")),
     version = pkg.dependencies["@mdbase-dev/ui"];
   assert.match(version, /^\d+\.\d+\.\d+-[\w.]+$/);
@@ -264,6 +260,9 @@ export async function loadOriginals({
     authentication,
     lockSha256: hash(lockBytes),
     protectedHashes: hashes,
+    production: { path: productionPath, sri: pin.sri, version: spec },
+    sdkImporters,
+    trust,
     appOrigin:
       target === "production"
         ? "https://reader.mdbase.dev"

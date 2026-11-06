@@ -17,6 +17,7 @@ const env = {
   VITE_MDBASE_READER_BUILD_ID: plan.sha.slice(0, 12),
   VITE_MDBASE_CONNECT_URL: plan.sdkTrust.release.cpOrigin,
   VITE_MDBASE_CONNECT_LOOPBACK_URL: "",
+  READER_PUBLICATION_PLAN: join(output, "plan.json"),
 };
 const run = (command, args, cwd = process.cwd()) =>
   execFileSync(command, args, { stdio: "inherit", env, cwd });

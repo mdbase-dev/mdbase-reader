@@ -9,8 +9,11 @@ Main may advance while a qualified ancestor is being published.
 
 The publisher authenticates npm/Sigstore production provenance and the same
 producer's signed staging archive, frozen original bytes and installed SDK/UI
-members before running the unprivileged web build. Staging uses the existing
-side-by-side SDK alias; no source manifest or lock is rewritten. The protected
+members before running the unprivileged web build. Staging mechanically derives an
+ephemeral install for every canonical SDK peer from that authenticated producer,
+as Writer does. Committed staging/LAB aliases and archived originals are not
+modified; their age cannot block a later production SDK repin. Normal local and
+extension builds keep using their committed side-by-side aliases. The protected
 job executes only workflow-owned helpers and isolated pinned tools, never the
 candidate or artifact's scripts. It validates immutable same-run artifact custody,
 all static bytes, the offline shell and capture route behavior. Entry filenames

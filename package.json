@@ -11,6 +11,7 @@
   "scripts": {
     "build": "pnpm i18n:check && pnpm build:code",
     "build:production": "MDBASE_ENV=production pnpm build",
+    "build:publisher": "node scripts/publisher/rehearsal.mjs",
     "build:code": "pnpm -r --if-present build",
     "i18n:extract": "mdbase-i18n extract --clean",
     "i18n:compile": "mdbase-i18n compile",

@@ -150,8 +150,9 @@ Each current target pin in `packages/connect/vendor/` records its exact SDK
 archive, producer and trust. Before build hooks execute, App CD authenticates npm
 provenance and the producer's staging attestation, verifies frozen SDK/UI archives
 and all installed originals, and binds the selected SDK's packaged target to the
-protected raw trust hash. No manifest, lock, trust root or signing identity is
-rewritten at deployment time. Python 3 is required for safe archive inventory.
+protected raw trust hash. Its ephemeral staging install is mechanically derived
+from the authenticated producer; committed manifests, locks, aliases, trust roots
+and signing identities are unchanged. Python 3 is required for safe archive inventory.
 The local deploy helper supports LAB only; dirty-tree overrides cannot publish
 to staging or production.
 

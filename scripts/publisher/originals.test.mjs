@@ -31,7 +31,7 @@ it("authenticates the production original, frozen peers and every installed SDK/
     /protected trust hash/,
   );
 });
-it("binds the existing staging alias to the authenticated production producer without repacking or retargeting", async () => {
+it("binds the derived staging original to the authenticated production producer without repacking or retargeting", async () => {
   const { pin } = await productionPin(root),
     pkg = JSON.parse(await readFile(join(root, "apps/reader/package.json"), "utf8"));
   const path = join(root, "apps/reader", pkg.dependencies["@mdbase-dev/sdk-staging"].slice(5)),
@@ -40,23 +40,30 @@ it("binds the existing staging alias to the authenticated production producer wi
     target: "staging",
     repoRoot: root,
     hashes: hashes("staging"),
-    installed: true,
+    installed: false,
     authenticate: async (p) => {
       assert.equal(p.sourceCommit, pin.sourceCommit);
       return { kind: "test-double", source: p.sourceCommit };
     },
     stage: async (p) => {
       assert.equal(p.sourceCommit, pin.sourceCommit);
-      return { bytes, authentication: { kind: "test-double", source: p.sourceCommit } };
+      return {
+        bytes,
+        path: `https://github.com/mdbase-dev/mdbase-connect/releases/download/sdk-v${p.version}/sdk-staging.tgz`,
+        authentication: { kind: "test-double", source: p.sourceCommit },
+      };
     },
   };
   const intake = await loadOriginals(options);
   assert.equal(intake.environment, "staging");
   assert.equal(intake.authentication.source, pin.sourceCommit);
-  assert.equal(intake.archives.staging.sha256, createHash("sha256").update(bytes).digest("hex"));
+  assert.equal(intake.archives.sdk.sha256, createHash("sha256").update(bytes).digest("hex"));
   await assert.rejects(
-    loadOriginals({ ...options, stage: async () => ({ bytes: Buffer.from("wrong original") }) }),
-    /staging original/,
+    loadOriginals({
+      ...options,
+      stage: async () => ({ bytes, authentication: { source: "0".repeat(40) } }),
+    }),
+    /staging producer mismatch/,
   );
 });
 it("installed inventory counts missing, changed and extra bytes and rejects symlinks", async () => {
