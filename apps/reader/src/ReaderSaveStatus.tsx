@@ -31,8 +31,7 @@ export function ReaderSaveStatus({
   const { pending, rejected } = snapshot?.writes ?? { pending: [], rejected: [] };
   const incidents = sdkSyncIncidents(snapshot);
   const needsAttention = rejected.length + incidents.length > 0;
-  const oldest = Math.min(...pending.map((entry) => entry.createdAt));
-  const stalled = useSustained(online && Boolean(pending.length), 30_000, oldest);
+  const stalled = useSustained(online && Boolean(pending.length), 30_000);
   if (!pending.length && !needsAttention) {
     return null;
   }

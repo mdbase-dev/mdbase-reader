@@ -21,8 +21,9 @@ export function useAnnotationCounts(
     revision: number;
     counts: ReadonlyMap<SourceId, number>;
   } | null>(null);
+  const counts = result?.gateway === gateway && result.revision === revision ? result.counts : null;
   useEffect(() => {
-    if (!enabled || !gateway.annotationCounts) {
+    if (!enabled || !gateway.annotationCounts || counts !== null) {
       return undefined;
     }
     const controller = new AbortController();
@@ -35,6 +36,6 @@ export function useAnnotationCounts(
       })
       .catch(() => undefined);
     return () => controller.abort();
-  }, [enabled, gateway, revision]);
-  return result?.gateway === gateway && result.revision === revision ? result.counts : null;
+  }, [counts, enabled, gateway, revision]);
+  return counts;
 }

@@ -98,6 +98,76 @@ it("aborts collection counts while source annotations load and never substitutes
   expect(host.textContent).toBe("9");
 });
 
+it.each([0, 9])(
+  "reuses current counts (%i) on resume and rescans only after revision or gateway changes",
+  async (count) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    const book = sourceId("book");
+    let revision = 0;
+    let changed = (): void => undefined;
+    const annotationCounts = vi
+      .fn()
+      .mockResolvedValue(new Map<SourceId, number>(count ? [[book, count]] : []));
+    const gateway = {
+      annotationCounts,
+      annotationCountsRevision: () => revision,
+      subscribeAnnotationCounts: (listener: () => void) => {
+        changed = listener;
+        return () => undefined;
+      },
+    } as unknown as ReaderWorkspaceGateway;
+    const replacementCounts = vi.fn().mockResolvedValue(new Map([[book, count + 1]]));
+    const replacement = { ...gateway, annotationCounts: replacementCounts };
+    const host = document.createElement("div");
+    document.body.append(host);
+    root = createRoot(host);
+    function Harness({
+      gateway,
+      enabled,
+    }: {
+      gateway: ReaderWorkspaceGateway;
+      enabled: boolean;
+    }): JSX.Element {
+      const counts = useAnnotationCounts(gateway, enabled);
+      return <span>{counts === null ? "unknown" : String(counts.get(book) ?? 0)}</span>;
+    }
+    async function render(enabled: boolean, currentGateway = gateway): Promise<void> {
+      await act(async () => {
+        root.render(<Harness gateway={currentGateway} enabled={enabled} />);
+        await Promise.resolve();
+      });
+    }
+    await render(true);
+    expect(annotationCounts).toHaveBeenCalledOnce();
+    for (const enabled of [false, true, false, true]) {
+      await render(enabled);
+      expect(annotationCounts).toHaveBeenCalledOnce();
+      expect(host.textContent).toBe(String(count));
+    }
+    await render(false);
+    await act(async () => {
+      revision += 1;
+      changed();
+      await Promise.resolve();
+    });
+    expect(host.textContent).toBe("unknown");
+    expect(annotationCounts).toHaveBeenCalledOnce();
+    await render(true);
+    expect(annotationCounts).toHaveBeenCalledTimes(2);
+    expect(host.textContent).toBe(String(count));
+    await render(false, replacement);
+    expect(host.textContent).toBe("unknown");
+    expect(replacementCounts).not.toHaveBeenCalled();
+    await render(true, replacement);
+    expect(replacementCounts).toHaveBeenCalledOnce();
+    expect(host.textContent).toBe(String(count + 1));
+    await render(false, replacement);
+    await render(true, replacement);
+    expect(replacementCounts).toHaveBeenCalledOnce();
+    expect(annotationCounts).toHaveBeenCalledTimes(2);
+  },
+);
+
 it("invalidates old counts on membership changes and keeps failures unknown", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   let revision = 0;

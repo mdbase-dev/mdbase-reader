@@ -121,8 +121,11 @@ it("stays calm offline and starts the stalled timer only on reconnect", async ()
   expect(host.textContent).not.toContain("may remove");
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
   act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
+  await act(() => vi.advanceTimersByTime(0));
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
-  await act(() => vi.advanceTimersByTime(30_001));
+  await act(() => vi.advanceTimersByTime(29_999));
+  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  await act(() => vi.advanceTimersByTime(1));
   expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
     "Reload Reader",
   );
@@ -156,18 +159,29 @@ it.each(["saved_on_device", "saving"])(
     } as unknown as Mdbase;
     root = createRoot(host);
     act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={navigator.onLine} />));
-    await act(() => vi.advanceTimersByTime(60_000));
-    expect(host.textContent).toContain("still pending on this device");
-    expect(host.textContent).not.toContain("may remove");
-    expect(host.querySelector(".reader-save-details > button")).toBeNull();
-    act(() => {
-      snapshot = { ...snapshot, sync: { kind: "synced" } };
-      changed();
-    });
-    await act(() => vi.advanceTimersByTime(30_001));
-    expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
-      "Reload Reader",
-    );
+    for (let reconnect = 0; reconnect < 2; reconnect += 1) {
+      await act(() => vi.advanceTimersByTime(60_000));
+      expect(host.textContent).toContain("still pending on this device");
+      expect(host.textContent).not.toContain("may remove");
+      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+      act(() => {
+        snapshot = { ...snapshot, sync: { kind: "synced" } };
+        changed();
+      });
+      await act(() => vi.advanceTimersByTime(0));
+      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+      await act(() => vi.advanceTimersByTime(29_999));
+      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+      await act(() => vi.advanceTimersByTime(1));
+      expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
+        "Reload Reader",
+      );
+      act(() => {
+        snapshot = { ...snapshot, sync: { kind: "offline" } };
+        changed();
+      });
+      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+    }
   },
 );
 
