@@ -255,7 +255,7 @@ msgstr "열린 탭 {0}개"
 msgid "{0} parts of {1}"
 msgstr "{1}의 부분 항목 {0}"
 
-#. placeholder {0}: String(writes.pending.length)
+#. placeholder {0}: String(pending.length)
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "{0} pending"
 msgstr "{0}개 대기 중"
@@ -948,6 +948,11 @@ msgstr "및"
 msgid "Annotation"
 msgstr "주석"
 
+#: apps/reader/src/InspectorPane.tsx
+#: apps/reader/src/LibraryCells.tsx
+msgid "Annotation count not yet known"
+msgstr "아직 주석 수를 알 수 없습니다"
+
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} could not be resolved."
 msgstr "주석 삽입 {reference}을(를) 확인할 수 없습니다."
@@ -1569,6 +1574,10 @@ msgstr "확인이 필요한 변경 사항"
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
 msgstr "변경 사항 검토 필요"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes to {title}"
+msgstr "{title}의 변경 사항"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Changing a colour’s meaning also relabels the highlights already in that colour. Hiding a colour only stops Reader offering it: highlights already in it keep their colour."
@@ -2628,12 +2637,12 @@ msgid "Couldn’t change the colour."
 msgstr "색상을 변경할 수 없었습니다."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
-msgstr "이 파일이 추가되었는지 확인할 수 없습니다. 다시 시도하기 전에 대기 중인 변경 사항과 라이브러리를 확인하세요."
+msgid "Couldn’t confirm this file was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "이 파일이 추가되었는지 확인할 수 없습니다. 헤더의 보류 중인 변경 사항 메뉴를 열고 라이브러리를 확인한 뒤 다시 시도하세요."
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
-msgstr "이 자료가 추가되었는지 확인할 수 없습니다. 다시 시도하기 전에 헤더의 대기 중인 변경 사항과 라이브러리를 확인하세요."
+msgid "Couldn’t confirm this source was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "이 소스가 추가되었는지 확인할 수 없습니다. 헤더의 보류 중인 변경 사항 메뉴를 열고 라이브러리를 확인한 뒤 다시 시도하세요."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -4168,8 +4177,8 @@ msgid "Hosted by mdbase"
 msgstr "mdbase에서 호스팅"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
-msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: 컬렉션에서 파일 전송을 확인하지 않았습니다. 다시 시도하기 전에 대기 중인 변경 사항을 확인하세요."
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Open the pending changes menu in the header before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: 컬렉션에서 파일 전송을 확인하지 않았습니다. 헤더의 보류 중인 변경 사항 메뉴를 열고 다시 시도하세요."
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -8472,8 +8481,8 @@ msgid "Stopped"
 msgstr "중지됨"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped adding. Check pending changes before trying again."
-msgstr "추가를 중지했습니다. 다시 시도하기 전에 대기 중인 변경 사항을 확인하세요."
+msgid "Stopped adding. Open the pending changes menu in the header before trying again."
+msgstr "추가를 중지했습니다. 헤더의 보류 중인 변경 사항 메뉴를 열고 다시 시도하세요."
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
@@ -8537,10 +8546,6 @@ msgstr "컬렉션 메뉴에서 컬렉션을 전환하거나 접근 권한을 관
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "컬렉션을 전환할까요?"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
-msgstr "동기화에 조치가 필요합니다. 로그아웃하거나 이 브라우저의 데이터를 지우기 전에 지원팀에 문의하세요."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -9183,12 +9188,16 @@ msgid "This file is already attached here."
 msgstr "이 파일은 이미 여기에 첨부되어 있습니다."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "This file wasn’t added. Close this and try again."
-msgstr "이 파일은 추가되지 않았습니다. 이 창을 닫고 다시 시도하세요."
+msgid "This file wasn’t added. Try again."
+msgstr "이 파일은 추가되지 않았습니다. 다시 시도하세요."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
 msgstr "여기는 mdbase Reader입니다"
+
+#: apps/reader/src/errors.ts
+msgid "This list may be incomplete. Reader could not verify all results. Try again after the collection finishes syncing."
+msgstr "이 목록은 불완전할 수 있습니다. Reader가 모든 결과를 확인하지 못했습니다. 컬렉션 동기화가 끝난 후 다시 시도하세요."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
@@ -9394,7 +9403,6 @@ msgid "Toggle Pointer Mode"
 msgstr "포인터 모드 전환"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "자료 사이드바 전환"
@@ -9831,6 +9839,10 @@ msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
 msgstr "mdbase 탭에서 승인을 기다리는 중…"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for confirmation"
+msgstr "확인 대기 중"
+
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "활성 탭을 기다리는 중"
@@ -9973,6 +9985,10 @@ msgstr "컬렉션과 단축키는 <0>설정</0>에서 언제든 변경할 수 �
 msgid "You can close this window."
 msgstr "이 창을 닫으셔도 됩니다."
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "You can keep reading. Sync needs attention; keep this browser’s data until it is resolved."
+msgstr "계속 읽을 수 있습니다. 동기화를 확인해야 합니다. 문제가 해결될 때까지 이 브라우저의 데이터를 유지하세요."
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
@@ -9981,6 +9997,10 @@ msgstr "탭을 사용해 여러 문서를 볼 수 있습니다."
 #: apps/reader/src/DocumentRendererStage.tsx
 msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
 msgstr "오프라인 상태입니다. 이 파일은 아직 다운로드되지 않았습니다. 인터넷에 연결하고 다시 시도하세요."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "You're offline. This file wasn't added. Try again when you're back online."
+msgstr "오프라인 상태입니다. 이 파일은 추가되지 않았습니다. 온라인 상태가 되면 다시 시도하세요."
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

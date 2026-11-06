@@ -255,7 +255,7 @@ msgstr "{0} 个打开的标签页"
 msgid "{0} parts of {1}"
 msgstr "{1} 个部分中的 {0} 个"
 
-#. placeholder {0}: String(writes.pending.length)
+#. placeholder {0}: String(pending.length)
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "{0} pending"
 msgstr "{0} 项待处理"
@@ -948,6 +948,11 @@ msgstr "和"
 msgid "Annotation"
 msgstr "注释"
 
+#: apps/reader/src/InspectorPane.tsx
+#: apps/reader/src/LibraryCells.tsx
+msgid "Annotation count not yet known"
+msgstr "批注数量尚不明确"
+
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} could not be resolved."
 msgstr "无法解析注释嵌入 {reference}。"
@@ -1569,6 +1574,10 @@ msgstr "有更改需要处理"
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
 msgstr "更改需要审核"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes to {title}"
+msgstr "对 {title} 的更改"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Changing a colour’s meaning also relabels the highlights already in that colour. Hiding a colour only stops Reader offering it: highlights already in it keep their colour."
@@ -2628,12 +2637,12 @@ msgid "Couldn’t change the colour."
 msgstr "无法更改颜色。"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
-msgstr "无法确认此文件是否已添加。请先检查待处理更改和资料库，再重试。"
+msgid "Couldn’t confirm this file was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "无法确认是否已添加此文件。请打开页眉中的待处理更改菜单并检查书库，然后重试。"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
-msgstr "无法确认此资料是否已添加。请先检查页眉中的待处理更改和资料库，再重试。"
+msgid "Couldn’t confirm this source was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "无法确认是否已添加此来源。请打开页眉中的待处理更改菜单并检查书库，然后重试。"
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -4168,8 +4177,8 @@ msgid "Hosted by mdbase"
 msgstr "由 mdbase 托管"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
-msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: 集合尚未确认文件传输。请先检查待处理更改，再重试。"
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Open the pending changes menu in the header before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: 集合尚未确认文件传输。请打开页眉中的待处理更改菜单，然后重试。"
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -8472,8 +8481,8 @@ msgid "Stopped"
 msgstr "已停止"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped adding. Check pending changes before trying again."
-msgstr "已停止添加。请先检查待处理的更改，然后再重试。"
+msgid "Stopped adding. Open the pending changes menu in the header before trying again."
+msgstr "已停止添加。请打开页眉中的待处理更改菜单，然后重试。"
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
@@ -8537,10 +8546,6 @@ msgstr "从集合菜单切换集合、管理访问权限或退出登录。"
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "切换集合？"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
-msgstr "同步需要处理。请在退出登录或清除此浏览器的数据之前联系支持人员。"
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -9183,12 +9188,16 @@ msgid "This file is already attached here."
 msgstr "此文件已附加在这里。"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "This file wasn’t added. Close this and try again."
-msgstr "此文件未添加。请关闭此窗口后重试。"
+msgid "This file wasn’t added. Try again."
+msgstr "未添加此文件。请重试。"
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
 msgstr "这是 mdbase Reader"
+
+#: apps/reader/src/errors.ts
+msgid "This list may be incomplete. Reader could not verify all results. Try again after the collection finishes syncing."
+msgstr "此列表可能不完整。Reader 无法验证所有结果。请等待集合同步完成后重试。"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
@@ -9394,7 +9403,6 @@ msgid "Toggle Pointer Mode"
 msgstr "切换指针模式"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "切换来源侧边栏"
@@ -9831,6 +9839,10 @@ msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
 msgstr "正在 mdbase 标签页中等待批准…"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for confirmation"
+msgstr "等待确认"
+
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "正在等待活动标签页"
@@ -9973,6 +9985,10 @@ msgstr "你可以随时在<0>设置</0>中更改集合和快捷键。"
 msgid "You can close this window."
 msgstr "你可以关闭此窗口。"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "You can keep reading. Sync needs attention; keep this browser’s data until it is resolved."
+msgstr "您可以继续阅读。同步需要处理；在问题解决前，请保留此浏览器的数据。"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
@@ -9981,6 +9997,10 @@ msgstr "你可以使用标签页查看多个文档。"
 #: apps/reader/src/DocumentRendererStage.tsx
 msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
 msgstr "您已离线。此文件尚未下载。请连接互联网后重试。"
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "You're offline. This file wasn't added. Try again when you're back online."
+msgstr "您处于离线状态。未添加此文件。请在恢复联网后重试。"
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

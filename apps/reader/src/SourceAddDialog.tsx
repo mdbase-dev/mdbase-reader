@@ -148,8 +148,8 @@ function OpenSourceAddDialog({
         {error ? (
           <SourceAdditionError error={error}>
             <Trans>
-              Couldn’t confirm this source was added. Check pending changes in the header and your
-              library before trying again.
+              Couldn’t confirm this source was added. Open the pending changes menu in the header
+              and check your library before trying again.
             </Trans>
           </SourceAdditionError>
         ) : null}
@@ -391,7 +391,7 @@ function ProblemDetails({ detail }: { readonly detail: string | undefined }): JS
   const message = detail?.includes("the live upload request changed")
     ? t`ATTACHMENT_UPLOAD_SCOPE_CHANGED: Another upload is still attached to this session. This file’s transfer could not start.`
     : detail?.includes("the hosted boundary outcome is unknown")
-      ? t`HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again.`
+      ? t`HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Open the pending changes menu in the header before trying again.`
       : detail;
   return detail ? (
     <details>

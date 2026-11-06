@@ -21,7 +21,7 @@ function fixture(): {
 } {
   const visible = { left: true, right: true };
   const activePanel = { id: "custom-tab", api: { setActive: vi.fn(), moveTo: vi.fn() } };
-  const edge = { id: "reader:edge:test", expand: vi.fn(), activePanel };
+  const edge = { id: "reader:edge:test", expand: vi.fn(), activePanel, setHeaderPosition: vi.fn() };
   const added = { id: "reader:edge:new", expand: vi.fn(), setHeaderPosition: vi.fn() };
   const api = {
     groups: [
@@ -35,7 +35,10 @@ function fixture(): {
     }),
     getEdgeGroup: vi.fn(() => edge),
     getPanel: vi.fn(),
-    addPanel: vi.fn(),
+    addPanel: vi.fn(() => ({
+      ...activePanel,
+      group: { api: { location: { type: "edge", position: "right" }, expand: vi.fn() } },
+    })),
     removePanel: vi.fn(),
     exitMaximizedGroup: vi.fn(),
     hasMaximizedGroup: () => false,
@@ -48,6 +51,31 @@ function fixture(): {
 }
 
 describe("sidebar region toggles", () => {
+  it("mounts the first Notes panel only after hiding its edge", () => {
+    const { sides, api, visible, activePanel } = fixture();
+    api.getEdgeGroup.mockReturnValue(undefined);
+    api.addPanel.mockImplementation(() => {
+      expect(visible.right).toBe(false);
+    });
+    sides.initialize();
+    expect(api.addEdgeGroup).toHaveBeenCalledWith(
+      "right",
+      expect.objectContaining({ initialSize: 340 }),
+    );
+    expect(api.addPanel).toHaveBeenCalledWith(
+      expect.objectContaining({ id: inspectorPanelId, inactive: true }),
+    );
+    expect(activePanel.api.setActive).not.toHaveBeenCalled();
+  });
+
+  it("keeps restored custom right-edge tabs and visibility", () => {
+    const { sides, api, visible } = fixture();
+    visible.right = false;
+    sides.initialize();
+    expect(api.addPanel).not.toHaveBeenCalled();
+    expect(visible.right).toBe(false);
+  });
+
   it.each(["left", "right"] as const)(
     "hides and restores the whole %s edge without changing its tabs",
     (position) => {

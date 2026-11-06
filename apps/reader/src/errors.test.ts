@@ -4,6 +4,17 @@ import { describe, expect, it } from "vitest";
 import { readerErrorMessage } from "./errors.js";
 
 describe("readerErrorMessage", () => {
+  it("names an unprovable list instead of showing a native engine error", () => {
+    const error = new ConnectRepositoryError(
+      "query annotations",
+      "query_incomplete",
+      "continuation absent",
+    );
+    expect(readerErrorMessage(error, "Try again.")).toBe(
+      "This list may be incomplete. Reader could not verify all results. Try again after the collection finishes syncing.",
+    );
+  });
+
   it("replaces engine budget errors with a plain next step", () => {
     const error = new ConnectRepositoryError(
       "query annotations",

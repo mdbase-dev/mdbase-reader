@@ -255,7 +255,7 @@ msgstr "Открытых вкладок: {0}"
 msgid "{0} parts of {1}"
 msgstr "Частей: {0} из {1}"
 
-#. placeholder {0}: String(writes.pending.length)
+#. placeholder {0}: String(pending.length)
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "{0} pending"
 msgstr "Ожидают: {0}"
@@ -948,6 +948,11 @@ msgstr "и"
 msgid "Annotation"
 msgstr "Аннотация"
 
+#: apps/reader/src/InspectorPane.tsx
+#: apps/reader/src/LibraryCells.tsx
+msgid "Annotation count not yet known"
+msgstr "Количество аннотаций пока неизвестно"
+
 #: packages/core/src/application/materialize-source.ts
 msgid "Annotation embed {reference} could not be resolved."
 msgstr "Не удалось разрешить встраивание аннотации {reference}."
@@ -1569,6 +1574,10 @@ msgstr "Изменения требуют внимания"
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
 msgstr "Изменения требуют проверки"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes to {title}"
+msgstr "Изменения в {title}"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "Changing a colour’s meaning also relabels the highlights already in that colour. Hiding a colour only stops Reader offering it: highlights already in it keep their colour."
@@ -2628,12 +2637,12 @@ msgid "Couldn’t change the colour."
 msgstr "Не удалось изменить цвет."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Couldn’t confirm this file was added. Check pending changes and your library before trying again."
-msgstr "Не удалось подтвердить добавление этого файла. Перед повторной попыткой проверьте ожидающие изменения и библиотеку."
+msgid "Couldn’t confirm this file was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "Не удалось подтвердить добавление файла. Откройте меню ожидающих изменений в заголовке и проверьте библиотеку перед повторной попыткой."
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "Couldn’t confirm this source was added. Check pending changes in the header and your library before trying again."
-msgstr "Не удалось подтвердить добавление этого источника. Перед повторной попыткой проверьте ожидающие изменения в заголовке и библиотеку."
+msgid "Couldn’t confirm this source was added. Open the pending changes menu in the header and check your library before trying again."
+msgstr "Не удалось подтвердить добавление источника. Откройте меню ожидающих изменений в заголовке и проверьте библиотеку перед повторной попыткой."
 
 #: apps/reader/src/SelectionToolbar.tsx
 msgctxt "SelectionToolbar interface"
@@ -4168,8 +4177,8 @@ msgid "Hosted by mdbase"
 msgstr "Размещено в mdbase"
 
 #: apps/reader/src/SourceAddDialog.tsx
-msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Check pending changes before trying again."
-msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: Коллекция не подтвердила передачу файла. Перед повторной попыткой проверьте ожидающие изменения."
+msgid "HOSTED_UPLOAD_COMMIT_UNKNOWN: The collection has not confirmed the file transfer. Open the pending changes menu in the header before trying again."
+msgstr "HOSTED_UPLOAD_COMMIT_UNKNOWN: Коллекция не подтвердила передачу файла. Откройте меню ожидающих изменений в заголовке перед повторной попыткой."
 
 #: apps/reader/src/FileNameSettings.tsx
 msgid "How Reader names new source notes and annotations in this collection. Changes only affect new items: existing files keep their names."
@@ -8472,8 +8481,8 @@ msgid "Stopped"
 msgstr "Остановлено"
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "Stopped adding. Check pending changes before trying again."
-msgstr "Добавление остановлено. Проверьте ожидающие изменения перед повторной попыткой."
+msgid "Stopped adding. Open the pending changes menu in the header before trying again."
+msgstr "Добавление остановлено. Откройте меню ожидающих изменений в заголовке перед повторной попыткой."
 
 #: apps/reader/src/import-controller.ts
 msgid "Stopped. Already committed data is kept. Resume with the same input and destination; existing records will not be overwritten."
@@ -8537,10 +8546,6 @@ msgstr "Переключайте коллекции, управляйте дос
 #: apps/reader/src/collection-switching.ts
 msgid "Switch collections?"
 msgstr "Переключить коллекцию?"
-
-#: apps/reader/src/ReaderSaveStatus.tsx
-msgid "Sync needs attention. Contact support before signing out or clearing this browser’s data."
-msgstr "Синхронизация требует внимания. Обратитесь в службу поддержки, прежде чем выходить из аккаунта или очищать данные этого браузера."
 
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Syncing…"
@@ -9183,12 +9188,16 @@ msgid "This file is already attached here."
 msgstr "Этот файл уже прикреплён здесь."
 
 #: apps/reader/src/SourceImportDialog.tsx
-msgid "This file wasn’t added. Close this and try again."
-msgstr "Этот файл не был добавлен. Закройте это окно и повторите попытку."
+msgid "This file wasn’t added. Try again."
+msgstr "Этот файл не был добавлен. Повторите попытку."
 
 #: apps/extension/src/CaptureApp.tsx
 msgid "This is mdbase Reader"
 msgstr "Это mdbase Reader"
+
+#: apps/reader/src/errors.ts
+msgid "This list may be incomplete. Reader could not verify all results. Try again after the collection finishes syncing."
+msgstr "Этот список может быть неполным. Reader не удалось проверить все результаты. Повторите попытку после завершения синхронизации коллекции."
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
 msgid "This note changed in the collection"
@@ -9394,7 +9403,6 @@ msgid "Toggle Pointer Mode"
 msgstr "Включить режим указателя"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Toggle Sources sidebar"
 msgstr "Показать или скрыть боковую панель источников"
@@ -9831,6 +9839,10 @@ msgctxt "Native sign-in"
 msgid "Waiting for approval in the mdbase tab…"
 msgstr "Ожидание подтверждения во вкладке mdbase…"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for confirmation"
+msgstr "Ожидание подтверждения"
+
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "Ожидание активной вкладки"
@@ -9973,6 +9985,10 @@ msgstr "Коллекцию и сочетания клавиш можно изм�
 msgid "You can close this window."
 msgstr "Это окно можно закрыть."
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "You can keep reading. Sync needs attention; keep this browser’s data until it is resolved."
+msgstr "Вы можете продолжать чтение. Синхронизация требует внимания; сохраните данные этого браузера до устранения проблемы."
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer emptyState"
 msgid "You can view multiple documents using tabs."
@@ -9981,6 +9997,10 @@ msgstr "Несколько документов можно просматрив�
 #: apps/reader/src/DocumentRendererStage.tsx
 msgid "You’re offline. This file isn’t downloaded yet. Connect to the internet and try again."
 msgstr "Вы не в сети. Этот файл ещё не загружен. Подключитесь к интернету и повторите попытку."
+
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "You're offline. This file wasn't added. Try again when you're back online."
+msgstr "Вы не в сети. Этот файл не был добавлен. Повторите попытку после подключения к сети."
 
 #: apps/reader/src/chapter-reading-hint.ts
 msgid "You’ve left this chapter"

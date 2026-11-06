@@ -163,7 +163,14 @@ function InspectorTabs({
         <span className="inspector-tab-label">
           <Trans>Annotations</Trans>
         </span>{" "}
-        <span className="inspector-tab-count">{annotationCount ?? "—"}</span>
+        <span
+          className="inspector-tab-count"
+          aria-label={
+            annotationCount === null && enabled ? t`Annotation count not yet known` : undefined
+          }
+        >
+          {annotationCount === null ? (enabled ? "…" : "—") : annotationCount || "—"}
+        </span>
       </button>
       <button
         type="button"

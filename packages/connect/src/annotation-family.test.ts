@@ -54,7 +54,7 @@ describe("batch annotation owner filtering", () => {
       sourceIds: new Set(owners.slice(0, 3).map(sourceId)),
     });
     expect(records.map(({ sourceId }) => sourceId)).toEqual(owners.slice(0, 3));
-    expect(queryPages).toHaveBeenCalledTimes(5);
+    expect(queryPages).toHaveBeenCalledOnce();
     expect(read).toHaveBeenCalledTimes(3);
     expect(read).not.toHaveBeenCalledWith({ path: documents[3]!.path });
   });

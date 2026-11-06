@@ -166,7 +166,11 @@ export class ConnectRepositoryError extends Error {
         : `mdbase Connect could not ${operation}: ${detail ?? code}${summary ? `: ${summary}` : ""}`,
     );
     this.name = "ConnectRepositoryError";
-    this.code = budgetExceeded ? "query_budget_exceeded" : code;
+    this.code = budgetExceeded
+      ? "query_budget_exceeded"
+      : (problem as ReaderConnectProblem | undefined)?.native?.reason === "query_incomplete"
+        ? "query_incomplete"
+        : code;
   }
 }
 

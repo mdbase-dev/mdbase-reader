@@ -293,7 +293,7 @@ describe("Connect annotation reads", () => {
     ]);
 
     await repository.listForSource(collectionId("reading"), sourceId("src_02"));
-    expect(queryPages).toHaveBeenCalledTimes(8);
+    expect(queryPages).toHaveBeenCalledTimes(6);
     expect(readMany).toHaveBeenCalledTimes(2);
   });
 });

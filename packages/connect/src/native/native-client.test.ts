@@ -11,6 +11,8 @@ import { outcomeValue } from "../repository-client.js";
 
 import { nativeReaderClient, type NativeReaderClient } from "./native-client.js";
 
+import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
+
 const memorySourceContract: MemoryContract = {
   ...sourceContract,
   type: "reader-source",
@@ -71,6 +73,80 @@ describe("native Reader validation failures", () => {
       expect(sdk[method]).toHaveBeenCalledOnce();
     },
   );
+});
+
+describe("native Reader page completeness", () => {
+  it("keeps more than one hundred source annotations across native pages", async () => {
+    const { replica, client } = await native();
+    for (let index = 0; index < 144; index += 1) {
+      replica.seed({
+        path: `annotations/${String(index)}.md`,
+        types: ["reader-annotation"],
+        frontmatter: { id: `annotation-${String(index)}`, source: "book" },
+      });
+    }
+    const pages = [];
+    for await (const result of client.queryPages(
+      { types: ["reader-annotation"] },
+      { pageSize: 100 },
+    )) {
+      pages.push(outcomeValue(result, "list source annotations"));
+    }
+    expect(pages.map((page) => page.results.length)).toEqual([100, 44]);
+    expect(pages.at(-1)).toMatchObject({ loaded: 144, complete: true });
+  });
+
+  it.each([undefined, true])(
+    "refuses a full unprovable native window with hasMore=%s",
+    async (hasMore) => {
+      const { client, sdk } = await native();
+      vi.spyOn(sdk, "pages").mockImplementation(async function* () {
+        const page = await sdk.query({ types: ["reader-annotation"] });
+        yield {
+          ...page,
+          records: Array.from(
+            { length: 100 },
+            () => ({ path: "annotations/a.md" }) as (typeof page.records)[number],
+          ),
+          ...(hasMore === undefined ? {} : { hasMore }),
+        };
+      });
+      const results: ConnectOutcome<QueryPage>[] = [];
+      for await (const result of client.queryPages(
+        { types: ["reader-annotation"] },
+        { pageSize: 100 },
+      )) {
+        results.push(result);
+      }
+      expect(results).toHaveLength(1);
+      expect(() => outcomeValue(results[0]!, "list source annotations")).toThrow(
+        "complete query or a continuation",
+      );
+      expect(results[0]).toMatchObject({
+        ok: false,
+        problem: { native: { reason: "query_incomplete" } },
+      });
+    },
+  );
+
+  it("accepts a saturated exact-path window because a file path is unique", async () => {
+    const { replica, client, sdk } = await native();
+    replica.seed({
+      path: "annotations/one.md",
+      types: ["reader-annotation"],
+      frontmatter: { id: "one" },
+    });
+    vi.spyOn(sdk, "pages").mockImplementation(async function* () {
+      const page = await sdk.query({ types: ["reader-annotation"] });
+      yield { records: page.records, complete: page.complete, asOf: page.asOf };
+    });
+    for await (const result of client.queryPages(
+      { types: ["reader-annotation"], where: 'file.path == "annotations/one.md"' },
+      { pageSize: 1 },
+    )) {
+      expect(outcomeValue(result, "resolve source").results).toHaveLength(1);
+    }
+  });
 });
 
 describe("native Reader client", () => {

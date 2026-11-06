@@ -317,8 +317,8 @@ button {
 }
 
 .icon-button svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
 }
 
 .reader-main {
@@ -425,7 +425,7 @@ button {
 }
 
 .library-action svg {
-  width: 17px;
+  width: 16px;
   color: var(--accent);
 }
 
@@ -482,7 +482,7 @@ button {
 }
 
 .library-search svg {
-  width: 15px;
+  width: 16px;
 }
 
 .library-search input {
@@ -661,8 +661,8 @@ button {
 }
 
 .library-footer svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 .reader-modal {
@@ -1963,8 +1963,8 @@ button {
 }
 
 .header-pane-toggle svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
   stroke-width: 1.5;
 }
 

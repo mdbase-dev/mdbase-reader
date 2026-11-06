@@ -55,8 +55,8 @@ function fixture(count = 2): {
     input: QueryInput | QueryMetadataInput,
   ): AsyncGenerator<ConnectOutcome<QueryMetadataPage | QueryPage>> {
     if (input.output !== "metadata") {
-      expect(input.select).toBeUndefined();
-      expect(input.projections).toBeUndefined();
+      expect(input.select).toEqual(["id", "source", "projection.reader_source_id"]);
+      expect(input.projections).toHaveProperty("reader_source_id");
       yield ok({ results: records, page: 0, offset: 0, loaded: records.length, complete: true });
       return;
     }

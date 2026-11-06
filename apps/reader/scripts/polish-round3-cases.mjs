@@ -204,6 +204,7 @@ export async function sampleAction(page, action, selector, shadow = false) {
           notes: notes
             ? {
                 x: notes.getBoundingClientRect().x,
+                width: notes.getBoundingClientRect().width,
                 opacity: Number(globalThis.getComputedStyle(notes).opacity),
                 visibility: globalThis.getComputedStyle(notes).visibility,
                 closing: notes.querySelector('[data-visible="false"]') !== null,
@@ -215,7 +216,11 @@ export async function sampleAction(page, action, selector, shadow = false) {
             easing: animation.effect.getTiming().easing,
             keyframeEasings: animation.effect.getKeyframes().map(({ easing }) => easing),
             target: animation.effect.target?.className,
-            edge: animation.effect.target?.getAttribute("data-reader-edge"),
+            edge:
+              animation.effect.target?.getAttribute("data-reader-edge") ??
+              animation.effect.target
+                ?.querySelector("[data-reader-edge]")
+                ?.getAttribute("data-reader-edge"),
           })),
         });
         await new Promise(globalThis.requestAnimationFrame);

@@ -111,3 +111,44 @@ it.each<[SourceImportProgress["phase"], boolean]>([
     vi.unstubAllGlobals();
   }
 });
+
+it.each(["checking", "recovering", "uploading", "creating"] as const)(
+  "names offline only when the file is known not to have been added (%s)",
+  (phase) => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    try {
+      act(() =>
+        root.render(
+          <SourceImportDialog
+            file={{ name: "test.html", mediaType: "text/html", size: 1, bytes: new ArrayBuffer(1) }}
+            importing={false}
+            progress={{ phase, completedBytes: 0, totalBytes: 1, fileIndex: 1, fileCount: 1 }}
+            error="engine failure"
+            onCancel={vi.fn()}
+            onImport={vi.fn()}
+          />,
+        ),
+      );
+      const message = host.querySelector('[role="alert"] > p')?.textContent;
+      if (phase === "checking" || phase === "recovering") {
+        expect(message).toBe(
+          "You're offline. This file wasn't added. Try again when you're back online.",
+        );
+      } else {
+        expect(message).toContain("Couldn’t confirm");
+        expect(message).toContain("pending changes menu in the header");
+      }
+      expect(message).not.toContain("engine failure");
+      expect(host.querySelector('[role="alert"] details')?.hasAttribute("open")).toBe(false);
+    } finally {
+      act(() => root.unmount());
+      host.remove();
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    }
+  },
+);

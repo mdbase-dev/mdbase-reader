@@ -149,10 +149,19 @@ export async function round5Workspace(browser, origin) {
   try {
     await context.addInitScript(() => {
       globalThis.readerLayoutShift = 0;
+      globalThis.readerLayoutShiftSources = [];
       new globalThis.PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (!entry.hadRecentInput) {
             globalThis.readerLayoutShift += entry.value;
+            globalThis.readerLayoutShiftSources.push({
+              value: entry.value,
+              sources: entry.sources.map(({ node, previousRect, currentRect }) => ({
+                node: node?.outerHTML?.slice(0, 180),
+                previousRect,
+                currentRect,
+              })),
+            });
           }
         }
       }).observe({ type: "layout-shift", buffered: true });
@@ -163,7 +172,10 @@ export async function round5Workspace(browser, origin) {
     await page.evaluate(() => globalThis.document.fonts.ready);
     await page.waitForTimeout(250);
     const cls = await page.evaluate(() => globalThis.readerLayoutShift);
-    assert.ok(cls < 0.005, `Startup CLS ${cls}`);
+    assert.ok(
+      cls < 0.005,
+      `Startup CLS ${cls}: ${JSON.stringify(await page.evaluate(() => globalThis.readerLayoutShiftSources))}`,
+    );
     await page.clock.install();
     await page.evaluate(() => {
       const event = new globalThis.Event("beforeinstallprompt", { cancelable: true });

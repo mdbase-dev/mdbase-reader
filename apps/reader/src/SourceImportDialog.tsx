@@ -93,7 +93,9 @@ export function SourceImportDialog({
       {error ? <ImportFailure error={error} progress={progress} /> : null}
       {stopped ? (
         <p role="status">
-          <Trans>Stopped adding. Check pending changes before trying again.</Trans>
+          <Trans>
+            Stopped adding. Open the pending changes menu in the header before trying again.
+          </Trans>
         </p>
       ) : null}
       {importing ? <ImportProgress progress={progress} /> : null}
@@ -126,14 +128,16 @@ function ImportFailure({
 }: Pick<SourceImportFlow, "progress"> & { readonly error: string }): JSX.Element {
   return (
     <SourceAdditionError error={error}>
-      {error.includes("the live upload request changed") ||
-      progress?.phase === "checking" ||
-      progress?.phase === "recovering" ? (
-        <Trans>This file wasn’t added. Close this and try again.</Trans>
+      {!navigator.onLine && (progress?.phase === "checking" || progress?.phase === "recovering") ? (
+        <Trans>You're offline. This file wasn't added. Try again when you're back online.</Trans>
+      ) : error.includes("the live upload request changed") ||
+        progress?.phase === "checking" ||
+        progress?.phase === "recovering" ? (
+        <Trans>This file wasn’t added. Try again.</Trans>
       ) : (
         <Trans>
-          Couldn’t confirm this file was added. Check pending changes and your library before trying
-          again.
+          Couldn’t confirm this file was added. Open the pending changes menu in the header and
+          check your library before trying again.
         </Trans>
       )}
     </SourceAdditionError>

@@ -43,7 +43,7 @@ export interface LibraryTableProps {
   readonly properties: readonly { readonly key: string; readonly label?: string }[];
   readonly propertyKeys: readonly string[];
   readonly valuesByPath: ReadonlyMap<string, Readonly<Record<string, unknown>>>;
-  readonly annotationCounts: ReadonlyMap<SourceId, number>;
+  readonly annotationCounts: ReadonlyMap<SourceId, number> | null;
   readonly focused: boolean;
   readonly selection: RowSelection;
   readonly onSelectionChange: (selection: RowSelection) => void;
