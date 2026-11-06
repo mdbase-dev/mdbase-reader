@@ -1,0 +1,51 @@
+# Reader web continuous deployment
+
+Ops `app-cd.yml` owns this independent app line through its single reusable
+`app-publish.yml`. It selects exact-source green main, waits for the authenticated
+SDK producer to be in both live production servers, then dispatches
+`deploy-reader.yml` with `source_sha` and `target`: staging → fresh browser smoke →
+production → fresh browser smoke. Each boundary rechecks exact CI and ancestry.
+Main may advance while a qualified ancestor is being published.
+
+The publisher authenticates npm/Sigstore production provenance and the same
+producer's signed staging archive, frozen original bytes and installed SDK/UI
+members before running the unprivileged web build. Staging uses the existing
+side-by-side SDK alias; no source manifest or lock is rewritten. The protected
+job executes only workflow-owned helpers and isolated pinned tools, never the
+candidate or artifact's scripts. It validates immutable same-run artifact custody,
+all static bytes, the offline shell and capture route behavior. Entry filenames
+end in the source's first twelve hex characters. Dashboard identity is served
+identity, never the manifest pin.
+
+Production captures the canonical Pages deployment and transitive assets before
+upload. Incomplete upload, verification or smoke (including cancellation) invokes
+the ordinary recovery job, which restores the captured UUID and verifies its
+alias/bytes over a stable interval. Recovery cannot make the attempt green. Ops
+holds only Reader; Server CD and other app lines are unaffected. Inspect exact
+receipts/recovery, then use `bin/release app-line clear reader` in ops. Never
+redispatch an unknown write.
+
+The old native branch publisher and its manual qualification/deploy entry points
+are retired. Web environments admit main only, without reviewers or wait timers.
+They retain existing Cloudflare secrets and pin only the raw target trust asset
+with `READER_TRUST_ASSET_SHA256`. Existing roots, policy keys, extension signing
+identities and user data are unchanged. Production and staging are never retargeted.
+
+## Extension shipping is independent
+
+`extension-train.yml` compares the actual shipping ZIP, tags changed main content,
+and `release.yml` packages and submits it to the store's normal queue. These paths
+remain intact, including Zotero releases, the staging extension public identity,
+and production store identity. The new web-only build neither uploads an extension
+to Pages nor changes that train. Old original/intake fixtures are historical tests,
+not web publication authority.
+
+## Live rollback drill
+
+A direct human main dispatch may opt into `drill: true` for production only.
+All ordinary checks still run. The source must already be canonical and served;
+a distinct deployment UUID must become live. Only after normal smoke succeeds
+does workflow-owned code deliberately fail it. Ordinary recovery must record
+`ok: true`, `restored: true` and the captured previous UUID. This proves same-source
+Pages recovery, not changed-source recovery, signed-in operations or store shipping.
+Keep the failed run and bounded artifacts, and complete the ops deployment report.

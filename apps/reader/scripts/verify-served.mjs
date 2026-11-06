@@ -9,7 +9,7 @@ import {
   coveredHostingControls,
   digest,
 } from "../../../scripts/lib/reader-hosting-policy.mjs";
-import { assertInventoryCoverage } from "./native-publisher.mjs";
+import { assertInventoryCoverage } from "../../../scripts/publisher/checks.mjs";
 import { assertOfflineShell } from "../../../scripts/lib/reader-offline-shell.mjs";
 export const isFetchableAsset = (path) =>
   !["_routes.json", "_headers", "_redirects"].includes(path.split("/").at(-1)) &&
@@ -81,7 +81,10 @@ async function probe(transport, url, status, expected, remaining) {
   }
 }
 export async function verifyServedAssets({ origin, inventory, publication, ...options }) {
-  if (!["https://staging.mdbase-reader.pages.dev", "https://reader.mdbase.dev"].includes(origin))
+  if (
+    !["https://staging.mdbase-reader.pages.dev", "https://reader.mdbase.dev"].includes(origin) &&
+    origin !== publication?.deployment?.url
+  )
     throw Error("Non-target Reader origin");
   assertInventoryCoverage(inventory);
   const total = options.totalTimeoutMs ?? 180000;
@@ -98,7 +101,7 @@ export async function verifyServedAssets({ origin, inventory, publication, ...op
   try {
     if (!publication) throw Error("missing source/deployment evidence");
     const { repoRoot, artifactRoot, plan, deployment, metadata: host, preflight } = publication;
-    if (plan.origin !== origin) throw Error("target origin");
+    if (plan.origin !== origin && deployment.url !== origin) throw Error("target origin");
     await assertInventory(join(artifactRoot, "publish"), inventory);
     policy = await sourceHostingPolicy(repoRoot);
     assertHostingMetadata(policy, host, plan, deployment, preflight);

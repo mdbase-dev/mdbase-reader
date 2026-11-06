@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { originalMembers } from "../../../scripts/lib/native-originals.mjs";
+import { originalMembers } from "../../../scripts/publisher/originals.mjs";
 import { readerDeployments } from "./deployment-environment.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
@@ -37,8 +37,8 @@ export function readerSdkTarget(environment) {
 
 /** Verify archive identity AND every installed original before importing any SDK build code.
  * `app` is the consuming workspace (Reader or its browser extension), which installs all three
- * originals side by side. The standard native publisher retains its separate, stronger
- * authentication/admission gates. */
+ * originals side by side. The App CD publisher independently authenticates the
+ * SDK producer and target trust before execution. */
 export async function verifiedReaderSdk(target, repoRoot = root, app = "apps/reader") {
   assert.ok(Object.hasOwn(pins, target), "Unsupported Reader SDK environment: " + target);
   const [name, manifest] = pins[target];
