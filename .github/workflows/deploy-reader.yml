@@ -1,380 +1,441 @@
-name: Deploy Reader
+name: Publish immutable Reader
 
-# Dependency merges use the existing production publisher; manual paths remain.
 on:
-  push:
-    branches: [main]
-    paths:
-      - apps/reader/package.json
-      - apps/zotero-exporter/package.json
-      - packages/connect/package.json
-      - packages/core/package.json
-      - packages/i18n/package.json
-      - packages/markdown-editor/package.json
-      - packages/migration/package.json
-      - packages/platform/package.json
-      - packages/reading-surface/package.json
-      - packages/renderer-epub/package.json
-      - packages/renderer-html/package.json
-      - packages/renderer-pdf/package.json
-      - packages/ui/package.json
-      - packages/web-capture/package.json
   workflow_dispatch:
     inputs:
-      target:
-        description: Deployment target
+      source_sha:
+        description: Full 40-character source commit, reachable from main.
         required: true
+        type: string
+      target:
+        description: Reader target; dispatch this workflow on main.
+        required: true
+        default: staging
         type: choice
         options:
           - staging
           - production
-      source_sha:
-        description: Native path only — exact 40-hex HEAD of literal release/native-staging or release/native-production; blank preserves main path
-        required: false
-        type: string
-        default: ""
+      drill:
+        description: Deliberately fail smoke after uploading the already-live production source (manual only).
+        type: boolean
+        default: false
 
 permissions:
+  actions: read
   contents: read
 
+concurrency:
+  group: reader-pages-${{ github.event_name == 'workflow_dispatch' && inputs.target || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+# CI is ci.yml. Ops and direct operators dispatch this immutable publisher.
 jobs:
-  ci:
-    if: inputs.source_sha == ''
-    uses: ./.github/workflows/ci.yml
-
-  deploy:
-    if: inputs.source_sha == ''
-    name: Deploy Reader to ${{ inputs.target || 'production' }}
-    needs: ci
+  admit:
+    # Validate dispatch shape before acquiring an environment.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    concurrency:
-      group: deploy-reader-${{ inputs.target || 'production' }}
-      cancel-in-progress: false
-    environment:
-      name: reader-${{ inputs.target || 'production' }}
-      url: ${{ inputs.target != 'staging' && 'https://reader.mdbase.dev/' || 'https://staging.mdbase-reader.pages.dev/' }}
-    env:
-      MDBASE_ENV: ${{ inputs.target || 'production' }}
+    timeout-minutes: 3
     steps:
-      - name: Require main
-        if: github.ref != 'refs/heads/main'
-        run: |
-          echo "::error::Staging and production deploy only from main (got ${GITHUB_REF})."
-          exit 1
-      - name: Require Cloudflare credentials
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::error::The reader-${MDBASE_ENV} environment needs CLOUDFLARE_API_TOKEN (Cloudflare Pages: Edit) and CLOUDFLARE_ACCOUNT_ID secrets."
-            exit 1
-          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      # deploy-pages.mjs refuses a dirty tree for staging and production.
-      - run: pnpm ${{ inputs.target != 'staging' && 'deploy:prod' || 'deploy:dev' }}
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          VITE_MDBASE_FEEDBACK_URL: ${{ vars.MDBASE_FEEDBACK_URL }}
-          VITE_MDBASE_FEEDBACK_TURNSTILE_SITE_KEY: ${{ vars.MDBASE_FEEDBACK_TURNSTILE_SITE_KEY }}
-      - name: Verify deployed manifest
-        env:
-          ORIGIN: ${{ inputs.target != 'staging' && 'https://reader.mdbase.dev' || 'https://staging.mdbase-reader.pages.dev' }}
-        run: |
-          for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
-            homepage=$(curl -fsS "$ORIGIN/.well-known/mdbase-app.json" | jq -r .homepage || true)
-            if [ "$homepage" = "$ORIGIN/" ]; then
-              echo "Manifest at $ORIGIN declares $homepage"
-              exit 0
-            fi
-            sleep 5
-          done
-          echo "::error::$ORIGIN/.well-known/mdbase-app.json does not declare $ORIGIN/"
-          exit 1
-
-  native-dispatch:
-    if: inputs.source_sha != ''
-    runs-on: ubuntu-24.04
-    timeout-minutes: 2
-    steps:
-      - name: Require literal native branch and full exact event SHA
-        env:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - env:
           TARGET: ${{ inputs.target }}
           SOURCE_SHA: ${{ inputs.source_sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          DRILL: ${{ inputs.drill && 'true' || 'false' }}
         run: |
           set -euo pipefail
           case "$TARGET" in staging|production) ;; *) exit 1 ;; esac
           [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]
           [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
-          [[ "$GITHUB_REF" == "refs/heads/release/native-$TARGET" ]]
-          [[ "$GITHUB_SHA" == "$SOURCE_SHA" ]]
+          [[ "$GITHUB_REF" == refs/heads/main ]]
+          node scripts/publisher/refs.mjs
+          node scripts/publisher/drill.mjs admit
 
-  native-inputs:
-    needs: native-dispatch
+  inputs:
+    needs: admit
     runs-on: ubuntu-24.04
-    timeout-minutes: 2
-    # Public handoff expectations only; no checkout/dependencies/Cloudflare secrets.
+    timeout-minutes: 3
     environment: reader-${{ inputs.target }}
-    env:
-      TARGET: ${{ inputs.target }}
-      SOURCE_SHA: ${{ inputs.source_sha }}
     outputs:
-      sdk: ${{ steps.hashes.outputs.sdk }}
-      ui: ${{ steps.hashes.outputs.ui }}
-      protocol: ${{ steps.hashes.outputs.protocol }}
       trust: ${{ steps.hashes.outputs.trust }}
-      public-key: ${{ steps.hashes.outputs.public-key }}
     steps:
-      - name: Initialize SAFE input-failure receipt before protected variable intake
-        run: |
-          mkdir -p "$RUNNER_TEMP/reader-input-failure"
-          node --input-type=module -e 'import {writeFileSync} from "node:fs";writeFileSync(process.env.RUNNER_TEMP+"/reader-input-failure/receipt.json",JSON.stringify({schema:"mdbase-reader/native-input-failure@1",status:"failed-or-incomplete",qualifiedArtifact:false,target:process.env.TARGET,source:{sha:process.env.SOURCE_SHA,tree:null},run:{repository:process.env.GITHUB_REPOSITORY,id:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT},reason:"protected-public-input-validation-refused-or-incomplete"},null,2));'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Workflow-owned ancestry check before reading environment inputs
+        env:
+          TARGET: ${{ inputs.target }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publisher/refs.mjs
       - id: hashes
         env:
-          NATIVE_SDK_SHA256: ${{ vars.NATIVE_SDK_SHA256 }}
-          NATIVE_UI_SHA256: ${{ vars.NATIVE_UI_SHA256 }}
-          NATIVE_PROTOCOL_SHA256: ${{ vars.NATIVE_PROTOCOL_SHA256 }}
-          NATIVE_TRUST_ASSET_SHA256: ${{ vars.NATIVE_TRUST_ASSET_SHA256 }}
-          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ inputs.target == 'staging' && vars.MDBASE_EXTENSION_STAGING_PUBLIC_KEY || '' }}
+          READER_TRUST_ASSET_SHA256: ${{ vars.READER_TRUST_ASSET_SHA256 }}
         run: |
           set -euo pipefail
-          for name in NATIVE_SDK_SHA256 NATIVE_UI_SHA256 NATIVE_PROTOCOL_SHA256 NATIVE_TRUST_ASSET_SHA256; do
-            [[ "${!name}" =~ ^[0-9a-f]{64}$ ]]
-          done
-          printf 'sdk=%s\nui=%s\nprotocol=%s\ntrust=%s\n' "$NATIVE_SDK_SHA256" "$NATIVE_UI_SHA256" "$NATIVE_PROTOCOL_SHA256" "$NATIVE_TRUST_ASSET_SHA256" >> "$GITHUB_OUTPUT"
-          if [[ "$TARGET" == staging ]]; then
-            [[ "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" =~ ^[A-Za-z0-9+/=]{1,4096}$ ]]
-            printf 'public-key=%s\n' "$MDBASE_EXTENSION_STAGING_PUBLIC_KEY" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Retain SAFE input failure only; never qualified artifact outputs
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: reader-native-input-failure-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/reader-input-failure/
-          if-no-files-found: error
-          retention-days: 90
+          [[ "$READER_TRUST_ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          printf 'trust=%s\n' "$READER_TRUST_ASSET_SHA256" >> "$GITHUB_OUTPUT"
 
-  native-build:
-    name: Unprivileged frozen Reader web and unpacked extension
-    needs: native-inputs
+  build:
+    name: Unprivileged frozen Reader build
+    needs: inputs
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    # NO environment and NO Cloudflare secrets. Public SPKI is build input only.
+    timeout-minutes: 25
+    # No GitHub environment or Cloudflare secrets. Original intake before hooks.
+    defaults:
+      run:
+        working-directory: candidate
     env:
       TARGET: ${{ inputs.target }}
       SOURCE_SHA: ${{ inputs.source_sha }}
       # Public build inputs: Pages runtime variables do not configure Vite assets.
       VITE_MDBASE_FEEDBACK_URL: ${{ inputs.target == 'production' && 'https://feedback-api.mdbase.dev/v1/feedback' || 'https://feedback-api-staging.mdbase.dev/v1/feedback' }}
       VITE_MDBASE_FEEDBACK_TURNSTILE_SITE_KEY: ${{ inputs.target == 'production' && '0x4AAAAAAEboz_mLT-taI3H-' || '0x4AAAAAAEbkvA4d9vQJq2D1' }}
-      NATIVE_SDK_SHA256: ${{ needs.native-inputs.outputs.sdk }}
-      NATIVE_UI_SHA256: ${{ needs.native-inputs.outputs.ui }}
-      NATIVE_PROTOCOL_SHA256: ${{ needs.native-inputs.outputs.protocol }}
-      NATIVE_TRUST_ASSET_SHA256: ${{ needs.native-inputs.outputs.trust }}
-      WRANGLER_SEND_METRICS: "false"
+      READER_TRUST_ASSET_SHA256: ${{ needs.inputs.outputs.trust }}
+      READER_SOURCE_ROOT: ${{ github.workspace }}/candidate
     outputs:
       artifact-id: ${{ steps.artifact.outputs.artifact-id }}
       artifact-digest: ${{ steps.artifact.outputs.artifact-digest }}
     steps:
-      - name: Initialize SAFE build-failure-only evidence before source/install/intake
-        run: |
-          mkdir -p "$RUNNER_TEMP/reader-build-failure"
-          node --input-type=module -e 'import {writeFileSync} from "node:fs"; writeFileSync(process.env.RUNNER_TEMP+"/reader-build-failure/receipt.json",JSON.stringify({schema:"mdbase-reader/native-build-failure@1",status:"failed-or-incomplete",qualifiedArtifact:false,target:process.env.TARGET,source:{sha:process.env.SOURCE_SHA,tree:null},run:{repository:process.env.GITHUB_REPOSITORY,id:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT},reason:"source-install-or-intake-not-complete"},null,2));'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: publisher
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Workflow-owned ancestry check before candidate checkout or execution
+        working-directory: publisher
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publisher/refs.mjs
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.source_sha }}
+          path: candidate
           fetch-depth: 0
           persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 10.7.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      - name: Exact clean source and frozen originals before any SDK execution
-        id: originals
+      - name: Data-only original intake before dependency execution
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/reader-build"
-          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" > "$RUNNER_TEMP/reader-build/plan.json"
-          pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
-          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" --installed --installer-evidence "$RUNNER_TEMP/reader-build-failure/installer-evidence.json" > "$RUNNER_TEMP/reader-installed-plan.json"
-          cmp "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-installed-plan.json"
-          pnpm rebuild --pending
-          pnpm check
-          # Checks generate LAB metadata; restore only this tracked output in ephemeral CI.
-          git show "$SOURCE_SHA:apps/extension/src/generated/mdbase-app.json" > apps/extension/src/generated/mdbase-app.json
-      - name: One actual target build, precompiled capture Worker, all final bytes
-        id: build
-        env:
-          MDBASE_EXTENSION_STAGING_PUBLIC_KEY: ${{ inputs.target == 'staging' && needs.native-inputs.outputs.public-key || '' }}
-        run: |
-          set -euo pipefail
-          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" --installed > "$RUNNER_TEMP/reader-confirmed-plan.json"
-          cmp "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-confirmed-plan.json"
-          pnpm build:native:ci "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-build"
-          cmp "$RUNNER_TEMP/reader-build/plan.json" "$RUNNER_TEMP/reader-confirmed-plan.json"
-          node scripts/native-build-envelope.mjs "$RUNNER_TEMP/reader-build"
-      - id: artifact
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+          node ../publisher/scripts/publisher/publisher.mjs guard > "$RUNNER_TEMP/reader-build/plan.json"
+      - run: node ../publisher/scripts/publisher/install-inputs.mjs "$RUNNER_TEMP/reader-build/plan.json"
+      - run: pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
+      - name: ALL installed original members, then unprivileged build once
+        run: node ../publisher/scripts/publisher/build.mjs "$RUNNER_TEMP/reader-build"
+      - run: node ../publisher/scripts/publisher/envelope.mjs "$RUNNER_TEMP/reader-build"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: artifact
         with:
-          name: reader-native-build-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: reader-build-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/reader-build/
           include-hidden-files: true
           if-no-files-found: error
-          retention-days: 14
-      - name: Retain minimal SAFE public failure receipt without qualified outputs
-        if: failure()
-        env:
-          ORIGINALS_OUTCOME: ${{ steps.originals.outcome }}
-          BUILD_OUTCOME: ${{ steps.build.outcome }}
-        run: |
-          node --input-type=module -e 'import {readFileSync,writeFileSync} from "node:fs";import {execFileSync} from "node:child_process";const path=process.env.RUNNER_TEMP+"/reader-build-failure/receipt.json";const r=JSON.parse(readFileSync(path));try{const tree=execFileSync("git",["rev-parse","HEAD^{tree}"],{encoding:"utf8",stdio:["ignore","pipe","ignore"]}).trim();if(/^[a-f0-9]{40}$/.test(tree))r.source.tree=tree;}catch{}r.reason=process.env.ORIGINALS_OUTCOME!=="success"?"source-install-or-originals-refused":process.env.BUILD_OUTCOME!=="success"?"build-or-final-inventory-refused":"qualified-artifact-publication-refused";writeFileSync(path,JSON.stringify(r,null,2));'
-      - name: Build-failure artifact is evidence ONLY and never enables protected upload
+          retention-days: 90
+      - name: Retain failed build plan without manufacturing a successful artifact
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: reader-native-build-failure-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/reader-build-failure/
-          if-no-files-found: error
+          name: reader-build-failure-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-build/
+          include-hidden-files: true
+          if-no-files-found: warn
           retention-days: 90
 
-  native-upload:
-    needs: native-build
+  publish:
+    name: Protected immutable Reader upload
+    needs: [inputs, build]
+    outputs:
+      ready: ${{ steps.compatibility.outputs.ready }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      actions: read
+    # Upload has a separate 7-minute bound; leave time for checks and recovery.
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: publisher
     concurrency:
-      group: reader-native-${{ inputs.target }}
+      group: reader-upload-${{ inputs.target }}
       cancel-in-progress: false
-    # Parent reviews LIVE native-ref/environment/credential protections separately.
-    # Production: required Callum reviewer/no admin bypass, NOT prevent-self-review.
-    # Separate Callum GO BEFORE any production dispatch/tag, then Callum UI approval.
-    # Agents NEVER call pending_deployments/approval APIs. Hashes are not GO.
+    # External environment policy admits main without per-publish approval.
     environment:
       name: reader-${{ inputs.target }}
       url: ${{ inputs.target == 'production' && 'https://reader.mdbase.dev/' || 'https://staging.mdbase-reader.pages.dev/' }}
     env:
       TARGET: ${{ inputs.target }}
       SOURCE_SHA: ${{ inputs.source_sha }}
-      NATIVE_SDK_SHA256: ${{ vars.NATIVE_SDK_SHA256 }}
-      NATIVE_UI_SHA256: ${{ vars.NATIVE_UI_SHA256 }}
-      NATIVE_PROTOCOL_SHA256: ${{ vars.NATIVE_PROTOCOL_SHA256 }}
-      NATIVE_TRUST_ASSET_SHA256: ${{ vars.NATIVE_TRUST_ASSET_SHA256 }}
+      READER_TRUST_ASSET_SHA256: ${{ vars.READER_TRUST_ASSET_SHA256 }}
+      ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
+      ARTIFACT_DIGEST: ${{ needs.build.outputs.artifact-digest }}
+      READER_SOURCE_ROOT: ${{ github.workspace }}/candidate
       WRANGLER_SEND_METRICS: "false"
     steps:
-      - name: Initialize minimal FAILED receipt BEFORE protected intake can refuse
-        run: |
-          mkdir -p "$RUNNER_TEMP/reader-native-receipt"
-          node --input-type=module -e 'import {writeFileSync} from "node:fs"; writeFileSync(process.env.RUNNER_TEMP+"/reader-native-receipt/receipt.json",JSON.stringify({schema:"mdbase-reader/native-publisher-receipt@1",status:"failed-or-incomplete",target:process.env.TARGET,source:{sha:process.env.SOURCE_SHA,tree:null},run:{repository:process.env.GITHUB_REPOSITORY,id:process.env.GITHUB_RUN_ID,attempt:process.env.GITHUB_RUN_ATTEMPT},deploymentId:null,assets:[],verification:null},null,2));'
+      # A recovery point must predate everything its run published.
+      - name: One publication per run; dispatch a new run to retry
+        timeout-minutes: 1
+        working-directory: ${{ github.workspace }}
+        run: test "$GITHUB_RUN_ATTEMPT" = 1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: publisher
+          fetch-depth: 0
+          persist-credentials: false
+        timeout-minutes: 3
+      - name: Workflow-owned ancestry check before candidate data is read
+        timeout-minutes: 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/publisher/refs.mjs
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.source_sha }}
+          path: candidate
           fetch-depth: 0
           persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-        with:
-          version: 11.15.1
-          package_json_file: tools/native-publisher/package.json
+        timeout-minutes: 3
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      - name: Trusted SOURCE guard only; NO app dependencies/build/hooks
+        timeout-minutes: 2
+      - name: Workflow-owned guard; candidate is data only
+        timeout-minutes: 4
         run: |
           set -euo pipefail
-          node apps/reader/scripts/native-publisher.mjs guard --target "$TARGET" --sha "$SOURCE_SHA" > "$RUNNER_TEMP/reader-native-receipt/source-plan.json"
-          cp "$RUNNER_TEMP/reader-native-receipt/source-plan.json" "$RUNNER_TEMP/reader-native-receipt/plan.json"
-      - name: Isolated integrity-locked official Wrangler only, no app workspace
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/reader-tools" "$RUNNER_TEMP/reader-upload"
-          cp tools/native-publisher/{package.json,pnpm-lock.yaml} "$RUNNER_TEMP/reader-tools/"
-          (cd "$RUNNER_TEMP/reader-tools" && NPM_CONFIG_USERCONFIG=/dev/null NPM_CONFIG_GLOBALCONFIG=/dev/null pnpm --ignore-workspace install --frozen-lockfile --ignore-scripts --ignore-pnpmfile)
-          test "$(node -p "require('$RUNNER_TEMP/reader-tools/node_modules/wrangler/package.json').version")" = 4.114.0
-          # Pages forbids --config. SOURCE-derived isolated cwd config only.
-          node scripts/reader-hosting.mjs upload-config "$RUNNER_TEMP/reader-upload"
-          cp "$RUNNER_TEMP/reader-upload/wrangler.json" "$RUNNER_TEMP/reader-native-receipt/upload-config.json"
-          chmod a-w "$RUNNER_TEMP/reader-upload/wrangler.json"
-      - name: Immutable same repository/run/attempt/event/source/tree/target artifact
+          mkdir -p "$RUNNER_TEMP/reader-receipt" "$RUNNER_TEMP/reader-upload"
+          node scripts/publisher/publisher.mjs guard > "$RUNNER_TEMP/reader-receipt/plan.json"
+      - name: Isolated official tool lock only; no app hooks
+        timeout-minutes: 3
+        run: node scripts/publisher/tool.mjs "$RUNNER_TEMP/reader-tool-path"
+      - name: Immutable artifact identity and full original inventory
+        timeout-minutes: 4
         env:
-          ARTIFACT_ID: ${{ needs.native-build.outputs.artifact-id }}
-          ARTIFACT_DIGEST: ${{ needs.native-build.outputs.artifact-digest }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          node scripts/lib/native-artifact.mjs "$RUNNER_TEMP/reader-upload/artifact"
-          cp "$RUNNER_TEMP/reader-upload/artifact/"{plan.json,inventory.json,envelope.json,extension-inventory.json} "$RUNNER_TEMP/reader-native-receipt/"
-          cp "$RUNNER_TEMP/reader-upload/artifact-metadata.json" "$RUNNER_TEMP/reader-native-receipt/"
-          cmp "$RUNNER_TEMP/reader-native-receipt/source-plan.json" "$RUNNER_TEMP/reader-native-receipt/plan.json"
-          node apps/reader/scripts/native-publisher.mjs inventory --dist "$RUNNER_TEMP/reader-upload/artifact/publish" --plan "$RUNNER_TEMP/reader-native-receipt/source-plan.json" > "$RUNNER_TEMP/reader-native-receipt/revalidated-inventory.json"
-          cmp "$RUNNER_TEMP/reader-native-receipt/inventory.json" "$RUNNER_TEMP/reader-native-receipt/revalidated-inventory.json"
+          node scripts/publisher/artifact.mjs "$RUNNER_TEMP/reader-upload/artifact"
+          cp "$RUNNER_TEMP/reader-upload/artifact/"{inventory.json,envelope.json} "$RUNNER_TEMP/reader-receipt/"
+          cp "$RUNNER_TEMP/reader-upload/artifact-metadata.json" "$RUNNER_TEMP/reader-receipt/"
+          cmp "$RUNNER_TEMP/reader-receipt/plan.json" "$RUNNER_TEMP/reader-upload/artifact/plan.json"
+          node scripts/publisher/publisher.mjs inventory "$RUNNER_TEMP/reader-upload/artifact/publish" "$RUNNER_TEMP/reader-receipt/plan.json" > "$RUNNER_TEMP/reader-receipt/revalidated-inventory.json"
+          cmp "$RUNNER_TEMP/reader-receipt/inventory.json" "$RUNNER_TEMP/reader-receipt/revalidated-inventory.json"
           chmod -R a-w "$RUNNER_TEMP/reader-upload/artifact"
-      - name: Safe project identity/configuration preflight (no alias assumption)
+      - name: Source-owned capture Functions upload configuration
+        timeout-minutes: 1
+        run: node scripts/publisher/runtime.mjs upload-config "$RUNNER_TEMP/reader-upload"
+      - name: Existing project identity (never provision)
+        timeout-minutes: 1
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node scripts/reader-hosting.mjs metadata "$RUNNER_TEMP/reader-native-receipt/hosting-preflight.json" "$RUNNER_TEMP/reader-native-receipt/plan.json"
-      - name: LAST exact current ref and full inventory then ONE web-only upload
-        id: upload
+        run: node scripts/publisher/publisher.mjs project > "$RUNNER_TEMP/reader-receipt/project.json"
+      - name: Live production contains the authenticated SDK producer
+        id: compatibility
+        timeout-minutes: 2
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
-          branch=$(jq -er .pagesBranch "$RUNNER_TEMP/reader-native-receipt/plan.json")
-          node apps/reader/scripts/native-publisher.mjs assert-inventory --dist "$RUNNER_TEMP/reader-upload/artifact/publish" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json"
-          node scripts/lib/native-artifact.mjs assert "$RUNNER_TEMP/reader-upload/artifact"
-          node scripts/native-current-head.mjs
-          cd "$RUNNER_TEMP/reader-upload"
-          "$RUNNER_TEMP/reader-tools/node_modules/.bin/wrangler" pages deploy artifact/publish --no-bundle --project-name mdbase-reader --branch "$branch" --commit-hash "$SOURCE_SHA" --commit-dirty=false 2>&1 | tee "$RUNNER_TEMP/reader-native-receipt/wrangler-output.txt"
-      - name: Capture actual UUID SUCCESS before served verification
-        id: deployment
-        if: always() && (steps.upload.outcome == 'success' || steps.upload.outcome == 'failure')
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node apps/reader/scripts/native-publisher.mjs capture-deployment --target "$TARGET" --sha "$SOURCE_SHA" --wrangler-output "$RUNNER_TEMP/reader-native-receipt/wrangler-output.txt" > "$RUNNER_TEMP/reader-native-receipt/deployment.json"
-      - name: Bind actual successful deployment and safe project metadata
-        id: hosting
-        if: always() && steps.upload.outcome == 'success' && steps.deployment.outcome == 'success'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node scripts/reader-hosting.mjs metadata "$RUNNER_TEMP/reader-native-receipt/hosting-metadata.json" "$RUNNER_TEMP/reader-native-receipt/plan.json" "$RUNNER_TEMP/reader-native-receipt/deployment.json" "$RUNNER_TEMP/reader-native-receipt/hosting-preflight.json"
-      - name: ALL final served bytes plus trusted capture/route policy; any unknown blocks
-        if: always() && steps.upload.outcome == 'success' && steps.deployment.outcome == 'success' && steps.hosting.outcome == 'success'
-        run: |
-          set -euo pipefail
-          node apps/reader/scripts/native-publisher.mjs assert-inventory --dist "$RUNNER_TEMP/reader-upload/artifact/publish" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json"
-          origin=$(jq -er .origin "$RUNNER_TEMP/reader-native-receipt/plan.json")
-          node apps/reader/scripts/verify-served.mjs --origin "$origin" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json" --artifact "$RUNNER_TEMP/reader-upload/artifact" --plan "$RUNNER_TEMP/reader-native-receipt/plan.json" --deployment "$RUNNER_TEMP/reader-native-receipt/deployment.json" --metadata "$RUNNER_TEMP/reader-native-receipt/hosting-metadata.json" --preflight "$RUNNER_TEMP/reader-native-receipt/hosting-preflight.json" > "$RUNNER_TEMP/reader-native-receipt/verification.json"
-      - name: Preserve failed/incomplete receipt, never automatic rebuild/redeploy/rollback
-        if: always()
-        run: |
-          if [ -f "$RUNNER_TEMP/reader-upload/artifact-metadata.json" ]; then cp "$RUNNER_TEMP/reader-upload/artifact-metadata.json" "$RUNNER_TEMP/reader-native-receipt/"; fi
-          if [ -f apps/reader/scripts/native-publisher.mjs ]; then
-            code=0
-            node apps/reader/scripts/native-publisher.mjs receipt --target "$TARGET" --plan "$RUNNER_TEMP/reader-native-receipt/plan.json" --inventory "$RUNNER_TEMP/reader-native-receipt/inventory.json" --deployment "$RUNNER_TEMP/reader-native-receipt/deployment.json" --verification "$RUNNER_TEMP/reader-native-receipt/verification.json" > "$RUNNER_TEMP/reader-native-receipt/final-receipt.json" || code=$?
-            if [ -s "$RUNNER_TEMP/reader-native-receipt/final-receipt.json" ]; then cp "$RUNNER_TEMP/reader-native-receipt/final-receipt.json" "$RUNNER_TEMP/reader-native-receipt/receipt.json"; fi
-            exit "$code"
-          fi
-          exit 1
-      - name: Always retain safe source/run/artifact/inventory/UUID/failure evidence
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        run: node scripts/publisher/compatibility.mjs "$RUNNER_TEMP/reader-receipt/plan.json" "$RUNNER_TEMP/reader-receipt/compatibility.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        timeout-minutes: 2
         with:
-          name: reader-native-receipt-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/reader-native-receipt/
-          include-hidden-files: true
+          name: reader-compatibility-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-receipt/compatibility.json
           if-no-files-found: error
+          retention-days: 90
+      - name: Capture production recovery point before upload
+        if: steps.compatibility.outputs.ready == 'true'
+        timeout-minutes: 4
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/publisher/rollback.mjs snapshot "$RUNNER_TEMP/reader-receipt"
+      # Stored before upload, so recovery survives a lost job or receipt.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: inputs.target == 'production' && steps.compatibility.outputs.ready == 'true'
+        timeout-minutes: 2
+        with:
+          name: reader-production-recovery-point-${{ github.run_id }}
+          path: ${{ runner.temp }}/reader-receipt/previous.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Drill requires the exact source already live before upload
+        if: inputs.drill && steps.compatibility.outputs.ready == 'true'
+        timeout-minutes: 1
+        env:
+          DRILL: ${{ inputs.drill && 'true' || 'false' }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/publisher/drill.mjs before-upload "$RUNNER_TEMP/reader-receipt"
+      - name: Recheck immutable inventory and upload once
+        id: upload
+        if: steps.compatibility.outputs.ready == 'true'
+        timeout-minutes: 7
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          node scripts/publisher/refs.mjs
+          branch=$(jq -er .pagesBranch "$RUNNER_TEMP/reader-receipt/plan.json")
+          node scripts/publisher/publisher.mjs assert-inventory "$RUNNER_TEMP/reader-upload/artifact/publish" "$RUNNER_TEMP/reader-receipt/inventory.json"
+          cli=$(cat "$RUNNER_TEMP/reader-tool-path")
+          cd "$RUNNER_TEMP/reader-upload"
+          node "$cli" pages deploy artifact/publish --no-bundle --project-name mdbase-reader --branch "$branch" --commit-hash "$SOURCE_SHA" --commit-dirty=false > "$RUNNER_TEMP/reader-upload/wrangler-output.txt" 2>&1
+      - name: Resolve actual full deployment UUID before served checks
+        id: deployment
+        timeout-minutes: 1
+        if: always() && steps.compatibility.outputs.ready == 'true' && (steps.upload.outcome == 'success' || steps.upload.outcome == 'failure' || steps.upload.outcome == 'cancelled')
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/publisher/publisher.mjs capture "$RUNNER_TEMP/reader-upload/wrangler-output.txt" > "$RUNNER_TEMP/reader-receipt/deployment.json"
+      - name: All deployment URL AND alias bytes, source-owned headers and routes
+        id: verification
+        timeout-minutes: 9
+        if: always() && steps.compatibility.outputs.ready == 'true' && steps.deployment.outcome == 'success'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DRILL: ${{ inputs.drill && 'true' || 'false' }}
+        run: |
+          set -euo pipefail
+          node scripts/publisher/hosting.mjs "$RUNNER_TEMP/reader-receipt/plan.json" "$RUNNER_TEMP/reader-receipt/inventory.json" "$RUNNER_TEMP/reader-receipt/deployment.json" "$RUNNER_TEMP/reader-upload/artifact" > "$RUNNER_TEMP/reader-receipt/verification.json"
+          if [ "$DRILL" = true ]; then node scripts/publisher/drill.mjs uploaded "$RUNNER_TEMP/reader-receipt"; fi
+      - name: Preserve honest failure or complete static-publication receipt
+        timeout-minutes: 1
+        if: always() && steps.compatibility.outputs.ready == 'true'
+        run: |
+          if [ -f "$RUNNER_TEMP/reader-upload/artifact-metadata.json" ]; then cp "$RUNNER_TEMP/reader-upload/artifact-metadata.json" "$RUNNER_TEMP/reader-receipt/"; fi
+          node scripts/publisher/publisher.mjs receipt "$RUNNER_TEMP/reader-receipt" > "$RUNNER_TEMP/reader-receipt/receipt.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        timeout-minutes: 2
+        if: always()
+        with:
+          name: reader-receipt-${{ inputs.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-receipt/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90
+
+  smoke:
+    name: Reader fresh-browser smoke
+    needs: publish
+    if: needs.publish.outputs.ready == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    # No environment, Cloudflare credentials, candidate checkout or app install.
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      TARGET: ${{ inputs.target }}
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.reader-smoke-browsers
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Isolated pinned browser tool with install scripts disabled
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          node scripts/publisher/tool.mjs "$RUNNER_TEMP/reader-smoke-tool" smoke
+          module=$(cat "$RUNNER_TEMP/reader-smoke-tool")
+          node "$(dirname "$module")/cli.js" install --with-deps chromium
+      - name: Fresh load, source entry asset, readiness and sign-in
+        timeout-minutes: 3
+        run: node scripts/publisher/smoke.mjs "$RUNNER_TEMP/reader-smoke-tool" "$RUNNER_TEMP/reader-smoke.json"
+      - name: Read this run's verified upload receipt for the manual drill
+        if: inputs.drill && inputs.target == 'production' && github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "reader-receipt-production-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --dir "$RUNNER_TEMP/reader-drill"
+      - name: Deliberate smoke failure after real same-source production upload
+        if: inputs.drill && inputs.target == 'production' && github.event_name == 'workflow_dispatch'
+        env:
+          DRILL: ${{ inputs.drill && 'true' || 'false' }}
+        run: node scripts/publisher/drill.mjs fail "$RUNNER_TEMP/reader-drill" "$RUNNER_TEMP/reader-drill.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && inputs.drill
+        with:
+          name: reader-production-drill-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-drill.json
+          if-no-files-found: warn
+          retention-days: 90
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: reader-${{ inputs.target }}-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-smoke.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  production-recovery:
+    name: Restore production after incomplete publication or smoke
+    needs: [publish, smoke]
+    # A job-level always() still runs after cancellation or a job timeout.
+    if: always() && inputs.target == 'production' && needs.publish.result != 'skipped' && needs.smoke.result != 'success' && needs.publish.outputs.ready != 'false'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: reader-production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+        timeout-minutes: 3
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+        timeout-minutes: 2
+      - name: Find the recovery point stored before upload
+        id: point
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_RESULT: ${{ needs.publish.result }}
+        run: |
+          set -euo pipefail
+          id=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?name=reader-production-recovery-point-$GITHUB_RUN_ID" --jq '[.artifacts[]|select(.expired|not)]|first|.id // empty')
+          if [ -z "$id" ] && [ "$DEPLOY_RESULT" = success ]; then
+            echo 'A completed publication has no recovery point' >&2
+            exit 1
+          fi
+          echo "artifact-id=$id" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        if: steps.point.outputs.artifact-id != ''
+        timeout-minutes: 2
+        with:
+          artifact-ids: ${{ steps.point.outputs.artifact-id }}
+          path: ${{ runner.temp }}/reader-recovery
+          merge-multiple: true
+      - name: Restore snapshot and verify every previous asset; keep run failed
+        if: steps.point.outputs.artifact-id != ''
+        timeout-minutes: 7
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/publisher/rollback.mjs recover "$RUNNER_TEMP/reader-recovery"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        timeout-minutes: 2
+        if: always() && steps.point.outputs.artifact-id != ''
+        with:
+          name: reader-production-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reader-recovery/
+          if-no-files-found: warn
           retention-days: 90

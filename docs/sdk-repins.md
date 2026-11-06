@@ -16,7 +16,8 @@ records are not rewritten to make an upgrade pass.
 
 The old Reader-local `sdk-repin.yml`, updater and its implementation-specific
 tests are removed so there are not two writers of that branch. No changes to
-Reader CI, native trust/intake, production publishing or the extension/store
-train are part of this ownership handoff. Existing native and store approval
-gates remain authoritative. Deployments are still owned by the existing
-publishers, not by the SDK updater.
+Reader CI or the extension/store train are part of this ownership handoff.
+Web deployments follow ops App CD after exact main CI, independent staging and
+production smoke, and production compatibility checks. There is no web GO or UI
+approval step. The independent extension tag/store train and its existing store
+identity and review gates remain unchanged. The SDK updater does not deploy.

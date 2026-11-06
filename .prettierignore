@@ -11,3 +11,5 @@ apps/capacitor/ios/
 scripts/lib/native-publish-bytes.mjs
 packages/connect/vendor/native-release/
 artifacts/
+# Raw signed trust assets: exact hashes are protected environment inputs.
+config/next-trust/

@@ -8,6 +8,8 @@ import { readerSdkTarget, verifiedReaderSdk } from "./reader-sdk.mjs";
 const projectRoot = resolve(import.meta.dirname, "..");
 const projectName = "mdbase-reader";
 const { target: deploymentTarget, deployment } = readerDeploymentFor(process.env);
+if (deploymentTarget !== "lab")
+  throw Error("Staging and production use ops App CD, not the local deploy helper.");
 const deploymentOrigin = deployment.origin;
 const connectUrl = deployment.connectUrl;
 // Refuse conflicting Vite selectors and check original archive/installed SDK BEFORE building.

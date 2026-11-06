@@ -143,53 +143,29 @@ canonical SDK export to the selected original, including imports originating in 
 the separate legacy SDK alias is untouched. The offline-shell adapter comes from that same original.
 The browser extension installs the same three originals and selects and verifies one the same way
 for its `MDBASE_ENV` (LAB by default), since each original accepts only its own environment's
-packaged trust; other shells are unaffected. The native
-publisher's original-package authentication and admission gates remain separate and unchanged.
+packaged trust; other shells are unaffected. Web publication now follows
+[App CD](app-continuous-deployment.md), replacing native branch publication.
 
-`packages/connect/vendor/sdk-{lab,staging}-eaa4e697.json` record hashes and embedded producer provenance;
-production uses `sdk-production-beta149.json`, which records the publication workflow run and the
-bundled protocol member. Native approval stays bound to the historical `sdk-production-beta141.json`. Before build hooks execute, verification checks
-the archive SHA-256 and length, every installed original member, and the SDK's actual packaged
-release environment and Connect origin against the deployment table. Missing archives/installations,
-unknown or conflicting selectors, changed bytes, and environment/origin mismatches fail closed.
-The deploy script also checks the emitted `.well-known/mdbase-reader-sdk.json` receipt before upload.
-No `package.json` or lockfile is rewritten at deployment time. Python 3 is required for the existing
-safe archive-inventory helper, alongside Node and pnpm.
-
-Staging/production continue to require committed build inputs unless the existing explicit
-`MDBASE_READER_ALLOW_DIRTY=1` development escape hatch is used. Archive identity and embedded
-provenance are not a new trust authentication or native release qualification claim.
+Each current target pin in `packages/connect/vendor/` records its exact SDK
+archive, producer and trust. Before build hooks execute, App CD authenticates npm
+provenance and the producer's staging attestation, verifies frozen SDK/UI archives
+and all installed originals, and binds the selected SDK's packaged target to the
+protected raw trust hash. Its ephemeral staging install is mechanically derived
+from the authenticated producer; committed manifests, locks, aliases, trust roots
+and signing identities are unchanged. Python 3 is required for safe archive inventory.
+The local deploy helper supports LAB only; dirty-tree overrides cannot publish
+to staging or production.
 
 ## Production deployment
 
 The production site is <https://reader.mdbase.dev>, connected to
-<https://connect.mdbase.dev>. Deploy staging, then production, with the
-**Deploy Reader** workflow from `main`:
-
-```sh
-gh workflow run deploy-reader.yml --ref main -f target=staging
-gh workflow run deploy-reader.yml --ref main -f target=production
-```
-
-It builds a clean checkout of `main`, requires CI to pass, deploys, and checks
-that the served manifest declares the target origin. The `reader-staging`,
-`reader-production` and `reader-lab` environments each need
-`CLOUDFLARE_API_TOKEN` (Cloudflare Pages: Edit) and `CLOUDFLARE_ACCOUNT_ID`.
-Without them, staging and production dispatches fail immediately and the
-automatic lab deploy on `main` is skipped with a warning.
-
-When the workflow is unavailable, deploy from a clean checkout of `main` with
-local Wrangler credentials:
-
-```sh
-MDBASE_ENV=staging pnpm deploy:dev
-MDBASE_ENV=production pnpm deploy:prod
-```
-
-Staging builds use the separate `staging` Pages branch and
-<https://staging.mdbase-reader.pages.dev>; only production targets `main`.
-Conflicting environment selectors are rejected. Switching from the former staging-backed
-site may require authorizing Reader against production; collection data is not migrated.
+<https://connect.mdbase.dev>. Ops `bin/release app-cd` selects exact green main,
+stages and smokes, then publishes and smokes production. See
+[App CD](app-continuous-deployment.md) for artifact custody, compatibility,
+recovery and the bounded manual rollback drill. There is no local production
+publisher or per-deployment web approval. Existing `reader-staging` and
+`reader-production` secrets stay scoped to their protected upload/recovery jobs.
+The extension/store train below remains independent.
 
 ## Build the browser extension
 
