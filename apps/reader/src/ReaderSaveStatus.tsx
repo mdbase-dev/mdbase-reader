@@ -1,7 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useCallback, useSyncExternalStore, type JSX } from "react";
+import { useCallback, useContext, useSyncExternalStore, type JSX } from "react";
 
 import { Menu } from "./Menu.js";
+import { SourceLibraryContext } from "./SourceLibraryContext.js";
 
 import type { Mdbase } from "@mdbase-reader/connect/native";
 
@@ -9,10 +10,13 @@ const noop = (): void => undefined;
 
 export function ReaderSaveStatus({
   mdbase,
+  connected,
 }: {
   readonly mdbase: Mdbase | null;
+  readonly connected: boolean;
 }): JSX.Element | null {
   const { t } = useLingui();
+  const sources = useContext(SourceLibraryContext);
   const subscribe = useCallback(
     (listener: () => void) => mdbase?.subscribe(listener) ?? noop,
     [mdbase],
@@ -48,22 +52,45 @@ export function ReaderSaveStatus({
         <ul>
           {entries.map((entry) => (
             <li key={entry.mutationId}>
-              <strong>{entry.problem?.message ?? t`Pending change`}</strong>
+              <strong>
+                {entry.problem ? t`Change needs attention` : t`Changes awaiting confirmation`}
+              </strong>
+              <span>
+                {entry.records
+                  .map(
+                    (record) =>
+                      sources.find(
+                        (source) =>
+                          source.id === record ||
+                          source.documents.some((document) => document.fileId === record),
+                      )?.title,
+                  )
+                  .filter(Boolean)
+                  .join(", ")}
+              </span>
               <time dateTime={new Date(entry.createdAt).toISOString()}>
                 {new Date(entry.createdAt).toLocaleTimeString()}
               </time>
-              <code>{entry.mutationId}</code>
-              {entry.records.length ? (
-                <small>
-                  {t`Record or file`}: {entry.records.join(", ")}
-                </small>
-              ) : null}
+              <details>
+                <summary>
+                  <Trans context="Reader interface">Details</Trans>
+                </summary>
+                <code>{entry.mutationId}</code>
+                {entry.problem ? <p>{entry.problem.message}</p> : null}
+                {entry.records.length ? (
+                  <small>
+                    {t`Record or file`}: {entry.records.join(", ")}
+                  </small>
+                ) : null}
+              </details>
             </li>
           ))}
         </ul>
-        <button type="button" onClick={() => window.location.reload()}>
-          <Trans>Reload Reader to check again</Trans>
-        </button>
+        {connected ? (
+          <button type="button" onClick={() => window.location.reload()}>
+            <Trans>Reload Reader to check again</Trans>
+          </button>
+        ) : null}
       </div>
     </Menu>
   );

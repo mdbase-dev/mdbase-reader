@@ -66,6 +66,11 @@ export function DocumentMessage({
   readonly tone?: "neutral" | "error";
   readonly action?: { readonly label: string; readonly run: () => void };
 }): JSX.Element {
+  useEffect(() => {
+    if (tone === "error") {
+      document.querySelector(".dv-live-region")?.replaceChildren();
+    }
+  }, [tone]);
   return (
     <div
       className={`connected-document-message is-${tone}`}

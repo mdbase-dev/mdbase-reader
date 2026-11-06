@@ -183,9 +183,9 @@ export async function round5Workspace(browser, origin) {
     assert.equal(heading.titleFont, heading.bodyFont);
     assert.ok(heading.titleSize <= 48);
     await page.clock.fastForward(31_000);
-    await expect(page.locator(".pwa-install")).toHaveCount(1);
-    await expect(page.locator(".pwa-install")).toBeHidden();
+    await expect(page.locator(".pwa-install")).toHaveCount(0);
     await command(page, "Open library");
+    await page.clock.fastForward(31_000);
     await expect(page.locator(".pwa-install")).toBeVisible();
     await page
       .locator(".pwa-install")

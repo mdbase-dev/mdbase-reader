@@ -9,33 +9,20 @@ interface InstallEvent extends Event {
 const COOLDOWN = 30 * 24 * 60 * 60 * 1000;
 const DELAY = 30_000;
 const STORAGE_KEY = "mdbase:pwa-install-dismissed";
-const USED_KEY = "mdbase:reader-used";
 const USED_EVENT = "mdbase:reader-document-opened";
 
-/** Opening a document is useful engagement; signing in alone is not. */
+/** Finishing a read or adding a source is engagement in the current session. */
 export function markPwaInstallEligible(): void {
-  try {
-    localStorage.setItem(USED_KEY, "1");
-  } catch {
-    /* The current tab can still offer installation without persistent storage. */
-  }
   window.dispatchEvent(new Event(USED_EVENT));
 }
 
-/** A delay starts only after useful engagement, including a previous used visit. */
+/** A delay starts only after useful engagement in this session. */
 function waitForReaderUse(ready: () => void): () => void {
   let timer: number | null = null;
   const used = (): void => {
     timer ??= window.setTimeout(ready, DELAY);
   };
   window.addEventListener(USED_EVENT, used);
-  try {
-    if (localStorage.getItem(USED_KEY) === "1") {
-      used();
-    }
-  } catch {
-    /* Wait for this tab to open a document. */
-  }
   return () => {
     if (timer !== null) {
       window.clearTimeout(timer);
@@ -53,17 +40,22 @@ function recentlyDismissed(): boolean {
   }
 }
 
-/** Installation is optional; no service worker or private-data cache is introduced. */
-export function setupPwaInstall(appName: string): () => void {
-  const standalone = matchMedia("(display-mode: standalone)");
-  const iosStandalone = (): boolean =>
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
-  const isInstalled = (): boolean => standalone.matches || iosStandalone();
+function isIosSafari(): boolean {
   const ios =
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1);
-  const safari =
-    navigator.userAgent.includes("Safari") && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent);
+  return (
+    ios &&
+    navigator.userAgent.includes("Safari") &&
+    !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent)
+  );
+}
+
+/** Installation is optional; no service worker or private-data cache is introduced. */
+export function setupPwaInstall(appName: string): () => void {
+  const standalone = matchMedia("(display-mode: standalone)");
+  const isInstalled = (): boolean =>
+    standalone.matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
   let dismissed = recentlyDismissed();
   let pending: InstallEvent | null = null;
   let ready = false;
@@ -84,13 +76,17 @@ export function setupPwaInstall(appName: string): () => void {
     remove();
   };
   const show = (): void => {
+    if (installOverlayOpen()) {
+      remove();
+      return;
+    }
     if (
       disposed ||
       !ready ||
       dismissed ||
       isInstalled() ||
       banner ||
-      (!pending && !(ios && safari))
+      (!pending && !isIosSafari())
     ) {
       return;
     }
@@ -160,6 +156,7 @@ export function setupPwaInstall(appName: string): () => void {
     remove();
     show();
   });
+  const stopOverlays = observeInstallOverlays(show);
   window.addEventListener("beforeinstallprompt", beforeInstall);
   window.addEventListener("appinstalled", installed);
   standalone.addEventListener("change", modeChanged);
@@ -169,11 +166,35 @@ export function setupPwaInstall(appName: string): () => void {
   });
   return () => {
     disposed = true;
+    stopOverlays();
     stopWaiting();
     stopLanguage();
     window.removeEventListener("beforeinstallprompt", beforeInstall);
     window.removeEventListener("appinstalled", installed);
     standalone.removeEventListener("change", modeChanged);
     remove();
+  };
+}
+
+function installOverlayOpen(): boolean {
+  return Boolean(
+    document.querySelector(
+      'dialog[open], [aria-modal="true"], details.reader-menu[open], .library-row-menu, [popover]:popover-open',
+    ),
+  );
+}
+
+function observeInstallOverlays(show: () => void): () => void {
+  const overlays = new MutationObserver(show);
+  overlays.observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ["open", "data-state", "aria-expanded"],
+  });
+  document.addEventListener("toggle", show, true);
+  return () => {
+    overlays.disconnect();
+    document.removeEventListener("toggle", show, true);
   };
 }

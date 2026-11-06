@@ -33,6 +33,7 @@ export interface LibrarySelection {
   readonly retryLibrary: () => void;
   readonly importStatus: "idle" | "importing";
   readonly importError: string | null;
+  readonly clearImportError: () => void;
   readonly importSourceFile: (
     request: Omit<SourceFileImportRequest, "collectionId">,
     options?: SourceImportOptions,
@@ -184,6 +185,7 @@ export function useLibrarySelection(
     retryLibrary,
     importStatus,
     importError,
+    clearImportError: useCallback(() => setImportError(null), []),
     ...writes,
     ...removal,
     selectedSourceId,

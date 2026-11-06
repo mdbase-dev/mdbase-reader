@@ -1,6 +1,5 @@
-import { useCallback, useEffect, type ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 
-import { markPwaInstallEligible } from "./pwa-install.js";
 import { bindSurfaceReadingContext, sourceReadingContextKey } from "./source-reading-range.js";
 
 import type { SourceSummary } from "@mdbase-reader/core";
@@ -32,9 +31,6 @@ export function RenderedSourceDocument({
     },
     [contextKey, onSurfaceChange, sessionId],
   );
-  useEffect(() => {
-    markPwaInstallEligible();
-  }, []);
   return (
     <div className="source-document">
       <header className="source-document-heading">

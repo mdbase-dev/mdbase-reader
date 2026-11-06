@@ -9,16 +9,16 @@ dialog.mdbase-feedback-dialog,
   opacity: 1;
   transform: translateY(0);
   transition:
-    opacity 160ms ease-out,
+    opacity 160ms var(--ease-out),
     transform 160ms var(--ease-out),
     display 120ms allow-discrete,
     overlay 120ms allow-discrete;
 }
 .reader-menu::details-content {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   transition:
-    opacity 120ms ease-out,
+    opacity 120ms var(--ease-out),
     transform 120ms var(--ease-out),
     content-visibility 120ms allow-discrete;
 }
@@ -50,6 +50,10 @@ dialog.mdbase-feedback-dialog,
 .reader-overlay :is(.mdbase-command-search, .reader-shortcut-help, .mdbase-command-footer) {
   flex: none;
 }
+.reader-overlay .reader-shortcut-help {
+  flex: 1 1 auto;
+  min-height: 0;
+}
 .reader-overlay .mdbase-command-results {
   flex: 1 1 auto;
 }
@@ -58,10 +62,23 @@ dialog.mdbase-feedback-dialog,
   flex-wrap: wrap;
 }
 .reader-shortcut-help {
+  overflow: auto;
   padding: 12px 16px;
   border-bottom: 1px solid var(--line);
   font-size: 13px;
   color: var(--ink-soft);
+}
+.reader-shortcut-help dl {
+  margin: 8px 0 16px;
+}
+.reader-shortcut-help dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding-block: 6px;
+}
+.reader-shortcut-help dd {
+  margin: 0;
 }
 .reader-shortcut-help :is(h3, p) {
   margin: 0;
@@ -82,13 +99,14 @@ dialog.mdbase-feedback-dialog,
 .reader-overlay > dialog::backdrop,
 dialog.mdbase-feedback-dialog::backdrop {
   opacity: 1;
-  transition: opacity 160ms ease-out;
+  transition: opacity 160ms var(--ease-out);
 }
 .reader-overlay[data-state="closed"] > :is(dialog, .settings-page, [popover]),
+.reader-overlay[data-state="closed"] > .library-row-menu,
 dialog.mdbase-feedback-dialog:not([open]),
 [popover]:not(:popover-open) {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   transition-duration: 120ms;
   pointer-events: none;
 }
@@ -102,12 +120,16 @@ dialog.mdbase-feedback-dialog:not([open])::backdrop {
   transition: none;
 }
 @starting-style {
+  .reader-menu[open]::details-content {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
   .reader-overlay > :is(dialog, .settings-page),
   dialog.mdbase-feedback-dialog[open],
   .library-row-menu,
   [popover]:popover-open {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-4px);
   }
   .reader-overlay > dialog::backdrop,
   dialog.mdbase-feedback-dialog::backdrop {

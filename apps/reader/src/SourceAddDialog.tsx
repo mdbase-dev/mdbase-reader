@@ -2,7 +2,7 @@ import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
-import { useRef, useState, type JSX } from "react";
+import { useEffect, useRef, useState, type JSX, type ReactNode } from "react";
 
 import { chapterIsbns } from "./chapter-doi.js";
 import { citationDateText, citationNames, displayCslValue } from "./citation-form-model.js";
@@ -146,9 +146,12 @@ function OpenSourceAddDialog({
           </p>
         ) : null}
         {error ? (
-          <p className="import-error capture-error" role="alert">
-            {error}
-          </p>
+          <SourceAdditionError error={error}>
+            <Trans>
+              Couldn’t confirm this source was added. Reconnect, then check pending changes in the
+              header and your library before trying again.
+            </Trans>
+          </SourceAdditionError>
         ) : null}
         <LookupFollowUp busy={busy} lookup={lookup} />
       </form>
@@ -363,6 +366,26 @@ function reviewedChapterCitation(
 }
 
 /** The error behind a plain message, for anyone who wants to report or look into it. */
+export function SourceAdditionError({
+  error,
+  children,
+}: {
+  readonly error: string;
+  readonly children: ReactNode;
+}): JSX.Element {
+  const problem = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    document.querySelector(".dv-live-region")?.replaceChildren();
+    problem.current?.focus();
+  }, [error]);
+  return (
+    <div ref={problem} className="import-error" role="alert" tabIndex={-1}>
+      <p>{children}</p>
+      <ProblemDetails detail={error} />
+    </div>
+  );
+}
+
 function ProblemDetails({ detail }: { readonly detail: string | undefined }): JSX.Element | null {
   return detail ? (
     <details>

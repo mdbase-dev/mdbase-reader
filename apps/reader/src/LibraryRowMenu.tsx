@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 
 import { selectRow, type RowSelection } from "./library-row-selection.js";
 import { readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
+import { OverlayPresence } from "./OverlayPresence.js";
 import { supportsChapterCreation } from "./source-parts-features.js";
 
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
@@ -66,7 +67,7 @@ export function LibraryRowMenu({
     };
   // Rows are transformed for virtual scrolling, so the menu escapes them to stay fixed, while
   // staying inside the main landmark with the table it belongs to.
-  return createPortal(
+  return (
     <div
       ref={ref}
       className="reader-menu-panel library-row-menu"
@@ -145,8 +146,7 @@ export function LibraryRowMenu({
           </button>
         </>
       ) : null}
-    </div>,
-    document.querySelector("main") ?? document.body,
+    </div>
   );
 }
 
@@ -211,7 +211,12 @@ export function useLibraryRowMenu(input: {
   return {
     open,
     openFromKey,
-    element: menu ? <LibraryRowMenu target={menu} actions={input.actions} onClose={close} /> : null,
+    element: createPortal(
+      <OverlayPresence open={menu !== null}>
+        {menu ? <LibraryRowMenu target={menu} actions={input.actions} onClose={close} /> : null}
+      </OverlayPresence>,
+      document.querySelector("main") ?? document.body,
+    ),
   };
 }
 

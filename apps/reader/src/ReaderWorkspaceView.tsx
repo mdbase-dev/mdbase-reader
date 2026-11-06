@@ -227,6 +227,17 @@ export function ReaderWorkspaceView({
       className={`reader-shell${notices ? " has-update" : ""}`}
       {...fileDrop.handlers}
     >
+      <a
+        hidden={!libraryTabActive(sourceWorkspace)}
+        className="reader-skip-link"
+        href="#reader-library-results"
+        onClick={(event) => {
+          event.preventDefault();
+          focusLibraryResults(shellRef.current);
+        }}
+      >
+        <Trans>Skip to sources</Trans>
+      </a>
       {fileDrop.active ? (
         <div className="file-drop-overlay" aria-hidden="true">
           <div>
@@ -627,6 +638,7 @@ function useCommandsForView(
 ): ReturnType<typeof readerCommands> {
   const createSourceParts = useSourcePartCreation();
   return readerCommands({
+    libraryViews: model.libraryViews.views,
     sources: model.library.sources,
     activeSource: model.source,
     workspace: model.sourceWorkspace,
@@ -658,4 +670,14 @@ function libraryTabActive(workspace: {
   readonly activeTab: { readonly kind: string } | null;
 }): boolean {
   return workspace.activeTab?.kind === "library";
+}
+
+function focusLibraryResults(shell: HTMLElement | null): void {
+  const results = shell?.querySelector<HTMLElement>(
+    ".workspace-pane.is-focused .library-workspace-results",
+  );
+  const firstResult = results?.querySelector<HTMLElement>(
+    '[data-row-index][tabindex="0"], .library-card-hit-target, .search-passage-list button',
+  );
+  (firstResult ?? results)?.focus();
 }

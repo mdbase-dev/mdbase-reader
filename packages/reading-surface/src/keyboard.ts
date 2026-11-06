@@ -80,7 +80,7 @@ export function isClaimedShortcut(event: KeyboardEvent, host: Document): boolean
   );
 }
 
-function isEditableTarget(target: EventTarget | null): boolean {
+export function isEditableTarget(target: EventTarget | null): boolean {
   // Frames have their own Element constructor, so test the shape rather than instanceof.
   const element = target as { closest?: (selector: string) => unknown } | null;
   return Boolean(
@@ -92,7 +92,12 @@ export function isApplicationShortcut(event: KeyboardEvent): boolean {
   if (event.isComposing) {
     return false;
   }
-  if (event.key === "Escape" || event.key === "F6" || event.key === "/") {
+  if (
+    event.key === "Escape" ||
+    event.key === "F6" ||
+    event.key === "/" ||
+    (event.key === "[" && !isEditableTarget(event.target))
+  ) {
     return true;
   }
   if (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) {

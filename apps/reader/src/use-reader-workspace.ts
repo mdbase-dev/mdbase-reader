@@ -105,6 +105,7 @@ export interface ReaderWorkspaceController
   ) => Promise<Source | null>;
   readonly importStatus: "idle" | "importing";
   readonly importError: string | null;
+  readonly clearImportError: () => void;
   readonly retryLibrary: () => void;
 }
 

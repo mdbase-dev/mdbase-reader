@@ -1,10 +1,9 @@
-import { useLingui } from "@lingui/react/macro";
-import { OpeningScreen } from "@mdbase-dev/ui/screens";
 import { createReaderRuntimeServices, createWebPlatform } from "@mdbase-reader/platform";
 import { lazy, Suspense, useMemo, type JSX } from "react";
 
 import { ConnectWorkspaceGateway } from "./connect-workspace.js";
 import { ConnectedDocument } from "./ConnectedDocument.js";
+import { ReaderBoot } from "./ReaderBoot.js";
 import { requestedAnnotation, requestedSourceId } from "./SourceDeepLink.js";
 
 import type { ReaderApp as ReaderAppComponent } from "./ReaderApp.js";
@@ -23,7 +22,6 @@ export function ReaderWorkspace({
 }: {
   readonly opened: ReaderConnectedCollection;
 }): JSX.Element {
-  const { t } = useLingui();
   const gateway = useMemo(
     () =>
       new ConnectWorkspaceGateway(
@@ -45,15 +43,7 @@ export function ReaderWorkspace({
     [opened],
   );
   return (
-    <Suspense
-      fallback={
-        <OpeningScreen
-          app="reader"
-          title={t({ message: "Opening your reading collection" })}
-          detail={t({ message: "Preparing the reading workspace" })}
-        />
-      }
-    >
+    <Suspense fallback={<ReaderBoot collectionName={opened.collectionName} />}>
       <ReaderApp
         key={opened.collectionId}
         gateway={gateway}

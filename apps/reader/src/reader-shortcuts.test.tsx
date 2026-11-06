@@ -94,12 +94,18 @@ it.each(["Display settings", "Language"])(
 
 it.each(["[data-outside]"])("does not run list commands from %s", (selector) => {
   const target = host.querySelector<HTMLElement>(selector)!;
-  for (const key of ["a", "[", "j", "k"]) {
+  for (const key of ["a", "j", "k"]) {
     expect(press(target, key).defaultPrevented).toBe(false);
     expect(document.activeElement).toBe(target);
   }
   expect(actions.addSource).not.toHaveBeenCalled();
   expect(actions.toggleSidebar).not.toHaveBeenCalled();
+});
+
+it("keeps the sidebar shortcut available outside the library", () => {
+  const target = host.querySelector<HTMLElement>("[data-outside]")!;
+  expect(press(target, "[").defaultPrevented).toBe(true);
+  expect(actions.toggleSidebar).toHaveBeenCalledOnce();
 });
 
 it.each([".library-table-row", "[data-card]", "[data-toolbar]", ".workspace-pane", "body"])(

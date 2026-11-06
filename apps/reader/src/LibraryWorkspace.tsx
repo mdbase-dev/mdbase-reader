@@ -277,6 +277,12 @@ export function LibraryWorkspace({
     shapeOf,
   );
   const resultsRef = useRef<HTMLDivElement>(null);
+  const emptySources = sources.length === 0 && !loading && !(indexLoading && !view.path);
+  const rendersSourceTable =
+    mode === "sources" &&
+    searchScope === "sources" &&
+    !emptySources &&
+    configuration.presentation === "table";
   const restoredScroll = useRef(false);
   useLayoutEffect(() => {
     // Returning to a view keeps its place once its rows exist to scroll to.
@@ -607,9 +613,15 @@ export function LibraryWorkspace({
         </p>
       ) : null}
       <div
-        ref={resultsRef}
+        ref={rendersSourceTable ? undefined : resultsRef}
+        id={focused ? "reader-library-results" : undefined}
+        tabIndex={-1}
         className="library-workspace-results"
-        onScroll={(event) => scrollPositions.set(view.key, event.currentTarget.scrollTop)}
+        onScrollCapture={(event) => {
+          if (event.target === resultsRef.current) {
+            scrollPositions.set(view.key, resultsRef.current.scrollTop);
+          }
+        }}
       >
         {mode === "annotations" ? (
           <LibraryAnnotations
@@ -648,7 +660,7 @@ export function LibraryWorkspace({
                   onOpenSourceView ? onOpenSourceView(id, view, destination) : onOpenSource(id)
                 }
               />
-            ) : sources.length === 0 && !loading && !(indexLoading && !view.path) ? (
+            ) : emptySources ? (
               <div className="library-workspace-empty">
                 <LibraryIcon />
                 {allSources.length === 0 ? (
@@ -690,7 +702,7 @@ export function LibraryWorkspace({
                   </>
                 )}
               </div>
-            ) : configuration.presentation === "table" ? (
+            ) : rendersSourceTable ? (
               <LibraryTable
                 key={layoutResets}
                 sources={sources}

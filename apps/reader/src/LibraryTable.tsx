@@ -110,9 +110,10 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const gridTemplateColumns = `${sizes.map((size) => `${String(size)}px`).join(" ")} minmax(44px, 1fr)`;
   const width = sizes.reduce((total, size) => total + size, 0) + 60;
   return (
-    <div className="library-table-frame">
+    <div ref={scrollRef} className="library-table-frame">
       <div
         ref={gridRef}
+        id={props.focused ? "reader-library-grid" : undefined}
         className={`library-table${layout.columns.includes("creator") ? " has-creator-column" : ""}${layout.columns.includes("format") ? " has-format-column" : ""}`}
         role={props.partRows ? "treegrid" : "grid"}
         tabIndex={-1}
@@ -220,8 +221,10 @@ function sourceActionKey(
   props: LibraryTableProps,
   grid: HTMLElement | null,
 ): boolean {
-  const index = props.selection.active;
-  const source = index === null ? undefined : props.sources[index];
+  const index = Number(
+    (event.target as Element).closest<HTMLElement>("[data-row-index]")?.dataset["rowIndex"],
+  );
+  const source = props.sources[index];
   if (event.ctrlKey || event.metaKey || event.altKey || !source) {
     return false;
   }

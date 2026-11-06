@@ -68,7 +68,11 @@ export function SdkReaderRoot({
   const subscribe = useCallback((listener: () => void) => sdk.subscribe(listener), [sdk]);
   const snapshot = useSyncExternalStore(subscribe, () => sdk.getSnapshot());
   if (snapshot.phase.kind === "starting" || snapshot.phase.kind === "opening") {
-    return <ReaderBoot />;
+    return (
+      <ReaderMdbaseContext value={sdk}>
+        <ReaderBoot />
+      </ReaderMdbaseContext>
+    );
   }
   return (
     <ReaderMdbaseContext value={sdk}>
@@ -127,7 +131,7 @@ function NativeScopeView({
     };
   }, [original]);
   if (!collection) {
-    return <ReaderBoot />;
+    return <ReaderBoot collectionName={original.displayName} />;
   }
   return renderNative ? (
     renderNative({ mdbase, connection: original, collection })

@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { applyLibraryLens } from "./library-lenses.js";
 import { sortLibrarySources } from "./library-view-state.js";
+import { markPwaInstallEligible } from "./pwa-install.js";
 import { applyReaderThemeColor } from "./reader-theme-color.js";
 import { startReaderStartupTiming } from "./startup-timing.js";
 import {
@@ -35,7 +36,9 @@ export function useDocumentSurfaceTiming(
   useEffect(() => {
     if (surface) {
       finish?.();
+      return markPwaInstallEligible;
     }
+    return undefined;
   }, [finish, surface]);
 }
 
@@ -119,6 +122,11 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
     focusSearchForContext(actions);
     return true;
   }
+  if (isSidebarKey(event, editing, modifier)) {
+    event.preventDefault();
+    actions.toggleSidebar();
+    return true;
+  }
   if (modifier && event.shiftKey && event.key.toLocaleLowerCase() === "f") {
     event.preventDefault();
     actions.focusSearch();
@@ -129,6 +137,10 @@ function handleCommandShortcut(event: KeyboardEvent, actions: ReaderShortcutActi
     return true;
   }
   return false;
+}
+
+function isSidebarKey(event: KeyboardEvent, editing: boolean, modifier: boolean): boolean {
+  return !editing && !modifier && !event.altKey && event.key === "[";
 }
 
 function handleLibraryShortcut(
@@ -152,13 +164,9 @@ function handleLibraryShortcut(
   if (!list) {
     return false;
   }
-  if (["[", "a"].includes(event.key.toLowerCase())) {
+  if (event.key.toLowerCase() === "a") {
     event.preventDefault();
-    if (event.key === "[") {
-      actions.toggleSidebar();
-    } else {
-      actions.addSource?.();
-    }
+    actions.addSource?.();
     return true;
   }
   if (/^[jksx]$/iu.test(event.key) || ["Enter", "Delete", "F2"].includes(event.key)) {
@@ -208,7 +216,7 @@ function forwardLibraryRowKey(list: HTMLElement, event: KeyboardEvent): void {
   }
   event.preventDefault();
   row.focus();
-  if (!(event.target instanceof Element && event.target.closest(".library-table"))) {
+  if (!(event.target instanceof Element && event.target.closest(".library-table-row"))) {
     row.dispatchEvent(
       new KeyboardEvent("keydown", {
         key: event.key,

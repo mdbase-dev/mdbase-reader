@@ -98,6 +98,7 @@ describe("command palette", () => {
       sourceExport: { run: () => undefined },
       bibliographyExport: { run: () => undefined },
       focusMode: false,
+      libraryViews: [{ key: "visual", name: "Visual library" }],
       toggleFocus: () => undefined,
       toggleLibrary: () => undefined,
       toggleInspector: () => undefined,
@@ -110,6 +111,7 @@ describe("command palette", () => {
       setDensity: () => undefined,
     } as unknown as ReaderCommandInput;
     const commands = readerCommands(input);
+    expect(matchingCommands(commands, "Visual library")[0]?.group).toBe("Current source");
     const openSettings = vi.fn();
     const configured = readerCommands({ ...input, openSettings });
     matchingCommands(configured, "settings")[0]?.run();

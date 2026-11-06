@@ -52,6 +52,23 @@ async function dismissDialog(): Promise<void> {
 }
 
 describe("native modal dialogs", () => {
+  it("focuses the new document session when successful import retains the pane DOM", async () => {
+    const pane = document.createElement("div");
+    pane.className = "workspace-pane is-focused";
+    pane.tabIndex = -1;
+    pane.dataset["sessionId"] = "library";
+    document.body.append(pane);
+    try {
+      await act(async () => root.render(<Harness dismiss={vi.fn()} />));
+      pane.dataset["sessionId"] = "imported-document";
+      opener.focus();
+      await act(async () => root.render(null));
+      expect(document.activeElement).toBe(pane);
+    } finally {
+      pane.remove();
+    }
+  });
+
   it("opens modally, labels the dialog, takes focus once and returns it on close", async () => {
     const showModal = vi.spyOn(HTMLDialogElement.prototype, "showModal");
     const dismiss = vi.fn();

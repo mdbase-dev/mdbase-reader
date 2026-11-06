@@ -23,7 +23,7 @@
     "test:pdf-touch": "node scripts/run-pdf-touch-audits.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "test:a11y": "node scripts/audit-accessibility.mjs",
-    "test:polish": "node scripts/polish-browser-test.mjs"
+    "test:polish": "node scripts/polish-browser-test.mjs && node scripts/polish-round6-test.mjs && node scripts/polish-round6-focus-test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/source-serif-4": "^5.3.1",

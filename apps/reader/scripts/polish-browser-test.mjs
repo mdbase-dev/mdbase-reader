@@ -283,23 +283,18 @@ try {
           await expect(
             page.getByRole("heading", { name: "Keyboard shortcuts", exact: true }),
           ).toBeVisible();
-          assert.ok(await page.getByRole("option").count());
-          await page.keyboard.press("ArrowDown");
-          result.active = await input.getAttribute("aria-activedescendant");
-          await expect(page.locator(`[id="${result.active}"]`)).toHaveAttribute(
-            "aria-selected",
-            "true",
-          );
+          await expect(page.locator(".reader-shortcut-help dl > div").first()).toBeVisible();
+          await page.keyboard.press("Tab");
+          await expect(page.getByRole("button", { name: "Close", exact: true })).toBeFocused();
           result.paletteLayout = await page.locator(".mdbase-command-palette").evaluate((panel) => {
             const help = panel.querySelector(".reader-shortcut-help").getBoundingClientRect();
-            const results = panel.querySelector(".mdbase-command-results").getBoundingClientRect();
             const footer = panel.getBoundingClientRect();
-            const active = panel.querySelector('[aria-selected="true"]');
+            const active = panel.querySelector(".reader-shortcut-help button");
             const bounds = active.getBoundingClientRect();
             return {
+              helpTop: help.top,
               helpBottom: help.bottom,
-              resultsTop: results.top,
-              resultsBottom: results.bottom,
+              panelTop: footer.top,
               footerTop: footer.bottom,
               activeTop: bounds.top,
               activeBottom: bounds.bottom,
@@ -311,10 +306,10 @@ try {
               ),
             };
           });
-          assert.ok(result.paletteLayout.helpBottom <= result.paletteLayout.resultsTop + 1);
-          assert.ok(result.paletteLayout.resultsBottom <= result.paletteLayout.footerTop + 1);
-          assert.ok(result.paletteLayout.activeTop >= result.paletteLayout.resultsTop - 1);
-          assert.ok(result.paletteLayout.activeBottom <= result.paletteLayout.resultsBottom + 1);
+          assert.ok(result.paletteLayout.helpTop >= result.paletteLayout.panelTop - 1);
+          assert.ok(result.paletteLayout.helpBottom <= result.paletteLayout.footerTop + 1);
+          assert.ok(result.paletteLayout.activeTop >= result.paletteLayout.helpTop - 1);
+          assert.ok(result.paletteLayout.activeBottom <= result.paletteLayout.helpBottom + 1);
           assert.equal(result.paletteLayout.activeHit, true);
           await audit(page, `${name} palette`);
           await page.screenshot({ path: join(output, `${name}-palette.png`) });
