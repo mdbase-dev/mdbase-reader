@@ -1,7 +1,4 @@
-import { t as translate } from "@lingui/core/macro";
-import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { OpeningScreen } from "@mdbase-dev/ui/screens";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -25,6 +22,7 @@ import { importService } from "./import-navigation.js";
 import { keepFocusedFieldInView } from "./keep-focused-field-in-view.js";
 import "./environment-badge.css";
 import { setupPwaInstall } from "./pwa-install.js";
+import { ReaderBoot } from "./ReaderBoot.js";
 import { ReaderErrorBoundary } from "./ReaderErrorBoundary.js";
 
 import type { ImportService } from "./ImportPageView.js";
@@ -75,11 +73,6 @@ const buildEnvironment =
 // The Private collection consent popup returns here. It hands the result to
 // the waiting reader tab and closes, without starting a second mdbase entry.
 const grantCallback = buildEnvironment !== null && completeAppGrantCallback(new URL(location.href));
-// Worded like the collection gate's first screen, so the SDK download is not a blank page.
-function StartingReader(): React.JSX.Element {
-  useLocale();
-  return <OpeningScreen app="reader" title={translate({ message: "Starting mdbase Reader…" })} />;
-}
 createRoot(root).render(
   <StrictMode>
     <ReaderI18nProvider>
@@ -92,15 +85,15 @@ createRoot(root).render(
                 <Trans>You can close this window.</Trans>
               </p>
             ) : migrationService ? (
-              <Suspense fallback={<StartingReader />}>
+              <Suspense fallback={<ReaderBoot />}>
                 <SdkReader service={migrationService} />
               </Suspense>
             ) : preview ? (
-              <Suspense fallback={null}>
+              <Suspense fallback={<ReaderBoot />}>
                 <PreviewReader />
               </Suspense>
             ) : (
-              <Suspense fallback={<StartingReader />}>
+              <Suspense fallback={<ReaderBoot />}>
                 <SdkReader />
               </Suspense>
             )}

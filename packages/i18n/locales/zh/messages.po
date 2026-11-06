@@ -255,6 +255,11 @@ msgstr "{0} 个打开的标签页"
 msgid "{0} parts of {1}"
 msgstr "{1} 个部分中的 {0} 个"
 
+#. placeholder {0}: String(writes.pending.length)
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "{0} pending"
+msgstr "{0} 项待处理"
+
 #. placeholder {0}: summary.removedFields
 #: apps/reader/src/CitationQualitySummary.tsx
 msgid "{0} removed fields. Edited counts compare current values with their recorded evidence, not a history of changes. Online lookups include web pages read through an online service."
@@ -1045,6 +1050,10 @@ msgstr "注释和笔记"
 msgid "Annotations made inside a chapter belong to"
 msgstr "章节内创建的注释属于"
 
+#: apps/reader/src/SourceRemovalDialog.tsx
+msgid "Annotations of a removed source will no longer appear in Reader."
+msgstr "已移除资料的批注将不再显示在 Reader 中。"
+
 #: apps/reader/src/reader-command-list.ts
 msgid "Annotations, source note and citation"
 msgstr "注释、文献笔记和引文"
@@ -1535,6 +1544,10 @@ msgstr "更改键盘快捷键"
 #: apps/extension/src/NotePanel.tsx
 msgid "Changed elsewhere"
 msgstr "已在其他位置更改"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Changes need attention"
+msgstr "有更改需要处理"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Changes need review"
@@ -3690,6 +3703,10 @@ msgstr "文件第 {0}–{1} 页"
 msgid "File transfer failed."
 msgstr "文件传输失败。"
 
+#: apps/reader/src/SourceImportDialog.tsx
+msgid "File transferred. Waiting for the collection to confirm it…"
+msgstr "文件已传输。正在等待资料集确认…"
+
 #: apps/reader/src/import-controller.ts
 msgid "Files: {completed} of {total}"
 msgstr "文件：已完成 {completed} 个，共 {total} 个"
@@ -4789,10 +4806,6 @@ msgstr "正在加载来源…"
 msgid "Loading the EPUB renderer…"
 msgstr "正在加载 EPUB 渲染器…"
 
-#: apps/reader/src/ReaderApp.tsx
-msgid "Loading the first sources; the rest of the library will load in the background"
-msgstr "正在加载首批来源；文献库的其余部分将在后台加载"
-
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Loading the HTML renderer…"
 msgstr "正在加载 HTML 渲染器…"
@@ -4801,8 +4814,11 @@ msgstr "正在加载 HTML 渲染器…"
 msgid "Loading the PDF renderer…"
 msgstr "正在加载 PDF 渲染器…"
 
-#: apps/reader/src/AnnotationEditor.tsx
 #: apps/reader/src/LibraryNavigator.tsx
+msgid "Loading views…"
+msgstr "正在加载视图…"
+
+#: apps/reader/src/AnnotationEditor.tsx
 msgid "Loading…"
 msgstr "正在加载…"
 
@@ -5853,11 +5869,6 @@ msgstr "在 mdbase Reader 中打开你的文献库"
 msgid "Opened {title}"
 msgstr "已打开{title}"
 
-#. placeholder {0}: original.displayName
-#: apps/reader/src/SdkReaderRoot.tsx
-msgid "Opening {0}"
-msgstr "正在打开 {0}"
-
 #. placeholder {0}: source.title
 #: apps/reader/src/ConnectedDocument.tsx
 msgid "Opening {0}…"
@@ -5904,7 +5915,6 @@ msgstr "正在打开文献笔记…"
 msgid "Opening the new page…"
 msgstr "正在打开新页面…"
 
-#: apps/reader/src/ReaderApp.tsx
 #: apps/reader/src/ReaderWorkspace.tsx
 msgid "Opening your reading collection"
 msgstr "正在打开你的阅读集合"
@@ -6263,6 +6273,10 @@ msgstr "PDF 文本提取已取消。"
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "PDF, EPUB or saved web page"
 msgstr "PDF、EPUB 或已保存的网页"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Pending change"
+msgstr "待处理的更改"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -7033,6 +7047,10 @@ msgstr "收件人"
 msgid "Record connection timings"
 msgstr "记录连接耗时"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Record or file"
+msgstr "记录或文件"
+
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Record timings in this panel only. No page text, paths, queries, IDs or credentials are recorded. Nothing is uploaded. Stopping or closing clears the recording."
 msgstr "仅在此面板中记录耗时。不会记录页面文本、路径、查询、ID 或凭据，也不会上传任何内容。停止或关闭后将清除记录。"
@@ -7076,6 +7094,10 @@ msgstr "重新加载"
 #: apps/reader/src/DeploymentUpdateNotice.tsx
 msgid "Reload Reader"
 msgstr "重新加载 Reader"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Reload Reader to check again"
+msgstr "重新加载 Reader 以再次检查"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reload the page, then press the mdbase Reader toolbar button again. Browser pages and the Chrome Web Store can’t be read by extensions."
@@ -7154,11 +7176,6 @@ msgstr "已移除"
 #: apps/reader/src/use-source-removal.ts
 msgid "Removed “{0}”."
 msgstr "已移除“{0}”。"
-
-#: apps/reader/src/SourceRemovalDialog.tsx
-msgctxt "SourceRemovalDialog interface"
-msgid "Removing…"
-msgstr "正在移除…"
 
 #: apps/reader/src/LibraryRowMenu.tsx
 msgid "Rename…"
@@ -8337,10 +8354,6 @@ msgstr "起始页必须是 1 到 {pageCount} 之间的整数。"
 msgid "Start section"
 msgstr "起始节"
 
-#: apps/reader/src/main.tsx
-msgid "Starting mdbase Reader…"
-msgstr "正在启动 mdbase Reader…"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Static ordering"
@@ -8660,6 +8673,10 @@ msgstr "你编辑期间集合发生了更改。请审阅冲突以继续。"
 msgid "The collection connection changed. Try again."
 msgstr "集合连接已更改。请重试。"
 
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "The collection refused some changes. Review them before signing out."
+msgstr "资料集拒绝了部分更改。请在退出登录前检查。"
+
 #: apps/extension/src/connection-view.ts
 msgid "The connection to this collection has changed. Choose the collection again."
 msgstr "与此集合的连接已更改。请重新选择集合。"
@@ -8884,6 +8901,10 @@ msgstr "主题"
 #: apps/reader/src/SettingsSections.tsx
 msgid "These apply only to Reader in this browser."
 msgstr "这些设置仅适用于此浏览器中的 Reader。"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "These changes have not reached the collection. This browser may remove its local copy."
+msgstr "这些更改尚未到达资料集。此浏览器可能会删除其本地副本。"
 
 #. placeholder {0}: duplicate.title
 #: packages/core/src/application/import-source-file.ts
@@ -9703,10 +9724,6 @@ msgctxt "LibraryAnnotationToolbar interface"
 msgid "View options"
 msgstr "视图选项"
 
-#: apps/reader/src/LibraryNavigator.tsx
-msgid "Views"
-msgstr "视图"
-
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgctxt "CitationStructuredEditor interface"
 msgid "Volume"
@@ -9735,6 +9752,10 @@ msgstr "正在 mdbase 标签页中等待批准…"
 #: apps/extension/src/CaptureApp.tsx
 msgid "Waiting for the active tab"
 msgstr "正在等待活动标签页"
+
+#: apps/reader/src/ReaderSaveStatus.tsx
+msgid "Waiting for the collection to confirm these changes."
+msgstr "正在等待资料集确认这些更改。"
 
 #: apps/extension/src/use-extension-capture.ts
 msgid "We couldn’t check whether this page is already saved. Saving checks again."

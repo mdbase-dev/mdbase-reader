@@ -3,7 +3,6 @@ import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { AppSwitcher } from "@mdbase-dev/ui/app-switcher";
 import { mdbaseApps } from "@mdbase-dev/ui/apps";
-import { CollectionSaveWarning } from "@mdbase-dev/ui/collections";
 import { shortcutLabel } from "@mdbase-dev/ui/command-palette";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
@@ -13,6 +12,7 @@ import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
 import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
 import { ReaderCollectionSwitcher, useReaderMdbase } from "./reader-collections.js";
+import { ReaderSaveStatus } from "./ReaderSaveStatus.js";
 
 import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
@@ -147,7 +147,7 @@ function LibraryHeader({
           />
         )}
         <ConnectionState state={connectionState} directAccess={directAccess} />
-        <CollectionSaveWarning />
+        <ReaderSaveStatus mdbase={mdbase} />
       </div>
       <div className="reader-header-actions">
         <button

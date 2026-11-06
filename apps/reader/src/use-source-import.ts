@@ -63,7 +63,6 @@ export function useSourceImport(
       }
       recoveryFile.current = file;
       importController.current.abort();
-      setProgress(null);
       return;
     }
     recoveryFile.current = null;

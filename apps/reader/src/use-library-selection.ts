@@ -172,6 +172,7 @@ export function useLibrarySelection(
   );
   const removal = useSourceRemovalWrites(
     gateway,
+    library,
     setLibrary,
     setSelectedSourceId,
     selectedSourceIdRef,
@@ -242,6 +243,7 @@ function sourceWrites(
 /** Source removal, when the collection offers it; a removed source leaves the library. */
 function useSourceRemovalWrites(
   gateway: ReaderWorkspaceGateway,
+  library: AsyncResource<ReaderLibrarySnapshot>,
   setLibrary: Dispatch<SetStateAction<AsyncResource<ReaderLibrarySnapshot>>>,
   setSelectedSourceId: Dispatch<SetStateAction<SourceId | null>>,
   selectedSourceIdRef: RefObject<SourceId | null>,
@@ -252,14 +254,32 @@ function useSourceRemovalWrites(
       if (!gateway.removeSource) {
         throw new Error(translate({ message: "This collection cannot remove sources." }));
       }
-      await gateway.removeSource(plan);
+      const before =
+        library.status === "ready"
+          ? library.value.sources.find(({ id }) => id === plan.sourceId)
+          : undefined;
       setLibrary((current) => removeLibrarySource(current, plan.sourceId));
+      try {
+        await gateway.removeSource(plan);
+      } catch (error) {
+        if (before) {
+          setLibrary((current) =>
+            current.status === "ready" && !current.value.sources.some(({ id }) => id === before.id)
+              ? {
+                  ...current,
+                  value: { ...current.value, sources: [...current.value.sources, before] },
+                }
+              : current,
+          );
+        }
+        throw error;
+      }
       if (selectedSourceIdRef.current === plan.sourceId) {
         selectedSourceIdRef.current = null;
         setSelectedSourceId(null);
       }
     },
-    [gateway, selectedSourceIdRef, setLibrary, setSelectedSourceId],
+    [gateway, library, selectedSourceIdRef, setLibrary, setSelectedSourceId],
   );
   return planSourceRemoval && gateway.removeSource ? { planSourceRemoval, removeSource } : {};
 }

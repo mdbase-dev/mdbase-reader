@@ -1,7 +1,5 @@
-import { useLingui } from "@lingui/react/macro";
-import { CollectionGate } from "@mdbase-dev/ui/collections";
+import { CollectionGate, useAutoStart } from "@mdbase-dev/ui/collections";
 import { FeedbackButton } from "@mdbase-dev/ui/feedback";
-import { OpeningScreen } from "@mdbase-dev/ui/screens";
 import {
   nativeReaderCollection,
   type Mdbase,
@@ -9,11 +7,19 @@ import {
   type NativeReaderCollection,
 } from "@mdbase-reader/connect/native";
 import { BrowserStorage } from "@mdbase-reader/platform";
-import { useEffect, useState, type JSX, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type JSX,
+  type ReactNode,
+} from "react";
 
 import { createJournals } from "./create-journals.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { readerCollectionApp, ReaderMdbaseContext } from "./reader-collections.js";
+import { ReaderBoot } from "./ReaderBoot.js";
 import "@mdbase-dev/ui/collections.css";
 import "./reader-collections.css";
 
@@ -58,6 +64,12 @@ export function SdkReaderRoot({
   renderNative,
 }: SdkReaderRootProps): JSX.Element {
   useClearCreatesOnSignOut(sdk);
+  useAutoStart(sdk);
+  const subscribe = useCallback((listener: () => void) => sdk.subscribe(listener), [sdk]);
+  const snapshot = useSyncExternalStore(subscribe, () => sdk.getSnapshot());
+  if (snapshot.phase.kind === "starting" || snapshot.phase.kind === "opening") {
+    return <ReaderBoot />;
+  }
   return (
     <ReaderMdbaseContext value={sdk}>
       <CollectionGate
@@ -88,7 +100,6 @@ function NativeScopeView({
   readonly connection: MdbaseApplicationConnection;
   readonly renderNative: SdkReaderRootProps["renderNative"];
 }): ReactNode {
-  const { t } = useLingui();
   // The parent keys by SDK collection ID and generation. A later snapshot may hand
   // back a new facade for the same scope; it must not retire these adapters.
   const [original] = useState(connection);
@@ -116,7 +127,7 @@ function NativeScopeView({
     };
   }, [original]);
   if (!collection) {
-    return <OpeningScreen app="reader" title={t`Opening ${original.displayName}`} />;
+    return <ReaderBoot />;
   }
   return renderNative ? (
     renderNative({ mdbase, connection: original, collection })

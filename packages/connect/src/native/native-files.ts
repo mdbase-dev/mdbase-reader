@@ -5,16 +5,15 @@ import { connectProblemFor } from "./native-mapping.js";
 
 import type { ReaderAssetClient } from "../annotation-assets.js";
 import type { ReaderFileClient } from "../documents.js";
-import type { ReaderSourceFileClient } from "../source-files.js";
+import type { ReaderSourceFileClient, ReaderSourceFileListOptions } from "../source-files.js";
 import type {
   CollectionFileDescriptor,
   ConnectOutcome,
   ConnectRequestOptions,
-  MdbaseFileListOptions,
   MdbaseFileStatTarget,
   MdbaseFileUploadOptions,
 } from "@mdbase-dev/connect";
-import type { FilesApi, FileView } from "@mdbase-dev/sdk";
+import type { MdbaseClient, FileView } from "@mdbase-dev/sdk";
 
 export type NativeReaderFileClient = ReaderFileClient &
   ReaderAssetClient &
@@ -26,9 +25,10 @@ export type NativeReaderFileClient = ReaderFileClient &
  * retried transfer resumes or replays instead of writing a second file.
  */
 export function nativeReaderFiles(
-  files: FilesApi,
+  client: Pick<MdbaseClient, "files" | "awaitReceipt" | "ledger">,
   isCurrent: () => boolean = () => true,
 ): NativeReaderFileClient {
+  const { files } = client;
   const check = (signal?: AbortSignal): void => {
     if (!isCurrent()) {
       throw new MdbaseError({
@@ -65,18 +65,11 @@ export function nativeReaderFiles(
     options: MdbaseFileUploadOptions = {},
   ): Promise<CollectionFileDescriptor> {
     check(options.signal);
-    const grant = files.grant;
-    if (grant && !grant.actions.includes("add")) {
-      throw new MdbaseError({
-        code: "forbidden",
-        recovery: "reauthorize",
-        message: "This collection does not allow mdbase Reader to add files.",
-      });
-    }
+    requireFileAddGrant(files.grant);
     const transferId = options.transferId ?? uuidv7();
     const mutationId = uuidv7();
-    const once = async (): Promise<CollectionFileDescriptor> => {
-      const write = await files.upload(path, source, {
+    const once = (): ReturnType<MdbaseClient["files"]["upload"]> =>
+      files.upload(path, source, {
         transferId,
         mutationId,
         ...(options.signal ? { signal: options.signal } : {}),
@@ -92,23 +85,25 @@ export function nativeReaderFiles(
             }
           : {}),
       });
-      check(options.signal);
-      await write.confirmed;
-      check(options.signal);
-      const view = await files.get(write.fileId, options.signal);
-      check(options.signal);
-      return descriptor(view);
-    };
+    let write;
     try {
-      return await once();
+      write = await once();
     } catch (error) {
       check(options.signal);
       // Resume the same transfer and mutation once after an unsettled outcome.
       if (isMdbaseError(error, "outcome_unknown") || isMdbaseError(error, "unavailable")) {
-        return once();
+        write = await once();
+      } else {
+        throw error;
       }
-      throw error;
     }
+    check(options.signal);
+    const receipt = await client.awaitReceipt(write.mutationId, 30_000, options.signal);
+    check(options.signal);
+    requireConfirmedUpload(receipt, path);
+    const view = await files.get(write.fileId, options.signal);
+    check(options.signal);
+    return descriptor(view);
   }
 
   return {
@@ -130,7 +125,7 @@ export function nativeReaderFiles(
       return new Blob([bytes as BlobPart], file.mediaType ? { type: file.mediaType } : {});
     },
     upload,
-    async *list(options: MdbaseFileListOptions = {}) {
+    async *list(options: ReaderSourceFileListOptions = {}) {
       check(options.signal);
       for await (const view of files.list({
         ...(options.folder ? { folder: options.folder } : {}),
@@ -138,10 +133,52 @@ export function nativeReaderFiles(
         ...(options.signal ? { signal: options.signal } : {}),
       })) {
         check(options.signal);
+        if (options.contentDigests && !options.contentDigests.includes(view.digest)) {
+          continue;
+        }
+        if (client.ledger.stateOf(view.id) !== "saved") {
+          throw new MdbaseError({
+            code: "outcome_unknown",
+            recovery: "refresh",
+            message: `“${view.path}” is still waiting for confirmation. Check pending changes before adding it again.`,
+          });
+        }
         yield descriptor(view);
       }
     },
   };
+}
+
+function requireFileAddGrant(grant: MdbaseClient["files"]["grant"]): void {
+  if (grant && !grant.actions.includes("add")) {
+    throw new MdbaseError({
+      code: "forbidden",
+      recovery: "reauthorize",
+      message: "This collection does not allow mdbase Reader to add files.",
+    });
+  }
+}
+
+function requireConfirmedUpload(
+  receipt: Awaited<ReturnType<MdbaseClient["awaitReceipt"]>>,
+  path: string,
+): void {
+  if (receipt.state === "rejected") {
+    throw new MdbaseError(
+      receipt.problem ?? {
+        code: "conflict",
+        recovery: "resolve_conflict",
+        message: "The collection refused this file. Review the change before trying again.",
+      },
+    );
+  }
+  if (receipt.state !== "confirmed") {
+    throw new MdbaseError({
+      code: "outcome_unknown",
+      recovery: "refresh",
+      message: `The collection has not confirmed “${path}”. No source was created. Check pending changes before adding it again.`,
+    });
+  }
 }
 
 /** The media type is the replica's, derived from the file extension; absent when unknown. */

@@ -8,7 +8,7 @@ import {
   type SourceId,
   type SourceSummary,
 } from "@mdbase-reader/core";
-import { act, type JSX } from "react";
+import { act, useEffect, type JSX } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SourceRemovalDialog } from "./SourceRemovalDialog.js";
@@ -31,38 +31,44 @@ const plan: SourceDeletionPlan = {
   brokenLinkPaths: ["annotations/a1.md"],
 };
 
+let host: HTMLDivElement;
+let root: ReturnType<typeof createRoot>;
+let removal: SourceRemovalController;
+const planRemoval = vi.fn<(id: SourceId) => Promise<SourceDeletionPlan>>();
+const remove = vi.fn<(plan: SourceDeletionPlan) => Promise<void>>();
+const onRemoved = vi.fn<(id: SourceId) => void>();
+
+let known: readonly SourceSummary[] = [];
+function Harness(): JSX.Element {
+  const controller = useSourceRemoval(
+    { planSourceRemoval: planRemoval, removeSource: remove },
+    onRemoved,
+  );
+  useEffect(() => {
+    removal = controller;
+  }, [controller]);
+  return <SourceRemovalDialog removal={controller} sources={known} />;
+}
+const button = (name: string): HTMLButtonElement | undefined =>
+  [...host.querySelectorAll("button")].find((item) => item.textContent === name);
+
+beforeEach(async () => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+  known = [];
+  planRemoval.mockReset().mockResolvedValue(plan);
+  remove.mockReset().mockResolvedValue(undefined);
+  onRemoved.mockReset();
+  host = document.createElement("div");
+  document.body.append(host);
+  root = createRoot(host);
+  await act(async () => root.render(<Harness />));
+});
+afterEach(async () => {
+  await act(async () => root.unmount());
+  host.remove();
+});
+
 describe("removing a source", () => {
-  let host: HTMLDivElement;
-  let root: ReturnType<typeof createRoot>;
-  let removal: SourceRemovalController;
-  const planRemoval = vi.fn<(id: SourceId) => Promise<SourceDeletionPlan>>();
-  const remove = vi.fn<(plan: SourceDeletionPlan) => Promise<void>>();
-  const onRemoved = vi.fn<(id: SourceId) => void>();
-
-  let known: readonly SourceSummary[] = [];
-  function Harness(): JSX.Element {
-    removal = useSourceRemoval({ planSourceRemoval: planRemoval, removeSource: remove }, onRemoved);
-    return <SourceRemovalDialog removal={removal} sources={known} />;
-  }
-  const button = (name: string): HTMLButtonElement | undefined =>
-    [...host.querySelectorAll("button")].find((item) => item.textContent === name);
-
-  beforeEach(async () => {
-    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-    known = [];
-    planRemoval.mockReset().mockResolvedValue(plan);
-    remove.mockReset().mockResolvedValue(undefined);
-    onRemoved.mockReset();
-    host = document.createElement("div");
-    document.body.append(host);
-    root = createRoot(host);
-    await act(async () => root.render(<Harness />));
-  });
-  afterEach(async () => {
-    await act(async () => root.unmount());
-    host.remove();
-  });
-
   it("deletes nothing until the checked removal is confirmed, and nothing on cancel", async () => {
     await act(async () => removal.request?.(source));
     expect(host.textContent).toContain("Remove “Imported by mistake”?");
@@ -90,7 +96,7 @@ describe("removing a source", () => {
     expect(host.querySelector("[role=alertdialog]")).toBeNull();
   });
 
-  it("routes native dismissal through cancel and refuses it while removal is writing", async () => {
+  it("dismisses before confirmation and immediately confirms while removal is writing", async () => {
     const opener = document.createElement("button");
     document.body.append(opener);
     opener.focus();
@@ -109,12 +115,9 @@ describe("removing a source", () => {
       }),
     );
     await act(async () => button("Remove source")?.click());
-    await act(async () => {
-      const dialog = host.querySelector("dialog")!;
-      dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
-      dialog.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: -1 }));
-    });
-    expect(host.querySelector("dialog")?.open).toBe(true);
+    expect(host.querySelector("dialog")).toBeNull();
+    expect(removal.notice).toContain("Removed “Imported by mistake”.");
+    expect(onRemoved).not.toHaveBeenCalled();
     await act(async () => finish());
     expect(host.querySelector("dialog")).toBeNull();
     opener.remove();
@@ -130,5 +133,84 @@ describe("removing a source", () => {
     expect(host.querySelector("li")?.textContent).toBe("Linking source");
     expect(host.querySelector("li")?.getAttribute("title")).toBe("annotations/a1.md");
     expect(host.textContent).toContain("use Move annotation to source on it first");
+  });
+
+  it("withdraws optimistic success and offers a fresh check when removal fails", async () => {
+    let refuse!: (reason: Error) => void;
+    remove.mockReturnValueOnce(
+      new Promise<void>((_resolve, reject) => {
+        refuse = reject;
+      }),
+    );
+    await act(async () => removal.request?.(source));
+    await act(async () => button("Remove source")?.click());
+    expect(removal.notice).toContain("Removed");
+    await act(async () => refuse(new Error("Removal refused")));
+    expect(removal.notice).toBe("Removal refused");
+    expect(host.textContent).toContain("Removal refused");
+    expect(button("Check again")).toBeDefined();
+    expect(button("Remove source")?.disabled).toBe(true);
+    expect(onRemoved).not.toHaveBeenCalled();
+  });
+});
+
+describe("concurrent source removal", () => {
+  it.each([false, true])("reports A's refusal after B is cancelled: %s", async (cancelSecond) => {
+    let refuse!: (reason: Error) => void;
+    remove.mockReturnValueOnce(
+      new Promise<void>((_resolve, reject) => {
+        refuse = reject;
+      }),
+    );
+    await act(async () => removal.request?.(source));
+    await act(async () => button("Remove source")?.click());
+    const second = { ...source, id: sourceId("src_2"), title: "Another source" };
+    planRemoval.mockResolvedValueOnce({ ...plan, sourceId: second.id });
+    await act(async () => removal.request?.(second));
+    const newer = removal.pending;
+    if (cancelSecond) {
+      await act(async () => button("Cancel")?.click());
+    }
+    await act(async () => refuse(new Error("A was not removed")));
+    expect(removal.notice).toBe("A was not removed");
+    expect(host.querySelector('[role="status"]')?.textContent).not.toContain("Removed");
+    if (!cancelSecond) {
+      expect(removal.pending).toBe(newer);
+      expect(host.textContent).toContain("Remove “Another source”?");
+    }
+    expect(onRemoved).not.toHaveBeenCalled();
+  });
+
+  it("does not close a newer removal dialog when an earlier deletion succeeds", async () => {
+    let finish!: () => void;
+    remove.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await act(async () => removal.request?.(source));
+    await act(async () => button("Remove source")?.click());
+    const second = { ...source, id: sourceId("src_2"), title: "Another source" };
+    planRemoval.mockResolvedValueOnce({ ...plan, sourceId: second.id });
+    await act(async () => removal.request?.(second));
+    const newer = removal.pending;
+    await act(async () => finish());
+    expect(removal.pending).toBe(newer);
+    expect(onRemoved).toHaveBeenCalledExactlyOnceWith(source.id);
+  });
+
+  it("ignores a preflight that finishes after cancellation", async () => {
+    let finish!: (value: SourceDeletionPlan) => void;
+    planRemoval.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    await act(async () => removal.request?.(source));
+    expect(removal.pending?.status).toBe("checking");
+    await act(async () => removal.cancel());
+    await act(async () => finish(plan));
+    expect(removal.pending).toBeNull();
+    expect(remove).not.toHaveBeenCalled();
   });
 });

@@ -4,6 +4,7 @@ import { loadEnv } from "vite";
 import { defineConfig, type UserConfig, type Plugin } from "vite";
 
 import { bundleReport } from "./scripts/bundle-report.js";
+import { readerAppUrls } from "./scripts/deployment-environment.mjs";
 import { readerSdkTarget, verifiedReaderSdk } from "./scripts/reader-sdk.mjs";
 
 import type * as SdkOfflineShell from "@mdbase-dev/sdk/offline-shell/build";
@@ -21,9 +22,17 @@ const buildOutput = {
 
 export default defineConfig(async ({ mode }): Promise<UserConfig> => {
   const environment = { ...loadEnv(mode, import.meta.dirname, ""), ...process.env };
-  const sdk = await verifiedReaderSdk(readerSdkTarget(environment));
+  const target = readerSdkTarget(environment);
+  const appUrls = readerAppUrls(target);
+  const sdk = await verifiedReaderSdk(target);
   const { offlineShellPlugin } = (await import(sdk.offlineShellUrl)) as typeof SdkOfflineShell;
   return {
+    define: Object.fromEntries(
+      Object.entries(appUrls).map(([app, url]) => [
+        `import.meta.env.VITE_MDBASE_${app.toUpperCase()}_URL`,
+        JSON.stringify(url),
+      ]),
+    ),
     plugins: [
       react(),
       lingui({ macroTransform: true }),

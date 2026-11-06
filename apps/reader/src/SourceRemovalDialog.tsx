@@ -49,7 +49,6 @@ function OpenSourceRemovalDialog({
 }): JSX.Element {
   const { t } = useLingui();
   const { source, status, plan, problem } = pending;
-  const removing = status === "removing";
   const cancelRef = useRef<HTMLButtonElement>(null);
   const { cancel } = removal;
   const links = plan?.brokenLinkPaths ?? [];
@@ -63,11 +62,7 @@ function OpenSourceRemovalDialog({
       describedBy="reader-remove-source-description"
       initialFocus={cancelRef}
       returnFocus={pending.invoker}
-      onDismiss={() => {
-        if (!removing) {
-          cancel();
-        }
-      }}
+      onDismiss={cancel}
     >
       <div className="import-dialog-heading">
         <h2 id="reader-remove-source-title">{translate`Remove “${source.title}”?`}</h2>
@@ -76,7 +71,8 @@ function OpenSourceRemovalDialog({
             This removes the source from your library and deletes its source note. Saved files and
             annotations are kept in the collection, but links to this source will stop working,
             including from its annotations and from any chapters of it.
-          </Trans>
+          </Trans>{" "}
+          <Trans>Annotations of a removed source will no longer appear in Reader.</Trans>
           {source.partOf
             ? translate({
                 message:
@@ -126,13 +122,7 @@ function OpenSourceRemovalDialog({
         ) : null}
       </div>
       <div className="import-dialog-actions">
-        <button
-          ref={cancelRef}
-          className="connection-secondary"
-          type="button"
-          disabled={removing}
-          onClick={cancel}
-        >
+        <button ref={cancelRef} className="connection-secondary" type="button" onClick={cancel}>
           <Trans context="Reader interface">Cancel</Trans>
         </button>
         {problem && !plan ? (
@@ -150,9 +140,7 @@ function OpenSourceRemovalDialog({
           disabled={status !== "confirming" || !plan}
           onClick={removal.confirm}
         >
-          {removing
-            ? t({ message: "Removing…", context: "SourceRemovalDialog interface" })
-            : t({ message: "Remove source", context: "SourceRemovalDialog interface" })}
+          {t({ message: "Remove source", context: "SourceRemovalDialog interface" })}
         </button>
       </div>
     </ModalDialog>

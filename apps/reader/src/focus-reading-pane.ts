@@ -1,4 +1,9 @@
 export function focusReadingPane(pane: HTMLElement): void {
+  const row = pane.querySelector<HTMLElement>('[data-row-index][tabindex="0"]');
+  if (row) {
+    row.focus({ preventScroll: true });
+    return;
+  }
   const frame = pane.querySelector<HTMLIFrameElement>("iframe");
   if (frame?.contentDocument?.body) {
     frame.contentWindow?.focus();

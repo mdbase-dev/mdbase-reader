@@ -19,12 +19,21 @@
         color: light-dark(#343431, #e2ded8);
         background: light-dark(#f7f4f0, #1c1d1c);
         font: 16px/1.5 system-ui;
-        min-height: calc(100dvh - 48px);
-        padding: 24px;
+        min-height: 100dvh;
+        display: grid;
+        grid-template: 50px 1fr / 260px 1fr;
       }
       .reader-boot header {
         border-bottom: 1px solid light-dark(#dedbd5, #44443e);
-        padding-bottom: 16px;
+        grid-column: 1 / -1;
+        padding: 12px 20px;
+      }
+      .reader-boot-sidebar {
+        grid-row: 2;
+        border-right: 1px solid light-dark(#dedbd5, #44443e);
+      }
+      .reader-boot-content {
+        padding: 24px;
       }
       .reader-boot-bars {
         max-width: 720px;
@@ -47,25 +56,47 @@
       body:has(.reader-boot) {
         margin: 0;
       }
+      @media (max-width: 680px) {
+        .reader-boot {
+          grid-template-columns: 0 1fr;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="root">
       <main class="reader-boot" aria-label="Loading Reader">
         <header>mdbase reader</header>
-        <div class="reader-boot-bars" role="status">
-          Loading Reader…
-          <span aria-hidden="true"></span><span aria-hidden="true"></span
-          ><span aria-hidden="true"></span>
+        <aside class="reader-boot-sidebar" aria-hidden="true"></aside>
+        <div class="reader-boot-content">
+          <div class="reader-boot-bars" role="status">
+            Loading Reader…
+            <span aria-hidden="true"></span><span aria-hidden="true"></span
+            ><span aria-hidden="true"></span>
+          </div>
+          <details>
+            <summary>Reader not opening?</summary>
+            <p>
+              Check your connection, then <a href="">reload Reader</a>. JavaScript must be enabled.
+            </p>
+            <p><a href="?preview=1">Try Reader with a sample library</a></p>
+          </details>
+          <p class="reader-boot-failure" role="alert" hidden></p>
         </div>
-        <details>
-          <summary>Reader not opening?</summary>
-          <p>
-            Check your connection, then <a href="">reload Reader</a>. JavaScript must be enabled.
-          </p>
-        </details>
       </main>
     </div>
+    <script>
+      function readerBootFailed(event) {
+        const failure = document.querySelector(".reader-boot-failure");
+        if (!failure) return;
+        failure.hidden = false;
+        failure.textContent =
+          "Reader could not start: " +
+          (event.reason?.message || event.message || "the application files could not load.");
+      }
+      window.addEventListener("error", readerBootFailed, true);
+      window.addEventListener("unhandledrejection", readerBootFailed);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

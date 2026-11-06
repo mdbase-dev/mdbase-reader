@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, type JSX, type ReactNode, type RefObject } from "react";
 
+import { focusReadingPane } from "./focus-reading-pane.js";
+
 const openers = new WeakMap<HTMLDialogElement, Element | null>();
 
 /** Native modality keeps focus and the background out of reach through the exit transition. */
@@ -46,7 +48,7 @@ export function ModalDialog({
       mounted.current = false;
       const restoreFocus = element?.contains(document.activeElement);
       const after = document.querySelector(".workspace-pane.is-focused");
-      const destination = after && after !== before ? after : opener;
+      const destination = after && (after !== before || !opener?.isConnected) ? after : opener;
       element?.close();
       if (
         restoreFocus &&
@@ -54,7 +56,11 @@ export function ModalDialog({
         destination.isConnected &&
         !destination.closest('[inert], [hidden], [aria-hidden="true"]')
       ) {
-        destination.focus();
+        if (destination.matches(".workspace-pane")) {
+          focusReadingPane(destination);
+        } else {
+          destination.focus();
+        }
       }
     };
   }, [initialFocus, returnFocus, active]);

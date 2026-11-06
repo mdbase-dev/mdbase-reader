@@ -465,6 +465,10 @@
 
 /* Narrow panes: the table is a two-line list and Continue reading swipes sideways. */
 @container library (max-width: 620px) {
+  .library-workspace .library-table-row .library-status {
+    width: 124px;
+  }
+
   .library-workspace .continue-reading {
     margin-inline: var(--sp-3);
   }

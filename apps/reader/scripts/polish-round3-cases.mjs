@@ -5,7 +5,7 @@ import { assertPdfTabContrast } from "./polish-round4-cases.mjs";
 export async function keyboardLibrary(page) {
   await page.locator("body").click({ position: { x: 4, y: 4 } });
   await page.keyboard.press("j");
-  await expect(page.locator('.library-table-row[tabindex="0"]')).not.toBeFocused();
+  await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
   await page.locator(".workspace-pane.is-focused .library-table").focus();
   await page.keyboard.press("j");
   await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
@@ -128,9 +128,9 @@ export async function titleFocus(page) {
     await page.keyboard.press("Enter");
     await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   }
-  await expect(page.locator(".workspace-pane.is-library-pane.is-focused")).toBeFocused();
+  await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
   await page.keyboard.press("j");
-  await expect(page.locator(".workspace-pane.is-library-pane.is-focused")).toBeFocused();
+  await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
   await page.locator(".workspace-pane.is-focused .library-table").focus();
   await page.keyboard.press("j");
   await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();

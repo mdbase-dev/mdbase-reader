@@ -7,6 +7,12 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import {
+  bootFailure,
+  round5Library,
+  round5Settings,
+  round5Workspace,
+} from "./polish-round5-cases.mjs";
+import {
   round4Library,
   readingKeys,
   desktopPdfNavigation,
@@ -227,6 +233,9 @@ async function command(page, query) {
 
 try {
   await staticBoot(browser, origin);
+  await bootFailure(browser, origin);
+  const round5 = await round5Workspace(browser, origin);
+  console.log(JSON.stringify({ round5 }));
   for (const viewport of [
     { width: 1440, height: 900 },
     { width: 390, height: 844 },
@@ -246,6 +255,7 @@ try {
           await page.goto(`${origin}/?preview=1`);
           await page.locator('.library-table[aria-label="Sources"]').waitFor();
           await page.evaluate(() => globalThis.document.fonts.ready);
+          await round5Library(page);
           await page.addScriptTag({ path: axePath });
           await expect(page.getByRole("note")).toContainText("no collection connected");
           await expect(page.getByRole("button", { name: /Switch collection/u })).toHaveCount(0);
@@ -357,6 +367,7 @@ try {
           await page.getByRole("option", { name: "Settings", exact: true }).click();
           result.settingsEnter = await trace(page, "observe", "dialog.settings-page");
           await page.locator("dialog.settings-page").waitFor();
+          await round5Settings(page);
           assertMotion(result.settingsEnter, 160, reducedMotion);
           await expect(page.locator(".mdbase-command-palette")).toBeHidden();
           await audit(page, `${name} settings`);

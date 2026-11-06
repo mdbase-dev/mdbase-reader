@@ -27,7 +27,7 @@ export function RendererStage({
   }, [state.status, reportError]);
   return (
     <div className="document-renderer-stage">
-      {children}
+      {state.status === "error" ? null : children}
       {state.status === "opening" ? (
         <div className="document-renderer-status">
           <DocumentMessage label={openingLabel} />

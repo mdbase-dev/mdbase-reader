@@ -17,6 +17,13 @@ export function sdkConnectionState(
   if (snapshot?.sync?.kind === "offline") {
     return "offline";
   }
+  if (
+    snapshot?.writes?.pending.length ||
+    snapshot?.writes?.rejected.length ||
+    snapshot?.saveWarning
+  ) {
+    return "syncing";
+  }
   return fallback;
 }
 

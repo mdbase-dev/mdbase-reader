@@ -1,6 +1,6 @@
 import { t as translate } from "@lingui/core/macro";
-import { Trans, useLingui } from "@lingui/react/macro";
-import { ConnectLayout, OpeningScreen } from "@mdbase-dev/ui/screens";
+import { Trans } from "@lingui/react/macro";
+import { ConnectLayout } from "@mdbase-dev/ui/screens";
 import { sourceId } from "@mdbase-reader/core";
 import { useCallback, useEffect, useState, type JSX } from "react";
 
@@ -10,6 +10,8 @@ import {
   describeConnectionProblem,
   libraryLoadFallback,
 } from "./connection-recovery.js";
+import { inspectorPanelId } from "./dockview-panel-ids.js";
+import { panelTab } from "./dockview-workspace-state.js";
 import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
   useDocumentSurfaceTiming,
@@ -18,6 +20,7 @@ import {
   useReaderShortcuts,
   useThemePreference,
 } from "./reader-app-hooks.js";
+import { ReaderBoot } from "./ReaderBoot.js";
 import { ReaderWorkspaceView, type ReaderWorkspaceViewModel } from "./ReaderWorkspaceView.js";
 import { updateSurface } from "./RenderedSourceDocument.js";
 import { SessionReadingLocations } from "./session-reading-locations.js";
@@ -65,7 +68,6 @@ export function ReaderApp({
   pickSourceFile,
   saveFile,
 }: ReaderAppProps): JSX.Element {
-  const { t } = useLingui();
   const workspace = useReaderWorkspace(gateway, initialSourceId ? sourceId(initialSourceId) : null);
   if (workspace.library.status === "error") {
     // The load failure is usually Connect's own wording; it waits behind Details.
@@ -84,15 +86,7 @@ export function ReaderApp({
     );
   }
   if (workspace.library.status !== "ready") {
-    return (
-      <OpeningScreen
-        app="reader"
-        title={t({ message: "Opening your reading collection" })}
-        detail={t({
-          message: "Loading the first sources; the rest of the library will load in the background",
-        })}
-      />
-    );
+    return <ReaderBoot />;
   }
   return (
     <LibraryDocumentIndex library={workspace.library.value} gateway={gateway}>
@@ -178,7 +172,17 @@ function OpenedReaderApp({
     citationSources: library.sources,
     saveFile,
   });
-  const sourceRemoval = useSourceRemoval(workspace, sourceWorkspace.close);
+  const sourceRemoval = useSourceRemoval(workspace, (id) => {
+    const activeTab = panelTab(sourceWorkspace.dock.api?.activePanel);
+    if (
+      activeTab?.kind === "source" &&
+      activeTab.sourceId === id &&
+      sourceWorkspace.dock.isSideVisible(inspectorPanelId)
+    ) {
+      sourceWorkspace.dock.toggleSidebar("right");
+    }
+    sourceWorkspace.close(id);
+  });
   const sourceStatus = useSourceStatus(gateway, workspace.reconcileSource);
 
   useReaderShortcuts({

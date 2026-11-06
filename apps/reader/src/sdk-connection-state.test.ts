@@ -7,7 +7,7 @@ import type { Mdbase } from "@mdbase-reader/connect/native";
 type Snapshot = ReturnType<Mdbase["getSnapshot"]>;
 const snapshot = (value: { saveState?: string; kind?: string }): Snapshot =>
   ({
-    writes: value.saveState ? { saveState: value.saveState } : null,
+    writes: value.saveState ? { saveState: value.saveState, pending: [], rejected: [] } : null,
     sync: value.kind ? { kind: value.kind } : null,
   }) as unknown as Snapshot;
 
@@ -21,5 +21,11 @@ describe("SDK connection state", () => {
       "connected",
     );
     expect(sdkConnectionState(null, "connected")).toBe("connected");
+    expect(
+      sdkConnectionState(
+        { writes: { pending: [{}], rejected: [], saveState: "saving" } } as unknown as Snapshot,
+        "connected",
+      ),
+    ).toBe("syncing");
   });
 });

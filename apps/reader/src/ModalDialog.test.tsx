@@ -113,6 +113,22 @@ describe("native modal dialogs", () => {
     expect(focus).not.toHaveBeenCalled();
   });
 
+  it("returns to the remaining library row after its opener is removed", async () => {
+    const pane = document.createElement("section");
+    pane.className = "workspace-pane is-library-pane is-focused";
+    pane.tabIndex = -1;
+    const row = document.createElement("div");
+    row.dataset["rowIndex"] = "0";
+    row.tabIndex = 0;
+    pane.append(row);
+    document.body.append(pane);
+    await act(async () => root.render(<Harness dismiss={vi.fn()} />));
+    opener.remove();
+    await act(async () => root.render(null));
+    expect(document.activeElement).toBe(row);
+    pane.remove();
+  });
+
   it.each(["is-document-pane", "is-library-pane"])(
     "hands focus to a newly opened %s instead of the palette opener",
     async (kind) => {
