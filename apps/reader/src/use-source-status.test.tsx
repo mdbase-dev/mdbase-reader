@@ -28,12 +28,11 @@ it("restores the previous status through the same write and routes Ctrl+Z only o
   function Harness(): React.JSX.Element {
     const status = useSourceStatus(
       { saveReadingStatus: save } as unknown as ReaderWorkspaceGateway,
-      [source],
       reconcile,
     );
     return (
       <>
-        <button onClick={() => status.change?.(source.id, "reading")}>Change</button>
+        <button onClick={() => status.change?.(source, "reading")}>Change</button>
         <input aria-label="Draft" />
         {status.notice}
       </>
@@ -73,12 +72,11 @@ it("does not claim success or offer Undo after a rejected status write", async (
   function Harness(): React.JSX.Element {
     const status = useSourceStatus(
       { saveReadingStatus: save } as unknown as ReaderWorkspaceGateway,
-      [source],
       reconcile,
     );
     return (
       <>
-        <button onClick={() => status.change?.(source.id, "reading")}>Change</button>
+        <button onClick={() => status.change?.(source, "reading")}>Change</button>
         {status.notice}
       </>
     );

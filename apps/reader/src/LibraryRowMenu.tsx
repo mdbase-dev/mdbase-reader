@@ -27,7 +27,7 @@ export interface LibraryRowMenuTarget {
 export interface LibraryRowMenuActions {
   readonly onOpen: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
-  readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
+  readonly onChangeStatus?: (source: SourceSummary, status: ReadingStatus) => void;
   readonly onRename?: (source: SourceSummary) => void;
   readonly onExport?: (sources: readonly SourceSummary[]) => void;
   /** Opens chapter creation for a PDF or EPUB book; absent when chapter creation is off. */
@@ -125,7 +125,7 @@ export function LibraryRowMenu({
               type="button"
               role="menuitemradio"
               aria-checked={choice === status}
-              onClick={run(() => actions.onChangeStatus?.(source.id, choice))}
+              onClick={run(() => actions.onChangeStatus?.(source, choice))}
             >
               {readingStatusLabel(choice)}
             </button>

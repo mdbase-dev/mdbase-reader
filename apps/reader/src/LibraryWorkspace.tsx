@@ -94,7 +94,7 @@ export function LibraryWorkspace({
   readonly annotationCounts?: ReadonlyMap<SourceId, number>;
   readonly bibliographyExport: BibliographyExportController;
   readonly onSourceChanged?: (source: Source) => void;
-  readonly changeStatus?: ((id: SourceId, status: ReadingStatus) => void) | undefined;
+  readonly changeStatus?: ((source: SourceSummary, status: ReadingStatus) => void) | undefined;
   readonly surfaces?: ReadonlyMap<string, ReadingSurface>;
   readonly onOpenSourceView?: (
     id: SourceId,
@@ -215,10 +215,10 @@ export function LibraryWorkspace({
         matches,
         allSources,
         collapsed,
-        flatParts || Boolean(filter.query.trim()),
+        layout.presentation === "cards" || flatParts || Boolean(filter.query.trim()),
         !indexLoading,
       ),
-    [matches, allSources, collapsed, flatParts, filter.query, indexLoading],
+    [matches, allSources, collapsed, layout.presentation, flatParts, filter.query, indexLoading],
   );
   const sources = parts.sources;
   const togglePart = (id: SourceId): void =>

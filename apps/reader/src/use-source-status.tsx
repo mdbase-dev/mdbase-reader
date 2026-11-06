@@ -7,14 +7,13 @@ import { readingStatusLabel } from "./LibraryCells.js";
 import { ReaderNotice } from "./ReaderNotice.js";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { ReadingStatus, Source, SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { ReadingStatus, Source, SourceSummary } from "@mdbase-reader/core";
 
 export function useSourceStatus(
   gateway: ReaderWorkspaceGateway,
-  sources: readonly SourceSummary[],
   reconcile: (source: Source) => void,
 ): {
-  readonly change: ((id: SourceId, status: ReadingStatus) => void) | undefined;
+  readonly change: ((source: SourceSummary, status: ReadingStatus) => void) | undefined;
   readonly notice: ReactNode;
 } {
   const [notice, setNotice] = useState<{
@@ -29,10 +28,9 @@ export function useSourceStatus(
     return () => clearTimeout(timer);
   }, [notice]);
   const change = useCallback(
-    (id: SourceId, status: ReadingStatus): void => {
-      const source = sources.find((item) => item.id === id);
+    (source: SourceSummary, status: ReadingStatus): void => {
       const save = gateway.saveReadingStatus?.bind(gateway);
-      if (!source || !save) {
+      if (!save) {
         return;
       }
       const previous = source.reading?.status ?? source.readingStatus ?? "inbox";
@@ -41,14 +39,14 @@ export function useSourceStatus(
         setNotice({
           message: readerErrorMessage(reason, t`Reader could not change the reading status.`),
         });
-      void save(id, status).then((updated) => {
+      void save(source.id, status).then((updated) => {
         reconcile(updated);
         const label = readingStatusLabel(status);
         setNotice({
           message: t`“${source.title}” — ${label}`,
           undo: () => {
             setNotice(null);
-            void save(id, previous).then((restored) => {
+            void save(source.id, previous).then((restored) => {
               reconcile(restored);
               setNotice({ message: t`Restored the status of “${source.title}”.` });
             }, fail);
@@ -56,7 +54,7 @@ export function useSourceStatus(
         });
       }, fail);
     },
-    [gateway, sources, reconcile],
+    [gateway, reconcile],
   );
   return {
     change: gateway.saveReadingStatus ? change : undefined,

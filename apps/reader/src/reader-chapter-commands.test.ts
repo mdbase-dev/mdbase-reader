@@ -32,6 +32,17 @@ const chapterCommand = (
 ): ReturnType<typeof readerCommands>[number] | undefined =>
   readerCommands(value).find(({ id }) => id === "add-chapters-as-sources");
 
+it("changes the loaded source's status even before it is in the progressive index", () => {
+  const activeSource = { ...book, readingStatus: "queued" as const };
+  const changeStatus = vi.fn();
+  const command = readerCommands({ ...input(activeSource, undefined, []), changeStatus }).find(
+    ({ id }) => id === "status:finished",
+  );
+  expect(command).toBeDefined();
+  command?.run();
+  expect(changeStatus).toHaveBeenCalledExactlyOnceWith(activeSource, "finished");
+});
+
 describe("current-source chapter command", () => {
   it.each(["application/pdf", "application/epub+zip"])(
     "opens chapter creation for the current %s source",

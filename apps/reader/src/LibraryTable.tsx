@@ -51,7 +51,7 @@ export interface LibraryTableProps {
   readonly scrollRef: RefObject<HTMLDivElement | null>;
   readonly onOpen: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
-  readonly onChangeStatus?: (id: SourceId, status: ReadingStatus) => void;
+  readonly onChangeStatus?: (source: SourceSummary, status: ReadingStatus) => void;
   /** Saves a field edited in its cell; editing is offered only when this is present. */
   readonly onEditField?: (source: SourceSummary, key: string, text: string) => Promise<void>;
   readonly onExport?: (sources: readonly SourceSummary[]) => void;

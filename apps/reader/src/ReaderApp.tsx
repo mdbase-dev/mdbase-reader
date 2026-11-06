@@ -179,7 +179,7 @@ function OpenedReaderApp({
     saveFile,
   });
   const sourceRemoval = useSourceRemoval(workspace, sourceWorkspace.close);
-  const sourceStatus = useSourceStatus(gateway, library.sources, workspace.reconcileSource);
+  const sourceStatus = useSourceStatus(gateway, workspace.reconcileSource);
 
   useReaderShortcuts({
     focusMode,

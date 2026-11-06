@@ -5,6 +5,9 @@ import { assertPdfTabContrast } from "./polish-round4-cases.mjs";
 export async function keyboardLibrary(page) {
   await page.locator("body").click({ position: { x: 4, y: 4 } });
   await page.keyboard.press("j");
+  await expect(page.locator('.library-table-row[tabindex="0"]')).not.toBeFocused();
+  await page.locator(".workspace-pane.is-focused .library-table").focus();
+  await page.keyboard.press("j");
   await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
   await activateRowAndReturn(page);
   const search = page.locator(".library-search-field input").first();
@@ -37,7 +40,9 @@ async function activateRowAndReturn(page) {
     .innerText();
   await page.keyboard.press("Enter");
   await expect(
-    page.locator('.workspace-pane.is-document-pane.is-focused .sr-only[role="status"]'),
+    page
+      .locator('.workspace-pane.is-document-pane.is-focused .sr-only[role="status"]')
+      .filter({ hasText: `Ready to read ${title}` }),
   ).toContainText(`Ready to read ${title}`);
   await page.keyboard.press("Control+k");
   await page
@@ -124,6 +129,9 @@ export async function titleFocus(page) {
     await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   }
   await expect(page.locator(".workspace-pane.is-library-pane.is-focused")).toBeFocused();
+  await page.keyboard.press("j");
+  await expect(page.locator(".workspace-pane.is-library-pane.is-focused")).toBeFocused();
+  await page.locator(".workspace-pane.is-focused .library-table").focus();
   await page.keyboard.press("j");
   await expect(page.locator('.library-table-row[tabindex="0"]')).toBeFocused();
 }
