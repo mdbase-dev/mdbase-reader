@@ -90,10 +90,43 @@ the production-preview polish gate, source inspection, or the new repeatable
 | W6.2 Failure live region     | Done        | Dockview retained stale opening announcements after source/renderer failure.   | The shared source error and existing renderer-failure owners clear `.dv-live-region`; the source-dialog regression seeds “Opening stale source” and asserts an empty region on failure. No screen-reader speech claim.                                                                                                                   |
 | W6.3 Service-worker precache | Not done    | Opus observed `/404.html` and `/index.html` failed precache requests on Pages. | Reader's `offlineShellPlugin()` comes from the public SDK. Its current file discovery owns the list and exposes no exclusion option. No generated worker patch or replacement local adapter was added. Needs an upstream SDK change/repin and Pages/LAB installed-shell proof; loopback cannot prove those production routing semantics. |
 
+## PR #133 independent-review follow-up
+
+The three follow-up regressions were added and run against the reviewed
+`255298c8e3f34c1bc164c5bfb4e7f9366eaa472b` implementation before the fixes.
+All three issues reproduced locally; none requires LAB to establish the defect.
+
+1. **Done — Escape/status race (P2).** Before: real Chromium keyboard input
+   (`S`, `Escape`, immediately `A`, with no intervening delay or inspection)
+   silently changed Inbox to Archived in **16 of 20 trials**. The component
+   regression also left focus on the closed combobox with animation frames held.
+   After: Escape cancels the shared listbox handler, closes through the existing
+   Select trigger, and synchronously focuses the owning row. No Escape animation
+   frame remains. **20 of 20 immediate-key trials** retain Inbox and open Add source;
+   the component test proves focus has returned before any animation frame. The
+   old 40 ms delayed probe is deleted, not retained as a parallel acceptance test.
+2. **Done — Notes search/results ref (P3).** Before: a real matching note result
+   rendered under All sources/Table, but ArrowDown left focus on the query input
+   in `library-workspace-regressions.test.tsx`. After: one `rendersSourceTable`
+   predicate governs both rendering and scroll-ref ownership, including empty and
+   loading states. The same component regression now focuses the matching result.
+   This uses the real text-search component with a deterministic gateway fixture,
+   not a connected search-service acceptance claim.
+3. **Done — Skip to sources in every presentation (P3).** Before: keyboard
+   activation left focus outside both Visual library's first card and an empty
+   table's results container. After: the link targets the focused library's results,
+   preferring a roving row, source card, or text-search result, with the focusable
+   results container as fallback. The browser regression exercises Visual library,
+   filtered-empty Table and Cards, and empty Notes & annotations search; the
+   existing table-row skip-link regression remains in the round-6 probe.
+
+These are local production-preview Chromium and component-test results. No service
+was deployed, and the remaining LAB/native/offline acceptance items below are unchanged.
+
 ## Validation and reproduction
 
 - Remote lint, typecheck, and all workspace tests pass. Reader: 199 files,
-  1,083 tests; HTML renderer: 104 tests. Architecture passes with the existing
+  1,085 tests; HTML renderer: 104 tests. Architecture passes with the existing
   1,003-line Connect follow-through cohesion warning.
 - Catalog extraction/compilation and the stricter remote i18n source/coverage
   check pass. All seven new messages are authored in the nine non-English
@@ -120,7 +153,8 @@ pnpm test:polish
 ```
 
 `test:polish` retains the eight original desktop/phone × light/dark ×
-normal/reduced-motion cells and then runs the new round-6 regression probe.
+normal/reduced-motion cells and then runs the round-6 and independent-review
+focus regression probes, including 20 real zero-delay Escape/A trials.
 Its source-add latency and mobile scroll assertions were not weakened. The only
 existing expectation changes follow the explicit shortcut-sheet replacement and
 current-session completed-read install eligibility contract.

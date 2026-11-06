@@ -141,23 +141,6 @@ try {
   await page.goto(`${origin}/?preview=1`);
   const table = page.locator('.library-table[aria-label="Sources"]');
   await table.waitFor();
-  await table.focus();
-  await page.keyboard.press("s");
-  const picker = page.locator('.library-table-row[data-row-index="0"] [role="combobox"]');
-  evidence.firstS = await picker.getAttribute("aria-expanded");
-  if (evidence.firstS !== "true") await page.keyboard.press("s");
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(40);
-  evidence.escapeFocus = await page.evaluate(() => globalThis.document.activeElement?.className);
-  const status = await picker.getAttribute("data-value");
-  await page.keyboard.press("a");
-  evidence.afterA = {
-    status: await picker.getAttribute("data-value"),
-    dialog: await page.locator(".source-add-dialog[open]").count(),
-  };
-  evidence.beforeA = status;
-  await page.keyboard.press("Escape");
-  await expect(page.locator("dialog[open]")).toHaveCount(0);
   await page.clock.install();
   await page.evaluate(() => {
     globalThis.window.dispatchEvent(new Event("beforeinstallprompt", { cancelable: true }));
@@ -183,10 +166,6 @@ try {
   await layoutAndTouchEvidence();
   console.log(JSON.stringify(evidence, null, 2));
   assert.ok(evidence.scroll.every(({ mid, end }) => mid > 0 && end === 0));
-  assert.equal(evidence.firstS, "true");
-  assert.match(evidence.escapeFocus, /library-table-row/u);
-  assert.equal(evidence.afterA.status, evidence.beforeA);
-  assert.equal(evidence.afterA.dialog, 1);
   assert.equal(evidence.removeHit, true);
   assert.equal(evidence.installDuringMenu, 0);
 } finally {

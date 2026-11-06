@@ -230,14 +230,10 @@ export function ReaderWorkspaceView({
       <a
         hidden={!libraryTabActive(sourceWorkspace)}
         className="reader-skip-link"
-        href="#reader-library-grid"
+        href="#reader-library-results"
         onClick={(event) => {
           event.preventDefault();
-          shellRef.current
-            ?.querySelector<HTMLElement>(
-              '.workspace-pane.is-focused [data-row-index][tabindex="0"]',
-            )
-            ?.focus();
+          focusLibraryResults(shellRef.current);
         }}
       >
         <Trans>Skip to sources</Trans>
@@ -674,4 +670,14 @@ function libraryTabActive(workspace: {
   readonly activeTab: { readonly kind: string } | null;
 }): boolean {
   return workspace.activeTab?.kind === "library";
+}
+
+function focusLibraryResults(shell: HTMLElement | null): void {
+  const results = shell?.querySelector<HTMLElement>(
+    ".workspace-pane.is-focused .library-workspace-results",
+  );
+  const firstResult = results?.querySelector<HTMLElement>(
+    '[data-row-index][tabindex="0"], .library-card-hit-target, .search-passage-list button',
+  );
+  (firstResult ?? results)?.focus();
 }

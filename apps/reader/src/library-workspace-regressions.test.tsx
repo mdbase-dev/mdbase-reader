@@ -66,6 +66,13 @@ async function renderLibrary(
   );
   const gateway = {
     executeLibraryView: vi.fn().mockResolvedValue({ sources, valuesByPath: new Map() }),
+    searchText: vi.fn().mockResolvedValue([
+      {
+        sourceId: sources[0]?.id,
+        kinds: ["note"],
+        passages: [{ kind: "note", text: "Attention" }],
+      },
+    ]),
     readFile: vi.fn(),
     saveReadingStatus,
   } as unknown as ReaderWorkspaceGateway;
@@ -168,4 +175,57 @@ it("shows every chapter in Cards without losing Table's collapse state", async (
   ).toEqual(["Book", "Chapter", "Section"]);
   await clickText("Table");
   expect(host.querySelector("[data-table]")?.textContent).not.toContain("Chapter");
+});
+
+it("focuses matching notes from search when the saved presentation is Table", async () => {
+  const source = partSource("Attention");
+  await renderLibrary([source], [source]);
+  const scope = host.querySelector<HTMLButtonElement>('[aria-label="Search scope"]')!;
+  act(() => scope.click());
+  await clickText("Notes & annotations");
+  const search = host.querySelector<HTMLInputElement>(".library-search-field input")!;
+  act(() => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(
+      search,
+      "Attention",
+    );
+    search.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  });
+  const match = host.querySelector<HTMLButtonElement>(".search-passage-list button");
+  expect(match).not.toBeNull();
+  expect(host.querySelector("[data-table]")).toBeNull();
+  search.focus();
+  act(() => {
+    search.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+  });
+  expect(document.activeElement).toBe(match);
+});
+
+it("closes status and returns focus to its row before any animation frame", () => {
+  const source = partSource("Attention");
+  const onChange = vi.fn();
+  const frames = vi.fn();
+  vi.stubGlobal("requestAnimationFrame", frames);
+  act(() =>
+    root.render(
+      <div role="row" data-row-index="0" tabIndex={0}>
+        <StatusPicker source={source} onChange={onChange} />
+      </div>,
+    ),
+  );
+  const row = host.querySelector<HTMLElement>("[data-row-index]")!;
+  const picker = host.querySelector<HTMLButtonElement>('[role="combobox"]')!;
+  act(() => picker.click());
+  const list = host.querySelector<HTMLElement>('[role="listbox"]')!;
+  list.focus();
+  act(() => {
+    list.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  });
+  expect(picker.getAttribute("aria-expanded")).toBe("false");
+  expect(document.activeElement).toBe(row);
+  expect(onChange).not.toHaveBeenCalled();
+  expect(frames).not.toHaveBeenCalled();
 });

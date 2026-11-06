@@ -189,8 +189,14 @@ export function StatusPicker({
       className={`library-status is-${status} is-editable`}
       onKeyDownCapture={(event) => {
         if (event.key === "Escape") {
-          const row = event.currentTarget.closest<HTMLElement>("[data-row-index]");
-          requestAnimationFrame(() => row?.focus({ preventScroll: true }));
+          event.preventDefault();
+          event.stopPropagation();
+          event.currentTarget
+            .querySelector<HTMLButtonElement>('[role="combobox"][aria-expanded="true"]')
+            ?.click();
+          event.currentTarget
+            .closest<HTMLElement>("[data-row-index]")
+            ?.focus({ preventScroll: true });
         }
       }}
     >
