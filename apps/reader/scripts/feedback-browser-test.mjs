@@ -12,18 +12,21 @@ const browser = await chromium.launch();
 const motion = [];
 async function trace(page, action) {
   return page.evaluate(async (action) => {
-    const dialog = document.querySelector(".mdbase-feedback-dialog");
     if (action === "open")
       document.querySelector(".reader-header .mdbase-feedback-trigger").click();
-    else dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+    else
+      document
+        .querySelector(".mdbase-feedback-dialog")
+        .dispatchEvent(new Event("cancel", { cancelable: true }));
     const start = performance.now();
     const samples = [];
     while (performance.now() - start < 300) {
       await new Promise(requestAnimationFrame);
+      const dialog = document.querySelector(".mdbase-feedback-dialog");
       samples.push({
         time: performance.now() - start,
-        visible: dialog.getClientRects().length > 0,
-        opacity: Number(getComputedStyle(dialog).opacity),
+        visible: dialog !== null && dialog.getClientRects().length > 0,
+        opacity: dialog ? Number(getComputedStyle(dialog).opacity) : 0,
         animations: document
           .getAnimations()
           .filter((animation) => animation.effect?.target === dialog)
@@ -76,8 +79,9 @@ try {
             value: {
               getDisplayMedia: () => {
                 window.feedbackCaptures++;
+                const dialog = document.querySelector(".mdbase-feedback-dialog");
                 window.feedbackCaptureVisible =
-                  document.querySelector(".mdbase-feedback-dialog").getClientRects().length > 0;
+                  dialog !== null && dialog.getClientRects().length > 0;
                 return Promise.reject(new DOMException("Cancelled", "NotAllowedError"));
               },
             },
@@ -88,17 +92,20 @@ try {
           .locator(".reader-header")
           .getByRole("button", { name: "Send feedback", exact: true });
         await expect(trigger).toBeVisible();
+        await expect(page.locator(".mdbase-feedback-dialog")).toHaveCount(0);
         const enter = await trace(page, "open");
         assertMotion(enter, 160, reducedMotion);
+        await expect(
+          page.getByRole("dialog", { name: "Send feedback", exact: true }),
+        ).toBeVisible();
         const exit = await trace(page, "close");
         assertMotion(exit, 120, reducedMotion);
         assert.equal(exit.at(-1).visible, false);
+        await expect(page.locator(".mdbase-feedback-dialog")).toHaveCount(0);
         await trigger.click();
-        await page.getByRole("button", { name: "Close feedback", exact: true }).click();
-        await page.evaluate(async () => {
-          await new Promise(requestAnimationFrame);
-          document.querySelector(".reader-header .mdbase-feedback-trigger").click();
-        });
+        await page.getByRole("button", { name: "Close", exact: true }).click();
+        await expect(page.locator(".mdbase-feedback-dialog")).toHaveCount(0);
+        await trigger.click();
         await expect(page.locator(".mdbase-feedback-dialog")).toHaveAttribute("open");
         await page.waitForTimeout(200);
         motion.push({ width, colorScheme, reducedMotion, enter, exit });
