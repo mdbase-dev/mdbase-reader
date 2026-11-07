@@ -1554,7 +1554,7 @@ msgstr "Cambiar atajos de teclado"
 msgid "Change needs attention"
 msgstr "Un cambio requiere atención"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Change reading status"
 msgstr "Cambiar estado de lectura"
 
@@ -2071,7 +2071,7 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "Close"
 msgstr "Cerrar"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgctxt "Reader shortcuts"
 msgid "Close"
 msgstr "Cerrar"
@@ -2735,10 +2735,6 @@ msgstr "Datos de la cita en CSL-JSON"
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "El CSL-JSON contiene errores: corrígelos o descártalo"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Ctrl+/ for shortcuts"
-msgstr "Ctrl+/ para los atajos"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Curator"
@@ -3002,6 +2998,7 @@ msgstr "Resaltados de Readwise descartados omitidos (se conservan en el archivo 
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
+msgctxt "Reader interface"
 msgid "Dismiss"
 msgstr "Cerrar"
 
@@ -3542,7 +3539,6 @@ msgid "Error loading document"
 msgstr "Error al cargar el documento"
 
 #: apps/extension/src/CaptureApp.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
 msgctxt "Reader interface"
 msgid "Esc"
 msgstr "Esc"
@@ -4650,7 +4646,7 @@ msgstr "Idea clave"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Keyboard shortcuts"
 msgstr "Atajos de teclado"
 
@@ -4706,7 +4702,7 @@ msgid "Legislation"
 msgstr "Legislación"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Library"
 msgstr "Biblioteca"
 
@@ -5406,11 +5402,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "Artículo de periódico"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Next / previous source"
 msgstr "Fuente siguiente / anterior"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "Página siguiente"
@@ -5656,11 +5652,6 @@ msgstr "Las notas se convierten en anotaciones independientes a nivel de fuente,
 msgid "Notes follow the active pane"
 msgstr "Las notas siguen al panel activo"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Nothing matches"
-msgstr "No hay coincidencias"
-
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
 msgstr "No hay nada que guardar aquí"
@@ -5876,7 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "Abrir inicio de sesión"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "Abrir fuente"
@@ -6464,7 +6455,7 @@ msgstr "Vista previa en "
 msgid "Preview the chapter citation with the book’s details"
 msgstr "Previsualiza la cita del capítulo con los datos del libro"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "Página anterior"
@@ -6926,7 +6917,7 @@ msgstr "Espacio de trabajo de Reader"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "El acceso de Reader a esta colección ha cambiado. Revisa el acceso actualizado para continuar."
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Reading"
 msgstr "Lectura"
 
@@ -7208,7 +7199,7 @@ msgid "Remove source"
 msgstr "Quitar fuente"
 
 #: apps/reader/src/LibraryRowMenu.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Remove source…"
 msgstr "Quitar fuente…"
 
@@ -7226,7 +7217,7 @@ msgstr "Eliminado"
 msgid "Removed “{0}”."
 msgstr "Se ha eliminado «{0}»."
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Rename source"
 msgstr "Renombrar fuente"
 
@@ -7321,11 +7312,6 @@ msgstr "Se restauraron tus cambios anteriores sin guardar."
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
 msgstr "Se restauró tu nota sin guardar de antes."
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Results"
-msgstr "Resultados"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Results open at the matching passage. If it cannot be found, use Find in the document."
@@ -7829,7 +7815,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "Buscar fuentes y ejecutar comandos · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Search this view"
 msgstr "Buscar en esta vista"
 
@@ -7917,7 +7903,7 @@ msgstr "Seleccionar área"
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "Selecciona una carpeta de paquete completa con rutas de archivo únicas."
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Select source"
 msgstr "Seleccionar fuente"
 
@@ -8400,7 +8386,7 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "Inicio"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Start of document"
 msgstr "Inicio del documento"
 
@@ -9351,24 +9337,9 @@ msgstr "Título, autor o etiqueta"
 msgid "Title, work type, and citation key"
 msgstr "Título, tipo de obra y clave de cita"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to close"
-msgstr "para cerrar"
-
 #: apps/reader/src/highlight-colors.ts
 msgid "To follow up"
 msgstr "Para seguir adelante"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to move"
-msgstr "para moverse"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to open"
-msgstr "para abrir"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."

@@ -164,6 +164,20 @@ try {
         await page.keyboard.press("Control+k");
         await page
           .getByRole("combobox", { name: "Search sources and commands", exact: true })
+          .evaluate((input) => {
+            input.dispatchEvent(
+              new globalThis.KeyboardEvent("keydown", {
+                key: "Enter",
+                isComposing: true,
+                bubbles: true,
+              }),
+            );
+          });
+        await expect(
+          page.getByRole("combobox", { name: "Search sources and commands", exact: true }),
+        ).toBeVisible();
+        await page
+          .getByRole("combobox", { name: "Search sources and commands", exact: true })
           .fill("status");
         await expect(
           page.getByRole("option").filter({ hasText: "Set status: Queued" }),
@@ -197,7 +211,7 @@ try {
           .getByRole("combobox", { name: "Search sources and commands", exact: true })
           .fill("Keyboard shortcuts");
         await page.keyboard.press("Enter");
-        const dialog = page.locator(".mdbase-command-palette");
+        const dialog = page.locator(".reader-shortcut-dialog");
         await expect(
           page.getByRole("heading", { name: "Keyboard shortcuts", exact: true }),
         ).toBeFocused();

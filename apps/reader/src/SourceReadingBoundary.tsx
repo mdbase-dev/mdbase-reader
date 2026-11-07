@@ -344,8 +344,8 @@ function ChapterReadingHint({
             <button
               type="button"
               className="source-reading-hint-dismiss"
-              aria-label={translate({ message: "Dismiss" })}
-              title={translate({ message: "Dismiss" })}
+              aria-label={translate({ message: "Dismiss", context: "Reader interface" })}
+              title={translate({ message: "Dismiss", context: "Reader interface" })}
               onClick={dismiss}
             >
               <CloseIcon />

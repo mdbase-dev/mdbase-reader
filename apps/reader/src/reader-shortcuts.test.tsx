@@ -134,6 +134,24 @@ it("does not move panes behind a modal", () => {
   expect(actions.focusNextPane).not.toHaveBeenCalled();
 });
 
+it.each([false, true])(
+  "uses native dialog open state while a shared modal is retained (open=%s)",
+  (open) => {
+    const dialog = document.createElement("dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.open = open;
+    host.append(dialog);
+    press(document.body, "F6");
+    act(() => {
+      document.body.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }),
+      );
+    });
+    expect(actions.focusNextPane).toHaveBeenCalledTimes(open ? 0 : 1);
+    expect(actions.openCommands).toHaveBeenCalledTimes(open ? 0 : 1);
+  },
+);
+
 it("preserves Enter on a library toolbar button", () => {
   const button = host.querySelector<HTMLElement>("[data-toolbar]")!;
   expect(press(button, "Enter").defaultPrevented).toBe(false);

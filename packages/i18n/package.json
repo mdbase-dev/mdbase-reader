@@ -15,8 +15,8 @@
   "dependencies": {
     "@lingui/core": "6.10.1",
     "@lingui/react": "6.10.1",
-    "@mdbase-dev/ui": "0.1.0-beta.149",
-    "@mdbase-dev/i18n": "0.1.0-beta.149",
+    "@mdbase-dev/ui": "0.1.0-beta.158",
+    "@mdbase-dev/i18n": "0.1.0-beta.158",
     "react": "^19.3.1"
   },
   "devDependencies": {

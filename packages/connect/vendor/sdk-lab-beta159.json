@@ -1,0 +1,61 @@
+{
+  "schema": "mdbase-reader/sdk-original/1",
+  "package": "@mdbase-dev/sdk-lab",
+  "artifact": "sdk-e6cfff7c-lab-beta159.tgz",
+  "version": "0.1.0-beta.159",
+  "sourceCommit": "e6cfff7cf453559aaf07781ba7991bcdc6cfcb70",
+  "environment": "lab",
+  "bytes": 4540900,
+  "sha256": "857a94b6fa2cec0c37488f504fa99dc68534795c7ff0c659923022af33375e38",
+  "sri": "sha512-OvdbOIYpgxl2NxxjFV0A7rutVnKvaQCAxl3P28JHRaWpczC2I9XqnZ9Cq3MGnPNGWvnnQ50xerSxWBeyQqkkEA==",
+  "publication": {
+    "release": "sdk-v0.1.0-beta.159",
+    "asset": "sdk-lab.tgz",
+    "repository": "mdbase-dev/mdbase-connect",
+    "workflow": ".github/workflows/publish-sdk-npm.yml",
+    "ref": "refs/heads/main",
+    "signatureVerified": true,
+    "certificateIdentity": "https://github.com/mdbase-dev/mdbase-connect/.github/workflows/publish-sdk-npm.yml@refs/heads/main"
+  },
+  "trust": {
+    "package": "@mdbase-dev/sdk-lab",
+    "sha256": "88fe5249be83d7db9999d88d4f62acaca79e8bdcabe2c9f236e2942014de3334",
+    "bytes": 876,
+    "cpOrigin": "https://connect-lab.mdbase.dev",
+    "logOrigin": "https://mdbase-next-log-lab-20261005.callumalpass.workers.dev",
+    "sourceCommit": "8a014fe2abd2d9c6a8b1ed3e77c35cfda3392d3e",
+    "sourceVersion": "0.1.0-beta.129"
+  },
+  "runtime": {
+    "sha256": "c30e2e23c1fbc6642936996b8495133ce66e87caaf49a99050fc38f8a7422667",
+    "bytes": 3803805,
+    "maxBytes": 3803805,
+    "source": {
+      "repository": "mdbase-dev/mdbase-connect",
+      "commit": "81462447473808e040d3b31d15ede54e987ffa1e"
+    }
+  },
+  "provenance": {
+    "schema": "mdbase-sdk/npm-publication/1",
+    "commit": "e6cfff7cf453559aaf07781ba7991bcdc6cfcb70",
+    "environment": "lab",
+    "trust": {
+      "package": "@mdbase-dev/sdk-lab",
+      "sha256": "88fe5249be83d7db9999d88d4f62acaca79e8bdcabe2c9f236e2942014de3334",
+      "bytes": 876,
+      "cpOrigin": "https://connect-lab.mdbase.dev",
+      "logOrigin": "https://mdbase-next-log-lab-20261005.callumalpass.workers.dev",
+      "sourceCommit": "8a014fe2abd2d9c6a8b1ed3e77c35cfda3392d3e",
+      "sourceVersion": "0.1.0-beta.129"
+    },
+    "runtime": {
+      "sha256": "c30e2e23c1fbc6642936996b8495133ce66e87caaf49a99050fc38f8a7422667",
+      "bytes": 3803805,
+      "maxBytes": 3803805,
+      "source": {
+        "repository": "mdbase-dev/mdbase-connect",
+        "commit": "81462447473808e040d3b31d15ede54e987ffa1e"
+      }
+    }
+  }
+}

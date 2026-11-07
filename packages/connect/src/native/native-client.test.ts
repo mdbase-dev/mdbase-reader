@@ -76,8 +76,15 @@ describe("native Reader validation failures", () => {
 });
 
 describe("native Reader page completeness", () => {
-  it("keeps more than one hundred source annotations across native pages", async () => {
-    const { replica, client } = await native();
+  it.each([false, true])("keeps 144 annotations across pages with partial=%s", async (partial) => {
+    const { replica, client, sdk } = await native();
+    const query = sdk.query.bind(sdk);
+    if (partial) {
+      vi.spyOn(sdk, "query").mockImplementation(async (...args) => {
+        const page = await query(...args);
+        return { ...page, complete: !page.cursor };
+      });
+    }
     for (let index = 0; index < 144; index += 1) {
       replica.seed({
         path: `annotations/${String(index)}.md`,
@@ -104,6 +111,7 @@ describe("native Reader page completeness", () => {
         const page = await sdk.query({ types: ["reader-annotation"] });
         yield {
           ...page,
+          complete: false,
           records: Array.from(
             { length: 100 },
             () => ({ path: "annotations/a.md" }) as (typeof page.records)[number],
@@ -128,6 +136,26 @@ describe("native Reader page completeness", () => {
       });
     },
   );
+
+  it("accepts a complete final page of exactly one hundred annotations", async () => {
+    const { replica, client } = await native();
+    for (let index = 0; index < 100; index += 1) {
+      replica.seed({
+        path: `annotations/${String(index)}.md`,
+        types: ["reader-annotation"],
+        frontmatter: { id: `annotation-${String(index)}`, source: "book" },
+      });
+    }
+    const pages = [];
+    for await (const result of client.queryPages(
+      { types: ["reader-annotation"] },
+      { pageSize: 100 },
+    )) {
+      pages.push(outcomeValue(result, "list source annotations"));
+    }
+    expect(pages).toHaveLength(1);
+    expect(pages[0]).toMatchObject({ loaded: 100, complete: true });
+  });
 
   it("accepts a saturated exact-path window because a file path is unique", async () => {
     const { replica, client, sdk } = await native();

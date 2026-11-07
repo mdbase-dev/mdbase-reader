@@ -74,7 +74,10 @@ export function useReaderShortcuts(actions: ReaderShortcutActions): void {
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent): void => handleReaderShortcut(event, actions);
     const focusPane = (event: KeyboardEvent): void => {
-      if (event.key === "F6" && !document.querySelector('dialog[open], [aria-modal="true"]')) {
+      if (
+        event.key === "F6" &&
+        !document.querySelector('dialog[open], [aria-modal="true"]:not(dialog)')
+      ) {
         event.preventDefault();
         event.stopPropagation();
         actions.focusNextPane();
@@ -90,7 +93,10 @@ export function useReaderShortcuts(actions: ReaderShortcutActions): void {
 }
 
 function handleReaderShortcut(event: KeyboardEvent, actions: ReaderShortcutActions): void {
-  if (event.defaultPrevented || document.querySelector('dialog[open], [aria-modal="true"]')) {
+  if (
+    event.defaultPrevented ||
+    document.querySelector('dialog[open], [aria-modal="true"]:not(dialog)')
+  ) {
     return;
   }
   if (handleCommandShortcut(event, actions) || handleTabShortcut(event, actions)) {

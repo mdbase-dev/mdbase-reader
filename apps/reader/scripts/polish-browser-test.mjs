@@ -269,7 +269,9 @@ try {
           result.addSource = await addSourceTiming(page);
           result.removalContrast = await removeContrast(page, audit);
           result.enter = await trace(page, "open");
-          assert.ok((await page.locator(".mdbase-command-palette").boundingBox()).height <= 480);
+          const paletteBounds = await page.locator(".mdbase-command-palette").boundingBox();
+          assert.ok(paletteBounds.y >= 0);
+          assert.ok(paletteBounds.y + paletteBounds.height <= page.viewportSize().height - 16);
           const input = page.getByRole("combobox", {
             name: "Search sources and commands",
             exact: true,
@@ -286,7 +288,7 @@ try {
           await expect(page.locator(".reader-shortcut-help dl > div").first()).toBeVisible();
           await page.keyboard.press("Tab");
           await expect(page.getByRole("button", { name: "Close", exact: true })).toBeFocused();
-          result.paletteLayout = await page.locator(".mdbase-command-palette").evaluate((panel) => {
+          result.paletteLayout = await page.locator(".reader-shortcut-dialog").evaluate((panel) => {
             const help = panel.querySelector(".reader-shortcut-help").getBoundingClientRect();
             const footer = panel.getBoundingClientRect();
             const active = panel.querySelector(".reader-shortcut-footer button");
@@ -313,7 +315,7 @@ try {
           assert.equal(result.paletteLayout.activeHit, true);
           await audit(page, `${name} palette`);
           await page.screenshot({ path: join(output, `${name}-palette.png`) });
-          result.exit = await trace(page, "close");
+          result.exit = await trace(page, "close", ".reader-shortcut-dialog");
           assert.equal(result.exit.at(-1).present, false);
           if (reducedMotion === "reduce") {
             assert.ok(result.enter.every(({ animations }) => animations.length === 0));
@@ -322,7 +324,7 @@ try {
             assert.ok(
               result.enter.some(({ animations }) =>
                 animations.some(
-                  ({ duration, property }) => duration === 90 && property === "opacity",
+                  ({ duration, property }) => duration === 160 && property === "opacity",
                 ),
               ),
             );
@@ -348,7 +350,11 @@ try {
             await new Promise((resolve) => setTimeout(resolve, 240));
             return {
               same,
-              open: Boolean(globalThis.document.querySelector(".reader-overlay[data-state=open]")),
+              open: Boolean(
+                globalThis.document.querySelector(
+                  '.mdbase-command-palette[open][data-open="true"]',
+                ),
+              ),
             };
           });
           if (reducedMotion !== "reduce") assert.equal(result.interruption.same, true);
