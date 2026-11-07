@@ -69,8 +69,14 @@ it("localizes public palette headings live without changing group, showAll or co
         </ReaderI18nProvider>,
       );
     });
+    const palette = document.querySelector<HTMLDialogElement>("dialog.mdbase-command-palette");
+    if (!palette) {
+      throw new Error("Palette dialog missing");
+    }
+    expect(palette.open).toBe(true);
+    expect(host.contains(palette)).toBe(false);
     const headings = (): readonly (string | null)[] =>
-      [...host.querySelectorAll(".mdbase-command-group")].map((node) => node.textContent);
+      [...palette.querySelectorAll(".mdbase-command-group")].map((node) => node.textContent);
     expect(headings()).toEqual([
       "開いているタブ",
       "現在の資料",
@@ -80,7 +86,7 @@ it("localizes public palette headings live without changing group, showAll or co
       "表示",
     ]);
     // Open tabs bypasses the six-command browse limit using its original English ID.
-    expect(host.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
+    expect(palette.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
     await act(async () => {
       await readerI18n.selectLocale("de");
     });
@@ -92,7 +98,7 @@ it("localizes public palette headings live without changing group, showAll or co
       "Arbeitsfläche",
       "Anzeige",
     ]);
-    expect(host.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
+    expect(palette.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
     await act(async () => {
       await readerI18n.selectLocale("it");
     });
@@ -104,10 +110,10 @@ it("localizes public palette headings live without changing group, showAll or co
       "Spazio di lavoro",
       "Visualizzazione",
     ]);
-    expect(host.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
+    expect(palette.querySelectorAll('[role="option"]')).toHaveLength(8 + 5 * 6);
     expect(commands.map(({ id, group }) => ({ id, group }))).toEqual(identities);
     expect(readerCommandGroupLabel("Unknown group")).toBe("Unknown group");
-    const input = host.querySelector("input");
+    const input = palette.querySelector("input");
     if (!input) {
       throw new Error("Palette input missing");
     }

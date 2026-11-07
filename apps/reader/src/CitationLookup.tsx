@@ -163,7 +163,7 @@ function CitationSuggestions({
                   aria-label={translate`Dismiss ${cslFieldLabel(suggestion.field)}`}
                   onClick={() => review(index, () => editor.dismissSuggestion(suggestion.field))}
                 >
-                  <Trans>Dismiss</Trans>
+                  <Trans context="Reader interface">Dismiss</Trans>
                 </button>
               </div>
             </div>

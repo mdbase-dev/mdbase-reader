@@ -1,5 +1,6 @@
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
+import { CommandPalette } from "@mdbase-dev/ui/command-palette";
 import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
@@ -17,8 +18,8 @@ import { mobileSourceBar } from "./mobile-source-bar.js";
 import { OverlayPresence } from "./OverlayPresence.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
-import { ReaderCommandPalette as CommandPalette } from "./ReaderCommandPalette.js";
 import { ReaderHeader } from "./ReaderHeader.js";
+import { ReaderShortcuts } from "./ReaderShortcuts.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
 import { SearchPassageStatus } from "./SearchPassageStatus.js";
@@ -445,9 +446,14 @@ export function ReaderWorkspaceView({
         placeholder={t({ message: "Search sources and commands" })}
         showAll={paletteShowsAll}
         groupLabel={readerCommandGroupLabel}
-        open={Boolean(model.commandsOpen)}
-        shortcuts={model.commandsOpen === "shortcuts"}
+        open={model.commandsOpen === true}
         commands={commands}
+        onClose={() => model.setCommandsOpen(false)}
+      />
+      <ReaderShortcuts
+        open={model.commandsOpen === "shortcuts"}
+        commands={commands}
+        groupLabel={readerCommandGroupLabel}
         onClose={() => model.setCommandsOpen(false)}
       />
     </div>

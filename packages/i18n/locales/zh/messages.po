@@ -1554,7 +1554,7 @@ msgstr "更改键盘快捷键"
 msgid "Change needs attention"
 msgstr "更改需要处理"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Change reading status"
 msgstr "更改阅读状态"
 
@@ -2071,7 +2071,7 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "Close"
 msgstr "关闭"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgctxt "Reader shortcuts"
 msgid "Close"
 msgstr "关闭"
@@ -2735,10 +2735,6 @@ msgstr "CSL-JSON 引文详情"
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "CSL-JSON 有错误——请修复或放弃"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Ctrl+/ for shortcuts"
-msgstr "按Ctrl+/查看快捷键"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Curator"
@@ -3002,6 +2998,7 @@ msgstr "已跳过已放弃的 Readwise 高亮（保留在原生存档中）"
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
+msgctxt "Reader interface"
 msgid "Dismiss"
 msgstr "忽略"
 
@@ -3542,7 +3539,6 @@ msgid "Error loading document"
 msgstr "加载文档时出错"
 
 #: apps/extension/src/CaptureApp.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
 msgctxt "Reader interface"
 msgid "Esc"
 msgstr "Esc"
@@ -4650,7 +4646,7 @@ msgstr "核心观点"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Keyboard shortcuts"
 msgstr "键盘快捷键"
 
@@ -4706,7 +4702,7 @@ msgid "Legislation"
 msgstr "法规"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Library"
 msgstr "文献库"
 
@@ -5406,11 +5402,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "报纸文章"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Next / previous source"
 msgstr "下一个 / 上一个资料"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "下一页"
@@ -5656,11 +5652,6 @@ msgstr "笔记会成为独立的来源级注释，而不是来源正文的替代
 msgid "Notes follow the active pane"
 msgstr "笔记跟随当前窗格"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Nothing matches"
-msgstr "没有匹配项"
-
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
 msgstr "这里没有可保存的内容"
@@ -5876,7 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "打开登录页面"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "打开来源"
@@ -6464,7 +6455,7 @@ msgstr "以"
 msgid "Preview the chapter citation with the book’s details"
 msgstr "使用书籍详情预览章节引文"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "上一页"
@@ -6926,7 +6917,7 @@ msgstr "Reader 工作区"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "Reader 对此集合的访问权限已更改。请审阅更新后的访问权限以继续。"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Reading"
 msgstr "阅读"
 
@@ -7208,7 +7199,7 @@ msgid "Remove source"
 msgstr "移除来源"
 
 #: apps/reader/src/LibraryRowMenu.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Remove source…"
 msgstr "移除来源…"
 
@@ -7226,7 +7217,7 @@ msgstr "已移除"
 msgid "Removed “{0}”."
 msgstr "已移除“{0}”。"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Rename source"
 msgstr "重命名资料"
 
@@ -7321,11 +7312,6 @@ msgstr "已恢复你之前未保存的更改。"
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
 msgstr "已恢复你之前未保存的笔记。"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Results"
-msgstr "搜索结果"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Results open at the matching passage. If it cannot be found, use Find in the document."
@@ -7829,7 +7815,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "搜索来源并运行命令 · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Search this view"
 msgstr "在此视图中搜索"
 
@@ -7917,7 +7903,7 @@ msgstr "选择区域"
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "请选择一个完整的数据包文件夹，且文件路径不得重复。"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Select source"
 msgstr "选择资料"
 
@@ -8400,7 +8386,7 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "开始"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Start of document"
 msgstr "文档开头"
 
@@ -9351,24 +9337,9 @@ msgstr "标题、作者或标签"
 msgid "Title, work type, and citation key"
 msgstr "标题、作品类型和引文键"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to close"
-msgstr "关闭"
-
 #: apps/reader/src/highlight-colors.ts
 msgid "To follow up"
 msgstr "待跟进"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to move"
-msgstr "移动"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to open"
-msgstr "打开"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."

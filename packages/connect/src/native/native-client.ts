@@ -675,20 +675,14 @@ class NativeRecords implements NativeReaderClient {
     signal: AbortSignal,
   ): AsyncGenerator<NativeQueryResult> {
     const { query, include } = nativeQuery({ ...input, limit: pageSize });
-    const uniquePath = /^file\.path == "(?:[^"\\]|\\.)*"$/u.test(input.where ?? "");
     let loaded = 0;
     for await (const page of this.client.pages(query, include, signal)) {
       this.#check(signal);
       loaded += page.records.length;
       if (
-        !page.complete ||
+        (!page.complete && !page.cursor) ||
         (!page.cursor &&
-          (page.hasMore === true ||
-            (page.totalCount !== undefined && page.totalCount > loaded) ||
-            (!uniquePath &&
-              page.hasMore === undefined &&
-              page.totalCount === undefined &&
-              page.records.length >= pageSize)))
+          (page.hasMore === true || (page.totalCount !== undefined && page.totalCount > loaded)))
       ) {
         throw new MdbaseError({
           code: "unavailable",
