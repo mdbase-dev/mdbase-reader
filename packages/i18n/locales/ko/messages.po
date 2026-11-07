@@ -1554,7 +1554,7 @@ msgstr "키보드 단축키 변경"
 msgid "Change needs attention"
 msgstr "확인이 필요한 변경 사항"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Change reading status"
 msgstr "읽기 상태 변경"
 
@@ -2071,7 +2071,7 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "Close"
 msgstr "닫기"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgctxt "Reader shortcuts"
 msgid "Close"
 msgstr "닫기"
@@ -2735,10 +2735,6 @@ msgstr "CSL-JSON 인용 정보"
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "CSL-JSON에 오류가 있습니다 — 수정하거나 버리세요"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Ctrl+/ for shortcuts"
-msgstr "Ctrl+/로 단축키 표시"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Curator"
@@ -3002,6 +2998,7 @@ msgstr "폐기된 Readwise 하이라이트를 건너뜀(기본 아카이브에 �
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
+msgctxt "Reader interface"
 msgid "Dismiss"
 msgstr "닫기"
 
@@ -3542,7 +3539,6 @@ msgid "Error loading document"
 msgstr "문서를 불러오는 중 오류가 발생했습니다"
 
 #: apps/extension/src/CaptureApp.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
 msgctxt "Reader interface"
 msgid "Esc"
 msgstr "Esc"
@@ -4650,7 +4646,7 @@ msgstr "핵심 내용"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Keyboard shortcuts"
 msgstr "키보드 단축키"
 
@@ -4706,7 +4702,7 @@ msgid "Legislation"
 msgstr "법령"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Library"
 msgstr "라이브러리"
 
@@ -5406,11 +5402,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "신문 기사"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Next / previous source"
 msgstr "다음 / 이전 자료"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "다음 페이지"
@@ -5656,11 +5652,6 @@ msgstr "노트는 출처 본문을 대체하지 않고 독립적인 출처 수�
 msgid "Notes follow the active pane"
 msgstr "노트가 활성 창을 따라갑니다"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Nothing matches"
-msgstr "일치하는 항목 없음"
-
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
 msgstr "여기에는 저장할 내용이 없습니다"
@@ -5876,7 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "로그인 열기"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "출처 열기"
@@ -6464,7 +6455,7 @@ msgstr "미리보기 형식 "
 msgid "Preview the chapter citation with the book’s details"
 msgstr "책의 정보로 장 인용 미리보기"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "이전 페이지"
@@ -6926,7 +6917,7 @@ msgstr "Reader 작업 공간"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "이 컬렉션에 대한 Reader의 접근 권한이 변경되었습니다. 계속하려면 변경된 접근 권한을 검토해 주세요."
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Reading"
 msgstr "읽기"
 
@@ -7208,7 +7199,7 @@ msgid "Remove source"
 msgstr "자료 제거"
 
 #: apps/reader/src/LibraryRowMenu.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Remove source…"
 msgstr "자료 제거…"
 
@@ -7226,7 +7217,7 @@ msgstr "제거됨"
 msgid "Removed “{0}”."
 msgstr "“{0}”을(를) 삭제했습니다."
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Rename source"
 msgstr "자료 이름 바꾸기"
 
@@ -7321,11 +7312,6 @@ msgstr "이전의 저장되지 않은 변경 사항을 복원했습니다."
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
 msgstr "이전에 저장하지 않은 노트를 복원했습니다."
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Results"
-msgstr "검색 결과"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Results open at the matching passage. If it cannot be found, use Find in the document."
@@ -7829,7 +7815,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "소스 검색 및 명령 실행 · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Search this view"
 msgstr "이 보기에서 검색"
 
@@ -7917,7 +7903,7 @@ msgstr "영역 선택"
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "파일 경로가 중복되지 않는 완전한 번들 폴더 하나를 선택하세요."
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Select source"
 msgstr "자료 선택"
 
@@ -8400,7 +8386,7 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "시작"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Start of document"
 msgstr "문서 시작"
 
@@ -9351,24 +9337,9 @@ msgstr "제목, 저자 또는 태그"
 msgid "Title, work type, and citation key"
 msgstr "제목, 저작 유형, 인용 키"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to close"
-msgstr "닫기"
-
 #: apps/reader/src/highlight-colors.ts
 msgid "To follow up"
 msgstr "나중에 확인"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to move"
-msgstr "이동"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to open"
-msgstr "열기"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."

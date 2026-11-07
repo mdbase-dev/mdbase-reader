@@ -26,7 +26,7 @@ export async function keyboardLibrary(page) {
     page.getByRole("heading", { name: "Keyboard shortcuts", exact: true }),
   ).toBeVisible();
   assert.ok(
-    (await page.locator(".mdbase-command-palette kbd").allTextContents()).every(
+    (await page.locator(".reader-shortcut-dialog kbd").allTextContents()).every(
       (label) => !/mod\+|Arrow(?:Left|Right)|ctrl\+/u.test(label),
     ),
   );

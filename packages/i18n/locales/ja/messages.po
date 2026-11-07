@@ -1554,7 +1554,7 @@ msgstr "キーボードショートカットを変更"
 msgid "Change needs attention"
 msgstr "確認が必要な変更があります"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Change reading status"
 msgstr "読書状況を変更"
 
@@ -2071,7 +2071,7 @@ msgctxt "PDF viewer passwordPrompt"
 msgid "Close"
 msgstr "閉じる"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgctxt "Reader shortcuts"
 msgid "Close"
 msgstr "閉じる"
@@ -2735,10 +2735,6 @@ msgstr "CSL-JSONの引用詳細"
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "CSL-JSONにエラーがあります — 修正するか破棄してください"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgid "Ctrl+/ for shortcuts"
-msgstr "Ctrl+/でショートカットを表示"
-
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Curator"
@@ -3002,6 +2998,7 @@ msgstr "破棄済みのReadwiseハイライトをスキップ（元のアーカ�
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
+msgctxt "Reader interface"
 msgid "Dismiss"
 msgstr "閉じる"
 
@@ -3542,7 +3539,6 @@ msgid "Error loading document"
 msgstr "文書の読み込みエラー"
 
 #: apps/extension/src/CaptureApp.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
 msgctxt "Reader interface"
 msgid "Esc"
 msgstr "Esc"
@@ -4650,7 +4646,7 @@ msgstr "重要な考え"
 
 #: apps/extension/src/OptionsApp.tsx
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Keyboard shortcuts"
 msgstr "キーボードショートカット"
 
@@ -4706,7 +4702,7 @@ msgid "Legislation"
 msgstr "法令"
 
 #: apps/reader/src/reader-command-list.ts
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Library"
 msgstr "ライブラリ"
 
@@ -5406,11 +5402,11 @@ msgctxt "CSL item type"
 msgid "Newspaper article"
 msgstr "新聞記事"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Next / previous source"
 msgstr "次の資料 / 前の資料"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Next page"
 msgstr "次のページ"
@@ -5656,11 +5652,6 @@ msgstr "ノートは元の資料本文を置き換えるのではなく、資料
 msgid "Notes follow the active pane"
 msgstr "ノートはアクティブなペインに追従します"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Nothing matches"
-msgstr "一致する項目はありません"
-
 #: apps/extension/src/CaptureApp.tsx
 msgid "Nothing to save here"
 msgstr "ここには保存するものがありません"
@@ -5876,7 +5867,7 @@ msgctxt "Native sign-in"
 msgid "Open sign-in"
 msgstr "サインインを開く"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Open source"
 msgstr "資料を開く"
@@ -6464,7 +6455,7 @@ msgstr "プレビュー形式 "
 msgid "Preview the chapter citation with the book’s details"
 msgstr "本の詳細を使って章の引用をプレビュー"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 #: packages/renderer-epub/src/epub-page-navigation.tsx
 msgid "Previous page"
 msgstr "前のページ"
@@ -6926,7 +6917,7 @@ msgstr "Readerのワークスペース"
 msgid "Reader’s access to this collection has changed. Review the updated access to continue."
 msgstr "このコレクションに対するReaderのアクセス権が変更されました。続行するには更新後のアクセス権を確認してください。"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Reading"
 msgstr "閲覧"
 
@@ -7208,7 +7199,7 @@ msgid "Remove source"
 msgstr "資料を削除"
 
 #: apps/reader/src/LibraryRowMenu.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Remove source…"
 msgstr "資料を削除…"
 
@@ -7226,7 +7217,7 @@ msgstr "削除済み"
 msgid "Removed “{0}”."
 msgstr "「{0}」を削除しました。"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Rename source"
 msgstr "資料名を変更"
 
@@ -7321,11 +7312,6 @@ msgstr "以前の未保存の変更を復元しました。"
 #: apps/extension/src/CaptureApp.tsx
 msgid "Restored your unsaved note from earlier."
 msgstr "以前の未保存のノートを復元しました。"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "Results"
-msgstr "検索結果"
 
 #: apps/reader/src/LibraryTextSearch.tsx
 msgid "Results open at the matching passage. If it cannot be found, use Find in the document."
@@ -7829,7 +7815,7 @@ msgid "Search sources and run commands · {0}"
 msgstr "資料を検索してコマンドを実行 · {0}"
 
 #: apps/reader/src/LibraryWorkspace.tsx
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Search this view"
 msgstr "このビューを検索"
 
@@ -7917,7 +7903,7 @@ msgstr "領域を選択"
 msgid "Select one complete bundle folder with unique file paths."
 msgstr "ファイルパスが重複していない、完全なバンドルフォルダーを1つ選択してください。"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Select source"
 msgstr "資料を選択"
 
@@ -8400,7 +8386,7 @@ msgctxt "CitationTypedFieldEditors interface"
 msgid "Start"
 msgstr "開始"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
+#: apps/reader/src/ReaderShortcuts.tsx
 msgid "Start of document"
 msgstr "文書の先頭"
 
@@ -9351,24 +9337,9 @@ msgstr "タイトル、著者、またはタグ"
 msgid "Title, work type, and citation key"
 msgstr "タイトル、作品の種類、引用キー"
 
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to close"
-msgstr "閉じる"
-
 #: apps/reader/src/highlight-colors.ts
 msgid "To follow up"
 msgstr "後で対応"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to move"
-msgstr "移動"
-
-#: apps/reader/src/ReaderCommandPalette.tsx
-msgctxt "Reader commands"
-msgid "to open"
-msgstr "開く"
 
 #: apps/extension/src/WelcomeApp.tsx
 msgid "To save a selection straight away, right-click it and choose Save highlight, or press <0>{highlight}</0>."

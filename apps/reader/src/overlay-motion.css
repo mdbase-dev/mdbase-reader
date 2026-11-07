@@ -27,7 +27,7 @@ dialog.mdbase-feedback-dialog,
   transform: none;
   transition-duration: 160ms;
 }
-.reader-overlay > .mdbase-command-palette {
+.reader-overlay > .reader-shortcut-dialog {
   position: fixed;
   margin: min(14vh, 120px) auto auto;
   padding: 0;
@@ -41,25 +41,12 @@ dialog.mdbase-feedback-dialog,
     display 120ms allow-discrete,
     overlay 120ms allow-discrete;
 }
-.reader-overlay > .mdbase-command-palette:not([open]) {
+.reader-overlay > .reader-shortcut-dialog:not([open]) {
   display: none;
-}
-.reader-overlay .mdbase-command-search {
-  grid-template-columns: minmax(0, 1fr);
-}
-.reader-overlay :is(.mdbase-command-search, .reader-shortcut-help, .mdbase-command-footer) {
-  flex: none;
 }
 .reader-overlay .reader-shortcut-help {
   flex: 1 1 auto;
   min-height: 0;
-}
-.reader-overlay .mdbase-command-results {
-  flex: 1 1 auto;
-}
-.reader-overlay .mdbase-command-footer {
-  display: flex;
-  flex-wrap: wrap;
 }
 .reader-shortcut-help {
   overflow: auto;
@@ -96,16 +83,6 @@ dialog.mdbase-feedback-dialog,
 }
 .reader-shortcut-help p {
   margin-top: 4px;
-}
-.reader-overlay
-  .mdbase-command-results
-  [role="option"]:is([aria-selected="true"], :hover, :focus-visible)
-  :is(small, kbd),
-.reader-overlay
-  .mdbase-command-results
-  [role="option"]:is([aria-selected="true"], :hover, :focus-visible)
-  .mdbase-command-alternate {
-  color: var(--ink);
 }
 .reader-overlay > dialog::backdrop,
 dialog.mdbase-feedback-dialog::backdrop {
@@ -146,12 +123,12 @@ dialog.mdbase-feedback-dialog:not([open])::backdrop {
   dialog.mdbase-feedback-dialog::backdrop {
     opacity: 0;
   }
-  .reader-overlay > .mdbase-command-palette {
+  .reader-overlay > .reader-shortcut-dialog {
     transform: translateY(-6px) scale(0.985);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .reader-overlay > .mdbase-command-palette {
+  .reader-overlay > .reader-shortcut-dialog {
     transition: none;
   }
   .reader-overlay > :is(dialog, .settings-page),
