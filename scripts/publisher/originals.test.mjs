@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdtemp, mkdir, readFile, writeFile, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { it } from "node:test";
 import { loadOriginals, productionPin, protectedHashes, installedMembers } from "./originals.mjs";
 const root = new URL("../../", import.meta.url).pathname;
@@ -10,6 +11,65 @@ const publication = JSON.parse(
   await readFile(join(root, "config/sdk-publication.json"), "utf8"),
 ).sdkPublication;
 const hashes = (target) => ({ READER_TRUST_ASSET_SHA256: publication.environments[target].sha256 });
+// Data-only stage double, never a publishable original. App CD downloads staging
+// from the current producer; the committed local/extension staging alias may lag.
+async function stagingFixture(t, pin) {
+  const scratch = await mkdtemp(join(tmpdir(), "reader-staging-original-"));
+  t.after(() => rm(scratch, { recursive: true, force: true }));
+  const trust = publication.environments.staging;
+  const facts = (bytes) => ({
+    bytes: Buffer.byteLength(bytes),
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+  });
+  const runtime = "test runtime",
+    sqlite = "test sqlite",
+    initializer = "test sqlite initializer";
+  const assetPins = {
+    runtime: facts(runtime),
+    sqlite: { ...facts(sqlite), initializer: facts(initializer) },
+  };
+  const release = {
+    environment: "staging",
+    cpOrigin: trust.cpOrigin,
+    logOrigin: trust.logOrigin,
+    assetSha256: trust.sha256,
+    source: {
+      repository: "mdbase-dev/mdbase-connect",
+      commit: trust.sourceCommit,
+      version: trust.sourceVersion,
+    },
+  };
+  return async ({ version = pin.version, commit = pin.sourceCommit } = {}) => {
+    const members = {
+      "package.json": JSON.stringify({ name: trust.package, version }),
+      "dist/native/provenance.json": JSON.stringify({
+        schema: "mdbase-sdk/npm-publication/1",
+        environment: "staging",
+        commit,
+        trust,
+        runtime: assetPins.runtime,
+      }),
+      "dist/application/packaged-trust.js": `const metadata = ${JSON.stringify(release)};\n`,
+      "dist/application/asset-pins.json": JSON.stringify(assetPins),
+      "dist/native/runtime.wasm": runtime,
+      "dist/native/sqlite3.wasm": sqlite,
+      "dist/native/sqlite3.js": initializer,
+      "dist/offline-shell-worker.js": "// test offline shell\n",
+    };
+    for (const [name, bytes] of Object.entries(members)) {
+      const path = join(scratch, "package", name);
+      await mkdir(dirname(path), { recursive: true });
+      await writeFile(path, bytes);
+    }
+    return execFileSync("tar", [
+      "-czf",
+      "-",
+      "-C",
+      scratch,
+      ...Object.keys(members).map((name) => "package/" + name),
+    ]);
+  };
+}
 it("authenticates the production original, frozen peers and every installed SDK/UI member", async () => {
   const intake = await loadOriginals({
     target: "production",
@@ -31,11 +91,15 @@ it("authenticates the production original, frozen peers and every installed SDK/
     /protected trust hash/,
   );
 });
-it("binds the derived staging original to the authenticated production producer without repacking or retargeting", async () => {
+it("binds staging to the current production producer independently of the committed staging alias", async (t) => {
   const { pin } = await productionPin(root),
-    pkg = JSON.parse(await readFile(join(root, "apps/reader/package.json"), "utf8"));
-  const path = join(root, "apps/reader", pkg.dependencies["@mdbase-dev/sdk-staging"].slice(5)),
-    bytes = await readFile(path);
+    archive = await stagingFixture(t, pin),
+    bytes = await archive();
+  const staged = (bytes) => ({
+    bytes,
+    path: `https://github.com/mdbase-dev/mdbase-connect/releases/download/sdk-v${pin.version}/sdk-staging.tgz`,
+    authentication: { kind: "test-double", source: pin.sourceCommit },
+  });
   const options = {
     target: "staging",
     repoRoot: root,
@@ -47,11 +111,8 @@ it("binds the derived staging original to the authenticated production producer 
     },
     stage: async (p) => {
       assert.equal(p.sourceCommit, pin.sourceCommit);
-      return {
-        bytes,
-        path: `https://github.com/mdbase-dev/mdbase-connect/releases/download/sdk-v${p.version}/sdk-staging.tgz`,
-        authentication: { kind: "test-double", source: p.sourceCommit },
-      };
+      assert.equal(p.version, pin.version);
+      return staged(bytes);
     },
   };
   const intake = await loadOriginals(options);
@@ -65,6 +126,14 @@ it("binds the derived staging original to the authenticated production producer 
     }),
     /staging producer mismatch/,
   );
+  // A matching authentication receipt cannot excuse wrong archive contents.
+  for (const patch of [{ version: "0.0.0-test" }, { commit: "0".repeat(40) }]) {
+    const wrong = await archive(patch);
+    await assert.rejects(loadOriginals({ ...options, stage: async () => staged(wrong) }), {
+      code: "ERR_ASSERTION",
+      actual: Object.values(patch)[0],
+    });
+  }
 });
 it("installed inventory counts missing, changed and extra bytes and rejects symlinks", async () => {
   const scratch = await mkdtemp(join(tmpdir(), "reader-installed-"));
