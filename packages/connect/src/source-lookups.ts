@@ -9,8 +9,8 @@ import {
 import { outcomeValue } from "./repository-client.js";
 import { withResolvedSourceParts } from "./source-part-links.js";
 
+import type { QueryInput, QueryRecord } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
 
 /**
  * Contract views cannot be filtered in the store, but Reader-created records always persist

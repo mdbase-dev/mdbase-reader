@@ -42,9 +42,9 @@ import {
   writeSourcePartOf,
 } from "./source-parts.js";
 
+import type { DeletePreflightResult, QueryRecord } from "./connect-types.js";
 import type { CreateFollowThrough } from "./create-follow-through.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { DeletePreflightResult, QueryRecord } from "@mdbase-dev/connect";
 
 export class ConnectSourceRepository implements SourceRepository {
   readonly #deletePreflights = new Map<string, DeletePreflightResult>();

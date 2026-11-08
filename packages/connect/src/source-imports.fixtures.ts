@@ -5,7 +5,7 @@ import type {
   ConnectOutcome,
   QueryResult,
   RecordDocument,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
 import type { PlannedSourceFileImport } from "@mdbase-reader/core";
 
 export const digest = `sha256:${"a".repeat(64)}` as const;
@@ -103,5 +103,5 @@ export function recordDocument(): RecordDocument {
 }
 
 export function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }

@@ -102,8 +102,9 @@ Reader preserves that server selection through the authorization callback. Loopb
 never used outside explicit localhost development. If the collection has no Reader contracts yet,
 Connect shows the exact type-pack changes and installs them only after approval.
 
-`mdbase-connect-dev validate-manifest … --allow-local` only permits loopback URLs during static
-manifest validation. The desktop application does not expose an `--allow-local` option. To test
+`node apps/reader/scripts/validate-manifest.mjs <mdbase-app.json> --allow-local` only permits
+loopback URLs during static manifest validation; it uses the SDK's canonical validator
+(`@mdbase-dev/sdk/manifest`). The desktop application does not expose an `--allow-local` option. To test
 against the managed service instead, deploy Reader at an HTTPS origin declared by its production
 manifest.
 

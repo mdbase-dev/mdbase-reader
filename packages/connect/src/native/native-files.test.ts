@@ -5,8 +5,8 @@ import { ConnectSourceImportRepository } from "../source-imports.js";
 
 import { nativeReaderFiles, type NativeReaderFileClient } from "./native-files.js";
 
+import type { CollectionFileDescriptor } from "../connect-types.js";
 import type { ReaderConnectClient } from "../repository-client.js";
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
 import type { MdbaseClient, FileView } from "@mdbase-dev/sdk";
 
 function fixture(state = "confirmed"): {

@@ -11,13 +11,13 @@ import {
   readerConnectBulkConcurrency,
 } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   QueryRecord,
   QueryMetadataRecord,
   QueryPage,
   QueryMetadataPage,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
+import type { ReaderConnectClient } from "./repository-client.js";
 import type { AnnotationListOptions, SourceId } from "@mdbase-reader/core";
 
 export async function* annotationSourcePages(

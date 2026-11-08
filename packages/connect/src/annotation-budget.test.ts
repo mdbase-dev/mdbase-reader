@@ -1,4 +1,3 @@
-import { connectProblem } from "@mdbase-dev/connect/advanced";
 import { MdbaseError } from "@mdbase-dev/sdk";
 import { collectionId, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi, type Mock } from "vitest";
@@ -7,11 +6,12 @@ import { annotationPathsForSource } from "./annotation-query.js";
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
 import { annotationSourcePages } from "./annotation-source-pages.js";
 import { withResolvedSource } from "./annotation-source.js";
+import { connectProblem } from "./connect-types.js";
 import { connectProblemFor } from "./native/native-mapping.js";
 import { outcomeValue } from "./repository-client.js";
 
+import type { ConnectOutcome, QueryInput, QueryPage, RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryInput, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
 function fixture(count: number): {
   documents: RecordDocument[];
@@ -46,12 +46,10 @@ function fixture(count: number): {
   const success = <Value>(value: Value): ConnectOutcome<Value> => ({
     ok: true,
     value,
-    diagnostics: [],
   });
   const failure = (): ConnectOutcome<QueryPage> =>
     ({
       ok: false,
-      diagnostics: [],
       problem: {
         ...connectProblem(
           "operation_failed",
@@ -59,7 +57,7 @@ function fixture(count: number): {
         ),
         native: { code: "too_large", reason: "query_budget_exceeded" },
       },
-    }) as ConnectOutcome<QueryPage>;
+    });
   const queryPages = vi.fn(async function* (
     input: QueryInput,
   ): AsyncGenerator<ConnectOutcome<QueryPage>> {
@@ -183,7 +181,6 @@ describe("single-source annotation query compatibility", () => {
     queryPages.mockImplementation(async function* () {
       yield await Promise.resolve({
         ok: true as const,
-        diagnostics: [],
         value: {
           results: [{ ...documents[0]!, values: { reader_source_id: "book" } }],
           complete: false,
@@ -268,7 +265,6 @@ describe("single-source annotation query compatibility", () => {
     queryPages.mockImplementation(async function* () {
       yield await Promise.resolve({
         ok: false as const,
-        diagnostics: [],
         problem: connectProblem("timeout", "query_budget_exceeded"),
       });
     });

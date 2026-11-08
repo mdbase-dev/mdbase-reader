@@ -52,7 +52,6 @@ describe("guarded annotation ownership writes", () => {
     };
     const update = vi.fn().mockResolvedValue({
       ok: true,
-      diagnostics: [],
       value: {
         path: annotation.path,
         revision: "ann-new",

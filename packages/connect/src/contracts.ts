@@ -1,4 +1,4 @@
-import type { DataContractSelector } from "@mdbase-dev/connect";
+import type { DataContractSelector } from "./connect-types.js";
 
 export const sourceContract = {
   id: "dev.mdbase.reader.source",

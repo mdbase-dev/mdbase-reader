@@ -18,8 +18,8 @@ import {
 
 import { isPathTaken } from "./validation-issues.js";
 
+import type { ConnectOutcome, ConnectProblem, RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, ConnectProblem, RecordDocument } from "@mdbase-dev/connect";
 
 export interface AppSettingsSnapshot<Values extends object> {
   /** `loading` until the first read, `failed` when it could not be read: defaults apply. */

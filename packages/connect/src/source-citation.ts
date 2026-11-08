@@ -15,8 +15,8 @@ import {
 import { sourceFromDocument } from "./mapping.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
 
+import type { RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { RecordDocument } from "@mdbase-dev/connect";
 
 const maxCitationSaveAttempts = 3;
 

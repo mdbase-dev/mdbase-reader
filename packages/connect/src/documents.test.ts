@@ -1,11 +1,11 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { collectionId, fileId, fileRevision, type DocumentTarget } from "@mdbase-reader/core";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
+import { connectFailure, connectProblem } from "./connect-types.js";
 import { ConnectDocumentRepository } from "./documents.js";
 
+import type { CollectionFileDescriptor } from "./connect-types.js";
 import type { ReaderFileClient } from "./documents.js";
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
 
 const descriptor: CollectionFileDescriptor = {
   fileId: "file-01",
@@ -31,7 +31,6 @@ function files(items: readonly CollectionFileDescriptor[]): {
     stat: vi.fn<ReaderFileClient["stat"]>((target) =>
       Promise.resolve({
         ok: true,
-        diagnostics: [],
         value:
           items.find((item) =>
             "fileId" in target ? item.fileId === target.fileId : item.path === target.path,

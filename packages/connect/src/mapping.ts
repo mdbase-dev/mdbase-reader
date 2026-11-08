@@ -21,7 +21,7 @@ import {
 import { readingPositionFromFrontmatter } from "./reading-position.js";
 import { partOfFromResult } from "./source-part-links.js";
 
-import type { QueryRecord, RecordDocument } from "@mdbase-dev/connect";
+import type { QueryRecord, RecordDocument } from "./connect-types.js";
 
 export { annotationFromDocument, annotationFrontmatter } from "./annotation-mapping.js";
 

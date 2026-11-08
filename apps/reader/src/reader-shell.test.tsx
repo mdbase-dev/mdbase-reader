@@ -152,7 +152,6 @@ describe("header", () => {
       <ReaderHeader
         collectionName="Reading"
         connectionState={connectionState}
-        directAccess={{ snapshot: null, working: false, problem: null, request: vi.fn() }}
         theme="light"
         onChangeTheme={() => undefined}
         onChangeDensity={() => undefined}

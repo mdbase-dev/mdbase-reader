@@ -1,11 +1,11 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { collectionId, DomainError, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { connectFailure, connectProblem } from "./connect-types.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
+import type { ConnectOutcome, QueryPage, RecordDocument, UpdateInput } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, RecordDocument, UpdateInput } from "@mdbase-dev/connect";
 import type { Mock } from "vitest";
 
 const path = "sources/crime.md";
@@ -18,7 +18,7 @@ const input = {
 };
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 
 function fixture(): {

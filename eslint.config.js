@@ -116,7 +116,7 @@ export default tseslint.config(
                 "react/*",
                 "electron",
                 "@capacitor/*",
-                "@mdbase-dev/connect",
+                "@mdbase-dev/sdk",
                 "@embedpdf/*",
                 "@readium/*",
                 "@codemirror/*",

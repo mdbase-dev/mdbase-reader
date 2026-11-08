@@ -1,5 +1,6 @@
-import { connectSuccess } from "@mdbase-dev/connect/advanced";
 import { isMdbaseError, MdbaseError, uuidv7 } from "@mdbase-dev/sdk";
+
+import { connectSuccess } from "../connect-types.js";
 
 import {
   connectProblemFor,
@@ -20,15 +21,6 @@ import {
 } from "./native-mapping.js";
 
 import type {
-  ReaderConnectClient,
-  ReaderCreatedRecord,
-  ReaderLocalRecord,
-  ReaderCreateOptions,
-  ReaderCreateTracking,
-  ReaderMutationState,
-  ReaderQueryPagesOptions,
-} from "../repository-client.js";
-import type {
   ConnectOutcome,
   CreateInput,
   DeleteInput,
@@ -46,7 +38,16 @@ import type {
   ReadManyResult,
   RecordDocument,
   UpdateInput,
-} from "@mdbase-dev/connect";
+} from "../connect-types.js";
+import type {
+  ReaderConnectClient,
+  ReaderCreatedRecord,
+  ReaderLocalRecord,
+  ReaderCreateOptions,
+  ReaderCreateTracking,
+  ReaderMutationState,
+  ReaderQueryPagesOptions,
+} from "../repository-client.js";
 import type {
   ContractQueryRecord,
   ContractSelector,
@@ -104,16 +105,7 @@ const DEFAULT_PAGE = 200;
 const RECEIPT_WAIT_MS = 3_000;
 const REQUEST_BUDGET_MS = 45_000;
 const fullInclude: Include = { effective: true, body: true, document: true };
-const CONTRACT_REFUSED = [
-  "types",
-  "where",
-  "projections",
-  "select",
-  "orderBy",
-  "groupBy",
-  "summaries",
-  "snapshot",
-] as const;
+const CONTRACT_REFUSED = ["types", "where", "projections", "select", "orderBy"] as const;
 
 export function nativeReaderClient(
   client: MdbaseClient,
@@ -240,7 +232,6 @@ class NativeRecords implements NativeReaderClient {
             ? { status: "found" as const, path, record: queryRecord(record) }
             : { status: "missing" as const, path };
         }),
-        errors: [],
       };
     });
   }

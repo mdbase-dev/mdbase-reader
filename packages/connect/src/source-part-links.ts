@@ -7,8 +7,8 @@ import {
 
 import { outcomeValue } from "./repository-client.js";
 
+import type { QueryInput, QueryRecord } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
 
 const projection = "reader_part_of_ids";
 const partRelations =

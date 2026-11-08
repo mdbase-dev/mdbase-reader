@@ -5,10 +5,9 @@ import { ConnectAnnotationRepository } from "./annotation-repository.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 
-const success = <T>(value: T): { ok: true; value: T; diagnostics: [] } => ({
+const success = <T>(value: T): { ok: true; value: T } => ({
   ok: true as const,
   value,
-  diagnostics: [],
 });
 describe("batch annotation owner filtering", () => {
   it("discovers once for many owners and hydrates only selected owners", async () => {

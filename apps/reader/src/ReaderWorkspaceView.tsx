@@ -48,7 +48,6 @@ import type {
 } from "./source-workspace-layout.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
-import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { DocumentAttachmentController } from "./use-document-attachment.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
@@ -85,7 +84,6 @@ export interface ReaderWorkspaceViewModel {
   readonly onSurfaceChange: (sessionId: string, surface: ReadingSurface | null) => void;
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
   readonly deploymentUpdateAvailable: boolean;
-  readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
   readonly changeTheme: (theme: ThemePreference) => void;
   readonly focusMode: boolean;
@@ -256,7 +254,6 @@ export function ReaderWorkspaceView({
         collectionName={library.collectionName}
         beforeCollectionSwitch={beforeCollectionSwitch}
         connectionState={connectionState}
-        directAccess={model.directAccess}
         theme={model.theme}
         onChangeTheme={model.changeTheme}
         onOpenCommands={() => model.setCommandsOpen(true)}

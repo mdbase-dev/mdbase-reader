@@ -8,7 +8,7 @@ import {
   sourceSummaryFromQuery,
 } from "./mapping.js";
 
-import type { JsonObject, QueryRecord, RecordDocument } from "@mdbase-dev/connect";
+import type { JsonObject, QueryRecord, RecordDocument } from "./connect-types.js";
 
 const sourceFrontmatter: JsonObject = {
   id: "src_01",

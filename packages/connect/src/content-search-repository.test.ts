@@ -3,11 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ConnectContentSearchRepository } from "./content-search-repository.js";
 
+import type { ConnectOutcome, QueryPage, QueryRecord } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, QueryRecord } from "@mdbase-dev/connect";
 
 function success(value: QueryPage): ConnectOutcome<QueryPage> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 
 function page(results: QueryRecord[], index = 0, complete = true): QueryPage {

@@ -3,13 +3,11 @@ import { expect, it, vi } from "vitest";
 
 import { annotationPathsForSource } from "./annotation-query.js";
 
+import type { QueryInput } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput } from "@mdbase-dev/connect";
 
 const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
+  supportsAuthorityFeature: vi.fn(() => Promise.resolve({ ok: true as const, value: false })),
 };
 
 it("asks mdbase which links reach the source, keeps legacy IDs, and follows renames", async () => {
@@ -63,7 +61,7 @@ it("asks mdbase which links reach the source, keeps legacy IDs, and follows rena
       id === undefined
         ? annotations
         : [{ path: sourcePath, effectiveFrontmatter: { id }, file: {}, types: [] }];
-    yield await Promise.resolve({ ok: true, value: { results }, diagnostics: [] });
+    yield await Promise.resolve({ ok: true, value: { results } });
   });
   const client = {
     ...legacyAuthorityFeatures,

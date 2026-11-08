@@ -9,8 +9,8 @@ import {
 
 import { outcomeValue } from "./repository-client.js";
 
+import type { QueryInput, QueryRecord } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
 
 export class ConnectContentSearchRepository implements ContentSearchRepository {
   constructor(private readonly client: ReaderConnectClient) {}

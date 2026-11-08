@@ -1,7 +1,6 @@
 import { ConnectDocumentError, type ReaderFileClient } from "./documents.js";
 import { outcomeValue } from "./repository-client.js";
 
-import type { MdbaseConnection } from "@mdbase-dev/connect";
 import type {
   CollectionFileReadOptions,
   CollectionFileRepository,
@@ -150,10 +149,4 @@ function mediaTypeFromPath(path: string): string {
     return "image/jpeg";
   }
   return "application/octet-stream";
-}
-
-export function connectCollectionFileRepository(
-  connection: MdbaseConnection,
-): ConnectCollectionFileRepository {
-  return new ConnectCollectionFileRepository(connection.files);
 }

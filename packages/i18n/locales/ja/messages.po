@@ -1121,10 +1121,6 @@ msgstr "適用"
 msgid "Apply JSON"
 msgstr "JSONを適用"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Apply Reader collection setup"
-msgstr "Readerのコレクション設定を適用"
-
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve access"
@@ -1740,11 +1736,6 @@ msgstr "上でコレクションを選択してください"
 msgid "Choose a collection before saving."
 msgstr "保存する前にコレクションを選択してください。"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose a collection to import into."
-msgstr "インポート先のコレクションを選択してください。"
-
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
 msgstr "保存先を選択"
@@ -1764,10 +1755,6 @@ msgstr "この本の閲覧順に開始と終了のセクションを選択して
 #: apps/reader/src/ChapterPreview.tsx
 msgid "Choose a valid start and end to preview the chapter’s location."
 msgstr "有効な開始位置と終了位置を選択すると章の位置をプレビューできます。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
-msgstr "既存のコレクションを選択するか、mdbaseの安全な承認ウィンドウで新しいホスト型コレクションを作成してください。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Choose an unused official CSL field."
@@ -2135,7 +2122,6 @@ msgstr "未保存の変更があるまま閉じますか？"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/OptionsApp.tsx
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/SettingsSections.tsx
 msgid "Collection"
 msgstr "コレクション"
@@ -2144,15 +2130,6 @@ msgstr "コレクション"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection"
 msgstr "コレクション"
-
-#: apps/reader/src/ImportDestination.tsx
-msgctxt "ImportDestination interface"
-msgid "Collection"
-msgstr "コレクション"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection authorization failed."
-msgstr "コレクションの認証に失敗しました。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2163,10 +2140,6 @@ msgstr "コレクションの編集者"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection number"
 msgstr "コレクション番号"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection setup failed."
-msgstr "コレクションの設定に失敗しました。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2325,11 +2298,6 @@ msgstr "別のコレクションを接続"
 msgid "Connect another collection…"
 msgstr "別のコレクションを接続…"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgctxt "ReaderHeader interface"
-msgid "Connect directly"
-msgstr "直接接続"
-
 #. placeholder {0}: environment.label || "mdbase"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
@@ -2352,20 +2320,11 @@ msgctxt "CollectionMenu interface"
 msgid "Connected collections"
 msgstr "接続済みコレクション"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Connected directly to this computer"
-msgstr "このコンピューターに直接接続中"
-
 #: apps/extension/src/CollectionSection.tsx
 msgid "Connected. The panel saves here unless you choose another."
 msgstr "接続しました。別の保存先を選ばない限り、このパネルからはここに保存されます。"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Connecting to mdbase…"
-msgstr "mdbaseに接続中…"
-
 #: apps/extension/src/ConnectionPanel.tsx
-#: apps/reader/src/ReaderHeader.tsx
 msgid "Connecting…"
 msgstr "接続中…"
 
@@ -2560,10 +2519,6 @@ msgstr "コレクションを変更できませんでした。再試行してく
 msgid "Could not check this annotation."
 msgstr "この注釈を確認できませんでした。"
 
-#: apps/reader/src/ImportPage.tsx
-msgid "Could not connect to mdbase."
-msgstr "mdbaseに接続できませんでした。"
-
 #: apps/reader/src/source-part-creation.ts
 msgid "Could not create the chapter."
 msgstr "章を作成できませんでした。"
@@ -2591,10 +2546,6 @@ msgstr "この注釈の位置が見つかりませんでした。"
 #: apps/reader/src/annotation-navigation.ts
 msgid "Could not locate this passage. The annotation is safe; the document may have changed."
 msgstr "この箇所の位置が見つかりませんでした。注釈は安全に保存されていますが、文書が変更された可能性があります。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Could not open mdbase approval. Allow popups and try again."
-msgstr "mdbaseの承認画面を開けませんでした。ポップアップを許可して再試行してください。"
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "Could not read export data."
@@ -2668,10 +2619,6 @@ msgstr "章を作成"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Create chapters"
 msgstr "章を作成"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Create or connect a collection…"
-msgstr "コレクションを作成または接続…"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Create the book first:"
@@ -2930,14 +2877,6 @@ msgstr "確認する詳細"
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
 msgstr "寸法"
-
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Direct connection"
-msgstr "直接接続"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Direct local access is not available for this connection."
-msgstr "この接続ではローカルへの直接アクセスは利用できません。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4897,15 +4836,6 @@ msgstr "ローカルの下書き保存領域を利用できないか、読み取
 msgid "Local draft storage is unavailable. Keep this window open until you save."
 msgstr "ローカルの下書き保存領域を利用できません。保存するまでこのウィンドウを開いたままにしてください。"
 
-#: apps/reader/src/ReaderHeader.tsx
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access is blocked. Allow it in your browser’s site settings, then retry."
-msgstr "ローカルネットワークへのアクセスがブロックされています。ブラウザーのサイト設定で許可してから再試行してください。"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access was not granted. Allow it when your browser asks, then retry."
-msgstr "ローカルネットワークへのアクセスが許可されませんでした。ブラウザーから求められた際に許可し、再試行してください。"
-
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Location"
@@ -5043,10 +4973,6 @@ msgstr "mdbaseはまだ準備中です。少し待ってから再試行してく
 #: apps/extension/src/use-connect.ts
 msgid "mdbase is still starting. Try again in a moment."
 msgstr "mdbaseはまだ起動中です。少し待ってから再試行してください。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "mdbase isn’t reachable right now. Check your connection and try again."
-msgstr "現在mdbaseに接続できません。接続を確認して再試行してください。"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/shell-messages.ts
@@ -6768,17 +6694,9 @@ msgstr "Readerは資料のノートを開けませんでした。"
 msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
 msgstr "Readerはmdbase Connectに接続できませんでした。接続を確認して再試行してください。"
 
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
-msgstr "Readerはローカルのmdbaseコネクターに接続できませんでした。中継接続は引き続き有効です。"
-
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not remove this source."
 msgstr "Readerはこの資料を削除できませんでした。"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not request local network access."
-msgstr "Readerはローカルネットワークへのアクセスを要求できませんでした。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not save {key}."
@@ -6884,10 +6802,6 @@ msgstr "Readerは資料レコードごとに書き込み可能なエディター
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
 msgstr "Readerがこのコレクションを使用するには、資料と注釈の定義が必要です。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Reader needs your approval to write to this collection."
-msgstr "このコレクションに書き込むにはReaderへの承認が必要です。"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
@@ -7253,10 +7167,6 @@ msgctxt "CSL item type"
 msgid "Report"
 msgstr "レポート"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr "ローカルネットワークへのアクセスを要求し、このコンピューターのmdbaseリレーに直接接続します。"
-
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
 msgstr "配置をリセット（タブは保持）"
@@ -7358,10 +7268,6 @@ msgstr "ライブラリの索引化を再開"
 msgid "Retry connection"
 msgstr "接続を再試行"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Retry local access"
-msgstr "ローカルアクセスを再試行"
-
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
 msgstr "保存を再試行"
@@ -7392,10 +7298,6 @@ msgstr "書評"
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
 msgstr "引用を確認"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Review collection access"
-msgstr "コレクションへのアクセスを確認"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
@@ -7907,10 +7809,6 @@ msgstr "同時に開くには{0}件以下を選択してください"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Select a chapter to preview it."
 msgstr "章を選択するとプレビューできます。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Select a collection"
-msgstr "コレクションを選択"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
@@ -9148,14 +9046,6 @@ msgstr "このコレクションでは資料の親を設定できません。"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection hasn’t been checked yet. Check it before saving."
 msgstr "このコレクションはまだ確認されていません。保存前に確認してください。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s setup before importing."
-msgstr "インポート前に、このコレクションにはReaderの設定が必要です。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
-msgstr "このコレクションにはReaderの資料と注釈のタイプが必要です。以下で確定するまでライブラリの内容はインポートされません。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection needs you to approve mdbase Reader for it."

@@ -14,9 +14,7 @@ import type { ReaderConnectClient } from "./repository-client.js";
 import type { PlannedSourceAttachment } from "@mdbase-reader/core";
 
 const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
+  supportsAuthorityFeature: vi.fn(() => Promise.resolve({ ok: true as const, value: false })),
 };
 
 describe("sources without documents", () => {

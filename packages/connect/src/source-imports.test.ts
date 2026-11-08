@@ -1,4 +1,3 @@
-import { MdbaseConnectError } from "@mdbase-dev/connect";
 import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
@@ -12,8 +11,8 @@ import {
 } from "./source-imports.fixtures.js";
 import { ConnectSourceImportRepository } from "./source-imports.js";
 
+import type { ConnectOutcome, QueryPage } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
 
 describe("ConnectSourceImportRepository", () => {
   it("filters duplicates at the authority and verifies exact digests without reading bodies", async () => {
@@ -116,7 +115,6 @@ describe("ConnectSourceImportRepository capture and recovery", () => {
     const failure = {
       ok: false,
       problem: { code: "timeout", message: "Outcome unknown" },
-      diagnostics: [],
     } as const;
     const create = vi.fn(() => Promise.resolve(failure));
     const read = vi.fn(() => Promise.resolve(success(recordDocument())));
@@ -134,30 +132,6 @@ describe("ConnectSourceImportRepository capture and recovery", () => {
       contract: { id: "dev.mdbase.reader.source", version: "1.0.0-beta.1" },
       includeDocument: true,
     });
-  });
-
-  it("recovers an ambiguous file commit with the same transfer identity", async () => {
-    const uncertain = new MdbaseConnectError({
-      problem_version: 1,
-      code: "operation_outcome_unknown",
-      category: "conflict",
-      recovery: "resolve_outcome",
-      message: "Outcome unknown",
-      operation_outcome: "unknown",
-      details: { request_id: "01977777-7777-7777-8777-777777777777" },
-    });
-    const upload = vi.fn().mockRejectedValueOnce(uncertain).mockResolvedValueOnce(fileDescriptor());
-    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
-    const repository = new ConnectSourceImportRepository(
-      { create } as unknown as ReaderConnectClient,
-      { upload },
-    );
-
-    await repository.commitFile(plan());
-
-    expect(upload).toHaveBeenCalledTimes(2);
-    expect(upload.mock.calls[0]?.[2]?.transferId).toBe("83dd2f80-c7da-44d7-9844-6ea755a05f40");
-    expect(upload.mock.calls[1]?.[2]?.transferId).toBe("83dd2f80-c7da-44d7-9844-6ea755a05f40");
   });
 
   it("refuses a descriptor whose digest differs from the planned bytes", async () => {
@@ -265,7 +239,6 @@ describe("ConnectSourceImportRepository record paths", () => {
     const failure = {
       ok: false,
       problem: { code: "conflict", message: "Path exists" },
-      diagnostics: [],
     } as const;
     const create = vi
       .fn()

@@ -1,15 +1,15 @@
-import { connectFailure, connectProblem, connectSuccess } from "@mdbase-dev/connect/advanced";
 import { uuidv7 } from "@mdbase-dev/sdk";
 
+import { connectFailure, connectProblem, connectSuccess } from "./connect-types.js";
 import {
   recordPathById,
   type ReaderConnectClient,
   type ReaderCreateReceipt,
   type ReaderCreateTracking,
 } from "./repository-client.js";
-import { isIdExists, isPathTaken, type ReaderConnectProblem } from "./validation-issues.js";
+import { isIdExists, isPathTaken } from "./validation-issues.js";
 
-import type { ConnectOutcome, ReadInput, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, ConnectProblem, ReadInput, RecordDocument } from "./connect-types.js";
 import type {
   CreateJournal,
   PendingCreate,
@@ -416,7 +416,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     }
   }
 
-  async #refused(entry: PendingCreate, problem: ReaderConnectProblem): Promise<void> {
+  async #refused(entry: PendingCreate, problem: ConnectProblem): Promise<void> {
     if (isIdExists(problem)) {
       // This create landed before (the record may have been deleted since): never again.
       await this.#confirmed(entry);
@@ -547,7 +547,7 @@ export class CreateFollowThrough implements ReaderCreateFollowThrough {
     how: Pick<FollowedCreate, "readBack" | "isOurs">,
     options: ReaderRequestOptions,
   ): Promise<Submitted | null> {
-    const problem = created.problem as ReaderConnectProblem;
+    const problem = created.problem;
     if (problem.code === "operation_outcome_unknown") {
       // Possibly captured: never write it again elsewhere until its receipt is known.
       await this.#update(entry, { state: "pending", mutationId: requestId(problem) });
@@ -945,13 +945,13 @@ function relinked(
   return current;
 }
 
-function transient(problem: ReaderConnectProblem): boolean {
+function transient(problem: ConnectProblem): boolean {
   return problem.native
     ? TRANSIENT_NATIVE.has(problem.native.code)
     : TRANSIENT_CONNECT.has(problem.code);
 }
 
-function requestId(problem: ReaderConnectProblem): string | undefined {
+function requestId(problem: ConnectProblem): string | undefined {
   const details = (problem as { readonly details?: unknown }).details;
   const id =
     typeof details === "object" && details !== null

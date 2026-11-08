@@ -3,13 +3,11 @@ import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
 
+import type { ConnectOutcome, QueryInput, QueryPage, RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryInput, QueryPage, RecordDocument } from "@mdbase-dev/connect";
 
 const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
+  supportsAuthorityFeature: vi.fn(() => Promise.resolve({ ok: true as const, value: false })),
 };
 
 const collection = collectionId("reading");
@@ -31,7 +29,7 @@ function document(index: number): RecordDocument {
   };
 }
 function ok<T>(value: T): ConnectOutcome<T> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 function page(documents: RecordDocument[]): ConnectOutcome<QueryPage> {
   return ok({ results: documents, complete: true, page: 1, offset: 0, loaded: documents.length });

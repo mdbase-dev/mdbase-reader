@@ -1,16 +1,4 @@
-import type { ConnectProblem } from "@mdbase-dev/connect";
-import type { Issue } from "@mdbase-dev/sdk";
-
-/** The native SDK's submitted-record diagnostics, retained across the legacy facade. */
-export type ConnectValidationIssue = Readonly<Issue>;
-export type ReaderConnectProblem = ConnectProblem & {
-  readonly issues?: readonly ConnectValidationIssue[];
-  /**
-   * The native SDK's own code and reason. The Connect code alone cannot tell a taken
-   * path (`conflict` / `path_taken`) from a revision conflict (`conflict` / `revision`).
-   */
-  readonly native?: { readonly code: string; readonly reason?: string };
-};
+import type { ConnectProblem, ConnectValidationIssue } from "./connect-types.js";
 
 /**
  * True when a create was refused because another record holds its path: `conflict` with
@@ -18,7 +6,7 @@ export type ReaderConnectProblem = ConnectProblem & {
  * `path_conflict` → `conflict` / `path_taken`; `intent.md` §3.1 "Explicit path").
  */
 export function isPathTaken(problem: ConnectProblem): boolean {
-  const native = (problem as ReaderConnectProblem).native;
+  const native = problem.native;
   return native?.code === "conflict" && native.reason === "path_taken";
 }
 
@@ -29,7 +17,7 @@ export function isPathTaken(problem: ConnectProblem): boolean {
  * `client.d.ts` `WriteOptions.intent`), so this means the same create landed before.
  */
 export function isIdExists(problem: ConnectProblem): boolean {
-  return (problem as ReaderConnectProblem).native?.reason === "id_exists";
+  return problem.native?.reason === "id_exists";
 }
 
 const fieldLabels: Readonly<Record<string, string>> = {

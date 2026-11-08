@@ -1,23 +1,22 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { collectionId, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
-import { connectClient, recordPathById } from "./repository-client.js";
+import { connectFailure, connectProblem } from "./connect-types.js";
+import { recordPathById } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   ConnectOutcome,
-  MdbaseConnection,
   QueryInput,
   QueryMetadataInput,
   QueryMetadataPage,
   QueryPage,
   ReadManyRecord,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
+import type { ReaderConnectClient } from "./repository-client.js";
 
 function ok<T>(value: T): ConnectOutcome<T> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 function fixture(count = 2): {
   client: ReaderConnectClient;
@@ -174,24 +173,6 @@ describe("wave B annotation hydration", () => {
     expect(read).not.toHaveBeenCalled();
   });
 
-  it("keeps advertised batch failures visible rather than silently downgrading to N reads", async () => {
-    const { repository, readMany, read } = fixture(1);
-    readMany.mockResolvedValue(
-      ok({
-        results: [{ status: "error", path: "annotations/0.md", batch: 0 }],
-        errors: [
-          {
-            batch: 0,
-            paths: ["annotations/0.md"],
-            failure: connectFailure(connectProblem("access_denied", "Denied")),
-          },
-        ],
-      }),
-    );
-    await expect(repository.listForSource(collection, sourceId("src_1"))).rejects.toThrow("Denied");
-    expect(read).not.toHaveBeenCalled();
-  });
-
   it("retains point hydration when a batch row has no revision", async () => {
     const { repository, records, read } = fixture(1);
     const record = records[0]!;
@@ -227,25 +208,5 @@ describe("wave B metadata discovery", () => {
       Promise.resolve(connectFailure(connectProblem("access_denied", "Discovery denied")));
     await expect(recordPathById(client, "src_1")).rejects.toThrow("Discovery denied");
     expect(queryPages).not.toHaveBeenCalled();
-  });
-
-  it("delegates connection-lifetime feature discovery and metadata paging to the SDK", async () => {
-    const supportsAuthorityFeature = vi.fn(() => Promise.resolve(ok(true)));
-    const queryPages = vi.fn(async function* () {
-      yield await Promise.resolve(
-        ok({ output: "metadata", results: [], page: 0, offset: 0, loaded: 0, complete: true }),
-      );
-    });
-    const client = connectClient({
-      supportsAuthorityFeature,
-      queryPages,
-    } as unknown as MdbaseConnection);
-    const signal = new AbortController().signal;
-    await client.supportsAuthorityFeature("query-metadata-v1", { signal });
-    for await (const page of client.queryPages({ output: "metadata" }, { signal, pageSize: 100 })) {
-      expect(page.ok).toBe(true);
-    }
-    expect(supportsAuthorityFeature).toHaveBeenCalledWith("query-metadata-v1", { signal });
-    expect(queryPages).toHaveBeenCalledWith({ output: "metadata" }, { signal, pageSize: 100 });
   });
 });

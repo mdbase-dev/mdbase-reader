@@ -4,17 +4,15 @@ import { describe, expect, it, vi } from "vitest";
 import { annotationFromDocument } from "./annotation-mapping.js";
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
 
+import type { ConnectOutcome, QueryInput, RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryInput, RecordDocument } from "@mdbase-dev/connect";
 
 const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
+  supportsAuthorityFeature: vi.fn(() => Promise.resolve({ ok: true as const, value: false })),
 };
 
 const collection = collectionId("reading");
-const ok = <T>(value: T): ConnectOutcome<T> => ({ ok: true, value, diagnostics: [] });
+const ok = <T>(value: T): ConnectOutcome<T> => ({ ok: true, value });
 
 function document(path: string, fields: Record<string, string>): RecordDocument {
   return {

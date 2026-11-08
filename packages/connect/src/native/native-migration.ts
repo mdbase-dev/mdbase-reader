@@ -3,7 +3,7 @@ import { ConnectRepositoryError, outcomeValue } from "../repository-client.js";
 
 import type { NativeReaderClient } from "./native-client.js";
 import type { NativeReaderFileClient } from "./native-files.js";
-import type { RecordDocument } from "@mdbase-dev/connect";
+import type { RecordDocument } from "../connect-types.js";
 import type {
   Fields,
   ImportedFile,
