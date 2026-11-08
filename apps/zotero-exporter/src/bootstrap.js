@@ -72,13 +72,18 @@ function openExporter(window) {
         "chrome://zotero/content/modules/filePicker.mjs",
       );
       const picker = new FilePicker();
-      picker.init(owner, "Save migration bundle inside this folder", picker.modeGetFolder);
+      picker.init(owner, "Choose where to save your export", picker.modeGetFolder);
       if ((await picker.show()) === picker.returnOK && !state.stopped && !owner.closed) {
         await controller.prepare(picker.file);
       }
     },
     async reveal() {
       if (controller.state.destination) await Zotero.File.reveal(controller.state.destination);
+    },
+    openImporter() {
+      if (!state.stopped && controller.state.phase === "complete") {
+        return Zotero.launchURL("https://reader.mdbase.dev/import/zotero");
+      }
     },
     detached() {
       state.dialog = null;

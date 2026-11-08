@@ -1,6 +1,6 @@
 # mdbase Reader Exporter for Zotero
 
-An **experimental, installable Zotero plugin** that exports a personal library as a versioned migration bundle. It is not a Connect client and does not create an mdbase collection. Reader's future importer will consume the folder and write to the user's selected collection.
+An **experimental, installable Zotero plugin** that exports a personal library as a versioned migration bundle. It is not a Connect client and does not create an mdbase collection. Reader's Zotero importer verifies the folder and writes to the user's selected collection after confirmation.
 
 ## Build and install
 
@@ -18,17 +18,18 @@ apps/zotero-exporter/dist/mdbase-reader-exporter-0.1.0.xpi
 apps/zotero-exporter/dist/mdbase-reader-exporter-0.1.0.xpi.sha256
 ```
 
-In Zotero: **Tools → Plugins → gear → Install Plugin From File…**, select the XPI. Then open **Tools → Export for mdbase Reader…**. No restart is required. Disable/uninstall using the same Plugins screen.
+Download the XPI from [Reader's Zotero importer](https://reader.mdbase.dev/import/zotero). In Zotero, open **Tools → Plugins** and drag the downloaded XPI into the Plugins window. Alternatively, use **gear → Install Plugin From File…**. Then open **Tools → Export for mdbase Reader…**. No restart is required. Disable/uninstall using the same Plugins screen.
 
 Compatibility is deliberately restricted to **Zotero 10.0.x**; acceptance testing used **10.0.2 on Linux x86-64**. Windows/macOS and earlier Zotero releases have not been tested. The package has its own version and can be released independently of the Reader web app.
 
 ## Workflow
 
-1. Finish syncing in Zotero.
+1. Sign in to your Zotero account and finish syncing. The export uses your Zotero user ID for stable item identities; unsigned-in libraries are not supported yet.
 2. Choose a parent folder **outside Zotero's data directory**.
 3. Review source, note, annotation and attachment counts, missing-file warnings and disk-space estimate.
 4. Click **Export library**. A uniquely named child folder is created; existing exports are never overwritten.
-5. Wait for completion, review warnings, and use **Show folder**.
+5. Wait for completion and review warnings. Item titles and recovery guidance are shown first; codes and keys remain under **Technical details** and in `manifest.json`.
+6. Use **Show folder** to locate the generated child folder. Click **Open Reader importer**, then select that whole folder in a browser with folder-selection support, such as Chrome. Do not select the parent folder or Zotero's data directory. Opening the importer sends no export data or local path. Reader verifies the selected export; review the destination collection and confirm the import before any files or records are written.
 
 This release exports all of **My Library**, not a selected collection or group library. Trashed records are excluded; surviving children with trashed parents are preserved with warnings. Missing attachments retain their metadata. Don't edit Zotero while exporting: a final consistency check detects changes and refuses to label that export complete.
 

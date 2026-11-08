@@ -32,6 +32,14 @@
   line-height: 1.65;
   max-width: 75ch;
 }
+.import-instructions {
+  max-width: 75ch;
+  padding-left: 24px;
+  line-height: 1.65;
+}
+.import-instructions li + li {
+  margin-top: 12px;
+}
 .import-intro {
   color: var(--ink-soft);
   font-size: 16px;

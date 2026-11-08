@@ -22,18 +22,20 @@
       </p>
       <section aria-labelledby="scope-heading">
         <h2 id="scope-heading">Your personal library</h2>
+        <p>Requires Zotero 10.0.x and a signed-in Zotero account.</p>
         <p>
           This version exports all of <strong>My Library</strong>. Group libraries and trashed items
           are excluded. Finish syncing first and avoid editing Zotero during the export.
         </p>
         <p>
-          No uploads, account connections or changes to your Zotero library. The folder is private
-          and may contain copyrighted material.
+          This exporter does not upload files, connect your account to Reader or change your Zotero
+          library. The folder may contain private or copyrighted material; choose where to save it
+          carefully.
         </p>
       </section>
       <section aria-labelledby="destination-heading">
         <h2 id="destination-heading">Destination</h2>
-        <button id="choose" type="button">Choose parent folder…</button>
+        <button id="choose" type="button">Choose export location…</button>
         <p id="destination" class="path">
           A new, uniquely named folder will be created inside it. Existing folders are never
           overwritten.
@@ -51,13 +53,24 @@
           <ul id="warning-list"></ul>
         </details>
       </section>
-      <p id="next-step" hidden="hidden">
-        Keep the whole bundle folder together. It is an export, not an mdbase collection. The Reader
-        bundle importer is not shipped yet.
-      </p>
+      <section id="next-step" aria-labelledby="next-step-heading" hidden="hidden">
+        <h2 id="next-step-heading">Next: import into Reader</h2>
+        <p>
+          Keep the whole export folder together. Open the Reader importer in a browser with folder
+          selection support, such as Chrome, then select the generated folder shown above—not its
+          parent folder or Zotero’s data directory. Reader will verify the export. Review the
+          destination collection and confirm the import before any files or records are written.
+        </p>
+        <p class="muted">
+          Opening the importer does not send your export or folder path to Reader.
+        </p>
+      </section>
       <footer>
         <button id="start" class="primary" type="button" disabled="disabled">Export library</button>
         <button id="cancel" type="button" hidden="hidden">Cancel</button>
+        <button id="open-reader" class="primary" type="button" hidden="hidden">
+          Open Reader importer
+        </button>
         <button id="reveal" type="button" hidden="hidden">Show folder</button>
         <button id="close" type="button">Close</button>
       </footer>

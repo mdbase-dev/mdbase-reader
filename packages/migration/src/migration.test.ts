@@ -88,6 +88,36 @@ describe("Zotero validation and mapping", () => {
     );
     await expect(readZoteroBundle(input, signal(), vi.fn())).rejects.toThrow(/parent/u);
   });
+  it.each([undefined, "A retained note"])(
+    "accepts documented warnings with an optional title: %s",
+    async (title) => {
+      const input = await fixture();
+      const manifest = object(JSON.parse(await input.get("manifest.json")!.text()));
+      const warning = {
+        code: "missing-parent",
+        key: "NOTE",
+        parent: "MISSING",
+        ...(title ? { title } : {}),
+      };
+      manifest["status"] = "complete-with-warnings";
+      manifest["warnings"] = [warning];
+      input.set("manifest.json", new Blob([JSON.stringify(manifest)]));
+      input.set(
+        "notes.json",
+        new Blob([
+          JSON.stringify([
+            {
+              key: "NOTE",
+              zotero: { key: "NOTE", parentItem: "MISSING", note: "<p>Retained note</p>" },
+            },
+          ]),
+        ]),
+      );
+      const bundle = await readZoteroBundle(input, signal(), vi.fn());
+      expect(bundle.manifest["warnings"]).toEqual([warning]);
+      expect(bundle.rows.notes[0]?.zotero["note"]).toBe("<p>Retained note</p>");
+    },
+  );
 });
 describe("repeatable destination-bound migration", () => {
   it("previews without writes, commits files before sources before annotations, and verifies", async () => {

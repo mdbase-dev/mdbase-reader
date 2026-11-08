@@ -36,21 +36,41 @@ function ZoteroInput({
     <>
       <p>
         <Trans>
-          Install the experimental Zotero 10.0.x exporter, then use{" "}
-          <strong>Tools → Export for mdbase Reader…</strong>. Select the whole exported folder—not
-          Zotero’s data directory.
+          The experimental exporter supports Zotero 10.0.x only and requires a signed-in Zotero
+          account. It exports all of <strong>My Library</strong>, excluding group libraries and
+          trash.
         </Trans>
       </p>
-      <p>
-        <Trans>
-          <a
-            href={`${import.meta.env.BASE_URL}downloads/mdbase-reader-exporter-0.1.0.xpi`}
-            download
-          >
-            Download Zotero exporter (.xpi)
-          </a>
-        </Trans>
-      </p>
+      <ol className="import-instructions">
+        <li>
+          <Trans>
+            <a
+              href={`${import.meta.env.BASE_URL}downloads/mdbase-reader-exporter-0.1.0.xpi`}
+              download
+            >
+              Download Zotero exporter (.xpi)
+            </a>
+          </Trans>
+        </li>
+        <li>
+          <Trans>
+            In Zotero, open <strong>Tools → Plugins</strong> and drag the downloaded .xpi file into
+            the Plugins window.
+          </Trans>
+        </li>
+        <li>
+          <Trans>
+            Finish syncing, then choose <strong>Tools → Export for mdbase Reader…</strong>. Keep
+            Zotero open and avoid editing until the export finishes.
+          </Trans>
+        </li>
+        <li>
+          <Trans>
+            Return here and select the whole generated export folder—not its parent folder or
+            Zotero’s data directory.
+          </Trans>
+        </li>
+      </ol>
       <label className="import-file">
         {t({ message: "Exported folder" })}
         <input

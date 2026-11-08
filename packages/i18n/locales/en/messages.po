@@ -3809,6 +3809,10 @@ msgstr "Finish signing in in the mdbase tab"
 msgid "Finish signing in or approving in the mdbase tab, then save."
 msgstr "Finish signing in or approving in the mdbase tab, then save."
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Finish syncing, then choose <0>Tools → Export for mdbase Reader…</0>. Keep Zotero open and avoid editing until the export finishes."
+msgstr "Finish syncing, then choose <0>Tools → Export for mdbase Reader…</0>. Keep Zotero open and avoid editing until the export finishes."
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
@@ -4312,6 +4316,10 @@ msgstr "In source note"
 msgid "In your collection"
 msgstr "In your collection"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "In Zotero, open <0>Tools → Plugins</0> and drag the downloaded .xpi file into the Plugins window."
+msgstr "In Zotero, open <0>Tools → Plugins</0> and drag the downloaded .xpi file into the Plugins window."
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Inbox"
@@ -4397,10 +4405,6 @@ msgstr "Install {appName}"
 #: apps/reader/src/pwa-install.ts
 msgid "Install {appName} for quick access in its own window."
 msgstr "Install {appName} for quick access in its own window."
-
-#: apps/reader/src/ImportInput.tsx
-msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
-msgstr "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview · no collection connected. Changes stay in this tab."
@@ -7367,6 +7371,10 @@ msgctxt "AnnotationEditor interface"
 msgid "Retry save"
 msgstr "Retry save"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Return here and select the whole generated export folder—not its parent folder or Zotero’s data directory."
+msgstr "Return here and select the whole generated export folder—not its parent folder or Zotero’s data directory."
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review"
@@ -8762,6 +8770,10 @@ msgstr "The embedded annotation asset is not an image."
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "The EPUB resource layer could not take control of this Reader tab."
 msgstr "The EPUB resource layer could not take control of this Reader tab."
+
+#: apps/reader/src/ImportInput.tsx
+msgid "The experimental exporter supports Zotero 10.0.x only and requires a signed-in Zotero account. It exports all of <0>My Library</0>, excluding group libraries and trash."
+msgstr "The experimental exporter supports Zotero 10.0.x only and requires a signed-in Zotero account. It exports all of <0>My Library</0>, excluding group libraries and trash."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "The export could not be encoded."

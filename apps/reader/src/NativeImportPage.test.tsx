@@ -115,6 +115,39 @@ it("native import home keeps the existing tiles without starting any SDK/legacy 
   expect(h.controls.observedActions()).toHaveLength(0);
 });
 
+it("Zotero onboarding explains prerequisites, installation and selecting the generated folder", async () => {
+  const app = await fixture();
+  await act(() =>
+    Promise.resolve(root.render(<NativeImportPage sdk={app.mdbase} service="zotero" />)),
+  );
+  expect(host.textContent).toContain("Zotero 10.0.x only");
+  expect(host.textContent).toContain("requires a signed-in Zotero account");
+  expect(host.textContent).toContain("My Library, excluding group libraries and trash");
+  const steps = [...host.querySelectorAll(".import-instructions > li")];
+  expect(steps).toHaveLength(4);
+  const download = steps[0]?.querySelector("a");
+  expect(download?.getAttribute("href")).toBe(
+    `${import.meta.env.BASE_URL}downloads/mdbase-reader-exporter-0.1.0.xpi`,
+  );
+  expect(download?.hasAttribute("download")).toBe(true);
+  expect(steps[1]?.textContent).toContain("Tools → Plugins");
+  expect(steps[1]?.textContent).toContain("drag the downloaded .xpi file");
+  expect(steps[2]?.textContent).toContain("Finish syncing");
+  expect(steps[2]?.textContent).toContain("Tools → Export for mdbase Reader…");
+  expect(steps[2]?.textContent).toContain("avoid editing until the export finishes");
+  expect(steps[3]?.textContent).toContain("whole generated export folder—not its parent folder");
+  expect(steps[3]?.textContent).toContain("Zotero’s data directory");
+  expect(host.textContent).toContain("browser with folder selection support, such as Chrome");
+  const input = host.querySelector<HTMLInputElement>('input[type="file"]');
+  expect(input?.hasAttribute("webkitdirectory")).toBe(true);
+  expect(input?.multiple).toBe(true);
+  expect(input?.disabled).toBe(false);
+  expect(migration.readZoteroBundle).not.toHaveBeenCalled();
+  await selectInput();
+  expect(migration.readZoteroBundle).toHaveBeenCalledOnce();
+  expect(host.textContent).toContain("Owned preview retained");
+});
+
 it("input/preview survives SDK destination changes without a nested main or borrowed client close", async () => {
   const h = await fixture();
   const close = vi.spyOn(h.client(), "close");

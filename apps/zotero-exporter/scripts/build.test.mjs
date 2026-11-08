@@ -42,6 +42,15 @@ test("XPI is reproducible and contains only the plugin and shared exporter", asy
   assert.match(manifest.applications.zotero.update_url, /^https:\/\//);
   // Zotero 10 refuses installation without update_url, even for manual-only builds.
   assert.equal(manifest.applications.zotero.strict_max_version, "10.0.*");
+  const markup = files.get("content/export.xhtml").toString();
+  assert.match(markup, /id="open-reader"/);
+  assert.match(markup, /Open Reader importer/);
+  assert.match(markup, /signed-in Zotero account/);
+  assert.doesNotMatch(markup, /not shipped yet/);
+  assert.match(
+    files.get("bootstrap.js").toString(),
+    /https:\/\/reader\.mdbase\.dev\/import\/zotero/,
+  );
   assert.deepEqual(
     files.get("exporter.js"),
     await readFile(
