@@ -4253,7 +4253,7 @@ msgstr "已导入到 {name}。{0, plural, other {已验证 # 条记录}}。"
 msgid "Import from {0}"
 msgstr "从 {0} 导入"
 
-#: packages/migration/src/run.ts
+#: packages/migration/src/run-identities.ts
 msgid "Import identity collision. Existing records will not be overwritten."
 msgstr "导入标识冲突。不会覆盖现有记录。"
 
