@@ -112,8 +112,21 @@ representations stop the import instead of silently replacing user data.
 Cancellation keeps committed data. Reselect the same bundle (or rescan Readwise
 with a token) and the same destination to resume/deduplicate. Pending record
 mutations have a browser-local recovery journal; file transfers use stable IDs.
+Native imports wait for each source's confirmed receipt before creating its
+annotations, and for every record before reporting completion. Pending local
+records are not proof of a completed import, including after cancellation or
+reopening the page. A rejection stops the job; an uncertain mutation retains
+its original recovery identity and is never submitted again as a new write.
 This is **not** an unattended background job, persistent token store, continuous
 sync, rollback operation, or update-overwrite workflow. Keep the browser open.
+
+Readwise v2 highlights always use `v2:<highlight id>`, independently of whether
+their Reader v3 counterpart is currently listed. Known Reader IDs are retained
+as aliases. Rescans also recognize the archived v2/v3 IDs in older imports,
+without rewriting those records. Ambiguous pre-existing duplicates stop the
+import for explicit review rather than being silently merged or deleted.
+An unlinked cross-API quote match also requires review: matching text alone is
+not enough to silently merge two highlights or import a potential duplicate.
 
 ## Checks
 

@@ -26,6 +26,7 @@ export class NativeMigrationTarget implements MigrationTarget {
   async existing(signal: AbortSignal): Promise<Map<string, Fields>> {
     const result = new Map<string, Fields>();
     const identitiesByPath = new Map<string, string>();
+    const importedPaths = new Map<string, string>();
     for (const contract of [sourceContract, annotationContract]) {
       for await (const page of this.records.queryPages(
         { contract, frontmatterMode: "effective" },
@@ -53,6 +54,9 @@ export class NativeMigrationTarget implements MigrationTarget {
       for (const row of outcomeValue(page, "inspect native import provenance").results) {
         const id = identitiesByPath.get(row.path);
         if (id) {
+          if (row.frontmatter?.["import"]) {
+            importedPaths.set(row.path, id);
+          }
           result.set(id, {
             ...result.get(id),
             import: (row.frontmatter?.["import"] ?? null) as Fields["import"],
@@ -60,7 +64,21 @@ export class NativeMigrationTarget implements MigrationTarget {
         }
       }
     }
+    await this.confirmExisting(importedPaths, signal);
     return result;
+  }
+
+  private async confirmExisting(paths: Map<string, string>, signal: AbortSignal): Promise<void> {
+    const storage = this.storage();
+    for (const [path, id] of paths) {
+      const key = this.journalKey(id);
+      const pendingId = storage?.getItem(key);
+      if (pendingId) {
+        await this.confirm({ id, path }, pendingId, key, storage, signal);
+      } else {
+        await this.confirmRecord({ id, path }, signal);
+      }
+    }
   }
 
   async files(signal: AbortSignal): Promise<Map<string, ImportedFile>> {
@@ -98,71 +116,133 @@ export class NativeMigrationTarget implements MigrationTarget {
     signal: AbortSignal,
   ): Promise<void> {
     signal.throwIfAborted();
-    const journalKey = `reader:migration-pending:${this.collectionId}:${record.id}`;
-    const storage = typeof localStorage === "undefined" ? null : localStorage;
-    if (await this.recoverJournal(record, journalKey, storage, signal)) {
+    const journalKey = this.journalKey(record.id);
+    const storage = this.storage();
+    const pendingId = storage?.getItem(journalKey);
+    if (pendingId) {
+      await this.confirm(record, pendingId, journalKey, storage, signal);
       return;
     }
-    const outcome = await this.records.create({
-      path: record.path,
-      type,
-      frontmatter: fields,
-      body: record.body,
-      includeDocument: true,
-    });
+    let mutationId: string | undefined;
+    const outcome = await this.records.create(
+      {
+        path: record.path,
+        type,
+        frontmatter: fields,
+        body: record.body,
+        includeDocument: true,
+      },
+      {
+        signal,
+        onMutation: (id) => {
+          mutationId = id;
+          storage?.setItem(journalKey, mutationId);
+        },
+      },
+    );
     if (!outcome.ok && outcome.problem.code === "operation_outcome_unknown") {
       const requestId = (outcome.problem.details as { request_id?: unknown } | undefined)
         ?.request_id;
       if (typeof requestId === "string") {
+        mutationId = requestId;
         storage?.setItem(journalKey, requestId);
-        await this.recover(record, requestId, signal);
-        storage?.removeItem(journalKey);
-        return;
       }
+    } else {
+      if (!outcome.ok) {
+        storage?.removeItem(journalKey);
+      }
+      verify(record, outcomeValue(outcome, "create imported record"));
     }
-    verify(record, outcomeValue(outcome, "create imported record"));
+    if (!mutationId) {
+      throw new ConnectRepositoryError("confirm imported record", "pending_mutation_unresolved");
+    }
+    await this.confirm(record, mutationId, journalKey, storage, signal);
   }
 
-  private async recoverJournal(
-    record: MigrationRecord,
+  private journalKey(id: string): string {
+    return `reader:migration-pending:${this.collectionId}:${id}`;
+  }
+
+  private storage(): Storage | null {
+    return typeof localStorage === "undefined" ? null : localStorage;
+  }
+
+  private async confirm(
+    record: Pick<MigrationRecord, "id" | "path">,
+    mutationId: string,
     key: string,
     storage: Storage | null,
     signal: AbortSignal,
-  ): Promise<boolean> {
-    const pendingId = storage?.getItem(key);
-    if (!pendingId) {
-      return false;
+  ): Promise<void> {
+    for (;;) {
+      signal.throwIfAborted();
+      const receipt = await this.records.createTracking.receipt(mutationId, { signal });
+      if (receipt.state === "rejected") {
+        storage?.removeItem(key);
+        throw new ConnectRepositoryError(
+          "confirm imported record",
+          receipt.problem.code,
+          receipt.problem.message,
+          receipt.problem,
+          receipt.problem.issues,
+        );
+      }
+      if (receipt.state === "confirmed") {
+        break;
+      }
+      if (receipt.state !== "pending") {
+        const local = await this.records.createTracking.recordAt(record.path, { signal });
+        if (local?.id === record.id && local.confirmed) {
+          break;
+        }
+        throw new Error(
+          "A previous import mutation needs recovery. Its original request will not be repeated as a new write.",
+        );
+      }
+      await pause(signal);
     }
-    if (this.records.pendingMutation(pendingId)) {
-      await this.recover(record, pendingId, signal);
-      storage?.removeItem(key);
-      return true;
-    }
-    const read = await this.records.read({ path: record.path }, { signal });
-    if (read.ok && read.value.effectiveFrontmatter["id"] === record.id) {
-      storage?.removeItem(key);
-      return true;
-    }
-    throw new Error(
-      "A previous import mutation needs recovery. Its original request will not be repeated as a new write.",
-    );
+    await this.confirmRecord(record, signal);
+    storage?.removeItem(key);
   }
 
-  private async recover(
-    record: MigrationRecord,
-    requestId: string,
+  private async confirmRecord(
+    record: Pick<MigrationRecord, "id" | "path">,
     signal: AbortSignal,
   ): Promise<void> {
-    const pending = this.records.pendingMutation(requestId);
-    if (!pending) {
-      throw new ConnectRepositoryError("recover imported record", "pending_mutation_unresolved");
+    for (;;) {
+      signal.throwIfAborted();
+      const local = await this.records.createTracking.recordAt(record.path, { signal });
+      if (local?.id !== record.id) {
+        throw new Error("Import verification failed: a record is missing or changed identity.");
+      }
+      if (local.confirmed) {
+        break;
+      }
+      await pause(signal);
     }
-    verify(record, outcomeValue(await pending.recover({ signal }), "recover imported record"));
   }
 }
 
-function verify(record: MigrationRecord, document: RecordDocument): void {
+function verify(record: Pick<MigrationRecord, "id">, document: RecordDocument): void {
   if (document.effectiveFrontmatter["id"] !== record.id) {
     throw new Error("Imported record identity mismatch.");
   }
+}
+
+function pause(signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const abort = (): void => {
+      clearTimeout(timer);
+      signal.removeEventListener("abort", abort);
+      reject(signal.reason instanceof Error ? signal.reason : new Error("Import stopped."));
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener("abort", abort);
+      resolve();
+    }, 250);
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) {
+      abort();
+    }
+  });
 }

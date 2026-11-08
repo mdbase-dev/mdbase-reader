@@ -46,6 +46,8 @@ export interface ReaderCreateReceipt {
 }
 
 export interface ReaderCreateOptions {
+  readonly signal?: AbortSignal;
+  readonly onMutation?: (mutationId: string) => void;
   /**
    * A stable name for this one save, such as its client-minted mutation ID. A retry with the
    * same intent lands once natively; the legacy Connect client ignores it.
