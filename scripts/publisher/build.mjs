@@ -8,6 +8,7 @@ import { publicationInventory, serializeInventory } from "./publisher.mjs";
 const output = process.argv[2],
   plan = JSON.parse(await readFile(join(output, "plan.json"), "utf8"));
 await compareInstalled(process.cwd(), plan.sdkTrust.archives);
+delete process.env.GITHUB_TOKEN;
 const env = {
   ...process.env,
   MDBASE_ENV: plan.target,

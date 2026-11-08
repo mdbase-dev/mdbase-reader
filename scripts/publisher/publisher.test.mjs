@@ -157,6 +157,7 @@ it("pins staging to the production version and verifies both release digests and
   };
   let called = false;
   const options = {
+    token: "",
     fetchImpl: async (url) =>
       url.includes("api.github.com")
         ? Response.json(release)

@@ -6,7 +6,12 @@ import { lstat, readFile, readdir, realpath } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { authenticateProduction, stagingArchive, publicBytes } from "./authentication.mjs";
+import {
+  authenticateProduction,
+  stagingArchive,
+  publicBytes,
+  archiveBytes,
+} from "./authentication.mjs";
 const hash = (bytes, algorithm = "sha256") =>
   createHash(algorithm)
     .update(bytes)
@@ -113,7 +118,7 @@ export async function compareInstalled(root, archives, { fetchImpl = fetch } = {
   const spaces = await workspaces(root);
   for (const archive of Object.values(archives)) {
     const bytes = archive.path.startsWith("https:")
-      ? await publicBytes(archive.path, fetchImpl)
+      ? await archiveBytes(archive.path, fetchImpl)
       : await regular(root, archive.path);
     assert.equal(hash(bytes), archive.sha256, "comparison archive changed");
     const members = originalMembers(bytes),
