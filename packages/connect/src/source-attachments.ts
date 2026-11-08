@@ -7,7 +7,11 @@ import {
 
 import { sourceFromDocument } from "./mapping.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
-import { documentEntry, uploadWithRecovery, type ReaderSourceFileClient } from "./source-files.js";
+import {
+  documentEntry,
+  uploadRepresentation,
+  type ReaderSourceFileClient,
+} from "./source-files.js";
 
 import type { ReaderConnectClient } from "./repository-client.js";
 
@@ -23,20 +27,18 @@ export async function attachRepresentation(
 ): Promise<Source> {
   const { representation } = plan;
   const totalBytes = representation.bytes.byteLength;
-  const descriptor = await uploadWithRecovery(files, representation, {
+  const descriptor = await uploadRepresentation(files, representation, {
     ...(options.signal ? { signal: options.signal } : {}),
     ...(options.onProgress
       ? {
           onProgress: (progress) => {
-            if (progress.phase === "uploading") {
-              options.onProgress?.({
-                phase: "uploading",
-                completedBytes: progress.transferredBytes,
-                totalBytes,
-                fileIndex: 1,
-                fileCount: 1,
-              });
-            }
+            options.onProgress?.({
+              phase: "uploading",
+              completedBytes: progress.transferredBytes,
+              totalBytes,
+              fileIndex: 1,
+              fileCount: 1,
+            });
           },
         }
       : {}),

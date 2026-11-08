@@ -1,7 +1,7 @@
 import { outcomeValue, readWithOptions } from "./repository-client.js";
 
+import type { QueryRecord, RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryRecord, RecordDocument } from "@mdbase-dev/connect";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
 interface PendingRead {
@@ -156,7 +156,6 @@ function unchanged(document: RecordDocument, record: QueryRecord): boolean {
     record.effectiveFrontmatter !== undefined &&
     same(record.frontmatter, document.frontmatter) &&
     same(record.effectiveFrontmatter, document.effectiveFrontmatter) &&
-    sameFact(record.file.size, document.file.size) &&
     sameFact(record.file.mtime, document.file.mtime)
   );
 }

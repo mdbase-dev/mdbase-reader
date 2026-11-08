@@ -10,11 +10,13 @@ import {
 
 import { outcomeValue } from "./repository-client.js";
 
-import type { CollectionFileDescriptor, MdbaseConnection } from "@mdbase-dev/connect";
+import type { CollectionFileDescriptor, ConnectOutcome, FileStatTarget } from "./connect-types.js";
 
 export interface ReaderFileClient {
-  // The SDK owns files-stat-v1 discovery and the legacy paginated-list fallback.
-  stat: MdbaseConnection["files"]["stat"];
+  stat(
+    target: FileStatTarget,
+    options?: { readonly signal?: AbortSignal },
+  ): Promise<ConnectOutcome<CollectionFileDescriptor | null>>;
   download(file: CollectionFileDescriptor, options?: DocumentOpenOptions): Promise<Blob>;
 }
 
@@ -174,8 +176,4 @@ function mediaTypeFromPath(path: string): string {
     return "text/html";
   }
   return "application/octet-stream";
-}
-
-export function connectDocumentRepository(connection: MdbaseConnection): ConnectDocumentRepository {
-  return new ConnectDocumentRepository(connection.files);
 }

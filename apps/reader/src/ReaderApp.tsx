@@ -30,7 +30,6 @@ import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { SourcePartCreation } from "./SourcePartCreation.js";
 import { useBibliographyExport } from "./use-bibliography-export.js";
 import { useDeploymentUpdate } from "./use-deployment-update.js";
-import { useDirectAccess } from "./use-direct-access.js";
 import { useDocumentAttachment } from "./use-document-attachment.js";
 import { useDocumentDecorations } from "./use-document-decorations.js";
 import { useMdbaseLibraryViews } from "./use-mdbase-library-views.js";
@@ -43,7 +42,6 @@ import { useSourceWorkspace } from "./use-source-workspace.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
-import type { ReaderDirectAccessController } from "@mdbase-reader/connect";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -53,7 +51,6 @@ export interface ReaderAppProps {
   readonly initialSourceId?: string | null;
   /** An annotation of the initial source to reveal (its record path or id). */
   readonly initialAnnotation?: string | null;
-  readonly directAccess?: ReaderDirectAccessController;
   readonly renderDocument?: SourceDocumentRenderer;
   readonly pickSourceFile?: () => Promise<PickedFile | null>;
   readonly saveFile?: (name: string, blob: Blob) => Promise<void>;
@@ -63,7 +60,6 @@ export function ReaderApp({
   gateway,
   initialSourceId = null,
   initialAnnotation = null,
-  directAccess,
   renderDocument,
   pickSourceFile,
   saveFile,
@@ -94,7 +90,6 @@ export function ReaderApp({
         gateway={gateway}
         initialSourceId={initialSourceId}
         initialAnnotation={initialAnnotation}
-        {...(directAccess ? { directAccess } : {})}
         workspace={workspace}
         library={workspace.library.value}
         {...(renderDocument ? { renderDocument } : {})}
@@ -111,7 +106,6 @@ function OpenedReaderApp({
   gateway,
   initialSourceId = null,
   initialAnnotation = null,
-  directAccess,
   workspace,
   library,
   renderDocument,
@@ -128,7 +122,6 @@ function OpenedReaderApp({
   const [sessionLocations] = useState(() => new SessionReadingLocations());
   useEffect(() => () => sessionLocations.clear(), [sessionLocations]);
   const deploymentUpdateAvailable = useDeploymentUpdate();
-  const directAccessState = useDirectAccess(directAccess);
   const sourceWorkspace = useRestoredSourceWorkspace(workspace, library);
   const libraryViews = useMdbaseLibraryViews(
     gateway,
@@ -221,7 +214,6 @@ function OpenedReaderApp({
     onSurfaceChange,
     surfaces,
     deploymentUpdateAvailable,
-    directAccess: directAccessState,
     theme,
     changeTheme,
     focusMode,

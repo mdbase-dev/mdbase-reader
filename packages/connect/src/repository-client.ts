@@ -1,20 +1,14 @@
-import { readerDiagnostics } from "./diagnostics.js";
-import {
-  validationIssueSummary,
-  type ConnectValidationIssue,
-  type ReaderConnectProblem,
-} from "./validation-issues.js";
+import { validationIssueSummary } from "./validation-issues.js";
 
 import type {
   ConnectOutcome,
-  ConnectRequestOptions,
+  ConnectValidationIssue,
   CreateInput,
   DeleteInput,
   DeletePreflightResult,
   DeleteProgressOptions,
   DeleteResult,
   ConnectProblem,
-  MdbaseConnection,
   QueryInput,
   QueryMetadataInput,
   QueryMetadataPage,
@@ -25,7 +19,7 @@ import type {
   ReadManyResult,
   RecordDocument,
   UpdateInput,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
 export const readerConnectBulkConcurrency = 4;
@@ -75,7 +69,7 @@ export interface ReaderCreateOptions {
  */
 export type ReaderMutationState =
   | { readonly state: "pending" | "confirmed" | "unknown" | "missing" }
-  | { readonly state: "rejected"; readonly problem: ReaderConnectProblem };
+  | { readonly state: "rejected"; readonly problem: ConnectProblem };
 
 /** The record at a path in the local view, as far as a create needs to know. */
 export interface ReaderCreatedRecord {
@@ -160,8 +154,7 @@ export class ConnectRepositoryError extends Error {
   ) {
     const summary = validationIssueSummary(issues);
     const budgetExceeded =
-      code === "query_budget_exceeded" ||
-      (problem as ReaderConnectProblem | undefined)?.native?.reason === "query_budget_exceeded";
+      code === "query_budget_exceeded" || problem?.native?.reason === "query_budget_exceeded";
     super(
       budgetExceeded
         ? "This annotation query is too large. Try again. If it still fails, contact support."
@@ -170,7 +163,7 @@ export class ConnectRepositoryError extends Error {
     this.name = "ConnectRepositoryError";
     this.code = budgetExceeded
       ? "query_budget_exceeded"
-      : (problem as ReaderConnectProblem | undefined)?.native?.reason === "query_incomplete"
+      : problem?.native?.reason === "query_incomplete"
         ? "query_incomplete"
         : code;
   }
@@ -185,7 +178,7 @@ export function outcomeValue<Value>(outcome: ConnectOutcome<Value>, operation: s
     outcome.problem.code,
     outcome.problem.message,
     outcome.problem,
-    (outcome.problem as ReaderConnectProblem).issues,
+    outcome.problem.issues,
   );
 }
 
@@ -268,75 +261,6 @@ export async function recordPathById(
     }
   }
   return null;
-}
-
-/**
- * Keep Reader's domain repositories independent of SDK types while leaving
- * admission, retry, mutation ordering, and request budgets with the SDK.
- */
-export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
-  const route = (): string => connection.route;
-  function queryPages(
-    input: QueryMetadataInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryMetadataPage>>;
-  function queryPages(
-    input: QueryInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryPage>>;
-  function queryPages(
-    input: QueryInput | QueryMetadataInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryPage | QueryMetadataPage>> {
-    const paging = {
-      ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
-      ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
-      ...connectOptions(options),
-    };
-    return readerDiagnostics.pages<QueryPage | QueryMetadataPage>(
-      route,
-      input.output === "metadata"
-        ? connection.queryPages(input, paging)
-        : connection.queryPages(input, paging),
-    );
-  }
-  return {
-    supportsAuthorityFeature: (id, options) =>
-      connection.supportsAuthorityFeature(id, connectOptions(options)),
-    read: (input, options) =>
-      readerDiagnostics.measure("read", route, () =>
-        connection.read(input, connectOptions(options)),
-      ),
-    readMany: (paths, options) =>
-      readerDiagnostics.measure("read-many", route, () => connection.readMany(paths, options)),
-    query: (input, options) =>
-      readerDiagnostics.measure("query", route, () =>
-        connection.query(input, connectOptions(options)),
-      ),
-    queryPages,
-    create: (input) => readerDiagnostics.measure("create", route, () => connection.create(input)),
-    update: (input) => readerDiagnostics.measure("update", route, () => connection.update(input)),
-    preflightDelete: (input) =>
-      readerDiagnostics.measure("delete-preflight", route, () => connection.preflightDelete(input)),
-    deleteWithProgress: (input, options) =>
-      readerDiagnostics.measure("delete", route, () =>
-        connection.deleteWithProgress(input, options),
-      ),
-  };
-}
-
-export function connectOptions(options: ReaderRequestOptions | undefined): ConnectRequestOptions {
-  return {
-    ...(options?.signal ? { signal: options.signal } : {}),
-    ...(options?.replaceableFamily
-      ? {
-          coordination: {
-            family: options.replaceableFamily,
-            latestWins: true,
-          },
-        }
-      : {}),
-  };
 }
 
 function hasRequestOptions(options: ReaderRequestOptions): boolean {

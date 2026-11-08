@@ -73,7 +73,7 @@ atomic entry.** It is safe to build Tidy on this. Reader does not expose it yet.
   rewrites do not fit is rejected as `too_large` (`open-questions.md` Q12).
 - Reader today: `ReaderConnectClient` has no `rename` or file `move`
   (`packages/connect/src/repository-client.ts:218-241`), and neither does the native
-  adapter (`packages/connect/src/native/*`). The legacy `@mdbase-dev/connect`
+  adapter (`packages/connect/src/native/*`). The retired legacy Connect
   beta.125 client has `rename({ updateRefs })` and `preflightRename`, but its
   `files.move` takes **no** `updateRefs` (`dist/files.d.ts:49-53`).
 

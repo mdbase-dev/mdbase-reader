@@ -1,7 +1,7 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { connectFailure, connectProblem } from "./connect-types.js";
 import { annotationContract, sourceContract } from "./contracts.js";
 import {
   ConnectAnnotationRepository,
@@ -9,16 +9,14 @@ import {
   type ReaderConnectClient,
 } from "./repositories.js";
 
-import type { ConnectOutcome, QueryPage, QueryResult, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage, QueryResult, RecordDocument } from "./connect-types.js";
 
 const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
+  supportsAuthorityFeature: vi.fn(() => Promise.resolve({ ok: true as const, value: false })),
 };
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 
 describe("ConnectSourceRepository", () => {
@@ -277,7 +275,6 @@ describe("Connect annotation reads", () => {
     // Revisionless bodies are batched by the SDK; missing query rows still require a read.
     expect(readMany).toHaveBeenCalledWith(["annotations/matching.md"], {
       types: ["reader-annotation"],
-      frontmatterMode: "both",
       includeBody: true,
     });
     expect(read).toHaveBeenCalledOnce();

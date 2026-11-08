@@ -1,10 +1,7 @@
-import { linksTo } from "@mdbase-dev/connect";
-
 import { annotationSourcePages } from "./annotation-source-pages.js";
 import { annotationSourceReference } from "./annotation-source.js";
 import { ConnectRepositoryError, outcomeValue, recordPathById } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   QueryInput,
   QueryRecord,
@@ -12,7 +9,8 @@ import type {
   QueryPage,
   QueryMetadataPage,
   ReadManyRecord,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
+import type { ReaderConnectClient } from "./repository-client.js";
 import type { ReaderRequestOptions, SourceId } from "@mdbase-reader/core";
 
 /** Filter Reader's persisted source references before transferring annotation metadata. */
@@ -32,7 +30,7 @@ export async function annotationCandidatesForSource(
   try {
     const path = await recordPathById(client, source, options);
     const [linked, legacy] = await Promise.all([
-      path ? sourceAnnotationRecords(client, linksTo("source", path), options) : [],
+      path ? sourceAnnotationRecords(client, linksToSource(path), options) : [],
       sourceAnnotationRecords(
         client,
         `has(record.source) && source != null && source.asFile() == null && source.contains(${JSON.stringify(source)})`,
@@ -112,20 +110,21 @@ export async function annotationRecordsAt(
   const result = outcomeValue(
     await client.readMany(paths, {
       types: ["reader-annotation"],
-      frontmatterMode: "both",
       includeBody: true,
       // Sibling batches must not supersede one another; cancellation owns this load's lifetime.
       ...(options.signal ? { signal: options.signal } : {}),
     }),
     "read annotation bodies",
   );
-  // Preserve the all-or-nothing cache check: a failed batch falls back to revisioned reads.
-  for (const error of result.errors) {
-    outcomeValue(error.failure, "read annotation bodies");
-  }
   return new Map(
     result.results.flatMap((entry) =>
       entry.status === "found" ? [[entry.path, entry.record] as const] : [],
     ),
   );
+}
+
+/** Annotations whose `source` link resolves to the file at `path`. */
+function linksToSource(path: string): string {
+  const source = 'record["source"]';
+  return `"source" in record && ${source} != null && ${source}.asFile() != null && ${source}.asFile().file.path == ${JSON.stringify(path)}`;
 }

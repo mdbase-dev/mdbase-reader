@@ -16,8 +16,8 @@ import {
 } from "./source-imports.fixtures.js";
 import { ConnectSourceImportRepository } from "./source-imports.js";
 
+import type { ConnectOutcome, QueryPage } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
 
 it("rejects a later-page authority match before any commit effects", async () => {
   const queryPages = vi.fn(() => duplicatePages());

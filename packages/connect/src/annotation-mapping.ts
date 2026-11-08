@@ -19,7 +19,7 @@ import {
 import { annotationSourceId } from "./annotation-source.js";
 import { positionFrontmatter, readingPositionFromFrontmatter } from "./reading-position.js";
 
-import type { JsonObject, RecordDocument } from "@mdbase-dev/connect";
+import type { JsonObject, RecordDocument } from "./connect-types.js";
 
 function object(value: unknown): Readonly<Record<string, unknown>> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)

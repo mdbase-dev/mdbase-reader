@@ -127,6 +127,6 @@ describe("record validation rejections", () => {
     expect(() => outcomeValue(failure(new Error("Connection failed")), "update source")).toThrow(
       "mdbase Connect could not update source: Connection failed",
     );
-    expect(outcomeValue({ ok: true, value: 42, diagnostics: [] }, "create source")).toBe(42);
+    expect(outcomeValue({ ok: true, value: 42 }, "create source")).toBe(42);
   });
 });

@@ -20,7 +20,7 @@ import { nativeReaderFiles } from "./native-files.js";
 import { plain, recordDocument } from "./native-mapping.js";
 import { NativeMigrationTarget } from "./native-migration.js";
 
-import type { ReaderConnectedCollection } from "../application-session.js";
+import type { ReaderConnectedCollection } from "../connected-collection.js";
 import type { LibraryViewRepository } from "../library-views.js";
 import type { NativeReaderClient } from "./native-client.js";
 import type {
@@ -28,7 +28,7 @@ import type {
   JsonObject,
   SavedViewExecution,
   SavedViewPresentation,
-} from "@mdbase-dev/connect";
+} from "../connect-types.js";
 import type {
   Change,
   MdbaseApplicationConnection,

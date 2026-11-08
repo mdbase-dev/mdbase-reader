@@ -1,25 +1,21 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import { collectionId, sourceId } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   ConnectOutcome,
   JsonObject,
   QueryInput,
   QueryPage,
-  QueryPagesOptions,
   QueryRecord,
   ReadInput,
   RecordDocument,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
+import type { ReaderConnectClient, ReaderQueryPagesOptions } from "./repository-client.js";
 
 const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
+  supportsAuthorityFeature: vi.fn(() => Promise.resolve({ ok: true as const, value: false })),
 };
 
 interface StoredAnnotation {
@@ -31,7 +27,7 @@ interface StoredAnnotation {
 const collection = collectionId("reading");
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 
 function stored(id: string, source: string, body = `Note ${id}`): StoredAnnotation {
@@ -44,7 +40,6 @@ function stored(id: string, source: string, body = `Note ${id}`): StoredAnnotati
 
 /** An authority whose queries and reads agree, as mdbase reports them. */
 const queryFile = (path: string, record: StoredAnnotation): QueryRecord["file"] => ({
-  size: record.body.length + JSON.stringify(record.frontmatter).length,
   mtime: `2026-08-09T00:00:0${String(record.version)}Z`,
   path,
 });
@@ -72,7 +67,10 @@ function authority(
   onQuery: (input: QueryInput) => void = () => undefined,
 ): {
   queryPages: Mock<
-    (input: QueryInput, options?: QueryPagesOptions) => AsyncGenerator<ConnectOutcome<QueryPage>>
+    (
+      input: QueryInput,
+      options?: ReaderQueryPagesOptions,
+    ) => AsyncGenerator<ConnectOutcome<QueryPage>>
   >;
   readMany: Mock<ReaderConnectClient["readMany"]>;
   read: Mock<(input: ReadInput) => Promise<ConnectOutcome<RecordDocument>>>;
@@ -80,7 +78,7 @@ function authority(
 } {
   const queryPages = vi.fn(async function* (
     input: QueryInput,
-    _options?: QueryPagesOptions,
+    _options?: ReaderQueryPagesOptions,
   ): AsyncGenerator<ConnectOutcome<QueryPage>> {
     onQuery(input);
     const where = input.where ?? "";
@@ -198,7 +196,7 @@ describe("Connect annotations for one source", () => {
     expect(read).toHaveBeenCalledTimes(20);
     expect(readMany).toHaveBeenCalledWith(
       [...annotations.keys()],
-      expect.objectContaining({ frontmatterMode: "both", includeBody: true }),
+      expect.objectContaining({ includeBody: true }),
     );
 
     // Long past the blind reuse window, the query alone confirms each record is current.
@@ -244,36 +242,6 @@ describe("Connect annotations for one source", () => {
 });
 
 describe("Connect annotation batch failure and legacy references", () => {
-  it("revalidates all revisions when a body batch fails, even with warm cached records", async () => {
-    const annotations = new Map([
-      ["annotations/a.md", stored("ann_a", "[[sources/one]]")],
-      ["annotations/b.md", stored("ann_b", "[[sources/one]]")],
-    ]);
-    const { client, read, readMany } = authority(annotations, {
-      "[[sources/one]]": "sources/one.md",
-    });
-    const repository = new ConnectAnnotationRepository(client);
-    const first = await repository.listForSource(collection, sourceId("src_1"));
-    read.mockClear();
-    const failure = connectFailure<"timeout">(connectProblem("timeout", "Batch timed out"));
-    readMany.mockImplementationOnce(async () => {
-      const result = await client.readMany([...annotations.keys()]);
-      if (!result.ok) {
-        throw new Error("Expected successful fixture read");
-      }
-      return success({
-        results: [
-          result.value.results[0]!,
-          { status: "error", path: "annotations/b.md", batch: 1 },
-        ],
-        errors: [{ batch: 1, paths: ["annotations/b.md"], failure }],
-      });
-    });
-
-    expect(await repository.listForSource(collection, sourceId("src_1"))).toEqual(first);
-    expect(read).toHaveBeenCalledTimes(2);
-  });
-
   it("keeps legacy bare-ID references only when they name exactly this source", async () => {
     const annotations = new Map([
       ["annotations/linked.md", stored("ann_linked", "[[sources/one|One]]")],

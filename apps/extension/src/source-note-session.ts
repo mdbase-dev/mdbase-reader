@@ -1,14 +1,14 @@
 import { i18n } from "@lingui/core";
 import { t as translate, msg } from "@lingui/core/macro";
 import {
-  MdbaseRecordSession,
+  ReaderRecordSession,
   recordChanged,
   recordFailure,
   recordMissing,
   recordOutcome,
   recordSuccess,
   type JsonObject,
-  type MdbaseRecordSessionState,
+  type ReaderRecordSessionState,
   type ReaderConnectedCollection,
 } from "@mdbase-reader/connect";
 
@@ -23,7 +23,7 @@ export interface SourceDetails {
 }
 
 export interface SourceNoteSnapshot {
-  readonly state: MdbaseRecordSessionState;
+  readonly state: ReaderRecordSessionState;
   readonly body: string;
   /** The title and tags with this panel's unsaved edits. */
   readonly details: SourceDetails;
@@ -56,7 +56,7 @@ type NoteCollection = Pick<ReaderConnectedCollection, "collectionId" | "sources"
  * `chrome.storage.session` that survives closing the panel.
  */
 export class SourceNoteSession {
-  readonly #record: MdbaseRecordSession<Source>;
+  readonly #record: ReaderRecordSession<Source>;
   readonly #listeners = new Set<() => void>();
   readonly #collectionId: string;
   readonly #sourceId: string;
@@ -79,7 +79,7 @@ export class SourceNoteSession {
     this.#sourceId = base.id;
     const { collectionId, sources, bodyRecovery } = collection;
     this.#pending = (requestId) => bodyRecovery.pending(requestId);
-    this.#record = new MdbaseRecordSession<Source>(
+    this.#record = new ReaderRecordSession<Source>(
       base,
       {
         revision: (source) => source.recordRevision,

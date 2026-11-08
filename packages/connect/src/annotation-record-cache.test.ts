@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AnnotationRecordCache } from "./annotation-record-cache.js";
 
+import type { ConnectOutcome, RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
 
 const document: RecordDocument = {
   path: "annotations/one.md",
@@ -17,7 +17,6 @@ const document: RecordDocument = {
 const ok = (value: RecordDocument): ConnectOutcome<RecordDocument> => ({
   ok: true,
   value,
-  diagnostics: [],
 });
 
 function deferred<T>(): {

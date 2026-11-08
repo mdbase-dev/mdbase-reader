@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ConnectBodyUpdateRecovery } from "./body-update-recovery.js";
 import { ConnectRepositoryError } from "./repository-client.js";
 
-import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, RecordDocument } from "./connect-types.js";
 
 const recovered = {
   path: "sources/crime.md",
@@ -32,7 +32,7 @@ function connection(outcome: ConnectOutcome<RecordDocument>): {
 
 describe("ConnectBodyUpdateRecovery", () => {
   it("continues the interrupted write through its durable handle", async () => {
-    const { recovery, recover } = connection({ ok: true, value: recovered, diagnostics: [] });
+    const { recovery, recover } = connection({ ok: true, value: recovered });
     expect(recovery.pending("lost")).toBe(true);
     const source = await recovery.recoverSource({
       collectionId: collectionId("c"),
@@ -61,7 +61,7 @@ describe("ConnectBodyUpdateRecovery", () => {
   });
 
   it("never writes when the handle is gone", async () => {
-    const { recovery } = connection({ ok: true, value: recovered, diagnostics: [] });
+    const { recovery } = connection({ ok: true, value: recovered });
     expect(recovery.pending("other")).toBe(false);
     await expect(
       recovery.recoverSource({ collectionId: collectionId("c"), requestId: "other" }),

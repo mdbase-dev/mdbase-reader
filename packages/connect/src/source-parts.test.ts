@@ -1,4 +1,3 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
 import {
   collectionId,
   fileId,
@@ -9,19 +8,20 @@ import {
 } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { connectFailure, connectProblem } from "./connect-types.js";
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
 import { documentRangePatch, sourcePartOfPatch } from "./source-frontmatter.js";
 import { withResolvedSourceParts } from "./source-part-links.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   ConnectOutcome,
   QueryInput,
   QueryPage,
   RecordDocument,
   UpdateInput,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
+import type { ReaderConnectClient } from "./repository-client.js";
 import type { Mock } from "vitest";
 
 const collection = collectionId("parts");
@@ -43,7 +43,7 @@ const base = {
   expectedRevision: recordRevision("rev-1"),
 };
 function success<T>(value: T): ConnectOutcome<T> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 function record(id: string, fields: Record<string, unknown> = {}): RecordDocument {
   const frontmatter = { id, title: id, ...fields };

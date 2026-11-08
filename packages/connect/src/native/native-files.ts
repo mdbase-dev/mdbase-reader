@@ -1,18 +1,18 @@
-import { connectFailure, connectSuccess } from "@mdbase-dev/connect/advanced";
 import { isMdbaseError, MdbaseError, uuidv7 } from "@mdbase-dev/sdk";
+
+import { connectFailure, connectSuccess } from "../connect-types.js";
 
 import { connectProblemFor } from "./native-mapping.js";
 
 import type { ReaderAssetClient } from "../annotation-assets.js";
-import type { ReaderFileClient } from "../documents.js";
-import type { ReaderSourceFileClient, ReaderSourceFileListOptions } from "../source-files.js";
 import type {
   CollectionFileDescriptor,
   ConnectOutcome,
-  ConnectRequestOptions,
-  MdbaseFileStatTarget,
-  MdbaseFileUploadOptions,
-} from "@mdbase-dev/connect";
+  FileStatTarget,
+  FileUploadOptions,
+} from "../connect-types.js";
+import type { ReaderFileClient } from "../documents.js";
+import type { ReaderSourceFileClient, ReaderSourceFileListOptions } from "../source-files.js";
 import type { MdbaseClient, FileView } from "@mdbase-dev/sdk";
 
 export type NativeReaderFileClient = ReaderFileClient &
@@ -41,8 +41,8 @@ export function nativeReaderFiles(
   };
 
   async function stat(
-    target: MdbaseFileStatTarget,
-    options: ConnectRequestOptions = {},
+    target: FileStatTarget,
+    options: { readonly signal?: AbortSignal } = {},
   ): Promise<ConnectOutcome<CollectionFileDescriptor | null>> {
     try {
       check(options.signal);
@@ -62,7 +62,7 @@ export function nativeReaderFiles(
   async function upload(
     path: string,
     source: Blob,
-    options: MdbaseFileUploadOptions = {},
+    options: FileUploadOptions = {},
   ): Promise<CollectionFileDescriptor> {
     check(options.signal);
     requireFileAddGrant(files.grant);
@@ -73,12 +73,10 @@ export function nativeReaderFiles(
         transferId,
         mutationId,
         ...(options.signal ? { signal: options.signal } : {}),
-        ...(options.ifRevision ? { ifRevision: options.ifRevision } : {}),
         ...(options.onProgress
           ? {
               onProgress: (progress) =>
                 options.onProgress?.({
-                  phase: "uploading",
                   transferredBytes: progress.done,
                   totalBytes: progress.total,
                 }),

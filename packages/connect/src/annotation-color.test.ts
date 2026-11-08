@@ -41,7 +41,6 @@ describe("guarded annotation colour writes", () => {
     };
     const update = vi.fn().mockResolvedValue({
       ok: true,
-      diagnostics: [],
       value: {
         path: annotation.path,
         revision: "ann-new",

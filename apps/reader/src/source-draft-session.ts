@@ -1,12 +1,12 @@
 import { t } from "@lingui/core/macro";
 import {
-  MdbaseRecordSession,
+  ReaderRecordSession,
   recordChanged,
   recordFailure,
   recordMissing,
   recordOutcome,
   recordSuccess,
-  type MdbaseRecordSessionSnapshot,
+  type ReaderRecordSessionSnapshot,
 } from "@mdbase-reader/connect";
 
 import { readerErrorMessage } from "./errors.js";
@@ -44,7 +44,7 @@ export interface SourceDraftRecovery {
 export class SourceDraftSession {
   private snapshot: SourceDraftSnapshot;
   private readonly listeners = new Set<() => void>();
-  private readonly record: MdbaseRecordSession<Source>;
+  private readonly record: ReaderRecordSession<Source>;
   private storedBody: string | undefined;
   private acknowledged: Source;
   private resumed = false;
@@ -59,7 +59,7 @@ export class SourceDraftSession {
     recovery?: SourceDraftRecovery,
   ) {
     this.acknowledged = base;
-    this.record = new MdbaseRecordSession<Source>(
+    this.record = new ReaderRecordSession<Source>(
       base,
       {
         revision: (source) => source.recordRevision,
@@ -244,7 +244,7 @@ export class SourceDraftSession {
   }
 
   private project(current: SourceDraftSnapshot): SourceDraftSnapshot {
-    const record: MdbaseRecordSessionSnapshot<Source> = this.record.snapshot;
+    const record: ReaderRecordSessionSnapshot<Source> = this.record.snapshot;
     const status: SourceDraftSnapshot["status"] =
       record.state === "saved"
         ? "saved"

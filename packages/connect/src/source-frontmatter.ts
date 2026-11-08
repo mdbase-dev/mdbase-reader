@@ -12,7 +12,7 @@ import {
 import { ConnectRepositoryError } from "./repository-client.js";
 import { documentEntry } from "./source-files.js";
 
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
+import type { CollectionFileDescriptor } from "./connect-types.js";
 
 type Descriptors = ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>;
 

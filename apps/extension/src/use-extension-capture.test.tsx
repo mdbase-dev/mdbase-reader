@@ -79,10 +79,6 @@ const extension = {
   journalStorage: {},
   dispose: vi.fn(),
 };
-vi.mock("@mdbase-reader/connect", () => ({
-  connectProblemMessage: (outcome: { problem?: { message: string } }) =>
-    outcome.problem?.message ?? null,
-}));
 vi.mock("./connect-session.js", () => ({
   createExtensionSession: mocks.createSession,
   rememberCollection: mocks.rememberCollection,

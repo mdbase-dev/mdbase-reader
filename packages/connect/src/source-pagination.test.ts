@@ -4,11 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 import { sourceContract } from "./contracts.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
+import type { ConnectOutcome, QueryPage } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
 
 function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+  return { ok: true, value };
 }
 
 describe("Connect source pagination", () => {

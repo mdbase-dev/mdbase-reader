@@ -20,8 +20,8 @@ import {
   recordPathById,
 } from "./repository-client.js";
 
+import type { DeletePreflightResult, ReadManyRecord } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { DeletePreflightResult, ReadManyRecord } from "@mdbase-dev/connect";
 import type {
   Annotation,
   AnnotationListOptions,

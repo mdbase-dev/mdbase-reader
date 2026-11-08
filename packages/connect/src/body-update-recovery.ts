@@ -1,7 +1,7 @@
 import { annotationFromDocument, sourceFromDocument } from "./mapping.js";
 import { outcomeValue } from "./repository-client.js";
 
-import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
+import type { ConnectOutcome, RecordDocument } from "./connect-types.js";
 import type { Annotation, BodyUpdateRecovery, RecoverBodyInput, Source } from "@mdbase-reader/core";
 
 /** The original interrupted write, by request ID: a Connect connection or the native client. */

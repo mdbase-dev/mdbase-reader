@@ -38,7 +38,6 @@ export async function intakeCopy(target = "staging") {
       "packages/connect/package.json",
       "packages/connect/vendor/native-release",
       intakeSdk,
-      "packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz",
       approvedUiArchive,
       "vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
     ];

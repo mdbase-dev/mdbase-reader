@@ -11,15 +11,11 @@ import {
 } from "./naming-templates.js";
 import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
 import { attachRepresentation } from "./source-attachments.js";
-import { uploadWithRecovery, type ReaderSourceFileClient } from "./source-files.js";
+import { uploadRepresentation, type ReaderSourceFileClient } from "./source-files.js";
 import { sourceFrontmatter } from "./source-frontmatter.js";
 
+import type { CollectionFileDescriptor, RecordDocument } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type {
-  CollectionFileDescriptor,
-  MdbaseConnection,
-  RecordDocument,
-} from "@mdbase-dev/connect";
 import type {
   CollectionId,
   PlannedSourceAttachment,
@@ -109,20 +105,18 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       const recovered = takeMatchingFile(recoverableFiles, representation.contentDigest);
       const descriptor =
         recovered ??
-        (await uploadWithRecovery(this.files, representation, {
+        (await uploadRepresentation(this.files, representation, {
           ...(options.signal ? { signal: options.signal } : {}),
           ...(options.onProgress
             ? {
                 onProgress: (progress) => {
-                  if (progress.phase === "uploading") {
-                    options.onProgress?.({
-                      phase: "uploading",
-                      completedBytes: completedBytes + progress.transferredBytes,
-                      totalBytes,
-                      fileIndex: index + 1,
-                      fileCount: orderedUploads.length,
-                    });
-                  }
+                  options.onProgress?.({
+                    phase: "uploading",
+                    completedBytes: completedBytes + progress.transferredBytes,
+                    totalBytes,
+                    fileIndex: index + 1,
+                    fileCount: orderedUploads.length,
+                  });
                 },
               }
             : {}),
@@ -244,14 +238,6 @@ function takeMatchingFile(
   digest: string,
 ): CollectionFileDescriptor | undefined {
   return files.get(digest)?.shift();
-}
-
-export function connectSourceImportRepository(
-  connection: MdbaseConnection,
-  records: ReaderConnectClient,
-  naming?: ReaderNaming,
-): ConnectSourceImportRepository {
-  return new ConnectSourceImportRepository(records, connection.files, undefined, naming);
 }
 
 export type { ReaderSourceFileClient } from "./source-files.js";

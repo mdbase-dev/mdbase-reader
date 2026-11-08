@@ -11,7 +11,7 @@ import { outcomeValue } from "../repository-client.js";
 
 import { nativeReaderClient, type NativeReaderClient } from "./native-client.js";
 
-import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
+import type { ConnectOutcome, QueryPage } from "../connect-types.js";
 
 const memorySourceContract: MemoryContract = {
   ...sourceContract,

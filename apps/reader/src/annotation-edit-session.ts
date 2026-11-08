@@ -1,10 +1,10 @@
 import { t } from "@lingui/core/macro";
 import {
-  MdbaseRecordSession,
+  ReaderRecordSession,
   recordFailure,
   recordOutcome,
   recordSuccess,
-  type MdbaseRecordSessionState,
+  type ReaderRecordSessionState,
 } from "@mdbase-reader/connect";
 
 import { clearLegacyEdits, readLegacyEdits } from "./annotation-edit-recovery.js";
@@ -36,7 +36,7 @@ export class AnnotationEditSession {
     editing: false,
     textVersion: 0,
   };
-  private readonly record: MdbaseRecordSession<Annotation>;
+  private readonly record: ReaderRecordSession<Annotation>;
   private text: string;
   private listeners = new Set<() => void>();
   private started = false;
@@ -53,7 +53,7 @@ export class AnnotationEditSession {
   ) {
     this.key = JSON.stringify([base.collectionId, base.sourceId, base.id]);
     this.text = base.body;
-    this.record = new MdbaseRecordSession<Annotation>(
+    this.record = new ReaderRecordSession<Annotation>(
       base,
       {
         revision: (annotation) => annotation.recordRevision ?? "",
@@ -229,7 +229,7 @@ export class AnnotationEditSession {
   }
 }
 
-function annotationStatus(state: MdbaseRecordSessionState): AnnotationEditSnapshot["status"] {
+function annotationStatus(state: ReaderRecordSessionState): AnnotationEditSnapshot["status"] {
   switch (state) {
     case "saved":
       return "saved";

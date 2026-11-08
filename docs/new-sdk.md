@@ -22,7 +22,7 @@ admission, READ/edit/reload or production release qualification.
 
 ## Prior intake notes (superseded SDK pin)
 
-Reader is being ported from prod Connect (`@mdbase-dev/connect`) to the public application
+Reader was ported from the retired legacy Connect client to the public application
 entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 
 ## Pin
@@ -33,7 +33,7 @@ entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
 `0c5f04c6adad67d747055ebe12963403e374aefde0999861d759f35e4e118ba6` (4346749 bytes).
 Its source, SRI, native pins and original bundled protocol are recorded in
 `packages/connect/vendor/mdbase-next-sdk.json`. The SDK bundles beta129
-`c280cd194ffd`; the direct legacy protocol dependency remains `d765e675c3da` unchanged.
+`c280cd194ffd`. Reader no longer depends on the legacy protocol package directly.
 
 This is a **DEV/LAB development intake, not release-qualified**. It includes the
 public error/status helpers and portable/native-origin sign-in APIs in one pin.

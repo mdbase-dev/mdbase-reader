@@ -1,4 +1,4 @@
-export * from "./application-session.js";
+export type * from "./connected-collection.js";
 export * from "./app-settings-store.js";
 export * from "./annotation-assets.js";
 export * from "./body-update-recovery.js";
@@ -7,8 +7,7 @@ export * from "./contracts.js";
 export * from "./create-follow-through.js";
 export * from "./documents.js";
 export { readerDiagnostics, ReaderDiagnostics } from "./diagnostics.js";
-export type { ReaderTiming } from "./diagnostics.js";
-export * from "./library-views.js";
+export type * from "./library-views.js";
 export * from "./mapping.js";
 export {
   maxNameTemplateLength,
@@ -18,10 +17,8 @@ export {
 export * from "./naming-templates.js";
 export * from "./reader-settings.js";
 export * from "./next-reader-records.js";
-export * from "./portable-application-session.js";
 export * from "./record-session.js";
 export * from "./repositories.js";
-export type { ConnectValidationIssue } from "./validation-issues.js";
 export * from "./source-imports.js";
 export { sourcePartOfPatch, documentRangePatch } from "./source-frontmatter.js";
-export type { JsonObject, MdbaseAppManifest } from "@mdbase-dev/connect";
+export type { ConnectValidationIssue, JsonObject } from "./connect-types.js";

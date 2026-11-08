@@ -1,15 +1,11 @@
-import type {
-  CollectionFileDescriptor,
-  MdbaseConnection,
-  MdbaseFileUploadOptions,
-} from "@mdbase-dev/connect";
+import type { CollectionFileDescriptor, FileUploadOptions } from "./connect-types.js";
 import type { AnnotationAssetRepository } from "@mdbase-reader/core";
 
 export interface ReaderAssetClient {
   upload(
     path: string,
     source: Blob,
-    options?: MdbaseFileUploadOptions,
+    options?: FileUploadOptions,
   ): Promise<CollectionFileDescriptor>;
 }
 
@@ -23,10 +19,4 @@ export class ConnectAnnotationAssetRepository implements AnnotationAssetReposito
       transferId: input.idempotencyKey,
     });
   }
-}
-
-export function connectAnnotationAssetRepository(
-  connection: MdbaseConnection,
-): ConnectAnnotationAssetRepository {
-  return new ConnectAnnotationAssetRepository(connection.files);
 }

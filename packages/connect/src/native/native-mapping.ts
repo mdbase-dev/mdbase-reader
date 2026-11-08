@@ -1,10 +1,10 @@
-import { connectFailure, connectProblem, connectSuccess } from "@mdbase-dev/connect/advanced";
 import { isMdbaseError, MdbaseError, toPlain } from "@mdbase-dev/sdk";
 
-import type { ReaderConnectProblem } from "../validation-issues.js";
+import { connectFailure, connectProblem, connectSuccess } from "../connect-types.js";
+
 import type {
   ConnectOutcome,
-  ConnectProblemCode,
+  ConnectProblem,
   JsonObject,
   QueryInput,
   QueryMetadataInput,
@@ -12,7 +12,7 @@ import type {
   QueryRecord,
   QueryResult,
   RecordDocument,
-} from "@mdbase-dev/connect";
+} from "../connect-types.js";
 import type {
   ContractRecordView,
   Include,
@@ -45,15 +45,6 @@ export function retired(): MdbaseError {
     recovery: "none",
     message: "This collection is no longer open in mdbase Reader.",
   });
-}
-
-function hasUnsupportedQueryMembers(input: QueryInput | QueryMetadataInput): boolean {
-  return (
-    input.groupBy !== undefined ||
-    input.summaries !== undefined ||
-    input.summaryFunctions !== undefined ||
-    input.snapshot !== undefined
-  );
 }
 
 function selection(input: QueryInput | QueryMetadataInput): Query {
@@ -91,9 +82,6 @@ export function nativeQuery(input: QueryInput | QueryMetadataInput): {
   query: Query;
   include: Include;
 } {
-  if (hasUnsupportedQueryMembers(input)) {
-    throw unsupported("Grouped, summarized and snapshot queries are not used natively by Reader.");
-  }
   const query: Query = {
     ...(input.types ? { types: [...input.types] } : {}),
     ...(input.where === undefined ? {} : { where: input.where }),
@@ -206,7 +194,7 @@ export function failure(error: unknown): ConnectOutcome<never> {
   return connectFailure(connectProblemFor(error));
 }
 
-const PROBLEM_CODES: Readonly<Record<string, ConnectProblemCode>> = {
+const PROBLEM_CODES: Readonly<Record<string, string>> = {
   not_found: "file_not_found",
   conflict: "concurrent_modification",
   cancelled: "operation_cancelled",
@@ -219,7 +207,7 @@ const PROBLEM_CODES: Readonly<Record<string, ConnectProblemCode>> = {
 };
 
 /** Map native SDK failures onto the Connect problem codes Reader already handles. */
-export function connectProblemFor(error: unknown): ReaderConnectProblem {
+export function connectProblemFor(error: unknown): ConnectProblem {
   if (error instanceof OutcomeUnknown) {
     return connectProblem("operation_outcome_unknown", error.message, {
       details: { request_id: error.mutationId },
@@ -244,7 +232,7 @@ export function connectProblemFor(error: unknown): ReaderConnectProblem {
         : "invalid_request"
       : (PROBLEM_CODES[error.code] ?? "operation_failed");
   return {
-    ...connectProblem(code as "operation_failed", error.message),
+    ...connectProblem(code, error.message),
     ...(error.issues ? { issues: error.issues } : {}),
     native: { code: error.code, ...(error.reason === undefined ? {} : { reason: error.reason }) },
   };

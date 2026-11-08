@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ConnectCollectionFileRepository } from "./collection-files.js";
 
+import type { CollectionFileDescriptor } from "./connect-types.js";
 import type { ReaderFileClient } from "./documents.js";
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
 import type { Mock } from "vitest";
 
 describe("bounded collection file reads", () => {
@@ -101,7 +101,6 @@ function readFixture(download: (file: CollectionFileDescriptor) => Promise<Blob>
     const index = Number(target.path?.split("/").at(-1)?.split(".")[0]);
     return Promise.resolve({
       ok: true,
-      diagnostics: [],
       value: {
         fileId: `file-${String(index)}`,
         path: `files/${String(index)}.png`,
@@ -197,10 +196,10 @@ describe("ConnectCollectionFileRepository", () => {
     const stat = vi.fn<ReaderFileClient["stat"]>(async (target) => {
       for await (const file of list()) {
         if (file.path === target.path) {
-          return { ok: true, value: file, diagnostics: [] };
+          return { ok: true, value: file };
         }
       }
-      return { ok: true, value: null, diagnostics: [] };
+      return { ok: true, value: null };
     });
     const repository = new ConnectCollectionFileRepository({ stat, download });
 
@@ -241,7 +240,7 @@ describe("ConnectCollectionFileRepository", () => {
     const repository = new ConnectCollectionFileRepository({
       stat: async () => {
         const result = await list().next();
-        return { ok: true, value: result.value ?? null, diagnostics: [] };
+        return { ok: true, value: result.value ?? null };
       },
       download: vi.fn(),
     });

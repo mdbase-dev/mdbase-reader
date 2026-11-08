@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ConnectSourceRepository } from "./source-repository.js";
 
+import type { ConnectOutcome, QueryInput, QueryPage, QueryRecord } from "./connect-types.js";
 import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryInput, QueryPage, QueryRecord } from "@mdbase-dev/connect";
 
 const library = collectionId("[test] library");
 
@@ -24,7 +24,6 @@ function lookupFixture(results: QueryRecord[]): {
   const queryPages = vi.fn(async function* (): AsyncGenerator<ConnectOutcome<QueryPage>> {
     yield await Promise.resolve({
       ok: true,
-      diagnostics: [],
       value: {
         results,
         page: 0,

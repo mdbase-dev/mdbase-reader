@@ -2,14 +2,14 @@ import { sourceId, type ReaderRequestOptions, type SourceId } from "@mdbase-read
 
 import { outcomeValue } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type {
   QueryInput,
   QueryRecord,
   QueryMetadataRecord,
   QueryPage,
   QueryMetadataPage,
-} from "@mdbase-dev/connect";
+} from "./connect-types.js";
+import type { ReaderConnectClient } from "./repository-client.js";
 
 /**
  * mdbase resolves an annotation's `source` link, so Reader never guesses a link's target from its

@@ -38,12 +38,6 @@ importers:
       '@lingui/vite-plugin':
         specifier: 6.10.1
         version: 6.10.1(@babel/core@8.0.9)(@lingui/babel-plugin-lingui-macro@6.10.1(@babel/core@8.0.9))(rolldown@1.2.15)(vite@8.3.5(@types/node@26.6.6)(jiti@2.7.0)(yaml@2.9.1))
-      '@mdbase-dev/connect-dev':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149
-      '@mdbase-dev/connect-protocol':
-        specifier: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
-        version: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
       '@mdbase-dev/i18n':
         specifier: 0.1.0-beta.149
         version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
@@ -316,9 +310,6 @@ importers:
 
   packages/connect:
     dependencies:
-      '@mdbase-dev/connect':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149
       '@mdbase-dev/sdk':
         specifier: 0.1.0-beta.163
         version: 0.1.0-beta.163
@@ -1662,20 +1653,6 @@ packages:
 
   '@marijn/find-cluster-break@1.0.4':
     resolution: {integrity: sha512-Wy0V7+SGUjnF9/TkiM1hKVDPj7jKXduPNboMVtHTA8dySMURWqfg/JZ9E2Sq8JgSJmkl7k7Qe9FLeMSrSraWmQ==}
-
-  '@mdbase-dev/connect-dev@0.1.0-beta.149':
-    resolution: {integrity: sha512-k2qGRHJvf+EaSde/vn68JuT6S3DG3QzAVZCTLY0q2Fb2gUxQgBYZwOv5RMJEO0IMrts+xMfWW+O3+wvQns+cGA==}
-    hasBin: true
-
-  '@mdbase-dev/connect-protocol@0.1.0-beta.149':
-    resolution: {integrity: sha512-e2owN1+/JNR2fICXXaRKHxeQgKRlGGcDgpT8+WLPZ84ya6JGpzuE40zL9ztezjn7U4Yj4m5JbqrcGAigR3YK0g==}
-
-  '@mdbase-dev/connect-protocol@file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz':
-    resolution: {integrity: sha512-c0iOOWEcNJRstdyUJ6aqJ3puVR5C9jXW4MBHmQnHI2c4vgOeKi5VWfiuueWx3ArvtwB3nPuAaXHhll/OKH/+Yw==, tarball: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz}
-    version: 0.1.0-beta.129
-
-  '@mdbase-dev/connect@0.1.0-beta.149':
-    resolution: {integrity: sha512-m/pnWm1crBvFxliJuu/oalegX2UOhvmaZN92yPlCJNEvDhsK9Ym9gvIXbCKszxNF9XL/wGBgCJT6bwoOIwPnow==}
 
   '@mdbase-dev/i18n@0.1.0-beta.149':
     resolution: {integrity: sha512-3Wd2BnU41dhHmAgmw+pqQhQOZg+R/A/HTLGQpknLjRlJu6LlBxJt4Q1DYzbOpFm35/l5dwUpqLemhA6VhLY4PA==}
@@ -5833,27 +5810,6 @@ snapshots:
   '@marcbachmann/cel-js@8.0.0': {}
 
   '@marijn/find-cluster-break@1.0.4': {}
-
-  '@mdbase-dev/connect-dev@0.1.0-beta.149':
-    dependencies:
-      '@mdbase-dev/connect': 0.1.0-beta.149
-      '@mdbase-dev/connect-protocol': 0.1.0-beta.149
-      ajv: 8.20.0
-      yaml: 2.9.1
-
-  '@mdbase-dev/connect-protocol@0.1.0-beta.149':
-    dependencies:
-      '@noble/hashes': 2.4.0
-      yaml: 2.9.1
-
-  '@mdbase-dev/connect-protocol@file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz':
-    dependencies:
-      '@noble/hashes': 2.4.0
-      yaml: 2.9.1
-
-  '@mdbase-dev/connect@0.1.0-beta.149':
-    dependencies:
-      '@mdbase-dev/connect-protocol': 0.1.0-beta.149
 
   '@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)':
     dependencies:
