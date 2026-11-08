@@ -25,8 +25,14 @@ export interface ConnectProblem {
   readonly native?: { readonly code: string; readonly reason?: string };
 }
 
-export interface ConnectSuccess<Value> { readonly ok: true; readonly value: Value }
-export interface ConnectFailure { readonly ok: false; readonly problem: ConnectProblem }
+export interface ConnectSuccess<Value> {
+  readonly ok: true;
+  readonly value: Value;
+}
+export interface ConnectFailure {
+  readonly ok: false;
+  readonly problem: ConnectProblem;
+}
 /** Every expected failure is data; exceptions are programming errors. */
 export type ConnectOutcome<Value> = ConnectSuccess<Value> | ConnectFailure;
 
@@ -176,7 +182,9 @@ export type ReadManyRecord = QueryRecord;
 
 export interface ReadManyResult {
   /** One entry per input path, in input order, including duplicates. */
-  results: ({ status: "found"; path: string; record: ReadManyRecord } | { status: "missing"; path: string })[];
+  results: (
+    { status: "found"; path: string; record: ReadManyRecord } | { status: "missing"; path: string }
+  )[];
 }
 
 export interface CreateInput {

@@ -47,17 +47,16 @@ function fixture(count: number): {
     ok: true,
     value,
   });
-  const failure = (): ConnectOutcome<QueryPage> =>
-    ({
-      ok: false,
-      problem: {
-        ...connectProblem(
-          "operation_failed",
-          "ordinary selection exceeds its bounded source or retained-value query budget",
-        ),
-        native: { code: "too_large", reason: "query_budget_exceeded" },
-      },
-    });
+  const failure = (): ConnectOutcome<QueryPage> => ({
+    ok: false,
+    problem: {
+      ...connectProblem(
+        "operation_failed",
+        "ordinary selection exceeds its bounded source or retained-value query budget",
+      ),
+      native: { code: "too_large", reason: "query_budget_exceeded" },
+    },
+  });
   const queryPages = vi.fn(async function* (
     input: QueryInput,
   ): AsyncGenerator<ConnectOutcome<QueryPage>> {
