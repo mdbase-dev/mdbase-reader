@@ -160,7 +160,7 @@ describe("Readwise file transfers and mapping", () => {
     const archive = plan.files.find((f) => f.key === "readwise-native");
     expect(archive).toBeDefined();
     expect(await (await archive!.load(signal())).text()).not.toContain("signature=secret");
-    expect(object(plan.annotations[0]?.fields["import"])["key"]).toBe("highlight");
+    expect(object(plan.annotations[0]?.fields["import"])["key"]).toBe("v2:1");
     expect(
       fetcher.mock.calls.every(([, options]) => !options?.method || options.method === "GET"),
     ).toBe(true);

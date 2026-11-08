@@ -4253,7 +4253,7 @@ msgstr "Импорт в {name} завершён. {0, plural, one {Провере
 msgid "Import from {0}"
 msgstr "Импортировать из {0}"
 
-#: packages/migration/src/run.ts
+#: packages/migration/src/run-identities.ts
 msgid "Import identity collision. Existing records will not be overwritten."
 msgstr "Конфликт идентификаторов импорта. Существующие записи не будут перезаписаны."
 

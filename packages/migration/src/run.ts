@@ -9,6 +9,7 @@ import {
   type MigrationSource,
 } from "./model.js";
 import { commitFiles } from "./run-files.js";
+import { checkIdentity, resolveExistingRecords } from "./run-identities.js";
 export interface ImportedFile {
   fileId: string;
   path: string;
@@ -51,7 +52,7 @@ export async function previewMigration(
   target: MigrationTarget,
   signal: AbortSignal,
 ): Promise<{ newRecords: number; existingRecords: number }> {
-  const records = await target.existing(signal);
+  const records = resolveExistingRecords(plan, await target.existing(signal));
   let existingRecords = 0;
   for (const r of [...plan.sources, ...plan.annotations]) {
     const old = records.get(r.id);
@@ -65,21 +66,13 @@ export async function previewMigration(
     newRecords: plan.sources.length + plan.annotations.length - existingRecords,
   };
 }
-function checkIdentity(old: Fields, plan: MigrationPlan, record: MigrationRecord): void {
-  const raw = object(old["import"], "existing import provenance");
-  if (raw["namespace"] !== plan.namespace || raw["key"] !== record.key) {
-    throw new Error(
-      t({ message: "Import identity collision. Existing records will not be overwritten." }),
-    );
-  }
-}
 export async function runMigration(
   plan: MigrationPlan,
   target: MigrationTarget,
   signal: AbortSignal,
   onProgress: (progress: MigrationProgress) => void,
 ): Promise<MigrationResult> {
-  const records = await target.existing(signal);
+  const records = resolveExistingRecords(plan, await target.existing(signal));
   const state: MigrationProgress = {
     collectionId: target.collectionId,
     files: 0,
@@ -155,7 +148,7 @@ export async function runMigration(
   signal.throwIfAborted();
   state.phase = "Verifying imported records";
   emit();
-  const confirmed = await target.existing(signal);
+  const confirmed = resolveExistingRecords(plan, await target.existing(signal));
   for (const r of [...plan.sources, ...plan.annotations]) {
     const record = confirmed.get(r.id);
     if (!record) {

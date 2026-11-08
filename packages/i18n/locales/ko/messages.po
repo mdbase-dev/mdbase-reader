@@ -4253,7 +4253,7 @@ msgstr "{name}(으)로 가져오기를 완료했습니다. {0, plural, other {�
 msgid "Import from {0}"
 msgstr "{0}에서 가져오기"
 
-#: packages/migration/src/run.ts
+#: packages/migration/src/run-identities.ts
 msgid "Import identity collision. Existing records will not be overwritten."
 msgstr "가져오기 식별자가 충돌합니다. 기존 레코드는 덮어쓰지 않습니다."
 

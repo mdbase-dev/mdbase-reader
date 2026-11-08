@@ -131,7 +131,8 @@ describe("classic Readwise books", () => {
     const plan = await scan();
     expect(plan.sources.filter((s) => s.key === readerDocument["id"])).toHaveLength(1);
     expect(plan.sources.some((s) => s.key === "v2-book:5001")).toBe(false);
-    const joined = plan.annotations.find((a) => a.key === readerHighlight["id"]);
+    const joined = plan.annotations.find((a) => a.key === "v2:9001");
+    expect(object(joined?.fields["import"])["aliases"]).toContain(readerHighlight["id"]);
     expect(joined?.fileKey).toBe(readerDocument["id"]);
     expect(joined?.fields["color"]).toBe("yellow");
     // A Reader row's `location` is its inbox state, not a position.

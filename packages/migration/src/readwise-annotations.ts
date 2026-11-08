@@ -148,17 +148,22 @@ async function bookHighlights(join: Join, source: MigrationSource, book: Fields)
     const id = scalar(highlight["id"]);
     const quote = text(highlight["text"]);
     const note = text(highlight["note"]);
-    const key = counterpart ? external : `v2:${id}`;
+    const key = id ? `v2:${id}` : external;
     if (join.done.has(key)) {
       continue;
     }
     join.done.add(key);
+    if (external) {
+      join.done.add(external);
+      join.aliases.set(external, key);
+    }
     await addAnnotation(join.plan, {
       key,
       source,
       quote,
       note,
       raw: highlight,
+      aliases: external ? [external] : [],
       supplemental: counterpart ? archiveReadwise(counterpart) : {},
     });
   }
@@ -172,6 +177,8 @@ async function unmatchedHighlight(join: Join, source: MigrationSource, row: Fiel
     : undefined;
   if (same) {
     join.aliases.set(key, same.key);
+    const provenance = object(same.fields["import"]);
+    provenance["aliases"] = [...array(provenance["aliases"] ?? []), key];
     plan.warnings.push(
       t`Readwise highlight identity could not be reconciled; matching quote retained once, native record archived: ${key}`,
     );
@@ -248,6 +255,7 @@ async function addAnnotation(
     note: string;
     raw: Fields;
     supplemental?: Fields;
+    aliases?: string[];
     createdAt?: string;
   },
 ): Promise<void> {
@@ -274,6 +282,7 @@ async function addAnnotation(
         service: "readwise",
         namespace: plan.namespace,
         key,
+        ...(item.aliases?.length ? { aliases: item.aliases } : {}),
         native: archiveReadwise(raw),
         supplemental: item.supplemental ?? {},
       },

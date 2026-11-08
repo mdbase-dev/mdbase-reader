@@ -79,6 +79,7 @@ export interface NativePendingMutation {
 }
 
 export interface NativeReaderClient extends ReaderConnectClient {
+  readonly createTracking: ReaderCreateTracking;
   /** The original native mutation for an `operation_outcome_unknown` request ID. */
   pendingMutation(requestId: string): NativePendingMutation | null;
   dispose(): void;
@@ -340,7 +341,7 @@ class NativeRecords implements NativeReaderClient {
       if (record === undefined) {
         throw unsupported("A retryable create needs a path.");
       }
-      const signal = this.#scope();
+      const signal = this.#scope(options.signal);
       const fields = {
         ...(typeof record === "string" ? { id: record } : {}),
         ...(input.contract ? { contract: input.contract } : {}),
@@ -375,6 +376,7 @@ class NativeRecords implements NativeReaderClient {
                     ? { record: receipt.records[0].id }
                     : {}),
               })),
+          options.onMutation,
         ),
       );
     });
@@ -544,9 +546,10 @@ class NativeRecords implements NativeReaderClient {
     submit: Submit,
     signal: AbortSignal,
     observe?: (receipt: Receipt) => void,
+    prepare?: (mutationId: string) => void,
   ): Promise<RecordDocument | null> {
     this.#check(signal);
-    const identity = intent === undefined ? { mutationId: uuidv7() } : { intent };
+    const identity = writeIdentity(intent, prepare);
     const minted = "mutationId" in identity ? identity.mutationId : undefined;
     let mutationId = minted;
     try {
@@ -555,6 +558,9 @@ class NativeRecords implements NativeReaderClient {
         throw new Error("The native write changed its mutation identity.");
       }
       mutationId = submitted.mutationId;
+      if (minted === undefined) {
+        prepare?.(mutationId);
+      }
     } catch (error) {
       // The SDK names the mutation an intent stood for on the error it reports.
       mutationId ??= isMdbaseError(error) ? error.mutationId : undefined;
@@ -782,8 +788,20 @@ function patchChanges(input: Readonly<Record<string, unknown>>): {
   return { patch, ...(unset.length > 0 ? { unset } : {}) };
 }
 
+function writeIdentity(
+  intent: string | undefined,
+  prepare: ((mutationId: string) => void) | undefined,
+): { mutationId: string } | { intent: string } {
+  if (intent !== undefined) {
+    return { intent };
+  }
+  const mutationId = uuidv7();
+  prepare?.(mutationId);
+  return { mutationId };
+}
+
 function mutationState(receipt: Receipt): ReaderMutationState {
-  if (receipt.state === "rejected") {
+  if (receipt.state === "rejected" || receipt.status === "conflicted") {
     return {
       state: "rejected",
       problem: connectProblemFor(

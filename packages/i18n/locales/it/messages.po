@@ -4252,7 +4252,7 @@ msgstr "Importazione completata in {name}. {0, plural, one {# record verificato}
 msgid "Import from {0}"
 msgstr "Importa da {0}"
 
-#: packages/migration/src/run.ts
+#: packages/migration/src/run-identities.ts
 msgid "Import identity collision. Existing records will not be overwritten."
 msgstr "Conflitto tra identità di importazione. I record esistenti non verranno sovrascritti."
 
