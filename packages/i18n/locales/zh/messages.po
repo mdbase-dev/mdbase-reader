@@ -3809,6 +3809,10 @@ msgstr "请在 mdbase 标签页完成登录"
 msgid "Finish signing in or approving in the mdbase tab, then save."
 msgstr "请在 mdbase 标签页中完成登录或批准，然后再保存。"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Finish syncing, then choose <0>Tools → Export for mdbase Reader…</0>. Keep Zotero open and avoid editing until the export finishes."
+msgstr "等待同步完成，然后选择 <0>工具 → Export for mdbase Reader…</0>。请保持 Zotero 打开，并在导出完成前不要进行编辑。"
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
@@ -4312,6 +4316,10 @@ msgstr "在文献笔记中"
 msgid "In your collection"
 msgstr "在你的集合中"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "In Zotero, open <0>Tools → Plugins</0> and drag the downloaded .xpi file into the Plugins window."
+msgstr "在 Zotero 中打开 <0>工具 → 插件</0>，将下载的 .xpi 文件拖入插件窗口。"
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Inbox"
@@ -4397,10 +4405,6 @@ msgstr "安装 {appName}"
 #: apps/reader/src/pwa-install.ts
 msgid "Install {appName} for quick access in its own window."
 msgstr "安装 {appName}，以便在独立窗口中快速访问。"
-
-#: apps/reader/src/ImportInput.tsx
-msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
-msgstr "安装实验性的 Zotero 10.0.x 导出器，然后使用 <0>工具 → 导出到 mdbase Reader…</0>。请选择整个导出文件夹，而不是 Zotero 的数据目录。"
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview · no collection connected. Changes stay in this tab."
@@ -7367,6 +7371,10 @@ msgctxt "AnnotationEditor interface"
 msgid "Retry save"
 msgstr "重试保存"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Return here and select the whole generated export folder—not its parent folder or Zotero’s data directory."
+msgstr "返回此页面，选择生成的整个导出文件夹，不要选择其上级文件夹或 Zotero 的数据目录。"
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review"
@@ -8762,6 +8770,10 @@ msgstr "嵌入的注释资源不是图片。"
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "The EPUB resource layer could not take control of this Reader tab."
 msgstr "EPUB 资源层无法接管此 Reader 标签页。"
+
+#: apps/reader/src/ImportInput.tsx
+msgid "The experimental exporter supports Zotero 10.0.x only and requires a signed-in Zotero account. It exports all of <0>My Library</0>, excluding group libraries and trash."
+msgstr "实验性导出器仅支持 Zotero 10.0.x，并要求登录 Zotero 账户。它会导出<0>我的文库</0>中的全部内容，不包括群组文库和回收站。"
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "The export could not be encoded."

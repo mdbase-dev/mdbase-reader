@@ -96,6 +96,13 @@ footer {
   overflow-wrap: anywhere;
   padding-left: 22px;
 }
+#warning-list > li + li {
+  margin-top: 16px;
+}
+#warning-list details {
+  font-size: 12px;
+  color: light-dark(#60605d, #aaa);
+}
 summary {
   cursor: pointer;
 }

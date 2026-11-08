@@ -3808,6 +3808,10 @@ msgstr "Completa l'accesso nella scheda mdbase"
 msgid "Finish signing in or approving in the mdbase tab, then save."
 msgstr "Completa l’accesso o l’approvazione nella scheda mdbase, quindi salva."
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Finish syncing, then choose <0>Tools → Export for mdbase Reader…</0>. Keep Zotero open and avoid editing until the export finishes."
+msgstr "Attendi il completamento della sincronizzazione, poi scegli <0>Strumenti → Export for mdbase Reader…</0>. Tieni Zotero aperto e non apportare modifiche fino al termine dell’esportazione."
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
@@ -4311,6 +4315,10 @@ msgstr "Nella nota della fonte"
 msgid "In your collection"
 msgstr "Nella raccolta"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "In Zotero, open <0>Tools → Plugins</0> and drag the downloaded .xpi file into the Plugins window."
+msgstr "In Zotero, apri <0>Strumenti → Plugin</0> e trascina il file .xpi scaricato nella finestra dei plugin."
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Inbox"
@@ -4396,10 +4404,6 @@ msgstr "Installa {appName}"
 #: apps/reader/src/pwa-install.ts
 msgid "Install {appName} for quick access in its own window."
 msgstr "Installa {appName} per accedervi rapidamente in una finestra dedicata."
-
-#: apps/reader/src/ImportInput.tsx
-msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
-msgstr "Installa l’esportatore sperimentale per Zotero 10.0.x, quindi usa <0>Strumenti → Esporta per mdbase Reader…</0>. Seleziona l’intera cartella esportata, non la directory dei dati di Zotero."
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview · no collection connected. Changes stay in this tab."
@@ -7366,6 +7370,10 @@ msgctxt "AnnotationEditor interface"
 msgid "Retry save"
 msgstr "Riprova a salvare"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Return here and select the whole generated export folder—not its parent folder or Zotero’s data directory."
+msgstr "Torna qui e seleziona l’intera cartella di esportazione generata, non la cartella che la contiene né la directory dei dati di Zotero."
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review"
@@ -8761,6 +8769,10 @@ msgstr "La risorsa annotazione incorporata non è un'immagine."
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "The EPUB resource layer could not take control of this Reader tab."
 msgstr "Il livello delle risorse EPUB non è riuscito a prendere il controllo di questa scheda Reader."
+
+#: apps/reader/src/ImportInput.tsx
+msgid "The experimental exporter supports Zotero 10.0.x only and requires a signed-in Zotero account. It exports all of <0>My Library</0>, excluding group libraries and trash."
+msgstr "L’esportatore sperimentale supporta solo Zotero 10.0.x e richiede l’accesso a un account Zotero. Esporta tutta <0>La mia biblioteca</0>, escluse le biblioteche di gruppo e il cestino."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "The export could not be encoded."

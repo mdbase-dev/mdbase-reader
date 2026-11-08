@@ -10,6 +10,46 @@ window.addEventListener(
     let picking = false;
     let warningsRendered = null;
 
+    function warningItem(warning) {
+      const create = (tag, text) => {
+        const node = document.createElementNS("http://www.w3.org/1999/xhtml", tag);
+        if (text) node.textContent = text;
+        return node;
+      };
+      const messages = {
+        "missing-file":
+          "This file is unavailable. Its Zotero metadata is included. Download or locate the file in Zotero, then export again.",
+        "missing-parent":
+          "This item's parent was not exported. The item is retained; check whether its parent is missing or in Zotero's trash.",
+        "csl-unavailable":
+          "Citation details could not be generated. Zotero metadata is included; check this item in Zotero and export again.",
+      };
+      const title = typeof warning.title === "string" ? warning.title.trim() : "";
+      const item = create("li");
+      const details = create("details");
+      details.append(
+        create("summary", "Technical details"),
+        create(
+          "p",
+          `Code: ${warning.code} · Item key: ${warning.key}${warning.parent ? ` · Parent key: ${warning.parent}` : ""}`,
+        ),
+      );
+      item.append(
+        create(
+          "strong",
+          title || (warning.code === "missing-file" ? "Untitled attachment" : "Untitled item"),
+        ),
+        create(
+          "p",
+          Object.hasOwn(messages, warning.code)
+            ? messages[warning.code]
+            : "Some export details are unavailable. Review the technical details before importing.",
+        ),
+        details,
+      );
+      return item;
+    }
+
     function render(state) {
       const busy = controller.busy;
       el("status").textContent = state.message;
@@ -19,10 +59,12 @@ window.addEventListener(
         "A new, uniquely named folder will be created inside it. Existing folders are never overwritten.";
       el("choose").disabled = busy || picking;
       el("start").disabled = state.phase !== "ready" || picking;
+      el("start").hidden = state.phase === "complete";
       el("cancel").hidden = !busy;
       el("cancel").disabled = state.phase === "cancelling";
       el("close").disabled = busy;
       el("reveal").hidden = state.phase !== "complete";
+      el("open-reader").hidden = state.phase !== "complete";
       el("next-step").hidden = state.phase !== "complete";
       el("progress").hidden = !busy;
       if (state.phase === "exporting" && state.total) {
@@ -70,15 +112,14 @@ window.addEventListener(
       }
       const warnings = state.manifest?.warnings;
       el("warnings").hidden = !warnings?.length;
-      if (warnings && warnings !== warningsRendered) {
+      if (warnings !== warningsRendered) {
         warningsRendered = warnings;
         el("warning-count").textContent =
-          `${warnings.length} warnings — also saved in manifest.json`;
+          `${warnings?.length || 0} ${warnings?.length === 1 ? "warning" : "warnings"} — also saved in manifest.json`;
+        el("warnings").open = !!warnings?.length;
         el("warning-list").replaceChildren();
-        for (const w of warnings) {
-          const item = document.createElementNS("http://www.w3.org/1999/xhtml", "li");
-          item.textContent = `${w.code}: ${w.key}${w.parent ? ` (parent ${w.parent})` : ""}`;
-          el("warning-list").append(item);
+        for (const warning of warnings || []) {
+          el("warning-list").append(warningItem(warning));
         }
       }
     }
@@ -115,6 +156,12 @@ window.addEventListener(
     el("reveal").addEventListener(
       "click",
       handle(() => actions.reveal()),
+    );
+    el("open-reader").addEventListener(
+      "click",
+      handle(() => {
+        if (controller.state.phase === "complete") return actions.openImporter();
+      }),
     );
     el("close").addEventListener("click", () => window.close());
     window.addEventListener("close", (event) => {

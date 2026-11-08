@@ -1,6 +1,6 @@
 # Zotero migration-bundle prototype
 
-A standalone, read-only exporter shared with the [installable Zotero plugin](../../apps/zotero-exporter/README.md). It does **not** create an mdbase collection, connect to a service, or modify Zotero records. The future Reader importer will convert this bundle and upload it to the selected (e.g. hosted) collection.
+A standalone, read-only exporter shared with the [installable Zotero plugin](../../apps/zotero-exporter/README.md). It does **not** create an mdbase collection, connect to a service, or modify Zotero records. [Reader's Zotero importer](https://reader.mdbase.dev/import/zotero) verifies and converts this bundle, then writes to the selected collection after confirmation.
 
 ## Run in Zotero
 
@@ -41,6 +41,7 @@ files/<zotero-attachment-key>/<original-filename>
 - Annotations retain original type, selectors, quotes, comments, colours, dates, tags and parent attachment keys. PDF, EPUB, image and ink selectors are not interpreted or converted.
 - Collections retain hierarchy; native item JSON retains membership. Neither is flattened into filenames or tags.
 - Attachments explicitly distinguish `available`, `missing-file`, and `linked-url`. Linked files are copied only when locally accessible. Missing attachments remain metadata records, with warnings. Original filesystem paths are omitted from native attachment JSON.
+- Warnings retain their machine-readable `code`, `key` and, for missing parents, `parent`. An optional `title` from the exported record provides a human-readable label; readers must also accept warnings without a title.
 - Original file bytes are copied, **never** PDF-rewritten to embed annotations. HTML snapshots include their adjacent support files recursively, excluding `.zotero*` caches. Other file attachments copy only their primary payload. Derived annotation image caches are not included; their native selectors are retained.
 - Each payload has a relative path, byte count and SHA-256 digest in the manifest. Each attachment lists its primary path and all payload paths.
 - The manifest starts as `exporting`; its terminal status is `complete`, `complete-with-warnings`, `failed`, or `cancelled`. Readers must refuse incomplete statuses. JSON writes use temporary files and atomic replacement. There is no resume yet: a failed/cancelled export must be repeated into a new destination.
@@ -92,4 +93,4 @@ The output is private user data and must not be committed or published. Only cod
 
 ## Before packaging as a public plugin
 
-The plugin now provides a folder picker, preflight disk-space estimate, progress/cancel UI, asynchronous native hashing and XPI packaging. Still needed: resumable journalling and tests on additional Zotero versions/OSes; collection/group selection and stable identity for unsigned-in libraries; embedded note images and more snapshot formats; a reviewed Better BibTeX integration rather than guessing citekeys. Add bundle schema validation and source-hash binding for annotation targets when building Reader's importer. The Reader bundle importer is not implemented yet.
+The plugin now provides a folder picker, preflight disk-space estimate, progress/cancel UI, asynchronous native hashing, XPI packaging and a link to Reader's bundle importer. Still needed: resumable journalling and tests on additional Zotero versions/OSes; collection/group selection and stable identity for unsigned-in libraries; embedded note images and more snapshot formats; a reviewed Better BibTeX integration rather than guessing citekeys. Bundle schema validation and annotation-target conversion belong in Reader's importer, not the exporter.

@@ -67,6 +67,47 @@ test("refuses active sync before creating a destination", async () => {
   assert.equal(f.written.size, 0);
 });
 
+test("warnings include exported titles without changing codes, keys or parent identities", async () => {
+  const fixtureData = fixture();
+  fixtureData.snapshot.items[0].csl = null;
+  fixtureData.snapshot.items[0].zotero.title = "  A source title  ";
+  fixtureData.snapshot.notes[0].zotero.parentItem = "TRASHED";
+  fixtureData.snapshot.annotations[0].zotero.parentItem = "MISSING-ATTACHMENT";
+  fixtureData.snapshot.annotations[0].zotero.annotationText = "Annotated passage";
+  fixtureData.snapshot.attachments[1].zotero.title = "<b>Attachment title</b>";
+  const manifest = await exportLibrary(fixtureData.adapter, { destination: "test" });
+  assert.deepEqual(JSON.parse(JSON.stringify(manifest.warnings)), [
+    { code: "missing-parent", key: "NOTE", parent: "TRASHED" },
+    {
+      code: "missing-parent",
+      key: "ANN",
+      parent: "MISSING-ATTACHMENT",
+      title: "Annotated passage",
+    },
+    { code: "csl-unavailable", key: "SOURCE", title: "A source title" },
+    { code: "missing-file", key: "MISSING", title: "<b>Attachment title</b>" },
+  ]);
+  assert.deepEqual(
+    fixtureData.written.get("manifest.json").warnings,
+    JSON.parse(JSON.stringify(manifest.warnings)),
+  );
+  assert.equal(fixtureData.written.get("items.json")[0].zotero.title, "  A source title  ");
+});
+
+test("warning titles can fall back to CSL without including raw note HTML", async () => {
+  const fixtureData = fixture();
+  fixtureData.snapshot.items[0].zotero.parentItem = "MISSING-PARENT";
+  fixtureData.snapshot.items[0].zotero.title = " ";
+  fixtureData.snapshot.items[0].csl.title = "CSL source title";
+  fixtureData.snapshot.notes[0].zotero.parentItem = "MISSING-PARENT";
+  const manifest = await exportLibrary(fixtureData.adapter, { destination: "test" });
+  assert.equal(
+    manifest.warnings.find((warning) => warning.key === "SOURCE").title,
+    "CSL source title",
+  );
+  assert.equal(manifest.warnings.find((warning) => warning.key === "NOTE").title, undefined);
+});
+
 for (const relative of [
   "../escape",
   "/absolute",

@@ -18,6 +18,12 @@ var ReaderZoteroBundle = (() => {
     return s;
   };
   const stable = (rows) => JSON.stringify(rows.slice().sort((a, b) => a.key.localeCompare(b.key)));
+  const warningFor = (code, row) => {
+    const title = [row.zotero.title, row.csl?.title, row.zotero.annotationText].find(
+      (value) => typeof value === "string" && value.trim(),
+    );
+    return { code, key: row.key, ...(title ? { title: title.trim() } : {}) };
+  };
 
   async function exportLibrary(adapter, { destination, signal, onProgress = () => {} }) {
     const check = () => {
@@ -51,8 +57,7 @@ var ReaderZoteroBundle = (() => {
         segment(row.key);
         if (row.zotero.parentItem && !keys.has(row.zotero.parentItem)) {
           manifest.warnings.push({
-            code: "missing-parent",
-            key: row.key,
+            ...warningFor("missing-parent", row),
             parent: row.zotero.parentItem,
           });
         }
@@ -67,7 +72,7 @@ var ReaderZoteroBundle = (() => {
         }
       }
       for (const row of items) {
-        if (!row.csl) manifest.warnings.push({ code: "csl-unavailable", key: row.key });
+        if (!row.csl) manifest.warnings.push(warningFor("csl-unavailable", row));
       }
       for (const [name, rows] of Object.entries({ items, notes, annotations, collections })) {
         await json(`${name}.json`, rows);
@@ -81,7 +86,7 @@ var ReaderZoteroBundle = (() => {
         if (payload.status !== "available") {
           out.status = payload.status;
           if (payload.status !== "linked-url") {
-            manifest.warnings.push({ code: payload.status, key: attachment.key });
+            manifest.warnings.push(warningFor(payload.status, attachment));
           }
         } else {
           if (!payload.files.length) throw new Error("Available attachment has no files");

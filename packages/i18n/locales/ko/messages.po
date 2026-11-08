@@ -3809,6 +3809,10 @@ msgstr "mdbase 탭에서 로그인 완료"
 msgid "Finish signing in or approving in the mdbase tab, then save."
 msgstr "mdbase 탭에서 로그인 또는 승인을 마친 다음 저장해 주세요."
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Finish syncing, then choose <0>Tools → Export for mdbase Reader…</0>. Keep Zotero open and avoid editing until the export finishes."
+msgstr "동기화가 끝나면 <0>도구 → Export for mdbase Reader…</0>를 선택하세요. 내보내기가 완료될 때까지 Zotero를 열어 두고 편집하지 마세요."
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Finished"
@@ -4312,6 +4316,10 @@ msgstr "자료 노트에 있음"
 msgid "In your collection"
 msgstr "내 컬렉션에 있음"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "In Zotero, open <0>Tools → Plugins</0> and drag the downloaded .xpi file into the Plugins window."
+msgstr "Zotero에서 <0>도구 → 플러그인</0>을 열고 다운로드한 .xpi 파일을 플러그인 창으로 드래그하세요."
+
 #: apps/reader/src/LibraryCells.tsx
 msgctxt "reading status"
 msgid "Inbox"
@@ -4397,10 +4405,6 @@ msgstr "{appName} 설치"
 #: apps/reader/src/pwa-install.ts
 msgid "Install {appName} for quick access in its own window."
 msgstr "{appName}을(를) 설치하면 별도 창에서 빠르게 열 수 있습니다."
-
-#: apps/reader/src/ImportInput.tsx
-msgid "Install the experimental Zotero 10.0.x exporter, then use <0>Tools → Export for mdbase Reader…</0>. Select the whole exported folder—not Zotero’s data directory."
-msgstr "실험용 Zotero 10.0.x 내보내기 도구를 설치한 다음 <0>도구 → Export for mdbase Reader…</0>를 사용해 주세요. Zotero의 데이터 디렉터리가 아니라 내보낸 폴더 전체를 선택해야 합니다."
 
 #: apps/reader/src/preview.tsx
 msgid "Interface preview · no collection connected. Changes stay in this tab."
@@ -7367,6 +7371,10 @@ msgctxt "AnnotationEditor interface"
 msgid "Retry save"
 msgstr "저장 다시 시도"
 
+#: apps/reader/src/ImportInput.tsx
+msgid "Return here and select the whole generated export folder—not its parent folder or Zotero’s data directory."
+msgstr "이 페이지로 돌아와 생성된 내보내기 폴더 전체를 선택하세요. 상위 폴더나 Zotero 데이터 디렉터리는 선택하지 마세요."
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "Review"
@@ -8762,6 +8770,10 @@ msgstr "포함된 주석 자산이 이미지가 아닙니다."
 #: packages/renderer-epub/src/epub-resource-store.ts
 msgid "The EPUB resource layer could not take control of this Reader tab."
 msgstr "EPUB 리소스 계층이 이 Reader 탭의 제어권을 가져올 수 없습니다."
+
+#: apps/reader/src/ImportInput.tsx
+msgid "The experimental exporter supports Zotero 10.0.x only and requires a signed-in Zotero account. It exports all of <0>My Library</0>, excluding group libraries and trash."
+msgstr "실험적 내보내기 도구는 Zotero 10.0.x만 지원하며 Zotero 계정에 로그인해야 합니다. 그룹 라이브러리와 휴지통을 제외한 <0>내 라이브러리</0> 전체를 내보냅니다."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "The export could not be encoded."
