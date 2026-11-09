@@ -338,7 +338,7 @@ async function main() {
       process.env.PUBLISH_RESULT,
     ];
     if (results.some((value) => ["failure", "cancelled"].includes(value))) {
-      let previous = {};
+      let previous;
       try {
         previous = await json(receiptPath());
       } catch {
@@ -355,7 +355,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   try {
     await main();
   } catch (error) {
-    let previous = {};
+    let previous;
     try {
       previous = await json(receiptPath());
     } catch {
