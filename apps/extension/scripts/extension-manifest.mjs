@@ -103,7 +103,7 @@ const packageVersion = JSON.parse(
  * `0.3.0-beta.1` ships as version `0.3.0` and shows its full name as `version_name`.
  */
 export function manifestVersion(version = packageVersion) {
-  const match = /^(\d+\.\d+\.\d+)(?:-(.+))?$/u.exec(version);
+  const match = /^(\d+\.\d+\.\d+(?:\.\d+)?)(?:-(.+))?$/u.exec(version);
   if (!match) {
     throw new Error(`Unsupported extension version: ${version}`);
   }

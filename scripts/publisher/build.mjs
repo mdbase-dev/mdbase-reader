@@ -1,4 +1,4 @@
-// Unprivileged web-only build. Extension shipping remains on its independent store train.
+// Unprivileged web-only build. Extension shipping uses its independent app-CD store target.
 import { execFileSync } from "node:child_process";
 import { cp, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";

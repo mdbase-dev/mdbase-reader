@@ -16,6 +16,27 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  extension-build:
+    name: Build production extension
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build production ZIP with its authenticated SDK
+        env:
+          MDBASE_ENV: production
+        run: pnpm --filter @mdbase-reader/extension package
+      - name: Keep source and generated manifests clean
+        run: test -z "$(git status --porcelain)"
+
   check:
     name: Lint, typecheck, test and build
     runs-on: ubuntu-24.04

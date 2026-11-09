@@ -1,55 +1,103 @@
-# Browser extension releases
+# Reader extension app CD
 
-## Disabled-by-default weekly train
+Approved 2026-11-09: ops app CD owns the independent `reader-extension-chrome`
+target. `publish-reader-extension.yml` runs only on main, on its first dispatch
+attempt, with an exact main-ancestor `source_sha`. No weekly train, GO step,
+cooldown, release-tag publisher or enable variable remains. The off switch is the
+ops `app-stop` issue marker `<!-- mdbase-app-line:reader-extension-chrome -->`.
+A whole-Reader stop also holds the extension; an extension failure never holds
+Reader web, another store or Server CD.
 
-`extension-train.yml` runs only on the Sunday 22:30 UTC weekly sweep or manual dispatch on **main**. There is no push/merge, pull-request or workflow-run trigger. **Merging this PR is a no-op for extension releases even if the switch is already on.** The entire job additionally requires repository variable `EXTENSION_TRAIN_ENABLED` to equal the exact string `true`. The script repeats the check before reading credentials. The variable has not been created or enabled.
+## Qualification, custody and submission
 
-SDK repin PRs still merge through ordinary CI/protections; their shipping effects are picked up by the next enabled weekly/manual sweep. The train:
+- Required workflows/jobs are defined **only** in ops `config/client-apps.json`,
+  `store_checks.extension-chrome`. The source must have exact-main-push CI and the
+  production extension package job green on the newest run attempt. Ops selects
+  the candidate; the workflow re-reads the same policy and attempts before writes.
+  Pending/failed checks wait. A proven pre-upload refusal retains
+  `exact-main-ci-required`, `write_started: false`; ops records `store-unchanged`
+  without an app-stop. After any possible upload, the same refusal stops the target.
+- A read-only preflight preserves pending/staged review and async upload. Rejected,
+  cancelled, warned or taken-down states fail closed. No review is cancelled or
+  replaced. One whole-workflow concurrency group serializes this store.
+- The version exceeds the live store channels and all `extension-v*` reservations,
+  using the source package manifest as a floor. For example, manifest 0.5.0 plus
+  live/reserved 0.5.1 yields **0.5.2**, not 0.5.1 again. Chrome numeric component
+  limits apply. A higher explicit manifest version wins. A source already proven
+  live by an exact run receipt is a no-op.
+- An unprivileged job authenticates the original production SDK's integrity,
+  Sigstore provenance, producer and protected trust digest before installation.
+  Frozen installation disables hooks and pnpmfiles; every installed original
+  member is compared before hooks/build. Only the ephemeral package version changes.
+  No store credentials or protected environment enter this job.
+- The protected uploader executes workflow-owned code, not candidate modules. It
+  reconstructs the exact source plan and checks the immutable artifact ID/digest,
+  workflow/run/attempt/source/tree binding, package SHA256SUMS and production MV3
+  manifest. It repeats canonical checks, holds, and the live production SDK producer
+  ancestry gate before upload and submission. Existing SDK signatures, digests,
+  provenance, attestation authentication and extension identity are not bypassed.
+- A permanent `extension-vVERSION` tag reserves the number **before** upload, even
+  if upload fails or its outcome is unknown. No tag is updated or deleted; tag pushes
+  no longer dispatch an extension publisher. Only the existing release App may
+  reserve a version after the supervisor verifies its existing ruleset authorization.
+- The same protected uploader preserves the existing GitHub distribution channel:
+  it creates the reserved tag's ZIP + SHA256SUMS release from the exact verified
+  store bytes before upload. A failed release stops this target without a store
+  write; its reserved version is still consumed. There is no second release build.
+- Holds are read through the existing ops store-line Actions bridge, using its
+  returned first-attempt run and exact bounded artifact. The release App needs
+  Actions-write access, not an added Issues grant; all line policy stays in ops.
+- Upload and submit are each attempted once. The v2 upload must return the exact
+  `crxVersion`; async success without that version remains a stop, never a guessed
+  submission. `DEFAULT_PUBLISH` releases automatically after approval, without
+  skipping review; `blockOnWarnings: true` remains. There is no second GO step.
+- The final `reader-store-extension-chrome-RUN` artifact contains only bounded
+  `store-cd-result.json` identity/outcome/reason/version/digest/write-boundary fields.
+  Ops retains `app-cd-reader-publish-extension-chrome-RUN` for the daily summary.
+  No tokens, Google response bodies, customer data or raw logs are retained.
+  Build/upload/rejection/unknown-write failures stop only this target. Never
+  redispatch an unknown write or clear a hold without reconciling it.
 
-1. Uses the existing release App for Git pushes and a read-only Google scope to inspect the store. A pending/staged review or in-progress upload defers before building or allocating a tag. Store policy issues fail closed.
-2. Builds the production ZIP, rather than treating source paths or lockfile changes as proof of a shipped change. There is no path list.
-3. Reads paginated `release.yml` run/jobs history and selects the most recently completed successful **Upload and submit for review** step in the Web Store job on a stable extension push tag. A green packaging-only run or failed submission is not a baseline; a later post-step job failure does not erase a proved successful submission. It checks the tag commit against the run SHA, downloads that release's exact ZIP and SHA256SUMS, and verifies the archive checksum.
-4. Compares hashes of sorted ZIP file names and uncompressed file contents, normalizing only the root manifest's `version`/`version_name`. ZIP order, compression and timestamps do not count. Every other shipped byte does. Identical content is a no-op, except an explicitly higher version on main is honored as deliberate release intent.
-5. Allocates a Chrome-compatible stable version above every reserved tag, including failed tags; failed tags never replace the content baseline. An explicit higher main version (for example `0.6.0`) is used unchanged. Alien tags outside main/version-only main snapshots produce an alerting failure, even for identical ZIPs. Patch exhaustion requires a higher minor/major version.
-6. Rechecks store state before tagging, defers if an extension release is still running, and tags a main snapshot with only the extension package version bumped. It does not write directly to main. The App-token tag push starts `release.yml`: exact-snapshot CI, production ZIP/checksums/GitHub Release, then ordinary store review. No mutation is automatically retried.
+Chrome v2 references: [status](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/fetchStatus),
+[upload](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/media/upload),
+[publish](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/publish).
+In particular, fetchStatus exposes no uploaded-draft version, and DEFAULT_PUBLISH
+means release immediately after approval. Store-installed copies receive Chrome
+updates; unpacked builds do not.
 
-Train and Web Store jobs share a serialization group. A store change outside this automation can still race the preflight; the publisher independently refuses pending review, old versions and policy issues. No pending submission is cancelled or replaced.
+## First live run and store preconditions
 
-## Baseline and enablement blockers verified 2026-11-02
+Merge the ops store-gate fix and TaskNotes companion first, this Reader change
+next, then ops Reader enrollment. Reader #155 (authenticated release asset reads)
+is already the base. Wait for both configured Reader main-push jobs. The release
+supervisor owns the first live submission at the next eligible fifteen-minute
+app-CD tick (Actions fallback minutes `07,22,37,52` UTC); implementation never
+dispatches a release or app-CD workflow.
 
-There is currently **no workflow-proved successful Web Store submission baseline**. The ten visible extension release runs were inspected: `extension-v0.2.0` through `0.2.3` green runs packaged GitHub releases but had no Web Store job. `0.3.0`, `0.4.0`, `0.4.1` and `0.5.0` had failed Web Store submissions. The train explicitly fails rather than adopting `0.2.3` or the highest failed tag. A maintainer must establish a successful normal release workflow submission after resolving the dashboard blocker; this PR does not bootstrap by guessing from a published store version or a manual dashboard submission.
+Before that tick, use the [store checklist](extension-store-checklist.md). Version
+0.5.2 is expected only if the highest live/reserved version remains 0.5.1; live
+store state was not read during implementation. A higher store/tag version raises
+it automatically. Pending review waits without allocating a version.
 
-Ruleset **26306750**, `extension-version-immutability`, is active for `refs/tags/extension-v*` with **creation, update and deletion** rules. The **only** bypass actor is RepositoryRole **5** (repository admin), mode `always`. This bypass applies to all three rules, including update/deletion; non-admin actors cannot create tags. The release App has **not** been added. An owner must install/authorize it and deliberately add its bypass before enabling the train. No tag was created to test enforcement.
+## Existing distribution evidence, 2026-11-09
 
-## Main-branch inspection and Google binding handoff
+The only existing store publisher is Chrome. No Firefox AMO or Edge publisher,
+listing or credentials are introduced.
 
-`release.yml` manual dispatch on **main** runs only `inspect-webstore`, using the existing environment variables/service account and `chromewebstore.readonly` scope. Push-only CI/packaging/upload/publish jobs do not run. No new tag is needed. The command is `node apps/extension/scripts/publish-webstore.mjs --status` with `CWS_ACCESS_TOKEN`, `CWS_PUBLISHER_ID` and `CWS_ITEM_ID`; it performs only a v2 GET `:fetchStatus`.
+| App               | Real channel today           | Evidence inspected                                                                                                                                                               | Added to app CD                                                |
+| ----------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Browser extension | Yes, Chrome                  | `release.yml` run 41348531792 (2026-11-01): package, checksum download, Google authentication and upload/submit steps succeeded; `extension-v0.5.1` release has ZIP + SHA256SUMS | Yes, Chrome only                                               |
+| Electron desktop  | No demonstrated distribution | No desktop publishing workflow; all nine GitHub releases are extension releases, no desktop installer assets or successful desktop channel uploads                               | No; product decision on channel/signing/updater                |
+| Capacitor mobile  | No demonstrated distribution | No iOS/Android store publisher or uploads in workflow history; no mobile release assets                                                                                          | No; product decision on platforms/listings/signing             |
+| Zotero exporter   | No demonstrated distribution | Tag packaging code exists in `release.yml`, but no `zotero-exporter-v*` release, tag, XPI release asset or successful release job in the inspected history                       | No; decide whether to activate the existing GitHub XPI channel |
 
-**Two existing settings reject main. Neither was changed.**
-
-- Environment `reader-extension-production` currently allows only the `extension-v*` **tag** deployment policy (61634280). An owner must add an exact **branch** policy `main`, retaining the tag policy and **no required reviewers**. Otherwise the job cannot reach Google authentication.
-- Provider `projects/927694253189/locations/global/workloadIdentityPools/reader-github/providers/reader-release` currently requires this repository/owner plus an extension tag and `release.yml` at that tag. Its service-account `roles/iam.workloadIdentityUser` principalSet already selects repository ID 1388387271; that binding does not need replacing. The provider's attribute condition must deliberately admit the two exact main workflows as below, preserving tag release trust. This is proposed configuration, **not an applied change**:
-
-```text
-assertion.repository_id == '1388387271' &&
-assertion.repository_owner_id == '307332157' && (
-  (assertion.ref.startsWith('refs/tags/extension-v') &&
-   assertion.workflow_ref.startsWith('mdbase-dev/mdbase-reader/.github/workflows/release.yml@refs/tags/extension-v')) ||
-  (assertion.ref == 'refs/heads/main' &&
-   assertion.event_name == 'workflow_dispatch' &&
-   assertion.workflow_ref == 'mdbase-dev/mdbase-reader/.github/workflows/release.yml@refs/heads/main') ||
-  (assertion.ref == 'refs/heads/main' &&
-   assertion.event_name in ['schedule', 'workflow_dispatch'] &&
-   assertion.workflow_ref == 'mdbase-dev/mdbase-reader/.github/workflows/extension-train.yml@refs/heads/main')
-)
-```
-
-Existing non-secret environment variables remain `CWS_WORKLOAD_IDENTITY_PROVIDER`, `CWS_SERVICE_ACCOUNT` (`reader-webstore@mdbase-connect.iam.gserviceaccount.com`), `CWS_PUBLISHER_ID` (`01a9bdcf-e8d0-46ba-956d-2ef4dde4dc43`), and `CWS_ITEM_ID` (`kimdfjefhbfgfecconmaiaaindjccidp`). No secret, IAM, provider or environment setting was changed. Service-account store access remains publisher-wide, so workflows hard-target Reader.
-
-## Publisher diagnostics and slow uploads
-
-The publisher keeps CWS **v2**, normal review and `blockOnWarnings: true`. It reports bounded, credential-redacted `error.details` and pre-upload status. If upload succeeds but submission fails, inspect the dashboard instead of blindly rerunning upload. Rerun only failed jobs when failure was provably before mutation; never retry an unknown-outcome mutation automatically.
-
-Slow upload processing is polled to completion, then `crxVersion` must be known and match before submission. **API limitation:** the current v2 upload response documents that `crxVersion` is omitted during async processing, while `fetchStatus` exposes only `lastAsyncUploadState` and versions of **published/submitted revisions**, not the newly uploaded unsubmitted draft. Those older revisions cannot safely verify the upload. Therefore missing version now **fails closed** instead of silently submitting. Polling cannot recover an unexposed draft version; this part of the requested behavior needs Google API support/operator verification. No undocumented field, re-upload, deprecated v1 fallback or post-submission inference is used. The v1 API support ended October 15, 2026.
-
-References: [v2 upload response](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/media/upload), [v2 status fields](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/fetchStatus), [v1 retirement](https://developer.chrome.com/docs/webstore/api/v1). See [the corrected dashboard checklist](extension-store-checklist.md). Store-installed copies receive Chrome's normal updates after approval/publication; unpacked copies do not. Zotero release behavior is unchanged.
+The three release runs immediately before 0.5.1 were 40236722529 (0.5.0),
+37020696442 (0.4.1), and 36868829802 (0.4.0). Their CI/package/checksum-download/
+Google-authentication steps succeeded; the combined **Upload and submit for review**
+step failed. Each run has **zero retained artifacts**. Allowed evidence therefore
+cannot distinguish upload from submission failure, prove an HTTP reason, or name
+a missing dashboard field. No raw logs were read or copied. The 0.5.1 run proves
+that this same submission boundary subsequently succeeded, not the specific fix
+or today's listing state. The replacement splits bounded upload/submission reasons,
+retains them durably and refuses policy warnings; it does not claim to repair an
+unproved historical dashboard defect.
