@@ -10,6 +10,13 @@ export const need = (condition, reason) => {
   if (!condition) throw Object.assign(new Error(reason), { reason });
 };
 export const json = async (path) => JSON.parse(await readFile(path, "utf8"));
+export function githubContent(file) {
+  try {
+    return JSON.parse(Buffer.from(file.content, "base64"));
+  } catch (error) {
+    throw Object.assign(error, { reason: error.reason ?? "release-evidence-unavailable" });
+  }
+}
 export function gh(path, { method, body, pages = false, raw = false } = {}) {
   const args = ["api", ...(pages ? ["--paginate", "--slurp"] : []), path];
   if (method) args.push("--method", method, "--input", "-");
@@ -19,13 +26,18 @@ export function gh(path, { method, body, pages = false, raw = false } = {}) {
       : method
         ? process.env.READER_RELEASE_TOKEN
         : process.env.GITHUB_TOKEN;
-  const bytes = execFileSync("gh", args, {
-    input: body ? JSON.stringify(body) : undefined,
-    env: { ...process.env, GH_TOKEN: token },
-    stdio: ["pipe", "pipe", "pipe"],
-    maxBuffer: 100 * 1024 * 1024,
-  });
-  return raw ? bytes : JSON.parse(bytes);
+  try {
+    const bytes = execFileSync("gh", args, {
+      input: body ? JSON.stringify(body) : undefined,
+      env: { ...process.env, GH_TOKEN: token },
+      stdio: ["pipe", "pipe", "pipe"],
+      maxBuffer: 100 * 1024 * 1024,
+    });
+    return raw ? bytes : JSON.parse(bytes);
+  } catch (error) {
+    if (!method || method === "GET") error.reason ??= "release-evidence-unavailable";
+    throw error;
+  }
 }
 export function versionParts(version) {
   need(/^(0|[1-9]\d*)(\.(0|[1-9]\d*)){2,3}$/.test(version ?? ""), "numeric-store-version-required");
@@ -136,7 +148,7 @@ export async function storeLine(
 }
 export async function qualify(source, transport = gh, readState = storeLine) {
   const file = transport(`repos/${ops}/contents/config/app-cd.json?ref=main`);
-  const cfg = JSON.parse(Buffer.from(file.content, "base64")).reader;
+  const cfg = githubContent(file).reader;
   need(
     cfg.repository === repository &&
       cfg.store_workflow === workflow &&
@@ -144,9 +156,8 @@ export async function qualify(source, transport = gh, readState = storeLine) {
     "store-enrollment-required",
   );
   const clients = transport(`repos/${ops}/contents/config/client-apps.json?ref=main`);
-  const checks = JSON.parse(Buffer.from(clients.content, "base64")).find(
-    (client) => client.repository === repository,
-  )?.store_checks?.[target];
+  const checks = githubContent(clients).find((client) => client.repository === repository)
+    ?.store_checks?.[target];
   need(Array.isArray(checks) && checks.length > 0, "store-check-policy-required");
   need(
     checks.some((check) => check.workflow === cfg.ci) &&

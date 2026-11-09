@@ -20,6 +20,7 @@ import {
   need,
   json,
   gh,
+  githubContent,
   versionParts,
   nextVersion,
   reviewBlock,
@@ -72,6 +73,13 @@ async function defer(reason) {
   });
 }
 async function previousSubmission(source, versions) {
+  try {
+    return await readPreviousSubmission(source, versions);
+  } catch (error) {
+    throw Object.assign(error, { reason: error.reason ?? "release-evidence-unavailable" });
+  }
+}
+async function readPreviousSubmission(source, versions) {
   const pages = gh(
     `repos/${repository}/actions/workflows/${workflow}/runs?branch=main&event=workflow_dispatch&per_page=100`,
     { pages: true },
@@ -123,10 +131,7 @@ async function prepare() {
   const pkg = gh(
     `repos/${repository}/contents/apps/extension/package.json?ref=${process.env.SOURCE_SHA}`,
   );
-  const version = nextVersion(JSON.parse(Buffer.from(pkg.content, "base64")).version, [
-    ...versions,
-    ...tags,
-  ]);
+  const version = nextVersion(githubContent(pkg).version, [...versions, ...tags]);
   await save({ outcome: "building", version });
   await appendFile(process.env.GITHUB_OUTPUT, `ready=true\nversion=${version}\n`);
 }
