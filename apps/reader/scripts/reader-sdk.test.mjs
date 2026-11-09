@@ -36,7 +36,7 @@ test("all three original archives match installed bytes and packaged target trus
     const pkg = JSON.parse(await readFile(join(repo, "apps/reader/package.json"), "utf8"));
     const name = target === "production" ? "@mdbase-dev/sdk" : "@mdbase-dev/sdk-" + target;
     if (target === "production") {
-      assert.equal(pkg.dependencies[name], "0.1.0-beta.167");
+      assert.equal(pkg.dependencies[name], "0.1.0-beta.168");
     } else {
       assert.ok(pkg.dependencies[name].endsWith(sdk.receipt.artifact));
     }
@@ -76,7 +76,7 @@ test("archive tampering refuses before any SDK import", async (t) => {
 
 test("a rehashed production archive cannot masquerade as LAB", async (t) => {
   const { root, path, pin } = await fixture(t, "@mdbase-dev/sdk");
-  const production = "sdk-76d4ffd9-production-beta167.tgz";
+  const production = "sdk-fde3cf93-production-beta168.tgz";
   const bytes = await readFile(join(repo, vendor, production));
   await cp(join(repo, vendor, production), join(root, vendor, production));
   await writeFile(
