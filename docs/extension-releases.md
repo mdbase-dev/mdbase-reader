@@ -20,6 +20,13 @@ Reader web, another store or Server CD.
 - A read-only preflight preserves pending/staged review and async upload. Rejected,
   cancelled, warned or taken-down states fail closed. No review is cancelled or
   replaced. One whole-workflow concurrency group serializes this store.
+- `prepare` only reads store/release evidence, including the ops bridge's `status`
+  operation; it never reserves a tag, creates a release, uploads or submits. Untyped
+  Web Store transport/JSON failures retain `store-observer-unavailable`; GitHub read
+  and prior-receipt decoding failures retain `release-evidence-unavailable`.
+  Policy and identity refusals remain distinct. `finish` preserves the stopped
+  receipt and `write_started: false`; Reader never opens a stop itself. Ops owns
+  the existing single 90-second pre-write retry and stops only after exhaustion.
 - The version exceeds the live store channels and all `extension-v*` reservations,
   using the source package manifest as a floor. For example, manifest 0.5.0 plus
   live/reserved 0.5.1 yields **0.5.2**, not 0.5.1 again. Chrome numeric component

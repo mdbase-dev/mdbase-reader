@@ -82,9 +82,16 @@ function webstoreClient({ publisherId, itemId, token, fetchImpl = fetch }) {
 
 export async function inspectWebstore(options) {
   const { request, statusPath } = webstoreClient(options);
-  const status = await request("status check", statusPath);
+  let status;
+  try {
+    status = await request("status check", statusPath);
+  } catch (error) {
+    throw Object.assign(error, { reason: error.reason ?? "store-observer-unavailable" });
+  }
   if (status.itemId !== options.itemId)
-    throw new Error("Web Store returned an unexpected item ID.");
+    throw Object.assign(new Error("Web Store returned an unexpected item ID."), {
+      reason: "store-item-binding-required",
+    });
   return status;
 }
 
