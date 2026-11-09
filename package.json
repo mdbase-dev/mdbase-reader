@@ -9,6 +9,8 @@
     "node": ">=22.12 <23"
   },
   "scripts": {
+    "check:release-downloads": "node scripts/check-release-downloads.mjs",
+    "test:release-downloads": "node --test scripts/check-release-downloads.test.mjs",
     "build": "pnpm i18n:check && pnpm build:code",
     "build:production": "MDBASE_ENV=production pnpm build",
     "build:publisher": "node scripts/publisher/rehearsal.mjs",
