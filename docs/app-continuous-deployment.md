@@ -36,12 +36,14 @@ identities and user data are unchanged. Production and staging are never retarge
 
 ## Extension shipping is independent
 
-`extension-train.yml` compares the actual shipping ZIP, tags changed main content,
-and `release.yml` packages and submits it to the store's normal queue. These paths
-remain intact, including Zotero releases, the staging extension public identity,
-and production store identity. The new web-only build neither uploads an extension
-to Pages nor changes that train. Old original/intake fixtures are historical tests,
-not web publication authority.
+Ops owns the independent `reader-extension-chrome` store target through
+`publish-reader-extension.yml`. The retired weekly train and extension-tag publisher
+have no parallel upload path. The new uploader preserves GitHub ZIP/checksum releases
+and automatically submits to Chrome's normal review queue; approval automatically
+releases the version. See [extension app CD](extension-releases.md) for version
+reservations, custody, target holds and supervisor prerequisites. Zotero's existing
+tag route and both extension identities remain unchanged. Web-only builds never
+upload an extension to Pages. Old intake fixtures are not publication authority.
 
 ## Live rollback drill
 

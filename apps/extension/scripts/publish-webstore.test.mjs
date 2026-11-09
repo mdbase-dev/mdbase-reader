@@ -62,7 +62,7 @@ test("only matching stable production tags can publish", () => {
 
 test("preserves pending submissions and rejects policy issues, old versions and wrong item", () => {
   assert.doesNotThrow(() => validateStatus(status, itemId, "0.3.0"));
-  for (const state of ["PENDING_REVIEW", "STAGED"])
+  for (const state of ["PENDING_REVIEW", "STAGED", "REJECTED", "CANCELLED", "UNKNOWN"])
     assert.throws(() =>
       validateStatus({ ...status, submittedItemRevisionStatus: { state } }, itemId, "0.3.0"),
     );
@@ -70,12 +70,42 @@ test("preserves pending submissions and rejects policy issues, old versions and 
     { warned: true },
     { takenDown: true },
     { lastAsyncUploadState: "IN_PROGRESS" },
+    { lastAsyncUploadState: "FAILED" },
     { itemId: "other" },
   ])
     assert.throws(() => validateStatus({ ...status, ...extra }, itemId, "0.3.0"));
   for (const version of ["0.2.0", "0.1.9"])
     assert.throws(() => validateStatus(status, itemId, version));
   assert.doesNotThrow(() => validateStatus(status, itemId, "0.10.0"));
+  assert.doesNotThrow(() => validateStatus(status, itemId, "0.2.0.1"));
+  assert.throws(() =>
+    validateStatus(
+      {
+        ...status,
+        publishedItemRevisionStatus: { distributionChannels: [{ crxVersion: "0.2.0.1" }] },
+      },
+      itemId,
+      "0.2.0",
+    ),
+  );
+});
+
+test("raced guards prevent the next store mutation with no retry", async () => {
+  for (const boundary of ["beforeUpload", "beforeSubmit"]) {
+    const mocked = mock([status, { itemId, crxVersion: "0.3.0", uploadState: "SUCCEEDED" }]);
+    await assert.rejects(
+      publishWebstore({
+        ...options,
+        ...mocked,
+        [boundary]: async () => {
+          throw new Error("exact-main-ci-required");
+        },
+      }),
+      /exact-main-ci-required/,
+    );
+    assert.equal(mocked.calls.length, boundary === "beforeUpload" ? 1 : 2);
+    assert.ok(!mocked.calls.some((call) => call.url.endsWith(":publish")));
+  }
 });
 
 test("uploads then submits for ordinary review with warnings blocking publication", async () => {

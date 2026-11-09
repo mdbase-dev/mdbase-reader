@@ -1,0 +1,252 @@
+name: Publish Reader extension store target
+run-name: "Reader store: ${{ inputs.target }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        required: true
+        type: choice
+        options: [extension-chrome]
+      source_sha:
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: reader-chrome-web-store
+  cancel-in-progress: false
+
+env:
+  STORE_TARGET: ${{ inputs.target }}
+  SOURCE_SHA: ${{ inputs.source_sha }}
+  TARGET: production
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: reader-extension-production
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    outputs:
+      ready: ${{ steps.prepare.outputs.ready }}
+      version: ${{ steps.prepare.outputs.version }}
+      trust: ${{ steps.trust.outputs.trust }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - id: evidence
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
+        with:
+          client-id: ${{ vars.RELEASE_AUTOMATION_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_AUTOMATION_APP_PRIVATE_KEY }}
+          owner: mdbase-dev
+          repositories: mdbase-cloud-ops,mdbase-connect
+          permission-contents: read
+          permission-actions: write
+      - id: google
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ vars.CWS_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.CWS_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/chromewebstore.readonly
+          create_credentials_file: false
+      - id: trust
+        env:
+          READER_TRUST_ASSET_SHA256: ${{ vars.READER_TRUST_ASSET_SHA256 }}
+        run: |
+          [[ "$READER_TRUST_ASSET_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          printf 'trust=%s\n' "$READER_TRUST_ASSET_SHA256" >> "$GITHUB_OUTPUT"
+      - id: prepare
+        name: Reconcile store queue and canonical ops checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          APP_EVIDENCE_GH_TOKEN: ${{ steps.evidence.outputs.token }}
+          CWS_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+        run: node scripts/extension-store.mjs prepare
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: reader-extension-prepare-${{ github.run_id }}
+          path: store-cd-result.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.ready == 'true'
+    name: Unprivileged production extension package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: candidate
+    env:
+      EXTENSION_VERSION: ${{ needs.prepare.outputs.version }}
+      READER_TRUST_ASSET_SHA256: ${{ needs.prepare.outputs.trust }}
+      READER_SOURCE_ROOT: ${{ github.workspace }}/candidate
+      MDBASE_ENV: production
+    outputs:
+      artifact-id: ${{ steps.artifact.outputs.artifact-id }}
+      artifact-digest: ${{ steps.artifact.outputs.artifact-digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: publisher
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+        with:
+          version: 10.7.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+      - name: Authenticate original SDK and frozen source before hooks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node ../publisher/scripts/extension-store.mjs build-plan "$RUNNER_TEMP/extension-build"
+      - run: pnpm install --frozen-lockfile --ignore-scripts --ignore-pnpmfile
+      - name: Compare every installed original and package once
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node ../publisher/scripts/extension-store.mjs package "$RUNNER_TEMP/extension-build"
+      - id: artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: reader-extension-build-${{ github.run_id }}
+          path: ${{ runner.temp }}/extension-build/
+          if-no-files-found: error
+          retention-days: 90
+
+  publish:
+    needs: [prepare, build]
+    if: needs.prepare.outputs.ready == 'true' && needs.build.result == 'success'
+    name: Protected immutable Chrome submission
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: reader-extension-production
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      EXTENSION_VERSION: ${{ needs.prepare.outputs.version }}
+      READER_TRUST_ASSET_SHA256: ${{ needs.prepare.outputs.trust }}
+      ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
+      ARTIFACT_DIGEST: ${{ needs.build.outputs.artifact-digest }}
+      READER_SOURCE_ROOT: ${{ github.workspace }}/candidate
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: publisher
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.source_sha }}
+          path: candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - id: evidence
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
+        with:
+          client-id: ${{ vars.RELEASE_AUTOMATION_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_AUTOMATION_APP_PRIVATE_KEY }}
+          owner: mdbase-dev
+          repositories: mdbase-cloud-ops,mdbase-connect
+          permission-contents: read
+          permission-actions: write
+      - id: google
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ vars.CWS_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.CWS_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/chromewebstore
+          create_credentials_file: false
+      - id: release
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
+        with:
+          client-id: ${{ vars.RELEASE_AUTOMATION_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_AUTOMATION_APP_PRIVATE_KEY }}
+          owner: mdbase-dev
+          repositories: mdbase-reader
+          permission-contents: write
+      - name: Verify immutable custody, reserve version, upload and submit once
+        id: submit
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          APP_EVIDENCE_GH_TOKEN: ${{ steps.evidence.outputs.token }}
+          CWS_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+          READER_RELEASE_TOKEN: ${{ steps.release.outputs.token }}
+        run: node publisher/scripts/extension-store.mjs publish "$RUNNER_TEMP/extension-upload"
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: reader-extension-publish-${{ github.run_id }}
+          path: store-cd-result.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  outcome:
+    needs: [prepare, build, publish]
+    if: always() && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Collect only this run's bounded boundary receipts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/extension-outcome"
+          for boundary in prepare publish; do
+            if gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "reader-extension-$boundary-$GITHUB_RUN_ID" --dir "$RUNNER_TEMP/extension-outcome/$boundary"; then
+              cp "$RUNNER_TEMP/extension-outcome/$boundary/store-cd-result.json" store-cd-result.json
+            fi
+          done
+      - name: Preserve failures without publishing or redispatching
+        env:
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          PUBLISH_RESULT: ${{ needs.publish.result }}
+        run: node scripts/extension-store.mjs finish
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: reader-store-extension-chrome-${{ github.run_id }}
+          path: store-cd-result.json
+          if-no-files-found: error
+          retention-days: 90

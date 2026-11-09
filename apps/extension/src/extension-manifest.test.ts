@@ -199,6 +199,7 @@ describe("extension manifest details", () => {
 
   it("ships prereleases under a numeric version with the full version name", () => {
     expect(manifestVersion("0.3.0")).toEqual({ version: "0.3.0" });
+    expect(manifestVersion("0.5.2.1")).toEqual({ version: "0.5.2.1" });
     expect(manifestVersion("0.3.0-beta.1")).toEqual({
       version: "0.3.0",
       version_name: "0.3.0-beta.1",

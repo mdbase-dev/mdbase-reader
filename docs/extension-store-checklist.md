@@ -1,45 +1,42 @@
-# Reader Chrome Web Store: corrected dashboard handoff
+# Reader Chrome CD supervisor checklist
 
-Item `kimdfjefhbfgfecconmaiaaindjccidp`, publisher `01a9bdcf-e8d0-46ba-956d-2ef4dde4dc43`. **Do not upload, submit, publish or cancel a review during this checklist.** The train is disabled by default; merging this PR does not release anything. Keep it disabled until these blockers and the [identity/baseline prerequisites](extension-releases.md) are resolved.
+Implementation approval was given on **2026-11-09**. This is a prerequisite and
+reconciliation checklist, not another approval/GO step or an enable switch.
+Do not upload, submit, publish or cancel a review while checking the setup.
 
-## Confirmed failure evidence
-
-- `extension-v0.5.0`, run 40236722529: upload passed; submission returned HTTP 400 `INVALID_ARGUMENT`, dashboard submission requirements unmet.
-- `extension-v0.4.1`, run 37020696442: HTTP 400 `FAILED_PRECONDITION`, validation warnings requiring confirmation. The old logger discarded `error.details`.
-- `extension-v0.4.0`, run 36868829802: only HTTP 400 was retained. A particular missing privacy/listing field is still **not** proved by the logs.
-- Local impersonation was denied and the existing operator token lacked CWS scope. Read-only main inspection is implemented but currently rejected by the environment's tag-only policy and Google's tag-only provider condition. Neither setting was changed. Current draft/published/pending-review state needs parent-thread dashboard inspection.
-- The four green pre-0.3 release runs had no Web Store submission job. No successful workflow-submission baseline exists; green GitHub packaging is not store evidence.
-
-## Fields and values for the parent browser thread
-
-- [ ] **Status / Package:** record the exact errors/warnings, published version, draft version and any pending review in the PR. Leave pending reviews intact. If the draft is 0.5.0 and only metadata is missing, a new ZIP/version is not the correction.
-- [ ] **Privacy practices → Single purpose:** if missing/inaccurate, enter: **“Save web pages, PDFs, citations and selected highlights to the user's mdbase Reader collection, and show saved highlights when revisiting a page.”**
-- [ ] **Permission justification:** fill missing/inaccurate entries with these values, describing install-time access rather than presenting it as opt-in:
-
-| Permission                                                | Justification text                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `activeTab`                                               | Read the user-selected page when Reader is opened or a capture/highlight command is invoked, to prepare its URL, title, readable content and selected quotation for saving.                                                                                                                                                                                                                                                                                                                                                             |
-| `scripting`                                               | Inject page capture, authenticated PDF fetching and highlight-rendering code to extract content, download a supported PDF using the user's existing website access, capture selections and display saved highlights.                                                                                                                                                                                                                                                                                                                    |
-| `storage`                                                 | Persist Reader settings, Connect authorization grants and pending save mutations locally, and retain per-tab capture drafts in session storage.                                                                                                                                                                                                                                                                                                                                                                                         |
-| `contextMenus`                                            | Offer Reader capture and save-highlight actions in the page/selection context menu.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `sidePanel`                                               | Show capture, citation and highlight controls beside the current page and follow the active tab.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `offscreen`                                               | Host the mdbase SDK's Worker in a hidden extension document to save pages and display saved highlights; the MV3 service worker cannot host that Worker directly.                                                                                                                                                                                                                                                                                                                                                                        |
-| `https://*/*` and configured Connect/log host permissions | Install-time HTTPS access lets the panel follow tabs and automatically look up visited page URLs in the authorized collection to mark saved pages and draw highlights. On user capture/save it reads page content and downloads supported PDFs, including documents accessible through the user's website login, for saving to that collection. It also permits Connect authorization/collection operations, the SDK's collection log/object transfers at log.mdbase.dev, DOI metadata lookups, and opt-in Wikimedia Citoid URL lookup. |
-
-- [ ] **Host-access disclosure:** the current manifest grants broad `https://*/*` at installation, not as an optional permission. Saved-page matching uses that grant without a separate initial opt-in. `SiteAccessStatus.tsx` hides “Allow on all sites” when already granted; its fallback branch checks for Chrome-withheld/restricted site access and requests restoration. It is **not** the ordinary install-time consent path or a separate saved-page feature toggle. Source shows a recovery branch, not wholly dead code; Chrome-withheld/regrant behavior was not browser-tested here. Do not claim it is default-OFF/optional in this version.
-- [ ] **Remote code:** packaged JS/WebAssembly execute locally; network citation responses are data. Select **No** for remotely executed code for this packaged implementation. WebAssembly's `wasm-unsafe-eval` CSP alone does not mean downloaded remote code.
-- [ ] **Data usage:** tick **Website content** (articles, PDFs, quotations, notes/highlights/citations), **Web history** (page URLs/titles, including visited unsaved addresses used for collection matching), **Authentication information** (Connect grants/authorization state in `chrome.storage.local`, signing/application identity in IndexedDB), and **Personally identifiable information** (Connect account email displayed by `connection-view.ts:141`, and account identity). Do not select “does not collect or use user data.” User-selected content can itself contain sensitive data; review any additional applicable categories with the owner rather than asserting all others are absent. Purpose: **App functionality** for capture, authorized collection access, citation lookup, saved-page recognition and recovery.
-- [ ] **Analytics wording:** do not claim “no analytics or logging anywhere.” The extension has no identified advertising/third-party analytics SDK. `log.mdbase.dev` is the SDK's **collection log/object transport**, not an analytics beacon and not merely a release-trust log. The build verifies that origin against packaged release metadata (`reader-sdk.mjs`); the packaged SDK's `app-host/http-log.js` then performs authorized `/v1/nonce` and `/v1/rpc` log operations (`append`, `read`, snapshots and object transfers). Connect separately retains operational/security metadata and bounded usage counts for aggregate operator reports, as the public policy states.
-- [ ] **Privacy policy URL:** a real extension-specific policy exists and returned HTTP 200 on 2026-11-02: **https://mdbase.dev/apps/reader/extension/privacy/**. The related Connect policy is **https://mdbase.dev/privacy/**. Use the extension-specific URL in the store, **after Callum reconciles its content with this release**. The current extension page describes optional saved-page recognition/optional website permission removal, contrary to this manifest's install-time access, and does not disclose the new opt-in Wikimedia Citoid flow. **Callum blocker: correct the published policy to cover install-time/background URL access, authenticated PDF capture, Citoid opt-in disclosure, and collection log transport before enabling/submitting.** Policy existence is not proof it covers this candidate. Reader's live SPA homepage was also fetched; it did not expose a separate policy link in its initial HTML.
-- [ ] **Data-use certifications:** after owner confirmation, certify no sale/transfer for unrelated purposes, no use/transfer outside Reader's single purpose, and no creditworthiness/lending use. The published policy makes these statements; source inspection cannot independently certify all business/downstream practices. Keep disclosures consistent with service-provider, account/operational and citation-service processing.
-- [ ] **Store listing / Distribution:** record and correct only dashboard-marked required fields/warnings. Preserve valid existing contact, category, regions and screenshots; do not invent their values. Save metadata only and report the remaining state without submitting.
-
-## Code-derived data flows
-
-- **Authenticated PDFs:** `apps/extension/src/page-capture.ts:427` injects `fetch(url, { credentials: "include" })` into the page. It can read/save PDFs behind the user's login. The ordinary extension fetch fallback at line 208 is a separate path. The saved PDF is document bytes, not an export of website cookies; do not describe every capture as anonymous/public-only.
-- **Collection saves:** `apps/extension/src/use-extension-capture.ts`, `apps/extension/src/save-capture.ts`, and `packages/connect/src/source-imports.ts` write selected content through Connect to the authorized collection. Background page matching sends URLs to query that collection; it is not just an on-device comparison.
-- **Local identity/drafts:** `apps/extension/src/chrome-storage.ts`, `apps/extension/src/drafts.ts`, SDK sign-in persistence and `apps/extension/src/connection-view.ts` cover authorization state, session drafts and account email. Not all data stays on-device.
-- **SDK log:** `apps/reader/scripts/reader-sdk.mjs` verifies packaged `logOrigin` against intake provenance. The production SDK original `packages/connect/vendor/sdk-4443fd15-production-beta149.tgz` contains `dist/application/packaged-trust.js` pinning `https://log.mdbase.dev` and `dist/app-host/http-log.js` implementing first-party collection log RPC/object operations. Trust pinning is not evidence that runtime traffic is only release verification.
-- **Citation services:** DOI requests send the DOI to doi.org and redirected registries without cookies (`packages/web-capture/src/doi.ts`). Citoid sends a captured page URL to Wikimedia only after explicit opt-in (missing setting is OFF), omitting credentials (`apps/extension/src/citoid-setting.ts`, `packages/web-capture/src/provider-claims.ts`). This opt-in is distinct from install-time host access.
-
-The exact historical dashboard omission remains unknown until the parent records it. No privacy values were inferred from the mere HTTP 400 response, and no public website/policy was modified by this PR.
+- Verify the existing `reader-extension-production` environment admits the exact
+  **main branch**, with no required reviewers. Read-only API inspection on
+  2026-11-09 showed only an `extension-v*` tag branch policy; no policy was changed.
+- Verify the existing Google workload identity provider admits this repository's
+  exact `publish-reader-extension.yml@refs/heads/main` workflow and main ref.
+  Preserve the same service account/publisher/item and the store signing identity.
+  Do not broaden trust to arbitrary workflows, forks, branches or PRs. Google
+  provider settings were not re-read during this implementation.
+- Confirm the existing `CWS_WORKLOAD_IDENTITY_PROVIDER`, `CWS_SERVICE_ACCOUNT`,
+  `CWS_PUBLISHER_ID`, `CWS_ITEM_ID` bindings. All four variable **names** were
+  present in the extension environment; values and credentials are not reports.
+- Supply the existing production `READER_TRUST_ASSET_SHA256` protected **public
+  digest** to the extension environment. It was not among the extension
+  environment variable names on 2026-11-09. Verify it against the authenticated
+  production SDK trust; do not invent a digest or change a key to make a build pass.
+- Confirm the existing release automation App installation and credential access
+  for Reader and ops/Connect evidence reads and Actions-write access to the existing
+  ops store-line bridge. No Issues grant is added to the App. Confirm the
+  App can create immutable `extension-v*` version reservations under the existing
+  tag ruleset. Do not remove creation/update/deletion protections or reuse an old
+  version. App installation, org-level credential availability and ruleset bypass
+  authorization require supervisor verification; no new credentials are created.
+- Inspect the **existing** listing's live version, any pending/staged/rejected
+  review and draft upload, plus current package/listing/privacy/permission warnings.
+  Resolve only actual dashboard findings. Historical step outcomes do not prove
+  which listing field was missing. Preserve an existing pending review; do not
+  submit a replacement. Existing staged or externally uploaded drafts need explicit
+  reconciliation, not guessed ownership. The workflow never creates a listing.
+- Confirm the ops gate fix, Reader change and enrollment are merged in the stated
+  order, canonical main checks are green and no whole-Reader or extension app-stop
+  is open. No workflow was dispatched and no stop cleared by implementation.
+- Let the supervisor observe the first normal tick and retain its exact bounded
+  ops/app records, then verify pending review or publication. Version is expected
+  to start at 0.5.2 only under the stated live/tag assumptions. On rejection or
+  unknown upload, reconcile the exact store version/run before clearing **only**
+  `reader-extension-chrome`; never bypass the hold by manual tagging/upload.

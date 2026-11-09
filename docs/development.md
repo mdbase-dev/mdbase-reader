@@ -197,8 +197,9 @@ SDK's signed grants remain the authorization mechanism. Connect grants live in
 `chrome.storage.local`, shared by the panel and service worker. Unsaved capture drafts use
 `chrome.storage.session` per tab and page.
 
-Stable `extension-v<version>` GitHub releases submit the production ZIP for Chrome Web Store
-review; prereleases remain GitHub-only. See [release setup and recovery](extension-releases.md)
+The independent `reader-extension-chrome` app-CD target builds exact green main sources and
+submits production ZIPs for automatic Chrome Web Store review and release. Version tags reserve
+numbers; they no longer trigger an alternate publisher. See [release setup and recovery](extension-releases.md)
 and [extension capture improvements and validation](extension-capture-improvements.md).
 
 ## Build the Zotero exporter
