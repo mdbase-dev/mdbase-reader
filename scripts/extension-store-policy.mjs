@@ -144,9 +144,16 @@ export async function storeLine(
     }
     await wait(2000);
   }
-  throw new Error("store-line-read-timeout");
+  need(false, "store-line-read-timeout");
 }
 export async function qualify(source, transport = gh, readState = storeLine) {
+  try {
+    return await readQualification(source, transport, readState);
+  } catch (error) {
+    throw Object.assign(error, { reason: error.reason ?? "release-evidence-unavailable" });
+  }
+}
+async function readQualification(source, transport, readState) {
   const file = transport(`repos/${ops}/contents/config/app-cd.json?ref=main`);
   const cfg = githubContent(file).reader;
   need(

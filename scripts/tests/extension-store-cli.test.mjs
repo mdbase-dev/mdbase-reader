@@ -67,7 +67,7 @@ else if (path.includes("actions/runs/71/artifacts")) result = {
   artifacts: [{ id: 81, name: "tasknotes-store-line", expired: false }],
 };
 else if (path.endsWith("artifacts/81/zip")) {
-  process.stdout.write(readFileSync("state.zip")); process.exit(0);
+  process.stdout.write(process.env.BAD_STATUS_ARCHIVE ? Buffer.from("invalid archive") : readFileSync("state.zip")); process.exit(0);
 }
 else if (path.includes("/compare/")) result = { status: "identical" };
 else if (path.includes("workflows/ci.yml/runs")) result = { workflow_runs: process.env.NO_CI ? [] : [{
@@ -129,6 +129,8 @@ test("prepare observer failures retain allowlisted pre-write receipts through fi
     { FAIL_FETCH: "1" },
     { TEST_STATUS: "{" },
     { FAIL_PATH: "contents/config/app-cd.json" },
+    { FAIL_PATH: "tasknotes-store-line.yml/dispatches" },
+    { BAD_STATUS_ARCHIVE: "1" },
     { BAD_GITHUB_JSON: "1" },
     { BAD_CONTENT: "1" },
     { FAIL_PATH: "workflows/publish-reader-extension.yml/runs" },
