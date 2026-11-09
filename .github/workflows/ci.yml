@@ -27,6 +27,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - run: pnpm run check:release-downloads && pnpm run test:release-downloads
       - run: pnpm install --frozen-lockfile
       # Tests build against the production-pinned SDK unless an environment is selected.
       - run: pnpm check
