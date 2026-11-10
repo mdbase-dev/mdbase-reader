@@ -394,4 +394,25 @@ test("store-line bridge follows only the returned first-attempt run and exact ar
   ])
     await assert.rejects(storeLine(fixture(changed)));
   await assert.rejects(storeLine(fixture({}, [])), /store-line-artifact-required/);
+  const flaky = (failures) => {
+    let reads = 0;
+    const inner = fixture();
+    const transport = (path, options) => {
+      if (path.endsWith("/runs/71") && ++reads <= failures)
+        throw Object.assign(new Error("gh failed"), { reason: "release-evidence-unavailable" });
+      return inner(path, options);
+    };
+    return { transport, reads: () => reads };
+  };
+  const waits = [];
+  const briefly = flaky(2);
+  assert.deepEqual(await storeLine(briefly.transport, async (ms) => waits.push(ms)), state);
+  assert.equal(briefly.reads(), 3);
+  assert.deepEqual(waits, [5000, 5000]);
+  const down = flaky(Infinity);
+  await assert.rejects(
+    storeLine(down.transport, async () => {}),
+    /gh failed/,
+  );
+  assert.equal(down.reads(), 8);
 });
