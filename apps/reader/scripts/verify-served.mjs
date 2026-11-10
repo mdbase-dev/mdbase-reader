@@ -80,6 +80,26 @@ async function probe(transport, url, status, expected, remaining) {
     }
   }
 }
+// A freshly published deployment can briefly answer a Function route before it
+// is fully live. Route probes are read-only GETs, so retry each a bounded number
+// of times within the publication deadline before refusing.
+export async function probeRoute(
+  transport,
+  url,
+  status,
+  expected,
+  left,
+  { attempts = 3, delayMs = 3000, wait = (ms) => new Promise((done) => setTimeout(done, ms)) } = {},
+) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await probe(transport, url, status, expected, left());
+    } catch (error) {
+      if (attempt >= attempts || left() <= delayMs) throw error;
+      await wait(delayMs);
+    }
+  }
+}
 export async function verifyServedAssets({ origin, inventory, publication, ...options }) {
   if (
     !["https://staging.mdbase-reader.pages.dev", "https://reader.mdbase.dev"].includes(origin) &&
@@ -144,22 +164,24 @@ export async function verifyServedAssets({ origin, inventory, publication, ...op
         notFound = inventory.find((a) => a.path === "404.html");
       if (!root || !notFound) throw Error("missing route expected bytes");
       const transport = options.fetch ?? fetch;
+      const retry = options.routeRetry ?? {};
       for (const path of policy.clientRoutes)
-        behavior.push(await probe(transport, origin + path, 200, root, left()));
+        behavior.push(await probeRoute(transport, origin + path, 200, root, left, retry));
       const denied = Buffer.from(
         JSON.stringify({ code: "method_not_allowed", message: "Use POST to capture a page." }),
       );
       behavior.push(
-        await probe(
+        await probeRoute(
           transport,
           origin + "/api/capture",
           405,
           { bytes: denied.length, sha256: digest(denied), headers: policy.captureHeaders },
-          left(),
+          left,
+          retry,
         ),
       );
       for (const path of ["/api/native-publisher-not-found", "/native-publisher-not-found"])
-        behavior.push(await probe(transport, origin + path, 404, notFound, left()));
+        behavior.push(await probeRoute(transport, origin + path, 404, notFound, left, retry));
     } catch {
       policyFailures.push({ reason: "bounded-source-route-behavior-refused" });
     }
