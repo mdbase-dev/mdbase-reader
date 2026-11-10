@@ -118,8 +118,20 @@ export async function storeLine(
   });
   const runId = response.workflow_run_id;
   need(Number.isSafeInteger(runId) && runId > 0, "store-line-dispatch-unknown");
+  let consecutiveReadFailures = 0;
   for (let attempt = 0; attempt < 90; attempt++) {
-    const run = transport(`repos/${ops}/actions/runs/${runId}`);
+    // A run returned by the dispatch can be briefly unreadable. Reading it is
+    // safe to repeat, so only a persistent transport failure refuses.
+    let run;
+    try {
+      run = transport(`repos/${ops}/actions/runs/${runId}`);
+    } catch (error) {
+      if (error.reason !== "release-evidence-unavailable" || ++consecutiveReadFailures >= 8)
+        throw error;
+      await wait(5000);
+      continue;
+    }
+    consecutiveReadFailures = 0;
     need(
       run.id === runId &&
         run.path === ".github/workflows/tasknotes-store-line.yml" &&
