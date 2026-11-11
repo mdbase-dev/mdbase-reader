@@ -12,7 +12,7 @@ const vendor = "packages/connect/vendor/";
 const pins = {
   lab: ["@mdbase-dev/sdk-lab", "sdk-lab-beta157.json"],
   staging: ["@mdbase-dev/sdk-staging", "sdk-staging-beta157.json"],
-  production: ["@mdbase-dev/sdk", "sdk-production-beta175.json"],
+  production: ["@mdbase-dev/sdk", "sdk-production-beta178.json"],
 };
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
