@@ -1,6 +1,5 @@
 import { createMdbase } from "@mdbase-reader/connect/native";
 
-import { credentiallessFetch } from "./credentialless-fetch.js";
 import { holdSdkHostLock } from "./offscreen-document.js";
 import { extensionDeclaration } from "./sdk-declaration.js";
 import { sdkHostSource } from "./sdk-host-source.js";
@@ -12,8 +11,6 @@ import { broadcastLink } from "./sdk-rpc.js";
  * service worker reach it over sdk-rpc.ts; it has no UI. Offscreen documents only get
  * chrome.runtime, so sign-in opens from the page whose action started it.
  */
-globalThis.fetch = credentiallessFetch(globalThis.fetch.bind(globalThis));
-
 async function start(): Promise<void> {
   await holdSdkHostLock();
   const hostId = crypto.randomUUID();
