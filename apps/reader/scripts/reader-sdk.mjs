@@ -10,8 +10,8 @@ import { readerDeployments } from "./deployment-environment.mjs";
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const vendor = "packages/connect/vendor/";
 const pins = {
-  lab: ["@mdbase-dev/sdk-lab", "sdk-lab-beta157.json"],
-  staging: ["@mdbase-dev/sdk-staging", "sdk-staging-beta157.json"],
+  lab: ["@mdbase-dev/sdk-lab", "sdk-lab-beta188.json"],
+  staging: ["@mdbase-dev/sdk-staging", "sdk-staging-beta188.json"],
   production: ["@mdbase-dev/sdk", "sdk-production-beta188.json"],
 };
 const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");

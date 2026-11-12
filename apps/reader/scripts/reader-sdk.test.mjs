@@ -60,8 +60,8 @@ async function fixture(t, name = "@mdbase-dev/sdk-lab") {
     join(repo, "apps/reader/node_modules", name),
     join(root, "apps/reader/node_modules/@mdbase-dev/sdk-lab"),
   );
-  const path = join(root, vendor, "sdk-lab-beta157.json");
-  await cp(join(repo, vendor, "sdk-lab-beta157.json"), path);
+  const path = join(root, vendor, "sdk-lab-beta188.json");
+  await cp(join(repo, vendor, "sdk-lab-beta188.json"), path);
   const pin = JSON.parse(await readFile(path, "utf8"));
   await cp(join(repo, vendor, pin.artifact), join(root, vendor, pin.artifact));
   return { root, path, pin };

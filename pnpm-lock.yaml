@@ -148,11 +148,11 @@ importers:
         specifier: 0.1.0-beta.188
         version: 0.1.0-beta.188
       '@mdbase-dev/sdk-lab':
-        specifier: file:../../packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz
-        version: file:packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz
+        specifier: file:../../packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
+        version: file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
       '@mdbase-dev/sdk-staging':
-        specifier: file:../../packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz
-        version: file:packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz
+        specifier: file:../../packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
+        version: file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
         version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.188)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -218,14 +218,14 @@ importers:
         specifier: 0.1.0-beta.188
         version: 0.1.0-beta.188
       '@mdbase-dev/sdk-lab':
-        specifier: file:../../packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz
-        version: file:packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz
+        specifier: file:../../packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
+        version: file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
       '@mdbase-dev/sdk-legacy-729b5391':
         specifier: file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz
         version: '@mdbase-dev/sdk@file:vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz'
       '@mdbase-dev/sdk-staging':
-        specifier: file:../../packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz
-        version: file:packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz
+        specifier: file:../../packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
+        version: file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
         version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.188)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1685,16 +1685,16 @@ packages:
       '@lingui/react': 6.9.0
       react: ^19.2.0
 
-  '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz':
-    resolution: {integrity: sha512-Q71Vbuk4iQFZknK0GR/2CmUpeNsf0T/XL2GMuv/PVWNxqO+dYTMw1mDpvb8pAtYAMpRyVrnQUf26Vk9HAuSjuQ==, tarball: file:packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz}
-    version: 0.1.0-beta.157
+  '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz':
+    resolution: {integrity: sha512-Tc/R1WhEBNDc2ODSWSOkmw35Fr+EhKGogdfECBgNS9R1gawItPaMiqA96D1S2/vlh01+CH2X8H0e9fG1alUXRw==, tarball: file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz}
+    version: 0.1.0-beta.188
     engines: {node: '>=20'}
     bundledDependencies:
       - '@mdbase-dev/connect-protocol'
 
-  '@mdbase-dev/sdk-staging@file:packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz':
-    resolution: {integrity: sha512-ia47TMEcUfFWIahKWpkqhsuAMRoyZ0so6gJ5IZkJ9N4zz+zV6tL1GDu1SqtosCEj0Cql5qUH+dinqk9WBrYJfQ==, tarball: file:packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz}
-    version: 0.1.0-beta.157
+  '@mdbase-dev/sdk-staging@file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz':
+    resolution: {integrity: sha512-tlfCGDfKueciOkqEAtz4MTrIuG3PXWJPw6PitidrSWU+P4HZdvJUTSUOpc2ZO+rllivnTV2r7wU0P5ohSIv5Sg==, tarball: file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz}
+    version: 0.1.0-beta.188
     engines: {node: '>=20'}
     bundledDependencies:
       - '@mdbase-dev/connect-protocol'
@@ -5872,13 +5872,13 @@ snapshots:
       - rolldown
       - supports-color
 
-  '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-493d29ca-lab-beta157.tgz':
+  '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz':
     dependencies:
       '@noble/ciphers': 2.4.0
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
 
-  '@mdbase-dev/sdk-staging@file:packages/connect/vendor/sdk-493d29ca-staging-beta157.tgz':
+  '@mdbase-dev/sdk-staging@file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz':
     dependencies:
       '@noble/ciphers': 2.4.0
       '@noble/curves': 2.4.0
