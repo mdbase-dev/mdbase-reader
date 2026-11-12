@@ -15,6 +15,12 @@ export function sdkSyncIncidents(snapshot: SdkSnapshot | null): SyncIncidents {
   return snapshot?.phase.kind === "ready" ? snapshot.phase.connection.records.status.incidents : [];
 }
 
+/** The device or the sync service cannot be reached. */
+export function sdkOffline(snapshot: SdkSnapshot | null): boolean {
+  const connection = snapshot?.sync?.connection;
+  return connection === "offline" || connection === "reconnecting";
+}
+
 /** The header's connection state from the SDK: never "connected" while it is
  * offline or keeping changes on this device until it can sync them. */
 export function sdkConnectionState(
@@ -24,26 +30,29 @@ export function sdkConnectionState(
   if (!snapshot) {
     return fallback;
   }
+  const sync = snapshot.sync;
+  const writes = sync?.writes;
   if (
     sdkSyncIncidents(snapshot).length ||
-    snapshot.writes?.rejected.length ||
-    (snapshot.sync &&
+    writes?.rejected.length ||
+    sync?.attention.some((reason) =>
       [
         "update_required",
         "account_suspended",
         "collection_migrating",
         "collection_not_yet_migrated",
-      ].includes(snapshot.sync.kind))
+      ].includes(reason),
+    )
   ) {
     return "attention";
   }
-  if (snapshot.writes?.saveState === "saved_on_device") {
+  if (writes?.saveState === "saved_on_device") {
     return "saved_on_device";
   }
-  if (snapshot.sync?.kind === "offline") {
+  if (sdkOffline(snapshot)) {
     return "offline";
   }
-  if (snapshot.writes?.pending.length || snapshot.saveWarning) {
+  if (writes?.pending.length || snapshot.saveWarning) {
     return "syncing";
   }
   return fallback;

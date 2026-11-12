@@ -10,7 +10,7 @@ function required(field: string): Issue {
     code: "schema_required",
     severity: "error",
     message: `required property \`${field}\` is missing`,
-    details: new Map([["schema_location", "/required"]]),
+    details: { schema_location: "/required" },
   };
 }
 
@@ -41,9 +41,7 @@ describe("record validation rejections", () => {
       expect(error).toBeInstanceOf(ConnectRepositoryError);
       const repositoryError = error as ConnectRepositoryError;
       expect(repositoryError.issues).toBe(issues);
-      expect(repositoryError.issues[0]?.details).toEqual(
-        new Map([["schema_location", "/required"]]),
-      );
+      expect(repositoryError.issues[0]?.details).toEqual({ schema_location: "/required" });
       expect(repositoryError.problem).toBe(outcome.ok ? null : outcome.problem);
       expect(repositoryError.message).toBe(
         `mdbase Connect could not ${operation}: \`sources/parts/chapter.md\` would not be valid: Saved date is required`,
@@ -72,10 +70,7 @@ describe("record validation rejections", () => {
         code: "schema_type",
         severity: "error",
         message: secret,
-        details: new Map([
-          ["schema_location", "/properties/title/type"],
-          ["record", secret],
-        ]),
+        details: { schema_location: "/properties/title/type", record: secret },
       },
       { code: "future_code", severity: "error", message: secret, details: secret },
       required(secret),
@@ -85,19 +80,19 @@ describe("record validation rejections", () => {
     );
   });
 
-  it("keeps nested friendly labels and unknown field keys without serializing CBOR details", () => {
+  it("keeps nested friendly labels and unknown field keys without serializing details", () => {
     expect(
       validationIssueSummary([
         {
           code: "format_invalid",
           severity: "error",
           message: "private value",
-          details: new Map([["schema_location", "/properties/csl/properties/DOI/pattern"]]),
+          details: { schema_location: "/properties/csl/properties/DOI/pattern" },
         },
         required("custom_key"),
         {
           ...required("status"),
-          details: new Map([["schema_location", "/properties/reading/required"]]),
+          details: { schema_location: "/properties/reading/required" },
         },
       ]),
     ).toBe(

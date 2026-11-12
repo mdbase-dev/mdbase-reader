@@ -1,4 +1,4 @@
-import { MdbaseError, toPlain } from "@mdbase-dev/sdk";
+import { MdbaseError } from "@mdbase-dev/sdk";
 import { collectionId } from "@mdbase-reader/core";
 
 import { ConnectAnnotationAssetRepository } from "../annotation-assets.js";
@@ -17,7 +17,7 @@ import { ConnectSourceImportRepository } from "../source-imports.js";
 
 import { nativeReaderClient } from "./native-client.js";
 import { nativeReaderFiles } from "./native-files.js";
-import { plain, recordDocument } from "./native-mapping.js";
+import { recordDocument } from "./native-mapping.js";
 import { NativeMigrationTarget } from "./native-migration.js";
 
 import type { ReaderConnectedCollection } from "../application-session.js";
@@ -76,7 +76,7 @@ export function nativeReaderCollection(
     : noop;
   const settings = new ReaderSettingsStore(client, {
     watch: (path, onChange) =>
-      connection.records.watchChanges(undefined, (batch) => {
+      connection.records.watchChanges((batch) => {
         if (current() && (batch.reset || batch.changes.some((change) => change.path === path))) {
           onChange();
         }
@@ -98,7 +98,7 @@ export function nativeReaderCollection(
     bodyRecovery: new ConnectBodyUpdateRecovery(client),
     ...(options.creates ? { createFollowThrough: creates } : {}),
     subscribeSourceChanges: (listener) => {
-      const watch = connection.records.watchChanges(undefined, (batch) => {
+      const watch = connection.records.watchChanges((batch) => {
         if (current() && (batch.reset || batch.changes.some(mayBeSource))) {
           listener();
         }
@@ -191,7 +191,7 @@ function nativeLibraryViews(
   return {
     async list(options = {}) {
       check(options.signal);
-      const listed = await sdk.views.list(undefined, options.signal);
+      const listed = await sdk.views.list(options);
       check(options.signal);
       return {
         views: listed.sources.map((source) => ({
@@ -204,7 +204,7 @@ function nativeLibraryViews(
             properties: view.properties.map((property) => ({ ...property })),
             ...(view.presentation === undefined
               ? {}
-              : { presentation: toPlain(view.presentation) as SavedViewPresentation }),
+              : { presentation: view.presentation as SavedViewPresentation }),
           })),
         })),
         meta: { totalCount: listed.sources.length },
@@ -259,7 +259,7 @@ function viewExecution(result: QueryResult, input: ExecuteViewInput): SavedViewE
         frontmatter: document.frontmatter,
         effectiveFrontmatter: document.effectiveFrontmatter,
         file: document.file,
-        ...(record.values ? { values: plain(record.values) } : {}),
+        ...(record.values ? { values: record.values } : {}),
       };
     }),
     meta: {
@@ -270,9 +270,9 @@ function viewExecution(result: QueryResult, input: ExecuteViewInput): SavedViewE
       ...(result.groups
         ? {
             groups: result.groups.map((group) => ({
-              values: plain(group.values),
+              values: group.values,
               count: group.count,
-              summaries: plain(group.summaries),
+              summaries: group.summaries ?? {},
             })),
           }
         : {}),

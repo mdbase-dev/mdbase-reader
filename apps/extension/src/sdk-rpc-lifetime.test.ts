@@ -25,7 +25,7 @@ afterEach(() => {
 async function fixture(): Promise<
   ReturnType<typeof createApplicationFixture> & {
     client: SdkClient;
-    application: ReturnType<ReturnType<typeof createApplicationFixture>["entry"]["application"]>;
+    application: ReturnType<typeof createApplicationFixture>["mdbase"];
   }
 > {
   // Real public SDK lifecycle fixture, not a cast READY application/session.
@@ -43,7 +43,7 @@ async function fixture(): Promise<
     initialSnapshot: signedOutSnapshot,
   });
   fixtures.push(sdk);
-  const application = sdk.entry.application();
+  const application = sdk.mdbase;
   const bus = memoryBus();
   hosts.push(
     serveSdk(bus.endpoint(), { application, currentCollection: () => null }, "owned-host"),
@@ -62,7 +62,7 @@ it("an already-aborted caller cannot invoke a protected SDK action through the b
   h.controls.setHandler("authorize", () => h.application.getSnapshot());
   const caller = new AbortController();
   caller.abort();
-  await h.client.application.authorize({ signal: caller.signal }).catch(() => undefined);
+  await h.client.application.signIn({ signal: caller.signal }).catch(() => undefined);
   expect(h.controls.observedActions().filter((call) => call.action === "authorize")).toHaveLength(
     0,
   );
@@ -78,7 +78,7 @@ it("disposing only this caller rejects its pending call without closing the SDK 
         finish = () => resolve(h.application.getSnapshot());
       }),
   );
-  const result = h.client.application.authorize().then(
+  const result = h.client.application.signIn().then(
     () => "resolved",
     () => "rejected",
   );

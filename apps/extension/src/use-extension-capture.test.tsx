@@ -30,7 +30,7 @@ const mocks = vi.hoisted(() => ({
   clearPageSelection: vi.fn(),
   prepareCitation: vi.fn(),
   rememberCollection: vi.fn(),
-  authorize: vi.fn(),
+  signIn: vi.fn(),
   approve: vi.fn(),
   listeners: new Set<() => void>(),
 }));
@@ -58,7 +58,7 @@ function publish(snapshot: Record<string, unknown>): void {
 const application = {
   start: mocks.start,
   select: mocks.select,
-  authorize: mocks.authorize,
+  signIn: mocks.signIn,
   approve: mocks.approve,
   getSnapshot: (): Record<string, unknown> => current,
   subscribe: (listener: () => void): (() => void) => {
@@ -153,7 +153,7 @@ beforeEach(() => {
   current = readySnapshot("test");
   mocks.createSession.mockImplementation(() => Promise.resolve(extension));
   mocks.start.mockResolvedValue(undefined);
-  mocks.authorize.mockResolvedValue(undefined);
+  mocks.signIn.mockResolvedValue(undefined);
   mocks.approve.mockResolvedValue(undefined);
   mocks.select.mockImplementation((id: string) => {
     publish(readySnapshot(id));
@@ -271,7 +271,7 @@ it("offers sign-in again from a refused sign-in, even while the first is still a
     await controller.retry();
   });
   expect(mocks.approve).toHaveBeenCalledTimes(2);
-  expect(mocks.authorize).not.toHaveBeenCalled();
+  expect(mocks.signIn).not.toHaveBeenCalled();
   await act(async () => {
     finish();
     await first;

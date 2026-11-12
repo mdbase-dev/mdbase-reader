@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
-import { toValue, type PlainValue } from "@mdbase-dev/sdk";
 import { nativeReaderCollection } from "@mdbase-reader/connect/native";
 import { memoryConnection } from "@mdbase-reader/connect/testing";
 import { act } from "react";
@@ -47,13 +46,7 @@ async function open(seed?: Record<string, unknown>): Promise<{
     memory.replica.seed({
       path: settingsPath,
       types: ["reader-settings"],
-      // Lists and objects are arrays and data maps in the replica, as a save writes them.
-      frontmatter: Object.fromEntries(
-        Object.entries({ ...reserved, ...seed }).map(([key, value]) => [
-          key,
-          toValue(value as PlainValue),
-        ]),
-      ),
+      frontmatter: { ...reserved, ...seed },
     });
   }
   const collection = nativeReaderCollection(memory.connection);

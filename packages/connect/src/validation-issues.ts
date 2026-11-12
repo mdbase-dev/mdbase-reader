@@ -72,8 +72,8 @@ function schemaField(details: ConnectValidationIssue["details"]): string | undef
   // The server sends only the failing schema keyword's location, e.g.
   // `/properties/csl/properties/DOI/pattern`; its property names are schema-defined.
   const location =
-    details instanceof Map
-      ? [...details].find(([key]) => key === "schema_location")?.[1]
+    typeof details === "object" && details !== null && !Array.isArray(details)
+      ? details["schema_location"]
       : undefined;
   if (typeof location !== "string") {
     return undefined;

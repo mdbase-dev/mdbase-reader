@@ -10,7 +10,6 @@ import {
   nativeQuery,
   outcome,
   OutcomeUnknown,
-  plain,
   queryRecord,
   recordDocument,
   resultMeta,
@@ -146,7 +145,7 @@ class NativeRecords implements NativeReaderClient {
       const signal = this.#scope(options.signal);
       let receipt: Receipt;
       try {
-        receipt = await this.client.receipt(mutationId, signal);
+        receipt = await this.client.receipt(mutationId, { signal });
       } catch (error) {
         // `receipt(id)` fails `not_found` once the replica no longer keeps it (§6: at least
         // 24 hours after it leaves `pending`), or when nothing was captured under that ID.
@@ -160,13 +159,16 @@ class NativeRecords implements NativeReaderClient {
     },
     recordAt: async (path, options = {}) => {
       const signal = this.#scope(options.signal);
-      const record = await this.client.find({ path }, { effective: true }, signal);
+      const record = await this.client.find({ path }, { include: { effective: true }, signal });
       this.#check(signal);
       return record ? createdRecord(record) : null;
     },
     local: async (replicaId, options = {}) => {
       const signal = this.#scope(options.signal);
-      const record = await this.client.find(replicaId, { effective: true, body: true }, signal);
+      const record = await this.client.find(replicaId, {
+        include: { effective: true, body: true },
+        signal,
+      });
       this.#check(signal);
       return record ? localRecord(record) : null;
     },
@@ -201,11 +203,13 @@ class NativeRecords implements NativeReaderClient {
       const signal = this.#scope(options.signal);
       if (input.contract) {
         // Contract views carry contract fields only; the body is never part of them.
-        const view = await this.client.getContract({ path: input.path }, input.contract, signal);
+        const view = await this.client.getContract({ path: input.path }, input.contract, {
+          signal,
+        });
         this.#check(signal);
         return contractDocument(view);
       }
-      const record = await this.client.get({ path: input.path }, fullInclude, signal);
+      const record = await this.client.get({ path: input.path }, { include: fullInclude, signal });
       this.#check(signal);
       return recordDocument(record);
     });
@@ -224,7 +228,7 @@ class NativeRecords implements NativeReaderClient {
       let next = 0;
       const worker = async (): Promise<void> => {
         for (let path = unique[next++]; path !== undefined; path = unique[next++]) {
-          const record = await this.client.find({ path }, include, signal);
+          const record = await this.client.find({ path }, { include, signal });
           this.#check(signal);
           if (record && (!types || record.types.some((type) => types.has(type)))) {
             found.set(path, record);
@@ -265,7 +269,7 @@ class NativeRecords implements NativeReaderClient {
         return { results: rows, meta: last ? resultMeta(last) : { hasMore: false } };
       }
       const { query, include } = nativeQuery(input);
-      const result = await this.client.query(query, include, signal);
+      const result = await this.client.query(query, { include, signal });
       this.#check(signal);
       return { results: result.records.map(queryRecord), meta: resultMeta(result) };
     });
@@ -505,10 +509,10 @@ class NativeRecords implements NativeReaderClient {
     contract?: ContractSelector,
   ): Promise<RecordView> {
     if (contract) {
-      await this.client.getContract({ path }, contract, signal);
+      await this.client.getContract({ path }, contract, { signal });
       this.#check(signal);
     }
-    const record = await this.client.get({ path }, fullInclude, signal);
+    const record = await this.client.get({ path }, { include: fullInclude, signal });
     this.#check(signal);
     if (ifRevision !== undefined && record.revision !== ifRevision) {
       throw new MdbaseError({
@@ -586,7 +590,7 @@ class NativeRecords implements NativeReaderClient {
 
   async #captured(mutationId: string): Promise<boolean> {
     try {
-      await this.client.receipt(mutationId, AbortSignal.timeout(10_000));
+      await this.client.receipt(mutationId, { signal: AbortSignal.timeout(10_000) });
       return true;
     } catch (error) {
       return !isMdbaseError(error, "not_found");
@@ -606,13 +610,13 @@ class NativeRecords implements NativeReaderClient {
     this.#check(signal);
     // Still pending after the wait is saved on this device, not a failure.
     const receipt = await this.client
-      .awaitReceipt(mutation.mutationId, this.receiptWaitMs, signal)
+      .awaitReceipt(mutation.mutationId, { timeoutMs: this.receiptWaitMs, signal })
       .catch((error: unknown) => {
         if (isMdbaseError(error, "cancelled")) {
           throw error;
         }
         this.#check(signal);
-        return this.client.receipt(mutation.mutationId, signal);
+        return this.client.receipt(mutation.mutationId, { signal });
       });
     this.#check(signal);
     if (receipt.mutation !== mutation.mutationId) {
@@ -635,7 +639,7 @@ class NativeRecords implements NativeReaderClient {
     if (mutation.operation === "delete") {
       return null;
     }
-    const record = await this.client.get(mutation.record, fullInclude, signal);
+    const record = await this.client.get(mutation.record, { include: fullInclude, signal });
     this.#check(signal);
     if (
       typeof mutation.record === "string"
@@ -648,7 +652,7 @@ class NativeRecords implements NativeReaderClient {
       throw new OutcomeUnknown(mutation.mutationId);
     }
     if (mutation.contract) {
-      const view = await this.client.getContract(record, mutation.contract, signal);
+      const view = await this.client.getContract(record, mutation.contract, { signal });
       this.#check(signal);
       return contractDocument(view);
     }
@@ -664,7 +668,7 @@ class NativeRecords implements NativeReaderClient {
     if (input.document !== undefined || input.body !== undefined) {
       throw unsupported("Contract updates change contract fields only, not the body.");
     }
-    const view = await this.client.getContract({ path: input.path }, contract, signal);
+    const view = await this.client.getContract({ path: input.path }, contract, { signal });
     this.#check(signal);
     const changes = {
       contract,
@@ -683,7 +687,7 @@ class NativeRecords implements NativeReaderClient {
     const { query, include } = nativeQuery({ ...input, limit: pageSize });
     const uniquePath = /^file\.path == "(?:[^"\\]|\\.)*"$/u.test(input.where ?? "");
     let loaded = 0;
-    for await (const page of this.client.pages(query, include, signal)) {
+    for await (const page of this.client.pages(query, { include, signal })) {
       this.#check(signal);
       loaded += page.records.length;
       if (
@@ -763,7 +767,7 @@ function contractRow(
       "A record implements this contract more than once; choose its type explicitly.",
     );
   }
-  const fields = plain(projection.fields);
+  const fields = projection.fields;
   return {
     path: view.path,
     revision: view.revision,
@@ -825,7 +829,7 @@ function mutationState(receipt: Receipt): ReaderMutationState {
  * even while later local edits are pending.
  */
 function createdRecord(record: RecordView): ReaderCreatedRecord {
-  const fields = plain(record.effective ?? record.frontmatter);
+  const fields = record.effective ?? record.frontmatter;
   return {
     id: fields["id"],
     confirmed: record.state.state === "confirmed" || record.state.confirmedSeq > 0,
@@ -837,7 +841,7 @@ function localRecord(record: RecordView): ReaderLocalRecord {
     ...createdRecord(record),
     path: record.path,
     // As written: what a create has to write again, without derived defaults.
-    frontmatter: plain(record.frontmatter),
+    frontmatter: record.frontmatter,
     ...(record.body === undefined ? {} : { body: record.body }),
   };
 }

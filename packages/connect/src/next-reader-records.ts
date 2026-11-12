@@ -1,4 +1,11 @@
-import { revisionOf, type MdbaseClient, type RecordRef, type wire } from "@mdbase-dev/sdk";
+import {
+  revisionOf,
+  type JsonValue,
+  type MdbaseClient,
+  type RecordRef,
+  type RecordView,
+  type wire,
+} from "@mdbase-dev/sdk";
 
 import { annotationContract, sourceContract } from "./contracts.js";
 
@@ -10,9 +17,9 @@ export interface NextReaderContractDigests {
 }
 
 export interface NextReaderRecord {
-  readonly record: wire.RecordView;
+  readonly record: RecordView;
   readonly providerType: string;
-  readonly fields: ReadonlyMap<string, wire.Value>;
+  readonly fields: ReadonlyMap<string, JsonValue>;
 }
 
 type Domain = keyof NextReaderContractDigests;
@@ -24,7 +31,7 @@ const required = {
 };
 
 /** Native read-only source/annotation foundation, not a Connect-shaped SDK
- * facade. Returns actual SDK views/tagged values, retaining native state and
+ * facade. Returns actual SDK views and values, retaining native state and
  * identities. Sign-in/collection lifetime and all writes remain SDK-owned. */
 export class NextReaderRecords {
   private readonly digests: NextReaderContractDigests;
@@ -59,7 +66,7 @@ export class NextReaderRecords {
 
   private async providers(domain: Domain, signal: AbortSignal): Promise<Providers> {
     signal.throwIfAborted();
-    const catalog = await this.client.describe(signal);
+    const catalog = await this.client.describe({ signal });
     signal.throwIfAborted();
     const expected = contracts[domain];
     const matching = catalog.contracts.filter(
@@ -85,7 +92,7 @@ export class NextReaderRecords {
       if (!binding) {
         continue;
       }
-      const fields = new Map(binding.fields);
+      const fields = new Map(Object.entries(binding.fields));
       if (required[domain].some((role) => !fields.get(role))) {
         throw new Error(`The Reader ${domain} provider lacks required field bindings.`);
       }
@@ -109,8 +116,7 @@ export class NextReaderRecords {
     let asOf: number | undefined;
     for await (const page of this.client.pages(
       { types: [...providers.keys()], limit: 1000 },
-      { effective: true },
-      signal,
+      { include: { effective: true }, signal },
     )) {
       signal.throwIfAborted();
       if (!page.complete) {
@@ -143,11 +149,10 @@ export class NextReaderRecords {
     const selected: RecordRef =
       typeof ref === "string" ? ref : "id" in ref ? ref.id : { path: ref.path };
     const providers = await this.providers(domain, signal);
-    const record = await this.client.get(
-      selected,
-      { body: true, document: true, effective: true },
+    const record = await this.client.get(selected, {
+      include: { body: true, document: true, effective: true },
       signal,
-    );
+    });
     signal.throwIfAborted();
     if (typeof selected === "string" ? record.id !== selected : record.path !== selected.path) {
       throw new Error("The Reader record changed its selected native identity.");
@@ -187,20 +192,20 @@ export class NextReaderRecords {
   }
 }
 
-function project(domain: Domain, record: wire.RecordView, providers: Providers): NextReaderRecord {
+function project(domain: Domain, record: RecordView, providers: Providers): NextReaderRecord {
   const matching = record.types.filter((type) => providers.has(type));
   const providerType = matching[0];
   if (matching.length !== 1 || !providerType) {
     throw new Error("Reader cannot select a unique admitted provider for this record.");
   }
   const values = record.effective ?? record.frontmatter;
-  const fields = new Map<string, wire.Value>();
+  const fields = new Map<string, JsonValue>();
   const binding = providers.get(providerType);
   if (!binding) {
     throw new Error("The Reader provider is no longer admitted.");
   }
   for (const [role, field] of binding) {
-    const value = values.get(field);
+    const value = values[field];
     if (value !== undefined) {
       fields.set(role, value);
     }

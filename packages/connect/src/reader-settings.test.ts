@@ -1,4 +1,4 @@
-import { connect, mdbaseError, toValue, type MdbaseClient } from "@mdbase-dev/sdk";
+import { mdbaseError, type MdbaseClient } from "@mdbase-dev/sdk";
 import { MemoryReplica } from "@mdbase-dev/sdk/testing";
 import { annotationId, dateTime, mutationId, sourceId } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -27,11 +27,7 @@ afterEach(() => {
 
 async function native(): Promise<{ replica: MemoryReplica; client: NativeReaderClient }> {
   const replica = new MemoryReplica({ confirmDelayMs: 0 });
-  const sdk: MdbaseClient = await connect({
-    connector: replica.connector(),
-    app: { name: "reader-native-test", version: "test" },
-    reconnect: false,
-  });
+  const sdk: MdbaseClient = await replica.client();
   closers.push(() => sdk.close());
   return { replica, client: nativeReaderClient(sdk, () => true) };
 }
@@ -133,8 +129,8 @@ describe("ReaderSettingsStore highlight colours", () => {
       types: ["reader-settings"],
       frontmatter: {
         ...record,
-        highlight_colors: toValue(["blue", "orange", "yellow", "blue"]),
-        highlight_meanings: toValue({ blue: "  Term ", orange: "Nope", pink: "" }),
+        highlight_colors: ["blue", "orange", "yellow", "blue"],
+        highlight_meanings: { blue: "  Term ", orange: "Nope", pink: "" },
       },
     });
     const store = new ReaderSettingsStore(client);
@@ -153,7 +149,7 @@ describe("ReaderSettingsStore highlight colours", () => {
       types: ["reader-settings"],
       frontmatter: {
         ...record,
-        highlight_colors: toValue(["orange"]),
+        highlight_colors: ["orange"],
         highlight_meanings: "Key idea",
       },
     });
@@ -381,7 +377,7 @@ describe("ReaderSettingsStore follows the change feed", () => {
     memory.replica.seed({
       path,
       types: ["reader-settings"],
-      frontmatter: { ...record, highlight_colors: toValue(["purple"]) },
+      frontmatter: { ...record, highlight_colors: ["purple"] },
     });
 
     await vi.waitFor(async () => {
@@ -406,11 +402,7 @@ describe("ReaderSettingsStore follows the change feed", () => {
 
   it("saves again over another device's record when head refuses a pending first save", async () => {
     const replica = new MemoryReplica({ confirmDelayMs: null });
-    const sdk = await connect({
-      connector: replica.connector(),
-      app: { name: "reader-native-test", version: "test" },
-      reconnect: false,
-    });
+    const sdk = await replica.client();
     closers.push(() => sdk.close());
     const client = nativeReaderClient(sdk, () => true, { receiptWaitMs: 20 });
     let mutation = "";
@@ -426,7 +418,7 @@ describe("ReaderSettingsStore follows the change feed", () => {
     );
     const store = new ReaderSettingsStore(client, {
       watch: (watched, onChange) =>
-        sdk.watchChanges(undefined, (batch) => {
+        sdk.watchChanges((batch) => {
           if (batch.reset || batch.changes.some((change) => change.path === watched)) {
             onChange();
           }

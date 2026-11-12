@@ -2,12 +2,12 @@ import { createApplicationFixture } from "@mdbase-reader/connect/testing";
 
 import manifest from "../generated/mdbase-app.json";
 
-import type { MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
+import type { ApplicationFixtureSnapshot } from "@mdbase-reader/connect/testing";
 
 const facet = { checking: false, assessment: null, problem: null };
 
 /** A complete signed-out public snapshot, for the SDK's own application fixture. */
-export const signedOutSnapshot: MdbaseApplicationSnapshot = {
+export const signedOutSnapshot: ApplicationFixtureSnapshot = {
   status: "signed_out",
   signIn: null,
   collections: [],
@@ -35,7 +35,7 @@ export const signedOutSnapshot: MdbaseApplicationSnapshot = {
 
 /** The SDK's public application fixture: test metadata only, never runtime evidence. */
 export function applicationFixture(
-  initial: Partial<MdbaseApplicationSnapshot> = {},
+  initial: Partial<ApplicationFixtureSnapshot> = {},
 ): ReturnType<typeof createApplicationFixture> {
   return createApplicationFixture({
     declaration: {

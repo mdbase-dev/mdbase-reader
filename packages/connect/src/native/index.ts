@@ -1,18 +1,15 @@
 import { createMdbase, type Mdbase, type MdbaseApplicationDeclaration } from "@mdbase-dev/sdk";
 
-export { MdbaseConnect, describeError, isMdbaseError, summarizeStatus } from "@mdbase-dev/sdk";
+export { createMdbase, describeError, isMdbaseError } from "@mdbase-dev/sdk";
 
 export { nativeReaderCollection } from "./native-collection.js";
 export type { NativeReaderCollection } from "./native-collection.js";
 export type {
-  MdbaseApplication,
   MdbaseApplicationConnection,
   MdbaseApplicationDeclaration,
-  MdbaseApplicationEntry,
-  MdbaseApplicationSnapshot,
   MdbaseApplicationSelectionSnapshot,
   MdbaseErrorDescription,
-  MdbaseConnectOptions,
+  MdbaseOptions,
   MdbaseSignInOpener,
   MdbaseSetupPlan,
   Mdbase,

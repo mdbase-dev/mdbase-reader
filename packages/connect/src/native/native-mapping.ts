@@ -1,11 +1,10 @@
 import { connectFailure, connectProblem, connectSuccess } from "@mdbase-dev/connect/advanced";
-import { isMdbaseError, MdbaseError, toPlain } from "@mdbase-dev/sdk";
+import { isMdbaseError, MdbaseError } from "@mdbase-dev/sdk";
 
 import type { ReaderConnectProblem } from "../validation-issues.js";
 import type {
   ConnectOutcome,
   ConnectProblemCode,
-  JsonObject,
   QueryInput,
   QueryMetadataInput,
   QueryMetadataRecord,
@@ -19,7 +18,6 @@ import type {
   Query,
   QueryResult as NativeQueryResult,
   RecordView,
-  Value,
 } from "@mdbase-dev/sdk";
 
 /** A native write whose outcome is not yet settled; carries its original mutation ID. */
@@ -111,10 +109,6 @@ export function nativeQuery(input: QueryInput | QueryMetadataInput): {
   };
 }
 
-export function plain(value: ReadonlyMap<string, Value> | undefined): JsonObject {
-  return value ? Object.fromEntries([...value].map(([key, item]) => [key, toPlain(item)])) : {};
-}
-
 export function fileMetadata(
   record: Pick<RecordView, "path"> & Partial<Pick<RecordView, "mtime">>,
 ): RecordDocument["file"] {
@@ -134,8 +128,8 @@ export function recordDocument(record: RecordView): RecordDocument {
     path: record.path,
     revision: record.revision,
     types: [...record.types],
-    frontmatter: plain(record.frontmatter),
-    effectiveFrontmatter: plain(record.effective ?? record.frontmatter),
+    frontmatter: record.frontmatter,
+    effectiveFrontmatter: record.effective ?? record.frontmatter,
     ...(record.body === undefined ? {} : { body: record.body }),
     ...(record.document === undefined ? {} : { document: record.document }),
     file: fileMetadata(record),
@@ -144,7 +138,7 @@ export function recordDocument(record: RecordView): RecordDocument {
 
 /** A contract view as Connect returns it: contract fields, no body (prod parity). */
 export function contractDocument(view: ContractRecordView): RecordDocument {
-  const fields = plain(view.fields);
+  const fields = view.fields;
   return {
     path: view.path,
     revision: view.revision,
@@ -161,11 +155,11 @@ export function queryRecord(record: RecordView): QueryRecord {
     path: record.path,
     revision: record.revision,
     types: [...record.types],
-    frontmatter: plain(record.frontmatter),
-    effectiveFrontmatter: plain(record.effective ?? record.frontmatter),
+    frontmatter: record.frontmatter,
+    effectiveFrontmatter: record.effective ?? record.frontmatter,
     ...(record.body === undefined ? {} : { body: record.body }),
     file: fileMetadata(record),
-    ...(record.values ? { values: plain(record.values) } : {}),
+    ...(record.values ? { values: record.values } : {}),
   };
 }
 
@@ -174,7 +168,7 @@ export function metadataRecord(record: RecordView): QueryMetadataRecord {
     path: record.path,
     types: [...record.types],
     revision: record.revision,
-    values: plain(record.values),
+    values: record.values ?? {},
   };
 }
 

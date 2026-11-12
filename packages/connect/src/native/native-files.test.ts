@@ -41,7 +41,7 @@ describe("native file confirmation", () => {
     await expect(adapter.upload("reading.html", new Blob(["reading"]))).resolves.toMatchObject({
       fileId: "file",
     });
-    expect(awaitReceipt).toHaveBeenCalledWith("mutation", 30_000, undefined);
+    expect(awaitReceipt).toHaveBeenCalledWith("mutation", { timeoutMs: 30_000 });
     expect(files.get).toHaveBeenCalledOnce();
   });
 
@@ -67,7 +67,7 @@ describe("native file confirmation", () => {
     const { adapter, awaitReceipt, files } = fixture();
     const controller = new AbortController();
     awaitReceipt.mockImplementation(
-      (_id, _timeout, signal: AbortSignal) =>
+      (_id, { signal }: { signal: AbortSignal }) =>
         new Promise((_resolve, reject) => {
           signal.addEventListener("abort", () => reject(signal.reason as Error), { once: true });
         }),

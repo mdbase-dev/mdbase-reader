@@ -15,15 +15,15 @@ import {
 } from "./sdk-rpc.js";
 
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
-import type { MdbaseApplication, MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
+import type { Mdbase, MdbaseSnapshot } from "@mdbase-reader/connect/native";
 
 /** The parts of the SDK application the extension's pages use. */
 export type RemoteApplication = Pick<
-  MdbaseApplication,
+  Mdbase,
   | "getSnapshot"
   | "subscribe"
   | "start"
-  | "authorize"
+  | "signIn"
   | "approve"
   | "select"
   | "chooseAnother"
@@ -76,7 +76,7 @@ class HostConnection {
   readonly #unlisten: () => void;
   #nextId = 0;
   #host: string | null = null;
-  #snapshot: MdbaseApplicationSnapshot | null = null;
+  #snapshot: MdbaseSnapshot | null = null;
   #shape: CollectionShape | null = null;
   #proxy: { readonly key: string; readonly collection: ReaderConnectedCollection } | null = null;
   #disposed = false;
@@ -94,7 +94,7 @@ class HostConnection {
     });
   }
 
-  get snapshot(): MdbaseApplicationSnapshot {
+  get snapshot(): MdbaseSnapshot {
     if (!this.#snapshot) {
       throw new Error(translate`mdbase has not started yet.`);
     }
@@ -318,7 +318,7 @@ export async function createSdkClient(
   /** An application command whose answer must be an SDK snapshot. */
   const command =
     (method: ApplicationCommand) =>
-    async (...args: unknown[]): Promise<MdbaseApplicationSnapshot> => {
+    async (...args: unknown[]): Promise<MdbaseSnapshot> => {
       const answer = await connection.call({ app: true }, method, args);
       if (!isApplicationSnapshot(answer)) {
         throw new Error(`mdbase answered ${method} with something other than its state.`);
@@ -329,7 +329,7 @@ export async function createSdkClient(
     getSnapshot: () => connection.snapshot,
     subscribe: (listener) => connection.subscribe(listener),
     start: command("start"),
-    authorize: command("authorize"),
+    signIn: command("signIn"),
     approve: command("approve"),
     select: command("select"),
     chooseAnother: command("chooseAnother"),
