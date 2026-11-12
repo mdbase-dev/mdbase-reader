@@ -22,8 +22,12 @@ it("clears offline addition errors on reconnect even while existing writes are s
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
   const snapshot = {
-    phase: { kind: "ready", connection: { records: { status: { incidents: [] } } } },
-    sync: { attention: [], writes: { pending: [{}], rejected: [], saveState: "saving" } },
+    phase: { kind: "ready" },
+    sync: {
+      attention: [],
+      incidents: [],
+      writes: { pending: [{}], rejected: [], saveState: "saving" },
+    },
   };
   const mdbase = {
     subscribe: () => () => undefined,

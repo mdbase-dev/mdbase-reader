@@ -209,23 +209,15 @@ it.each([
     const host = document.createElement("div");
     document.body.append(host);
     const snapshot = {
-      phase: {
-        kind: "ready",
-        connection: {
-          records: {
-            status: {
-              incidents: [
-                {
-                  kind: "read_only",
-                  details: { service_code: "append_refused", reason: "collection_read_only" },
-                },
-                { kind: "log_regressed", details: {} },
-              ],
-            },
-          },
-        },
-      },
+      phase: { kind: "ready" },
       sync: {
+        incidents: [
+          {
+            kind: "read_only",
+            details: { service_code: "append_refused", reason: "collection_read_only" },
+          },
+          { kind: "log_regressed", details: {} },
+        ],
         writes: {
           pending: Array.from({ length: pending }, () => ({
             mutationId: "retained-refusal",

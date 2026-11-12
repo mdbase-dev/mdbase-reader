@@ -18,13 +18,11 @@ const snapshot = (value: { saveState?: string; connection?: string }): Snapshot 
 describe("SDK connection state", () => {
   it("reports an incident with pending writes as attention, not progress or a fabricated rejection", () => {
     const pending = {
-      phase: {
-        kind: "ready",
-        connection: { records: { status: { incidents: [{ kind: "read_only" }] } } },
-      },
+      phase: { kind: "ready" },
       sync: {
         connection: "online",
         attention: [],
+        incidents: [{ kind: "read_only" }],
         writes: { pending: [{}], rejected: [], saveState: "saved_on_device" },
       },
     } as unknown as Snapshot;

@@ -6,13 +6,11 @@ import type { Mdbase } from "@mdbase-reader/connect/native";
 const noop = (): void => undefined;
 
 type SdkSnapshot = ReturnType<Mdbase["getSnapshot"]>;
-type SyncIncidents = Extract<
-  SdkSnapshot["phase"],
-  { kind: "ready" }
->["connection"]["records"]["status"]["incidents"];
 
-export function sdkSyncIncidents(snapshot: SdkSnapshot | null): SyncIncidents {
-  return snapshot?.phase.kind === "ready" ? snapshot.phase.connection.records.status.incidents : [];
+export function sdkSyncIncidents(
+  snapshot: SdkSnapshot | null,
+): NonNullable<SdkSnapshot["sync"]>["incidents"] {
+  return snapshot?.sync?.incidents ?? [];
 }
 
 /** The device or the sync service cannot be reached. */
