@@ -13,10 +13,11 @@ export function sdkSyncIncidents(
   return snapshot?.sync?.incidents ?? [];
 }
 
-/** The device or the sync service cannot be reached. */
+/** The device has no network or the sync service did not answer. A busy or
+ * rate-limited service is not offline. */
 export function sdkOffline(snapshot: SdkSnapshot | null): boolean {
-  const connection = snapshot?.sync?.connection;
-  return connection === "offline" || connection === "reconnecting";
+  const sync = snapshot?.sync;
+  return sync?.connection === "offline" || sync?.health === "unreachable";
 }
 
 /** The header's connection state from the SDK: never "connected" while it is
