@@ -1,8 +1,8 @@
 import {
   nativeReaderCollection,
   type MdbaseApplicationConnection,
-  type MdbaseApplicationEntry,
-  type MdbaseApplicationSnapshot,
+  type Mdbase,
+  type MdbaseSnapshot,
   type NativeReaderCollection,
 } from "@mdbase-reader/connect/native";
 import { MemoryStorage, StorageCreateJournal } from "@mdbase-reader/platform";
@@ -18,7 +18,7 @@ import type { SdkHostSource } from "./sdk-host.js";
  */
 const createStorage = new MemoryStorage();
 
-function readyEvidence(snapshot: MdbaseApplicationSnapshot): boolean {
+function readyEvidence(snapshot: MdbaseSnapshot): boolean {
   const { readiness } = snapshot;
   return (
     snapshot.status === "ready" &&
@@ -32,8 +32,8 @@ function readyEvidence(snapshot: MdbaseApplicationSnapshot): boolean {
 
 /** The SDK's current READY connection for the selected collection, or null. */
 export function readyConnection(
-  sdk: MdbaseApplicationEntry,
-  snapshot: MdbaseApplicationSnapshot,
+  sdk: Mdbase,
+  snapshot: MdbaseSnapshot,
 ): MdbaseApplicationConnection | null {
   const selected = snapshot.selectedCollectionId;
   if (!selected || !readyEvidence(snapshot)) {
@@ -48,13 +48,12 @@ export function readyConnection(
  * keyed by connection scope: a later snapshot may hand back a new facade for the same
  * connection, which must not retire them.
  */
-export function sdkHostSource(sdk: MdbaseApplicationEntry, hostId: string): SdkHostSource {
-  const application = sdk.application();
+export function sdkHostSource(sdk: Mdbase, hostId: string): SdkHostSource {
   let opened: { readonly key: string; readonly collection: NativeReaderCollection } | null = null;
   return {
-    application,
+    application: sdk,
     currentCollection() {
-      const connection = readyConnection(sdk, application.getSnapshot());
+      const connection = readyConnection(sdk, sdk.getSnapshot());
       const key = connection ? `${hostId}:${connection.id}:${connection.generation}` : null;
       if (opened?.key !== key) {
         opened?.collection.dispose();

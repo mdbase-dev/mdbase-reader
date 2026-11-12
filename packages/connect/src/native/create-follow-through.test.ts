@@ -1,4 +1,3 @@
-import { connect } from "@mdbase-dev/sdk";
 import {
   annotationId,
   collectionId,
@@ -268,11 +267,7 @@ describe("create follow-through", () => {
     const replica = new MemoryReplica({ confirmDelayMs: null, where: whereId });
     const journal = new MemoryJournal();
     const session = async (): Promise<MdbaseApplicationConnection> => {
-      const client = await connect({
-        connector: replica.connector(),
-        app: { name: "reader-native-test", version: "test" },
-        reconnect: false,
-      });
+      const client = await replica.client();
       cleanup.push(() => client.close());
       return { ...(await memoryConnectionFor(replica)), records: client, files: client.files };
     };
@@ -296,11 +291,7 @@ describe("create follow-through", () => {
 
   it("reconciles when the link opens again after a refusal it missed", async () => {
     const replica = new MemoryReplica({ confirmDelayMs: null, where: whereId });
-    const client = await connect({
-      connector: replica.connector(),
-      app: { name: "reader-native-test", version: "test" },
-      reconnect: { minDelayMs: 10, maxDelayMs: 20 },
-    });
+    const client = await replica.client({ reconnect: { minDelayMs: 10, maxDelayMs: 20 } });
     cleanup.push(() => client.close());
     const journal = new MemoryJournal();
     const collection = open(

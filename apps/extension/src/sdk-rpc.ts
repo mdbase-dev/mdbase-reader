@@ -1,6 +1,6 @@
-import type { MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
+import type { MdbaseSnapshot } from "@mdbase-reader/connect/native";
 
-type MdbaseApplicationReadinessSnapshot = MdbaseApplicationSnapshot["readiness"];
+type MdbaseApplicationReadinessSnapshot = MdbaseSnapshot["readiness"];
 
 /**
  * The extension's SDK channel. One offscreen document owns the SDK (sdk-host.ts); the side
@@ -34,7 +34,7 @@ export function broadcastLink(name = sdkChannelName): SdkLink & { close(): void 
 /** The application commands the extension sends; nothing else reaches the SDK. */
 export const applicationCommands = [
   "start",
-  "authorize",
+  "signIn",
   "approve",
   "select",
   "chooseAnother",
@@ -354,7 +354,7 @@ export function isReadinessSnapshot(value: unknown): value is MdbaseApplicationR
 }
 
 /** The fields the client reads from a host snapshot; anything else is not one. */
-export function isApplicationSnapshot(value: unknown): value is MdbaseApplicationSnapshot {
+export function isApplicationSnapshot(value: unknown): value is MdbaseSnapshot {
   if (!isObject(value)) {
     return false;
   }

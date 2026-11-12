@@ -1,4 +1,4 @@
-import { connect, MdbaseError, type MdbaseClient } from "@mdbase-dev/sdk";
+import { MdbaseError, type MdbaseClient } from "@mdbase-dev/sdk";
 import {
   MemoryReplica,
   type MemoryContract,
@@ -31,11 +31,7 @@ async function native(
   receiptWaitMs?: number,
 ): Promise<{ replica: MemoryReplica; client: NativeReaderClient; sdk: MdbaseClient }> {
   const replica = new MemoryReplica({ confirmDelayMs: 0, ...options });
-  const sdk = await connect({
-    connector: replica.connector(),
-    app: { name: "reader-native-test", version: "test" },
-    reconnect: false,
-  });
+  const sdk = await replica.client();
   clients.push(sdk);
   return {
     replica,

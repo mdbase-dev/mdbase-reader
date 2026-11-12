@@ -28,9 +28,11 @@ it("offers a reload for old pending writes even while syncing", async () => {
   } as unknown as Mdbase;
   const snapshot = {
     phase: { kind: "starting" },
-    writes: {
-      pending: [{ mutationId: "stalled", records: [], createdAt: Date.now() }],
-      rejected: [],
+    sync: {
+      writes: {
+        pending: [{ mutationId: "stalled", records: [], createdAt: Date.now() }],
+        rejected: [],
+      },
     },
   };
   root = createRoot(host);
@@ -52,9 +54,11 @@ it("shows the actual pending change and drops the warning only when the ledger d
   let snapshot = {
     phase: { kind: "starting" },
     saveWarning: "storage_may_be_evicted",
-    writes: {
-      pending: [{ mutationId: "owned-write", records: ["owned-file"], createdAt: Date.now() }],
-      rejected: [],
+    sync: {
+      writes: {
+        pending: [{ mutationId: "owned-write", records: ["owned-file"], createdAt: Date.now() }],
+        rejected: [],
+      },
     },
   };
   const mdbase = {
@@ -91,7 +95,7 @@ it("shows the actual pending change and drops the warning only when the ledger d
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
   expect(host.querySelector(".reader-save-details li details")?.hasAttribute("open")).toBe(false);
   act(() => {
-    snapshot = { ...snapshot, writes: { pending: [], rejected: [] } };
+    snapshot = { ...snapshot, sync: { writes: { pending: [], rejected: [] } } };
     changed();
   });
   expect(host.querySelector("details")).toBeNull();
@@ -105,9 +109,11 @@ it("stays calm offline and starts the stalled timer only on reconnect", async ()
   const snapshot = {
     phase: { kind: "starting" },
     saveWarning: "storage_may_be_evicted",
-    writes: {
-      pending: [{ mutationId: "offline", records: [], createdAt: Date.now() - 60_000 }],
-      rejected: [],
+    sync: {
+      writes: {
+        pending: [{ mutationId: "offline", records: [], createdAt: Date.now() - 60_000 }],
+        rejected: [],
+      },
     },
   };
   const mdbase = {
@@ -142,12 +148,14 @@ it.each(["saved_on_device", "saving"])(
     let changed: () => void = () => undefined;
     let snapshot = {
       phase: { kind: "starting" },
-      sync: { kind: "offline" },
       saveWarning: "storage_may_be_evicted",
-      writes: {
-        saveState,
-        pending: [{ mutationId: "offline-sdk", records: [], createdAt: Date.now() }],
-        rejected: [],
+      sync: {
+        connection: "offline",
+        writes: {
+          saveState,
+          pending: [{ mutationId: "offline-sdk", records: [], createdAt: Date.now() }],
+          rejected: [],
+        },
       },
     };
     const mdbase = {
@@ -165,7 +173,7 @@ it.each(["saved_on_device", "saving"])(
       expect(host.textContent).not.toContain("may remove");
       expect(host.querySelector(".reader-save-details > button")).toBeNull();
       act(() => {
-        snapshot = { ...snapshot, sync: { kind: "synced" } };
+        snapshot = { ...snapshot, sync: { ...snapshot.sync, connection: "online" } };
         changed();
       });
       await act(() => vi.advanceTimersByTime(0));
@@ -177,7 +185,7 @@ it.each(["saved_on_device", "saving"])(
         "Reload Reader",
       );
       act(() => {
-        snapshot = { ...snapshot, sync: { kind: "offline" } };
+        snapshot = { ...snapshot, sync: { ...snapshot.sync, connection: "offline" } };
         changed();
       });
       expect(host.querySelector(".reader-save-details > button")).toBeNull();
@@ -201,37 +209,28 @@ it.each([
     const host = document.createElement("div");
     document.body.append(host);
     const snapshot = {
-      phase: {
-        kind: "ready",
-        connection: {
-          records: {
-            status: {
-              incidents: [
-                {
-                  kind: "read_only",
-                  details: new Map([
-                    ["service_code", "append_refused"],
-                    ["reason", "collection_read_only"],
-                  ]),
-                },
-                { kind: "log_regressed", details: new Map() },
-              ],
-            },
+      phase: { kind: "ready" },
+      sync: {
+        incidents: [
+          {
+            kind: "read_only",
+            details: { service_code: "append_refused", reason: "collection_read_only" },
           },
+          { kind: "log_regressed", details: {} },
+        ],
+        writes: {
+          pending: Array.from({ length: pending }, () => ({
+            mutationId: "retained-refusal",
+            records: ["retained-record"],
+            createdAt: Date.now(),
+          })),
+          rejected: Array.from({ length: rejected }, () => ({
+            mutationId: "rejected-refusal",
+            records: ["rejected-record"],
+            createdAt: Date.now(),
+            problem: { message: "The collection is read-only.", recovery: "contact_support" },
+          })),
         },
-      },
-      writes: {
-        pending: Array.from({ length: pending }, () => ({
-          mutationId: "retained-refusal",
-          records: ["retained-record"],
-          createdAt: Date.now(),
-        })),
-        rejected: Array.from({ length: rejected }, () => ({
-          mutationId: "rejected-refusal",
-          records: ["rejected-record"],
-          createdAt: Date.now(),
-          problem: { message: "The collection is read-only.", recovery: "contact_support" },
-        })),
       },
     };
     const mdbase = {
@@ -253,7 +252,7 @@ it.each([
     expect(host.querySelector(".reader-save-details > details")?.textContent).toContain(
       "log_regressed",
     );
-    expect(snapshot.writes.pending).toHaveLength(pending);
-    expect(snapshot.writes.rejected).toHaveLength(rejected);
+    expect(snapshot.sync.writes.pending).toHaveLength(pending);
+    expect(snapshot.sync.writes.rejected).toHaveLength(rejected);
   },
 );

@@ -15,7 +15,7 @@ import {
 import { memoryBus } from "./testing/memory-bus.js";
 import { applicationFixture } from "./testing/sdk-fixture.js";
 
-import type { MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
+import type { ApplicationFixtureSnapshot } from "@mdbase-reader/connect/testing";
 
 const owned: { close(): void }[] = [];
 afterEach(() => {
@@ -38,12 +38,12 @@ function host(
 function fixtureHost(
   bus: ReturnType<typeof memoryBus>,
   id: string,
-  initial: Partial<MdbaseApplicationSnapshot> = {},
+  initial: Partial<ApplicationFixtureSnapshot> = {},
 ): ReturnType<typeof applicationFixture> & { served: ReturnType<typeof host> } {
   const sdk = applicationFixture(initial);
   owned.push(sdk.controls);
   const served = host(bus, id, {
-    application: sdk.entry.application(),
+    application: sdk.mdbase,
     currentCollection: () => null,
   });
   return { ...sdk, served };
@@ -66,7 +66,7 @@ async function client(
   return created;
 }
 
-const never = new Promise<MdbaseApplicationSnapshot>(() => undefined);
+const never = new Promise<ApplicationFixtureSnapshot>(() => undefined);
 
 describe("SDK RPC between extension pages and the offscreen host", () => {
   it("serves only the public application commands, with the SDK's snapshot", async () => {
@@ -104,7 +104,7 @@ describe("SDK RPC between extension pages and the offscreen host", () => {
     await client(bus, { openSignIn: bystander });
     const opener = vi.fn();
     const remote = await client(bus, { openSignIn: opener });
-    await remote.application.authorize();
+    await remote.application.signIn();
     await vi.waitFor(() =>
       expect(opener).toHaveBeenCalledWith("https://connect-lab.mdbase.dev/approve"),
     );
@@ -122,7 +122,7 @@ describe("SDK RPC between extension pages and the offscreen host", () => {
       hostGone: (id) =>
         new Promise<void>((resolve) => (id === "h1" ? (gone = resolve) : undefined)),
     });
-    const pending = remote.application.authorize();
+    const pending = remote.application.signIn();
     await vi.waitFor(() =>
       expect(first.controls.observedActions().some((call) => call.action === "authorize")).toBe(
         true,
@@ -161,7 +161,7 @@ describe("SDK RPC between extension pages and the offscreen host", () => {
         }),
     );
     const remote = await client(bus);
-    const pending = remote.application.authorize().then(
+    const pending = remote.application.signIn().then(
       () => "resolved",
       (reason: unknown) => (reason instanceof Error ? reason.message : "rejected"),
     );
@@ -189,7 +189,7 @@ describe("the READY collection over the SDK RPC", () => {
     const sdk = applicationFixture();
     owned.push(sdk.controls);
     host(bus, "h1", {
-      application: sdk.entry.application(),
+      application: sdk.mdbase,
       currentCollection: () => ({ key: "h1:c:1", collection }),
     });
     const remote = await client(bus);

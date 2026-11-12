@@ -1,5 +1,5 @@
 import { t } from "@lingui/core/macro";
-import { describeError, type MdbaseApplicationSnapshot } from "@mdbase-reader/connect/native";
+import { describeError, type MdbaseSnapshot } from "@mdbase-reader/connect/native";
 
 /**
  * What the extension's pages show for the SDK's application snapshot. The SDK owns
@@ -101,10 +101,7 @@ function recoveryActionLabel(action: RecoveryAction): string | null {
 }
 
 /** The SDK's description of a settled problem, as one extension control. */
-function sdkProblem(
-  snapshot: MdbaseApplicationSnapshot,
-  readiness: boolean,
-): ConnectionProblemView | null {
+function sdkProblem(snapshot: MdbaseSnapshot, readiness: boolean): ConnectionProblemView | null {
   const described = describeError(snapshot);
   if (!described) {
     return null;
@@ -134,7 +131,7 @@ function sdkProblem(
   };
 }
 
-function identityLabel(signIn: MdbaseApplicationSnapshot["signIn"]): string | null {
+function identityLabel(signIn: MdbaseSnapshot["signIn"]): string | null {
   if (signIn?.state !== "paired") {
     return null;
   }
@@ -151,7 +148,7 @@ type Screen = Pick<ConnectionView, "status" | "problem">;
 const plain = (status: ConnectionStatus): Screen => ({ status, problem: null });
 
 /** Screens that win over everything else: closed, waiting in the mdbase tab, a problem. */
-function interruption(snapshot: MdbaseApplicationSnapshot): Screen | null {
+function interruption(snapshot: MdbaseSnapshot): Screen | null {
   const { status, readiness, selection } = snapshot;
   if (status === "closed") {
     return plain("closed");
@@ -172,7 +169,7 @@ function interruption(snapshot: MdbaseApplicationSnapshot): Screen | null {
 }
 
 /** The step the reader (or the SDK) has to take next. */
-function nextStep(snapshot: MdbaseApplicationSnapshot): ConnectionStatus | null {
+function nextStep(snapshot: MdbaseSnapshot): ConnectionStatus | null {
   const { status, readiness, selection } = snapshot;
   if (selection.state === "approval_required") {
     return "approval";
@@ -189,7 +186,7 @@ function nextStep(snapshot: MdbaseApplicationSnapshot): ConnectionStatus | null 
   return status === "unselected" || selection.state === "invalid" ? "choosing" : null;
 }
 
-function screen(snapshot: MdbaseApplicationSnapshot, usable: boolean): Screen {
+function screen(snapshot: MdbaseSnapshot, usable: boolean): Screen {
   const interrupted = interruption(snapshot);
   if (interrupted) {
     return interrupted;
@@ -212,7 +209,7 @@ function screen(snapshot: MdbaseApplicationSnapshot, usable: boolean): Screen {
  * mdbase opening; the SDK's own status is not changed.
  */
 export function connectionView(
-  snapshot: MdbaseApplicationSnapshot,
+  snapshot: MdbaseSnapshot,
   usable: boolean,
   hostAvailable = true,
 ): ConnectionView {

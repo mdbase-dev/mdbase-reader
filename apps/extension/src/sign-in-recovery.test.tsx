@@ -34,7 +34,7 @@ async function renderAndApprove(
   copy: ReturnType<typeof describeError>,
 ): Promise<void> {
   owned.push(h.controls);
-  const application = h.entry.application();
+  const application = h.mdbase;
   const scope = new AbortController();
   const approve = async (): Promise<void> => {
     await application.approve(undefined, { signal: scope.signal });
@@ -80,7 +80,7 @@ for (const status of ["blocked", "authorizing"] as const) {
   for (const code of ["refused", "expired"] as const) {
     it(`${status}/${code} keeps SDK copy and an enabled approval gesture`, async () => {
       const h = applicationFixture({ status, problem: code });
-      const copy = describeError(h.entry.application().getSnapshot());
+      const copy = describeError(h.mdbase.getSnapshot());
       if (!copy?.actionLabel) {
         throw new Error("Missing public SDK sign-in description");
       }

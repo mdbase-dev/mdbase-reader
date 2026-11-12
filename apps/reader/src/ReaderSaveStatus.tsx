@@ -2,7 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useContext, useSyncExternalStore, type JSX } from "react";
 
 import { Menu } from "./Menu.js";
-import { sdkSyncIncidents } from "./sdk-connection-state.js";
+import { sdkOffline, sdkSyncIncidents } from "./sdk-connection-state.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
 import { useSustained } from "./use-sustained.js";
 
@@ -27,8 +27,8 @@ export function ReaderSaveStatus({
     () => mdbase?.getSnapshot() ?? null,
     () => null,
   );
-  const online = browserOnline && snapshot?.sync?.kind !== "offline";
-  const { pending, rejected } = snapshot?.writes ?? { pending: [], rejected: [] };
+  const online = browserOnline && !sdkOffline(snapshot);
+  const { pending, rejected } = snapshot?.sync?.writes ?? { pending: [], rejected: [] };
   const incidents = sdkSyncIncidents(snapshot);
   const needsAttention = rejected.length + incidents.length > 0;
   const stalled = useSustained(online && Boolean(pending.length), 30_000);
@@ -70,7 +70,7 @@ export function ReaderSaveStatus({
 function SaveStatusEntries({
   entries,
 }: {
-  readonly entries: NonNullable<MdbaseSnapshot["writes"]>["pending"];
+  readonly entries: NonNullable<NonNullable<MdbaseSnapshot["sync"]>["writes"]>["pending"];
 }): JSX.Element {
   const { t } = useLingui();
   const sources = useContext(SourceLibraryContext);
@@ -165,13 +165,9 @@ function SyncIncidentList({
         {incidents.map((incident, index) => {
           const details = incident.details;
           const fields: JSX.Element[] = [];
-          if (details instanceof Map) {
-            for (const [key, value] of details) {
-              if (
-                typeof key === "string" &&
-                ["service_code", "code", "reason"].includes(key) &&
-                typeof value === "string"
-              ) {
+          if (typeof details === "object" && details !== null && !Array.isArray(details)) {
+            for (const [key, value] of Object.entries(details)) {
+              if (["service_code", "code", "reason"].includes(key) && typeof value === "string") {
                 fields.push(<code key={key}>{value}</code>);
               }
             }

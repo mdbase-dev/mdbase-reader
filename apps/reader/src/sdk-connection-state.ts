@@ -6,13 +6,18 @@ import type { Mdbase } from "@mdbase-reader/connect/native";
 const noop = (): void => undefined;
 
 type SdkSnapshot = ReturnType<Mdbase["getSnapshot"]>;
-type SyncIncidents = Extract<
-  SdkSnapshot["phase"],
-  { kind: "ready" }
->["connection"]["records"]["status"]["incidents"];
 
-export function sdkSyncIncidents(snapshot: SdkSnapshot | null): SyncIncidents {
-  return snapshot?.phase.kind === "ready" ? snapshot.phase.connection.records.status.incidents : [];
+export function sdkSyncIncidents(
+  snapshot: SdkSnapshot | null,
+): NonNullable<SdkSnapshot["sync"]>["incidents"] {
+  return snapshot?.sync?.incidents ?? [];
+}
+
+/** The device has no network or the sync service did not answer. A busy or
+ * rate-limited service is not offline. */
+export function sdkOffline(snapshot: SdkSnapshot | null): boolean {
+  const sync = snapshot?.sync;
+  return sync?.connection === "offline" || sync?.health === "unreachable";
 }
 
 /** The header's connection state from the SDK: never "connected" while it is
@@ -24,26 +29,29 @@ export function sdkConnectionState(
   if (!snapshot) {
     return fallback;
   }
+  const sync = snapshot.sync;
+  const writes = sync?.writes;
   if (
     sdkSyncIncidents(snapshot).length ||
-    snapshot.writes?.rejected.length ||
-    (snapshot.sync &&
+    writes?.rejected.length ||
+    sync?.attention.some((reason) =>
       [
         "update_required",
         "account_suspended",
         "collection_migrating",
         "collection_not_yet_migrated",
-      ].includes(snapshot.sync.kind))
+      ].includes(reason),
+    )
   ) {
     return "attention";
   }
-  if (snapshot.writes?.saveState === "saved_on_device") {
+  if (writes?.saveState === "saved_on_device") {
     return "saved_on_device";
   }
-  if (snapshot.sync?.kind === "offline") {
+  if (sdkOffline(snapshot)) {
     return "offline";
   }
-  if (snapshot.writes?.pending.length || snapshot.saveWarning) {
+  if (writes?.pending.length || snapshot.saveWarning) {
     return "syncing";
   }
   return fallback;

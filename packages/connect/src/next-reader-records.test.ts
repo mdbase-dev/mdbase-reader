@@ -1,4 +1,4 @@
-import { connect, MdbaseError, toValue, type MdbaseClient, type wire } from "@mdbase-dev/sdk";
+import { MdbaseError, type DescribeResult, type MdbaseClient } from "@mdbase-dev/sdk";
 import { MemoryReplica } from "@mdbase-dev/sdk/testing";
 import { afterEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
@@ -14,7 +14,7 @@ interface Fixture {
   source: ReturnType<MemoryReplica["seed"]>;
   annotation: ReturnType<MemoryReplica["seed"]>;
   client: MdbaseClient;
-  catalog: wire.DescribeResult;
+  catalog: DescribeResult;
   describe: MockInstance<MdbaseClient["describe"]>;
   records: NextReaderRecords;
 }
@@ -36,7 +36,7 @@ async function fixture(): Promise<Fixture> {
       caption: "A paper",
       medium: "article",
       captured: "2026-10-10T10:00:00Z",
-      citation: toValue({ title: "A paper" }),
+      citation: { title: "A paper" },
     },
     body: "User-authored literature note\n",
   });
@@ -56,17 +56,13 @@ async function fixture(): Promise<Fixture> {
     types: ["note"],
     frontmatter: { id: "not-a-source", title: "Not admitted" },
   });
-  const client = await connect({
-    connector: replica.connector(),
-    app: { name: "reader-data-test", version: "test" },
-    reconnect: false,
-  });
+  const client = await replica.client();
   clients.push(client);
   // Synthetic exact contract/type metadata over actual SDK record frames. This
   // does not qualify Reader's native manifest/parser/runtime or sign-in setup.
-  const catalog: wire.DescribeResult = {
+  const catalog: DescribeResult = {
     specVersion: "0.3.0",
-    settings: new Map(),
+    settings: {},
     inclusion: { include: [] },
     issues: [],
     contracts: [
@@ -93,15 +89,13 @@ async function fixture(): Promise<Fixture> {
           {
             contract: sourceContract.id,
             version: sourceContract.version,
-            fields: new Map(
-              Object.entries({
-                id: "work_id",
-                title: "caption",
-                kind: "medium",
-                saved_at: "captured",
-                csl: "citation",
-              }),
-            ),
+            fields: {
+              id: "work_id",
+              title: "caption",
+              kind: "medium",
+              saved_at: "captured",
+              csl: "citation",
+            },
           },
         ],
       },
@@ -112,14 +106,12 @@ async function fixture(): Promise<Fixture> {
           {
             contract: annotationContract.id,
             version: annotationContract.version,
-            fields: new Map(
-              Object.entries({
-                id: "mark_id",
-                source: "for_work",
-                annotation_type: "mark_kind",
-                created_at: "made_at",
-              }),
-            ),
+            fields: {
+              id: "mark_id",
+              source: "for_work",
+              annotation_type: "mark_kind",
+              created_at: "made_at",
+            },
           },
         ],
       },
@@ -157,15 +149,14 @@ describe("NextReaderRecords (SDK stand-in, not native/LAB acceptance)", () => {
     expect(sources[0]?.record.id).toBe(f.source.id);
     expect(sources[0]?.providerType).toBe("bibliography-item");
     expect(sources[0]?.fields.get("title")).toBe("A paper");
-    expect(sources[0]?.fields.get("csl")).toBeInstanceOf(Map);
-    expect(sources[0]?.record.frontmatter.has("caption")).toBe(true);
+    expect(sources[0]?.fields.get("csl")).toEqual({ title: "A paper" });
+    expect(sources[0]?.record.frontmatter).toHaveProperty("caption");
     expect(sources[0]?.record.body).toBeUndefined();
     expect(sources[0]?.record.document).toBeUndefined();
     expect(sources[0]?.record.state.state).toBe("confirmed");
     expect(query).toHaveBeenCalledWith(
       { types: ["bibliography-item"], limit: 1000 },
-      { effective: true },
-      expect.any(AbortSignal),
+      { include: { effective: true }, signal: expect.any(AbortSignal) },
     );
     expect(get).not.toHaveBeenCalled();
     const annotations = await collect(f.records.annotations(signal()));
@@ -179,7 +170,9 @@ describe("NextReaderRecords (SDK stand-in, not native/LAB acceptance)", () => {
     async (domain) => {
       const f = await fixture();
       const id = domain === "source" ? f.source.id : f.annotation.id;
-      const expected = await f.client.get(id, { body: true, document: true, effective: true });
+      const expected = await f.client.get(id, {
+        include: { body: true, document: true, effective: true },
+      });
       vi.spyOn(f.client, "get").mockResolvedValue(expected);
       const result =
         domain === "source"
@@ -231,10 +224,10 @@ describe("NextReaderRecords (SDK stand-in, not native/LAB acceptance)", () => {
         f.catalog.types[0]!.implements.push(implementation);
       }
       if (failure === "required") {
-        implementation.fields.delete("id");
+        delete implementation.fields["id"];
       }
       if (failure === "nested") {
-        implementation.fields.set("title", "bibliography.title");
+        implementation.fields["title"] = "bibliography.title";
       }
       const query = vi.spyOn(f.client, "query");
       await expect(collect(f.records.sources(signal()))).rejects.toThrow();
@@ -260,9 +253,7 @@ describe("NextReaderRecords full source (SDK stand-in, not native/LAB acceptance
     async (failure) => {
       const f = await fixture();
       const record = await f.client.get(f.source.id, {
-        body: true,
-        document: true,
-        effective: true,
+        include: { body: true, document: true, effective: true },
       });
       if (failure === "body") {
         delete record.body;
@@ -282,7 +273,9 @@ describe("NextReaderRecords full source (SDK stand-in, not native/LAB acceptance
 
   it("retains native pending/protected state without calling it saved or resubmitting", async () => {
     const f = await fixture();
-    const record = await f.client.get(f.source.id, { body: true, document: true, effective: true });
+    const record = await f.client.get(f.source.id, {
+      include: { body: true, document: true, effective: true },
+    });
     record.state = {
       ...record.state,
       state: "pending",
@@ -297,12 +290,14 @@ describe("NextReaderRecords full source (SDK stand-in, not native/LAB acceptance
 
   it("uses effective fields but leaves the genuine record unchanged", async () => {
     const f = await fixture();
-    const record = await f.client.get(f.source.id, { body: true, document: true, effective: true });
-    record.effective = new Map(record.frontmatter).set("caption", "Effective title");
+    const record = await f.client.get(f.source.id, {
+      include: { body: true, document: true, effective: true },
+    });
+    record.effective = { ...record.frontmatter, caption: "Effective title" };
     vi.spyOn(f.client, "get").mockResolvedValue(record);
     const projected = await f.records.getSource(record.id, signal());
     expect(projected.fields.get("title")).toBe("Effective title");
-    expect(projected.record.frontmatter.get("caption")).toBe("A paper");
+    expect(projected.record.frontmatter["caption"]).toBe("A paper");
     expect(projected.record).toBe(record);
   });
 
@@ -317,8 +312,7 @@ describe("NextReaderRecords full source (SDK stand-in, not native/LAB acceptance
     expect((await f.records.getSource(selected, signal())).record.id).toBe(f.source.id);
     expect(get).toHaveBeenCalledWith(
       { path: f.source.path },
-      { body: true, document: true, effective: true },
-      expect.any(AbortSignal),
+      { include: { body: true, document: true, effective: true }, signal: expect.any(AbortSignal) },
     );
   });
 });
@@ -326,7 +320,9 @@ describe("NextReaderRecords full source (SDK stand-in, not native/LAB acceptance
 describe("NextReaderRecords identity/provider safety (SDK stand-in)", () => {
   it("refuses an SDK readback that switches the selected UUID", async () => {
     const f = await fixture();
-    const record = await f.client.get(f.source.id, { body: true, document: true, effective: true });
+    const record = await f.client.get(f.source.id, {
+      include: { body: true, document: true, effective: true },
+    });
     vi.spyOn(f.client, "get").mockResolvedValue({ ...record, id: f.annotation.id });
     await expect(f.records.getSource(f.source.id, signal())).rejects.toThrow(
       "selected native identity",
@@ -335,7 +331,9 @@ describe("NextReaderRecords identity/provider safety (SDK stand-in)", () => {
 
   it("refuses records outside or ambiguous across admitted providers", async () => {
     const f = await fixture();
-    const record = await f.client.get(f.source.id, { body: true, document: true, effective: true });
+    const record = await f.client.get(f.source.id, {
+      include: { body: true, document: true, effective: true },
+    });
     const get = vi.spyOn(f.client, "get");
     get.mockResolvedValue({ ...record, types: ["reader-source"] });
     await expect(f.records.getSource(record.id, signal())).rejects.toThrow(
@@ -353,7 +351,7 @@ describe("NextReaderRecords identity/provider safety (SDK stand-in)", () => {
     const get = f.client.get.bind(f.client);
     vi.spyOn(f.client, "get").mockImplementation(async (...args) => {
       const record = await get(...args);
-      f.catalog.types[0]!.implements[0]!.fields.set("title", "other_caption");
+      f.catalog.types[0]!.implements[0]!.fields["title"] = "other_caption";
       return record;
     });
     await expect(f.records.getSource(f.source.id, signal())).rejects.toThrow("bindings changed");
@@ -361,9 +359,11 @@ describe("NextReaderRecords identity/provider safety (SDK stand-in)", () => {
 
   it("refuses records missing required role values", async () => {
     const f = await fixture();
-    const record = await f.client.get(f.source.id, { body: true, document: true, effective: true });
-    record.frontmatter.delete("work_id");
-    record.effective?.delete("work_id");
+    const record = await f.client.get(f.source.id, {
+      include: { body: true, document: true, effective: true },
+    });
+    delete record.frontmatter["work_id"];
+    delete record.effective?.["work_id"];
     vi.spyOn(f.client, "get").mockResolvedValue(record);
     await expect(f.records.getSource(record.id, signal())).rejects.toThrow(
       "lacks required contract fields",
@@ -377,10 +377,10 @@ describe("NextReaderRecords pagination/lifetime (SDK stand-in)", () => {
     async (failure) => {
       const f = await fixture();
       vi.spyOn(f.client, "pages").mockImplementation(async function* () {
-        const record = await f.client.get(f.source.id, { effective: true });
+        const record = await f.client.get(f.source.id, { include: { effective: true } });
         yield { records: [record], complete: failure !== "incomplete", asOf: 1 };
         if (failure === "bindings") {
-          f.catalog.types[0]!.implements[0]!.fields.set("title", "other_caption");
+          f.catalog.types[0]!.implements[0]!.fields["title"] = "other_caption";
         }
         yield {
           records: failure === "duplicate" ? [record] : [],

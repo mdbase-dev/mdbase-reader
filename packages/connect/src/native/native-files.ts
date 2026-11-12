@@ -48,7 +48,7 @@ export function nativeReaderFiles(
       check(options.signal);
       const view = await files.get(
         target.path === undefined ? target.fileId : { path: target.path },
-        options.signal,
+        options,
       );
       check(options.signal);
       return connectSuccess(descriptor(view));
@@ -98,10 +98,10 @@ export function nativeReaderFiles(
       }
     }
     check(options.signal);
-    const receipt = await client.awaitReceipt(write.mutationId, 30_000, options.signal);
+    const receipt = await client.awaitReceipt(write.mutationId, { ...options, timeoutMs: 30_000 });
     check(options.signal);
     requireConfirmedUpload(receipt, path);
-    const view = await files.get(write.fileId, options.signal);
+    const view = await files.get(write.fileId, options);
     check(options.signal);
     return descriptor(view);
   }
@@ -110,7 +110,7 @@ export function nativeReaderFiles(
     stat,
     async download(file, options = {}) {
       check(options.signal);
-      const view = await files.get(file.fileId, options.signal);
+      const view = await files.get(file.fileId, options);
       check(options.signal);
       if (view.digest !== file.contentDigest) {
         throw new MdbaseError({

@@ -1,21 +1,21 @@
 {
   "schema": "mdbase-reader/sdk-original/1",
   "package": "@mdbase-dev/sdk-lab",
-  "artifact": "sdk-493d29ca-lab-beta157.tgz",
-  "version": "0.1.0-beta.157",
-  "sourceCommit": "493d29ca2a3494c5d59677e8b83e309b44a28c31",
+  "artifact": "sdk-e8ffb806-lab-beta188.tgz",
+  "version": "0.1.0-beta.188",
+  "sourceCommit": "e8ffb806d16c58fe03cf50c96fb66e29ebb612ba",
   "environment": "lab",
-  "bytes": 4537675,
-  "sha256": "927cc688a22d0931207d9108b53958e3279f2d2d711342b04ac80c02d8091e26",
-  "sri": "sha512-Q71Vbuk4iQFZknK0GR/2CmUpeNsf0T/XL2GMuv/PVWNxqO+dYTMw1mDpvb8pAtYAMpRyVrnQUf26Vk9HAuSjuQ==",
+  "bytes": 4819910,
+  "sha256": "ee3283c5e37eadb728a32076b4831e1e2bcca064a526f7456aab43ae003771f9",
+  "sri": "sha512-Tc/R1WhEBNDc2ODSWSOkmw35Fr+EhKGogdfECBgNS9R1gawItPaMiqA96D1S2/vlh01+CH2X8H0e9fG1alUXRw==",
   "publication": {
-    "release": "sdk-v0.1.0-beta.157",
+    "release": "sdk-v0.1.0-beta.188",
     "asset": "sdk-lab.tgz",
     "repository": "mdbase-dev/mdbase-connect",
     "workflow": ".github/workflows/publish-sdk-npm.yml",
-    "ref": "refs/heads/main",
+    "ref": "refs/tags/v0.1.0-beta.188",
     "signatureVerified": true,
-    "certificateIdentity": "https://github.com/mdbase-dev/mdbase-connect/.github/workflows/publish-sdk-npm.yml@refs/heads/main"
+    "certificateIdentity": "https://github.com/mdbase-dev/mdbase-connect/.github/workflows/publish-sdk-npm.yml@refs/tags/v0.1.0-beta.188"
   },
   "trust": {
     "package": "@mdbase-dev/sdk-lab",
@@ -27,17 +27,17 @@
     "sourceVersion": "0.1.0-beta.129"
   },
   "runtime": {
-    "sha256": "d375ce16a48dec718801704f56ffb6a545247a2793912c2c8e68ceb171ff2537",
-    "bytes": 3797530,
-    "maxBytes": 3797530,
+    "sha256": "7004351583c3a79411e644fafe9f5786816d32ea058605d1905fd50666012f40",
+    "bytes": 3875815,
+    "maxBytes": 3875815,
     "source": {
       "repository": "mdbase-dev/mdbase-connect",
-      "commit": "3e433313e0a234513478789686a4f4274e4dd76c"
+      "commit": "aae332572834fbfa065c0f696017c0de3540649d"
     }
   },
   "provenance": {
     "schema": "mdbase-sdk/npm-publication/1",
-    "commit": "493d29ca2a3494c5d59677e8b83e309b44a28c31",
+    "commit": "e8ffb806d16c58fe03cf50c96fb66e29ebb612ba",
     "environment": "lab",
     "trust": {
       "package": "@mdbase-dev/sdk-lab",
@@ -49,12 +49,12 @@
       "sourceVersion": "0.1.0-beta.129"
     },
     "runtime": {
-      "sha256": "d375ce16a48dec718801704f56ffb6a545247a2793912c2c8e68ceb171ff2537",
-      "bytes": 3797530,
-      "maxBytes": 3797530,
+      "sha256": "7004351583c3a79411e644fafe9f5786816d32ea058605d1905fd50666012f40",
+      "bytes": 3875815,
+      "maxBytes": 3875815,
       "source": {
         "repository": "mdbase-dev/mdbase-connect",
-        "commit": "3e433313e0a234513478789686a4f4274e4dd76c"
+        "commit": "aae332572834fbfa065c0f696017c0de3540649d"
       }
     }
   }

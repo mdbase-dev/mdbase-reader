@@ -17,10 +17,10 @@ import {
 } from "./sdk-rpc.js";
 
 import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
-import type { MdbaseApplication } from "@mdbase-reader/connect/native";
+import type { Mdbase } from "@mdbase-reader/connect/native";
 
 export interface SdkHostSource {
-  readonly application: MdbaseApplication;
+  readonly application: Mdbase;
   /** The adapters over the SDK's current READY connection, keyed by connection scope. */
   currentCollection(): {
     readonly key: string;
@@ -38,7 +38,7 @@ type CallMessage = Extract<ClientMessage, { kind: "call" }>;
 type Method = (...args: unknown[]) => unknown;
 
 /** Calls a person starts; a sign-in they lead to opens from that person's page. */
-const interactive = new Set(["authorize", "approve", "chooseAnother", "select", "configure"]);
+const interactive = new Set(["signIn", "approve", "chooseAnother", "select", "configure"]);
 
 function member(owner: unknown, name: string): Method | null {
   if (typeof owner !== "object" || owner === null) {
