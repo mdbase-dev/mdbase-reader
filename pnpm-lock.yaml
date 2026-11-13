@@ -145,8 +145,8 @@ importers:
         specifier: 0.1.0-beta.149
         version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/sdk':
-        specifier: 0.1.0-beta.200
-        version: 0.1.0-beta.200
+        specifier: 0.1.0-beta.202
+        version: 0.1.0-beta.202
       '@mdbase-dev/sdk-lab':
         specifier: file:../../packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
         version: file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
@@ -155,7 +155,7 @@ importers:
         version: file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.200)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.202)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -215,8 +215,8 @@ importers:
         specifier: 0.1.0-beta.149
         version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/sdk':
-        specifier: 0.1.0-beta.200
-        version: 0.1.0-beta.200
+        specifier: 0.1.0-beta.202
+        version: 0.1.0-beta.202
       '@mdbase-dev/sdk-lab':
         specifier: file:../../packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
         version: file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz
@@ -228,7 +228,7 @@ importers:
         version: file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.200)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.202)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -320,8 +320,8 @@ importers:
         specifier: 0.1.0-beta.149
         version: 0.1.0-beta.149
       '@mdbase-dev/sdk':
-        specifier: 0.1.0-beta.200
-        version: 0.1.0-beta.200
+        specifier: 0.1.0-beta.202
+        version: 0.1.0-beta.202
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -354,7 +354,7 @@ importers:
         version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.200)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.202)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -403,7 +403,7 @@ importers:
         version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.200)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.202)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -585,7 +585,7 @@ importers:
         version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.200)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.202)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1699,8 +1699,8 @@ packages:
     bundledDependencies:
       - '@mdbase-dev/connect-protocol'
 
-  '@mdbase-dev/sdk@0.1.0-beta.200':
-    resolution: {integrity: sha512-ejMOMXNBAMsXlQNR7y/WfxBdHR7vJCtUx5HDwtwoB4uakuhvFyYu5C/61fwVIvT/S1AdRG7sZf3st6hgq6ndDw==}
+  '@mdbase-dev/sdk@0.1.0-beta.202':
+    resolution: {integrity: sha512-uNBCVCbXZnyu0aG4YkIk16L7kOkE5mAHpJG2OBgJe5vv4S71pgNcGH/GoN2pKpI9C/N72I6G0WmJMRNrwykEIQ==}
     engines: {node: '>=20'}
     bundledDependencies:
       - '@mdbase-dev/connect-protocol'
@@ -5884,7 +5884,7 @@ snapshots:
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
 
-  '@mdbase-dev/sdk@0.1.0-beta.200':
+  '@mdbase-dev/sdk@0.1.0-beta.202':
     dependencies:
       '@noble/ciphers': 2.4.0
       '@noble/curves': 2.4.0
@@ -5896,7 +5896,7 @@ snapshots:
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
 
-  '@mdbase-dev/ui@0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.200)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@mdbase-dev/ui@0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.202)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@fontsource-variable/atkinson-hyperlegible-next': 5.3.0
       '@fontsource/azeret-mono': 5.3.0
@@ -5906,7 +5906,7 @@ snapshots:
       react: 19.3.1
     optionalDependencies:
       '@codemirror/view': 6.43.15
-      '@mdbase-dev/sdk': 0.1.0-beta.200
+      '@mdbase-dev/sdk': 0.1.0-beta.202
       react-dom: 19.3.1(react@19.3.1)
 
   '@messageformat/date-skeleton@1.1.0': {}
