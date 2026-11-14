@@ -193,7 +193,11 @@ function pageTitle(c: ExtensionCaptureController): string {
   if (c.source) {
     return c.source.title;
   }
-  return c.capture ? c.draft.title.trim() || c.capture.pageTitle : t`Reading the page…`;
+  if (!c.capture) {
+    return t`Reading the page…`;
+  }
+  // A feed has no title of its own: it is never saved, only the posts chosen from it.
+  return c.draft.title.trim() || c.capture.pageTitle || (c.postPicker ? t`Posts` : "");
 }
 
 /**

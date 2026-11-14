@@ -10,23 +10,9 @@ export function PostPicker({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
+  // Closed, the save bar's button is the one way in; a second one here only repeated it.
   const picker = c.postPicker;
-  if (!picker) {
-    return null;
-  }
-  if (!picker.open) {
-    return (
-      <button
-        type="button"
-        className="secondary compact"
-        disabled={c.busy || c.navigated}
-        onClick={picker.show}
-      >
-        <Trans>Choose posts…</Trans>
-      </button>
-    );
-  }
-  return <OpenPostPicker picker={picker} controller={c} />;
+  return picker?.open ? <OpenPostPicker picker={picker} controller={c} /> : null;
 }
 
 function OpenPostPicker({

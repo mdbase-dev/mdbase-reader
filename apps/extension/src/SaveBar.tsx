@@ -8,7 +8,11 @@ import type { ExtensionCaptureController } from "./capture-controller.js";
 
 /** Whether a save may start now: connected, titled, not busy and still on the page. */
 export function saveReady(c: ExtensionCaptureController): boolean {
-  return c.snapshot.status === "ready" && !c.busy && !c.navigated && Boolean(c.draft.title.trim());
+  return connectedAndIdle(c) && Boolean(c.draft.title.trim());
+}
+
+function connectedAndIdle(c: ExtensionCaptureController): boolean {
+  return c.snapshot.status === "ready" && !c.busy && !c.navigated;
 }
 
 /**
@@ -42,9 +46,8 @@ export function SaveBar({
 }: {
   readonly controller: ExtensionCaptureController;
 }): React.JSX.Element | null {
-  const { t } = useLingui();
-  const ready = saveReady(c);
-  const blocker = saveBlocker(c);
+  // A page of posts is never saved itself, so it needs no title: each chosen post brings its own.
+  const ready = c.postPicker ? connectedAndIdle(c) : saveReady(c);
   const selection = c.capture?.kind === "html" ? c.capture.selection : null;
   const { save, source } = c;
   useEffect(() => {
@@ -74,7 +77,8 @@ export function SaveBar({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [ready, save, selection, source]);
-  if (!c.capture || (!source && awaitingConnection(c))) {
+  // The open post picker has its own Save and Cancel.
+  if (!c.capture || (!source && awaitingConnection(c)) || c.postPicker?.open) {
     return null;
   }
   const pdf = c.capture.kind === "pdf";
@@ -92,6 +96,22 @@ export function SaveBar({
       </a>
     ) : null;
   }
+  return <SaveAction controller={c} ready={ready} selection={Boolean(selection)} />;
+}
+
+/** The unsaved page's one action: save it, or on a page of posts choose which to save. */
+function SaveAction({
+  controller: c,
+  ready,
+  selection,
+}: {
+  readonly controller: ExtensionCaptureController;
+  readonly ready: boolean;
+  readonly selection: boolean;
+}): React.JSX.Element {
+  const { t } = useLingui();
+  const picker = c.postPicker;
+  const blocker = picker || selection ? null : saveBlocker(c);
   return (
     <div className="save-bar">
       <button
@@ -100,12 +120,12 @@ export function SaveBar({
         type="button"
         disabled={!ready}
         aria-keyshortcuts={selection ? undefined : "Control+Enter Meta+Enter"}
-        title={selection ? undefined : t`Save (${modifierKey()}+Enter)`}
-        onClick={() => void save({ highlight: false })}
+        title={selection || picker ? undefined : t`Save (${modifierKey()}+Enter)`}
+        onClick={() => (picker ? picker.show() : void c.save({ highlight: false }))}
       >
         {submitLabel(c)}
       </button>
-      {blocker && !selection ? <p className="hint">{blocker}</p> : null}
+      {blocker ? <p className="hint">{blocker}</p> : null}
     </div>
   );
 }

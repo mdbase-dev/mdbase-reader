@@ -1806,10 +1806,6 @@ msgstr "选择或拖放文件"
 msgid "Choose posts to save"
 msgstr "选择要保存的帖子"
 
-#: apps/extension/src/PostPicker.tsx
-msgid "Choose posts…"
-msgstr "选择帖子…"
-
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Choose sections in reading order. The first and last sections are included in full."
 msgstr "按阅读顺序选择节。起始节和结束节都会完整纳入。"
@@ -6390,6 +6386,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Post"
 msgstr "帖子"
 
+#: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/PostPicker.tsx
 msgid "Posts"
 msgstr "帖子"
