@@ -12,8 +12,8 @@ export interface CollectionConnection extends ConnectionControls {
 }
 
 /**
- * Connect outside the capture panel (welcome and settings pages). Grants and the remembered
- * collection live in extension storage, so the panel picks up what is chosen here.
+ * Connect outside the capture panel (welcome and settings pages). The SDK shares sign-in; each
+ * page owns its selection, and the worker follows the last ready page selection.
  */
 export function useCollectionConnection(): CollectionConnection {
   const lock = useActionLock();

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 
 import { lingui } from "@lingui/vite-plugin";
@@ -9,6 +10,12 @@ import { extensionSdk } from "./scripts/extension-sdk.mjs";
 import { chromeLocales, chromeMessages, shellCatalogue } from "./scripts/localized-shell.mjs";
 
 const environment = extensionEnvironment();
+// One identity for all bundles emitted by this build, including the separate worker build.
+const sessionBuild = randomUUID();
+const defines = {
+  __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment),
+  __READER_EXTENSION_SESSION_BUILD__: JSON.stringify(sessionBuild),
+};
 
 type SdkAliases = Awaited<ReturnType<typeof extensionSdk>>["aliases"];
 
@@ -37,16 +44,10 @@ function manifest(): Plugin {
   };
 }
 
-/**
- * The service worker's classic scripts, built after the pages as self-contained IIFEs so
- * they share no chunks with them: background.js, and page-status.js, which it loads with
- * importScripts() only when a page may be saved (see src/page-status-loader.ts). Neither
- * includes the SDK, which runs in the offscreen host (src/offscreen.ts).
- */
+/** Build the module service worker and the injected social-page classic script. */
 function serviceWorker(alias: SdkAliases): Plugin {
   const scripts = {
     background: "src/background.ts",
-    "page-status": "src/page-status-worker.ts",
     "social-page": "src/social-page.ts",
   };
   return {
@@ -60,7 +61,8 @@ function serviceWorker(alias: SdkAliases): Plugin {
           root: import.meta.dirname,
           logLevel: "warn",
           resolve: { alias },
-          define: { __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment) },
+          define: defines,
+          worker: { format: "es" },
           build: {
             target: "es2022",
             sourcemap: true,
@@ -70,7 +72,7 @@ function serviceWorker(alias: SdkAliases): Plugin {
             modulePreload: false,
             rolldownOptions: {
               input: resolve(import.meta.dirname, entry),
-              // Vite's preload helper mentions import.meta; with modulePreload off it is unused.
+              // The injected classic script cannot use import.meta.
               onLog(level, log, handler) {
                 if (log.code !== "EMPTY_IMPORT_META") {
                   handler(level, log);
@@ -85,7 +87,10 @@ function serviceWorker(alias: SdkAliases): Plugin {
                     },
                   }
                 : {}),
-              output: { format: "iife", entryFileNames: `${name}.js` },
+              output: {
+                format: name === "background" ? "es" : "iife",
+                entryFileNames: `${name}.js`,
+              },
             },
           },
         });
@@ -115,7 +120,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
         },
       },
     },
-    define: { __READER_EXTENSION_ENVIRONMENT__: JSON.stringify(environment) },
+    define: defines,
     build: {
       target: "es2022",
       sourcemap: true,

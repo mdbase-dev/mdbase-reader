@@ -4941,10 +4941,6 @@ msgstr "Ingrandisci documento"
 msgid "Maximize document · {0}"
 msgstr "Ingrandisci documento · {0}"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase answered the readiness check with something else."
-msgstr "mdbase ha restituito una risposta inattesa al controllo di disponibilità."
-
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
 msgstr "mdbase Connect non ha accettato la registrazione dell’app Reader, quindi non può aprire le raccolte qui."
@@ -4952,14 +4948,6 @@ msgstr "mdbase Connect non ha accettato la registrazione dell’app Reader, quin
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connect ha impiegato troppo tempo per rispondere. Riprova tra poco."
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase could not start in the background. Reload the extension."
-msgstr "mdbase non è riuscito ad avviarsi in background. Ricarica l’estensione."
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase has not started yet."
-msgstr "mdbase non ha ancora iniziato."
 
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
@@ -4992,10 +4980,6 @@ msgstr "mdbase Reader è installato"
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
 msgstr "Impostazioni di mdbase Reader"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr "mdbase si è riavviato in background. Verifica se l’ultima modifica è stata salvata, poi riprova."
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "meanings"
@@ -8642,10 +8626,6 @@ msgstr "Il citekey @{0} non è unico."
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr "La raccolta è cambiata mentre stavate modificando."
-
-#: apps/extension/src/sdk-host.ts
-msgid "The collection connection changed. Try again."
-msgstr "La connessione alla raccolta è cambiata. Riprova."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."

@@ -4942,10 +4942,6 @@ msgstr "문서 최대화"
 msgid "Maximize document · {0}"
 msgstr "문서 최대화 · {0}"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase answered the readiness check with something else."
-msgstr "mdbase의 준비 상태 확인 응답이 예상과 다릅니다."
-
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
 msgstr "mdbase Connect가 Reader의 앱 등록을 수락하지 않아 여기에서 컬렉션을 열 수 없습니다."
@@ -4953,14 +4949,6 @@ msgstr "mdbase Connect가 Reader의 앱 등록을 수락하지 않아 여기에�
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connect의 응답이 너무 오래 걸립니다. 잠시 후 다시 시도하세요."
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase could not start in the background. Reload the extension."
-msgstr "mdbase를 백그라운드에서 시작하지 못했습니다. 확장 프로그램을 다시 불러오세요."
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase has not started yet."
-msgstr "mdbase가 아직 시작되지 않았습니다."
 
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
@@ -4993,10 +4981,6 @@ msgstr "mdbase Reader가 설치되었습니다"
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
 msgstr "mdbase Reader 설정"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr "mdbase가 백그라운드에서 다시 시작되었습니다. 마지막 변경 사항이 저장되었는지 확인한 후 다시 시도하세요."
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "meanings"
@@ -8643,10 +8627,6 @@ msgstr "인용 키 @{0}이(가) 고유하지 않습니다."
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr "편집하는 동안 컬렉션이 변경되었습니다. 충돌을 검토한 후 계속해 주세요."
-
-#: apps/extension/src/sdk-host.ts
-msgid "The collection connection changed. Try again."
-msgstr "컬렉션 연결이 변경되었습니다. 다시 시도하세요."
 
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."

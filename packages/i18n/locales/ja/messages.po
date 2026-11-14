@@ -4942,10 +4942,6 @@ msgstr "文書を最大化"
 msgid "Maximize document · {0}"
 msgstr "文書を最大化 · {0}"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase answered the readiness check with something else."
-msgstr "mdbaseの準備状況確認に想定外の応答がありました。"
-
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
 msgstr "mdbase ConnectがReaderのアプリ登録を受け付けなかったため、ここではコレクションを開けません。"
@@ -4953,14 +4949,6 @@ msgstr "mdbase ConnectがReaderのアプリ登録を受け付けなかったた�
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connectからの応答がタイムアウトしました。少し待ってから再試行してください。"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase could not start in the background. Reload the extension."
-msgstr "mdbaseをバックグラウンドで起動できませんでした。拡張機能を再読み込みしてください。"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase has not started yet."
-msgstr "mdbaseはまだ起動していません。"
 
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
@@ -4993,10 +4981,6 @@ msgstr "mdbase Readerをインストール済み"
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
 msgstr "mdbase Readerの設定"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr "mdbaseがバックグラウンドで再起動しました。最後の変更が保存されたか確認してから再試行してください。"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "meanings"
@@ -8643,10 +8627,6 @@ msgstr "引用キー@{0}は一意ではありません。"
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr "編集中にコレクションが変更されました。続行するには競合を確認してください。"
-
-#: apps/extension/src/sdk-host.ts
-msgid "The collection connection changed. Try again."
-msgstr "コレクションの接続が変更されました。再試行してください。"
 
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
