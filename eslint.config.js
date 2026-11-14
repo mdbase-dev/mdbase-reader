@@ -87,6 +87,23 @@ export default tseslint.config(
       "max-depth": ["error", 4],
       "max-lines-per-function": ["error", { max: 120, skipBlankLines: true, skipComments: true }],
       "no-console": "error",
+      // A bare call to one of these silently reaches `window` when the local binding it meant is
+      // out of scope (a tab's close button once called `window.close()` and did nothing).
+      "no-restricted-globals": [
+        "error",
+        ...[
+          "blur",
+          "close",
+          "event",
+          "find",
+          "focus",
+          "name",
+          "open",
+          "print",
+          "status",
+          "stop",
+        ].map((name) => ({ name, message: `Use a local binding or window.${name} explicitly.` })),
+      ],
       "no-restricted-syntax": [
         "error",
         {
