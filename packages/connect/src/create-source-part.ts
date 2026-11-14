@@ -18,15 +18,16 @@ import {
   sourceNotePathCandidates,
   type ReaderNaming,
 } from "./naming-templates.js";
-import { outcomeValue, type ReaderConnectClient } from "./repository-client.js";
 import { checkSourcePartChain } from "./source-parts.js";
 import { ConnectSourceRepository } from "./source-repository.js";
+
+import type { MdbaseClient } from "@mdbase-dev/sdk";
 
 /** Single record create: relation, citation and shared-file range succeed or fail together. */
 // Validate every boundary before the single create; no partial relation/document writes.
 // eslint-disable-next-line complexity
 export async function createSourcePart(
-  records: ReaderConnectClient,
+  records: MdbaseClient,
   plan: PlannedSourcePart,
   options: ReaderRequestOptions = {},
   creates: CreateFollowThrough = new CreateFollowThrough(records),
@@ -131,19 +132,16 @@ export async function createSourcePart(
       label: plan.title,
       candidates,
       input: { type: "reader-source", frontmatter, body: `# ${plan.title}\n` },
-      readBack: { contract: sourceContract, includeDocument: true },
+      readBack: { contract: sourceContract },
       linksTo: [parent.id],
       isOurs: (existing) =>
         Object.entries(frontmatter).every(
           ([key, value]) =>
-            key === "saved_at" || cslValuesEqual(existing.effectiveFrontmatter[key], value),
+            key === "saved_at" ||
+            cslValuesEqual((existing.effective ?? existing.frontmatter)[key], value),
         ),
     },
     options,
   );
-  return sourceFromDocument(
-    plan.collectionId,
-    outcomeValue(created, "create chapter source"),
-    parent.id,
-  );
+  return sourceFromDocument(plan.collectionId, created, parent.id);
 }

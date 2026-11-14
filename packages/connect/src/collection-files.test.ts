@@ -1,10 +1,12 @@
+import { mdbaseError } from "@mdbase-dev/sdk";
 import { collectionId, fileRevision } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectCollectionFileRepository } from "./collection-files.js";
+import { testFile } from "./records.fixtures.js";
 
 import type { ReaderFileClient } from "./documents.js";
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
+import type { FileView } from "@mdbase-dev/sdk";
 import type { Mock } from "vitest";
 
 describe("bounded collection file reads", () => {
@@ -18,7 +20,7 @@ describe("bounded collection file reads", () => {
       active--;
       return new Blob(["PNG"]);
     });
-    const { repository, stat } = readFixture(download);
+    const { repository, get } = readFixture(download);
     const files = await Promise.all(
       Array.from({ length: 11 }, (_, index) =>
         repository.read(collectionId("reading"), `files/${String(index)}.png`),
@@ -26,7 +28,7 @@ describe("bounded collection file reads", () => {
     );
     expect(files).toHaveLength(11);
     expect(maximum).toBe(2);
-    expect(stat).toHaveBeenCalledTimes(11);
+    expect(get).toHaveBeenCalledTimes(11);
     expect(download).toHaveBeenCalledTimes(11);
   });
 
@@ -37,7 +39,7 @@ describe("bounded collection file reads", () => {
     const gate = new Promise<Blob>((resolve) => {
       release = resolve;
     });
-    const download = vi.fn((_file: CollectionFileDescriptor) => gate);
+    const download = vi.fn((_file: FileView) => gate);
     const { repository } = readFixture(download);
     const first = repository.read(collectionId("reading"), "files/0.png");
     const second = repository.read(collectionId("reading"), "files/1.png");
@@ -62,7 +64,7 @@ describe("bounded collection file reads", () => {
     const gate = new Promise<Blob>((resolve) => {
       release = resolve;
     });
-    const download = vi.fn((file: CollectionFileDescriptor) =>
+    const download = vi.fn((file: FileView) =>
       file.path === "files/0.png" ? gate : Promise.resolve(new Blob(["PNG"])),
     );
     const { repository } = readFixture(download);
@@ -79,46 +81,44 @@ describe("bounded collection file reads", () => {
 
   it("does not poison a read lane after a failed download", async () => {
     const download = vi
-      .fn<(file: CollectionFileDescriptor) => Promise<Blob>>()
+      .fn<(file: FileView) => Promise<Blob>>()
       .mockRejectedValueOnce(new Error("Download failed"))
       .mockResolvedValue(new Blob(["PNG"]));
     const { repository } = readFixture(download);
-    const results = await Promise.allSettled(
+    const records = await Promise.allSettled(
       [0, 1, 2].map((index) =>
         repository.read(collectionId("reading"), `files/${String(index)}.png`),
       ),
     );
-    expect(results.map((result) => result.status)).toEqual(["rejected", "fulfilled", "fulfilled"]);
+    expect(records.map((result) => result.status)).toEqual(["rejected", "fulfilled", "fulfilled"]);
     expect(download).toHaveBeenCalledTimes(3);
   });
 });
 
-function readFixture(download: (file: CollectionFileDescriptor) => Promise<Blob>): {
+function readFixture(download: (file: FileView) => Promise<Blob>): {
   repository: ConnectCollectionFileRepository;
-  stat: Mock<ReaderFileClient["stat"]>;
+  get: Mock<ReaderFileClient["get"]>;
 } {
-  const stat = vi.fn<ReaderFileClient["stat"]>((target) => {
-    const index = Number(target.path?.split("/").at(-1)?.split(".")[0]);
-    return Promise.resolve({
-      ok: true,
-      diagnostics: [],
-      value: {
-        fileId: `file-${String(index)}`,
+  const get = vi.fn<ReaderFileClient["get"]>((target) => {
+    const index = Number(
+      (typeof target === "string" ? target : target.path).split("/").at(-1)?.split(".")[0],
+    );
+    return Promise.resolve(
+      testFile({
+        id: `file-${String(index)}`,
         path: `files/${String(index)}.png`,
-        revision: "file-revision",
-        contentDigest: `sha256:${"a".repeat(64)}`,
+        digest: `sha256:${"a".repeat(64)}`,
         size: 3,
         mediaType: "image/png",
-        mediaClass: "image",
-        modifiedAt: "2026-09-24T00:00:00Z",
-      },
-    });
+        media: "image",
+      }),
+    );
   });
-  return { repository: new ConnectCollectionFileRepository({ stat, download }), stat };
+  return { repository: new ConnectCollectionFileRepository({ get: get, download }), get };
 }
 
 describe("size-limited collection file reads", () => {
-  it("refuses an oversized file from stat before downloading it", async () => {
+  it("refuses an oversized file from get before downloading it", async () => {
     const download = vi.fn().mockResolvedValue(new Blob(["PNG"]));
     const { repository } = readFixture(download);
     await expect(
@@ -144,12 +144,12 @@ describe("size-limited collection file reads", () => {
     ).resolves.toMatchObject({ bytes: new Uint8Array([80, 78, 71]) });
   });
 
-  it("does not start a download if cancelled during stat", async () => {
+  it("does not start a download if cancelled during get", async () => {
     const abort = new AbortController();
     const download = vi.fn();
     const fixture = readFixture(download);
-    const original = fixture.stat.getMockImplementation()!;
-    fixture.stat.mockImplementation(async (target, options) => {
+    const original = fixture.get.getMockImplementation()!;
+    fixture.get.mockImplementation(async (target, options) => {
       const result = await original(target, options);
       abort.abort();
       return result;
@@ -168,41 +168,43 @@ describe("ConnectCollectionFileRepository", () => {
   it("exports exact revisions using fresh point metadata rather than a folder index", async () => {
     const revision: `sha256:${string}` = `sha256:${"a".repeat(64)}`;
     const cropRevision: `sha256:${string}` = `sha256:${"b".repeat(64)}`;
-    const list = vi.fn(async function* (): AsyncGenerator<CollectionFileDescriptor> {
+    const list = vi.fn(async function* (): AsyncGenerator<FileView> {
       await Promise.resolve();
       yield {
-        fileId: "file-01",
+        id: "file-01",
+        state: "materialized",
+        confirmedSeq: 1,
         path: "files/reading/paper.pdf",
-        revision: "file-rev-1",
-        contentDigest: revision,
+        digest: revision,
         size: 4,
         mediaType: "application/pdf",
-        mediaClass: "pdf" as const,
-        modifiedAt: "2026-08-09T00:00:00Z",
+        media: "pdf" as const,
+        mtime: Date.parse("2026-08-09T00:00:00Z"),
       };
       yield {
-        fileId: "file-02",
+        id: "file-02",
+        state: "materialized",
+        confirmedSeq: 1,
         path: "files/reading/crop.png",
-        revision: "file-rev-2",
-        contentDigest: cropRevision,
+        digest: cropRevision,
         size: 3,
         mediaType: "image/png",
-        mediaClass: "image" as const,
-        modifiedAt: "2026-08-09T00:00:00Z",
+        media: "image" as const,
+        mtime: Date.parse("2026-08-09T00:00:00Z"),
       };
     });
     const download = vi.fn((descriptor: { readonly path: string }) =>
       Promise.resolve(new Blob([descriptor.path.endsWith("pdf") ? "PDF!" : "PNG"])),
     );
-    const stat = vi.fn<ReaderFileClient["stat"]>(async (target) => {
+    const get = vi.fn<ReaderFileClient["get"]>(async (target) => {
       for await (const file of list()) {
-        if (file.path === target.path) {
-          return { ok: true, value: file, diagnostics: [] };
+        if (file.path === (typeof target === "string" ? target : target.path)) {
+          return file;
         }
       }
-      return { ok: true, value: null, diagnostics: [] };
+      throw mdbaseError("not_found", "File not found");
     });
-    const repository = new ConnectCollectionFileRepository({ stat, download });
+    const repository = new ConnectCollectionFileRepository({ get, download });
 
     await expect(
       repository.read(
@@ -216,7 +218,7 @@ describe("ConnectCollectionFileRepository", () => {
       bytes: new Uint8Array([80, 68, 70, 33]),
     });
     await repository.read(collectionId("reading"), "files/reading/crop.png");
-    expect(stat.mock.calls.map(([target]) => target)).toEqual([
+    expect(get.mock.calls.map(([target]) => target)).toEqual([
       { path: "files/reading/paper.pdf" },
       { path: "files/reading/crop.png" },
     ]);
@@ -226,22 +228,26 @@ describe("ConnectCollectionFileRepository", () => {
   it("refuses to export a different file revision", async () => {
     const currentRevision: `sha256:${string}` = `sha256:${"c".repeat(64)}`;
     const oldRevision: `sha256:${string}` = `sha256:${"d".repeat(64)}`;
-    const list = async function* (): AsyncGenerator<CollectionFileDescriptor> {
+    const list = async function* (): AsyncGenerator<FileView> {
       await Promise.resolve();
       yield {
-        fileId: "file-01",
+        id: "file-01",
+        state: "materialized",
+        confirmedSeq: 1,
         path: "files/paper.pdf",
-        revision: "file-rev-1",
-        contentDigest: currentRevision,
+        digest: currentRevision,
         size: 4,
-        mediaClass: "pdf" as const,
-        modifiedAt: "2026-08-09T00:00:00Z",
+        media: "pdf" as const,
+        mtime: Date.parse("2026-08-09T00:00:00Z"),
       };
     };
     const repository = new ConnectCollectionFileRepository({
-      stat: async () => {
+      get: async () => {
         const result = await list().next();
-        return { ok: true, value: result.value ?? null, diagnostics: [] };
+        if (result.done) {
+          throw mdbaseError("not_found", "Missing");
+        }
+        return result.value;
       },
       download: vi.fn(),
     });

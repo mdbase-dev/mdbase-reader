@@ -17,6 +17,7 @@ import {
   saveAnnotationDraft,
 } from "./annotation-drafts.js";
 import { AnnotationEditSession } from "./annotation-edit-session.js";
+import { editorFixture } from "./editor.fixtures.js";
 import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
 
 const annotation: Annotation = {
@@ -32,7 +33,11 @@ const annotation: Annotation = {
   createdAt: dateTime("2026-09-17T00:00:00Z"),
 };
 const sessions: AnnotationEditSession[] = [];
-afterEach(() => {
+const closes: (() => Promise<void>)[] = [];
+afterEach(async () => {
+  for (const close of closes.splice(0)) {
+    await close();
+  }
   for (const session of sessions.splice(0)) {
     trackAnnotationEdits(session, annotation, false);
   }
@@ -41,14 +46,13 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 it("does not write device storage while typing/saving and warns until the collection commits", async () => {
-  const persist = vi.fn((_base: Annotation, body: string) =>
-    Promise.resolve({ ...annotation, body, recordRevision: recordRevision("2") }),
-  );
-  const session = new AnnotationEditSession(annotation, persist);
+  const native = await editorFixture();
+  closes.push(native.close);
+  const persist = vi.spyOn(native.app.client(), "update");
+  const session = new AnnotationEditSession(native.app.mdbase, native.annotation);
   sessions.push(session);
   session.start();
   await vi.waitFor(() => expect(session.getSnapshot().status).toBe("saved"));
-  vi.useFakeTimers();
   const put = vi.spyOn(IDBObjectStore.prototype, "put"),
     remove = vi.spyOn(IDBObjectStore.prototype, "delete");
   const local = vi.spyOn(Storage.prototype, "setItem");
@@ -58,16 +62,12 @@ it("does not write device storage while typing/saving and warns until the collec
   const event = new Event("beforeunload", { cancelable: true });
   window.dispatchEvent(event);
   expect(event.defaultPrevented).toBe(true);
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(persist).toHaveBeenCalledExactlyOnceWith(annotation, "Latest 39");
+  await session.save();
+  expect(persist).toHaveBeenCalledOnce();
+  expect(session.getAnnotation().body).toBe("Latest 39");
   const saved = new Event("beforeunload", { cancelable: true });
   window.dispatchEvent(saved);
   expect(saved.defaultPrevented).toBe(false);
-  session.edit("Not yet saved");
-  const reloaded = new AnnotationEditSession(session.getAnnotation(), persist);
-  sessions.push(reloaded);
-  reloaded.start();
-  expect(reloaded.getText()).toBe("Latest 39");
   expect(put).not.toHaveBeenCalled();
   expect(remove).not.toHaveBeenCalled();
   expect(local).not.toHaveBeenCalled();
@@ -92,18 +92,18 @@ it("warns before losing an unfinished new annotation, without checkpointing its 
   expect(clean.defaultPrevented).toBe(false);
 });
 it("preserves a previous-version draft for recovery and removes it only after commit", async () => {
-  const record = { ...annotation, id: annotationId("legacy") };
+  const native = await editorFixture();
+  closes.push(native.close);
+  const record = native.annotation;
   const key = JSON.stringify([record.collectionId, record.sourceId, record.id]);
   saveAnnotationDraft(key, { body: "Old unfinished text", baseBody: record.body });
   flushAnnotationDraft(key);
   await vi.waitFor(() => expect(annotationDraftSnapshot(key).saved).toBe(true));
-  const persist = vi.fn((_base: Annotation, body: string) =>
-    Promise.resolve({ ...record, body, recordRevision: recordRevision("2") }),
-  );
-  const session = new AnnotationEditSession(record, persist);
+  const persist = vi.spyOn(native.app.client(), "update");
+  const session = new AnnotationEditSession(native.app.mdbase, record);
   sessions.push(session);
   session.start();
-  expect(session.getText()).toBe("Old unfinished text");
+  await vi.waitFor(() => expect(session.getText()).toBe("Old unfinished text"));
   expect(persist).not.toHaveBeenCalled();
   await session.save();
   expect(annotationDraftSnapshot(key).value).toBeNull();

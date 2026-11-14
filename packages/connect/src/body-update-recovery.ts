@@ -1,35 +1,30 @@
+import { resolveAnnotationSource } from "./annotation-source.js";
 import { annotationFromDocument, sourceFromDocument } from "./mapping.js";
-import { outcomeValue } from "./repository-client.js";
+import { settledRecord } from "./repository-client.js";
 
-import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
+import type { MdbaseClient } from "@mdbase-dev/sdk";
 import type { Annotation, BodyUpdateRecovery, RecoverBodyInput, Source } from "@mdbase-reader/core";
 
-/** The original interrupted write, by request ID: a Connect connection or the native client. */
-export interface ReaderPendingMutations {
-  pendingMutation(requestId: string): { recover(): Promise<ConnectOutcome<RecordDocument>> } | null;
-}
-
-/** Recovers interrupted body writes through the connection's durable pending mutations. */
+/** Existing repository recovery observes the SDK's original mutation. Editors use record leases. */
 export class ConnectBodyUpdateRecovery implements BodyUpdateRecovery {
-  constructor(private readonly connection: ReaderPendingMutations) {}
-
+  constructor(private readonly client: MdbaseClient) {}
   async recoverSource(input: RecoverBodyInput): Promise<Source> {
-    return sourceFromDocument(input.collectionId, await this.#recover(input.requestId));
+    return sourceFromDocument(
+      input.collectionId,
+      await settledRecord(this.client, input.requestId),
+    );
   }
-
   async recoverAnnotation(input: RecoverBodyInput): Promise<Annotation> {
-    return annotationFromDocument(input.collectionId, await this.#recover(input.requestId));
+    const record = await settledRecord(this.client, input.requestId);
+    return annotationFromDocument(
+      input.collectionId,
+      record,
+      await resolveAnnotationSource(this.client, record.path),
+    );
   }
-
   pending(requestId: string): boolean {
-    return this.connection.pendingMutation(requestId) !== null;
-  }
-
-  async #recover(requestId: string): Promise<RecordDocument> {
-    const pending = this.connection.pendingMutation(requestId);
-    if (!pending) {
-      throw new Error("The interrupted write is no longer pending. No new write was attempted.");
-    }
-    return outcomeValue(await pending.recover(), "recover an interrupted write");
+    return this.client.ledger
+      .getSnapshot()
+      .pending.some(({ mutationId }) => mutationId === requestId);
   }
 }

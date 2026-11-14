@@ -35,6 +35,7 @@ describe("per-environment extension manifest", () => {
       "https://*/*",
     ]);
     expect(manifest["optional_host_permissions"]).toBeUndefined();
+    expect(manifest["background"]).toEqual({ service_worker: "background.js", type: "module" });
     // The SDK's one owner is an offscreen document.
     expect(manifest["permissions"]).toContain("offscreen");
     expect(manifest["content_security_policy"]).toEqual({

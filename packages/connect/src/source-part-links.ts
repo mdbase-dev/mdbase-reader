@@ -5,10 +5,9 @@ import {
   type SourceSummary,
 } from "@mdbase-reader/core";
 
-import { outcomeValue } from "./repository-client.js";
+import { completeReaderPages } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
+import type { PlainValue, MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
 
 const projection = "reader_part_of_ids";
 const partRelations =
@@ -16,18 +15,18 @@ const partRelations =
 const resolvedTarget = "r.target.asFile() != null ? r.target.asFile().?id.orValue(null) : null";
 
 /** Nested targets use the same authority-owned asFile resolution as annotation source links. */
-export function withResolvedSourceParts(input: QueryInput): QueryInput {
+export function withResolvedSourceParts(input: Query): Query {
   return {
     ...input,
     projections: {
-      ...input.projections,
-      [projection]: { expression: `(${partRelations}).map(r, ${resolvedTarget})` },
+      ...(input["projections"] as Record<string, PlainValue> | undefined),
+      [projection]: { expr: `(${partRelations}).map(r, ${resolvedTarget})` },
     },
-    select: [...(input.select ?? []), `projection.${projection}`],
+    select: [...(Array.isArray(input.select) ? input.select : []), `projection.${projection}`],
   };
 }
 
-export function partOfFromResult(record: Pick<QueryRecord, "values">): SourceId | undefined {
+export function partOfFromResult(record: Pick<RecordView, "values">): SourceId | undefined {
   const ids = record.values?.[projection];
   const first: unknown = Array.isArray(ids)
     ? ids.find((id) => typeof id === "string" && id.trim())
@@ -40,19 +39,19 @@ export function sourcePartsWhere(id: SourceId): string {
 }
 
 export async function resolveSourcePartOf(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   path: string,
   options: ReaderRequestOptions = {},
 ): Promise<SourceId | undefined> {
-  for await (const outcome of client.queryPages(
+  for await (const outcome of completeReaderPages(
+    client,
     withResolvedSourceParts({
       types: ["reader-source"],
       where: `file.path == ${JSON.stringify(path)}`,
-      frontmatterMode: "effective",
     }),
     options,
   )) {
-    const record = outcomeValue(outcome, "resolve source parent").results[0];
+    const record = outcome.records[0];
     if (record) {
       return partOfFromResult(record);
     }
@@ -65,7 +64,7 @@ export async function resolveSourcePartOf(
  * Resolve a page's parent links in one ordinary query, and skip it for pages without parts.
  */
 export async function resolveSourceSummaryParts(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   sources: readonly SourceSummary[],
   options: ReaderRequestOptions,
 ): Promise<readonly SourceSummary[]> {
@@ -76,14 +75,14 @@ export async function resolveSourceSummaryParts(
     return sources;
   }
   const parents = new Map<string, SourceId>();
-  for await (const outcome of client.queryPages(
+  for await (const outcome of completeReaderPages(
+    client,
     withResolvedSourceParts({
       where: `file.path in ${JSON.stringify(paths)}`,
-      frontmatterMode: "effective",
     }),
     options,
   )) {
-    for (const record of outcomeValue(outcome, "resolve source parents").results) {
+    for (const record of outcome.records) {
       const parent = partOfFromResult(record);
       if (parent) {
         parents.set(record.path, parent);

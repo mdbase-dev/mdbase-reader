@@ -1121,10 +1121,6 @@ msgstr "적용"
 msgid "Apply JSON"
 msgstr "JSON 적용"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Apply Reader collection setup"
-msgstr "Reader 컬렉션 설정 적용"
-
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve access"
@@ -1740,11 +1736,6 @@ msgstr "위에서 컬렉션 선택"
 msgid "Choose a collection before saving."
 msgstr "저장하기 전에 컬렉션을 선택해 주세요."
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose a collection to import into."
-msgstr "가져올 컬렉션을 선택해 주세요."
-
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
 msgstr "대상 선택"
@@ -1764,10 +1755,6 @@ msgstr "이 책의 읽기 순서에 따라 시작 절과 끝 절을 선택하세
 #: apps/reader/src/ChapterPreview.tsx
 msgid "Choose a valid start and end to preview the chapter’s location."
 msgstr "유효한 시작과 끝을 선택하면 장 위치를 미리 볼 수 있습니다."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
-msgstr "기존 컬렉션을 선택하거나, mdbase의 보안 승인 창에서 새 호스팅 컬렉션을 만드세요."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Choose an unused official CSL field."
@@ -2131,7 +2118,6 @@ msgstr "저장되지 않은 변경 사항이 있는데 닫을까요?"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/OptionsApp.tsx
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/SettingsSections.tsx
 msgid "Collection"
 msgstr "컬렉션"
@@ -2140,15 +2126,6 @@ msgstr "컬렉션"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection"
 msgstr "컬렉션"
-
-#: apps/reader/src/ImportDestination.tsx
-msgctxt "ImportDestination interface"
-msgid "Collection"
-msgstr "컬렉션"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection authorization failed."
-msgstr "컬렉션 권한 부여에 실패했습니다."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2159,10 +2136,6 @@ msgstr "컬렉션 편집자"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection number"
 msgstr "컬렉션 번호"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection setup failed."
-msgstr "컬렉션 설정에 실패했습니다."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2321,11 +2294,6 @@ msgstr "다른 컬렉션 연결"
 msgid "Connect another collection…"
 msgstr "다른 컬렉션 연결…"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgctxt "ReaderHeader interface"
-msgid "Connect directly"
-msgstr "직접 연결"
-
 #. placeholder {0}: environment.label || "mdbase"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
@@ -2348,20 +2316,11 @@ msgctxt "CollectionMenu interface"
 msgid "Connected collections"
 msgstr "연결된 컬렉션"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Connected directly to this computer"
-msgstr "이 컴퓨터에 직접 연결됨"
-
 #: apps/extension/src/CollectionSection.tsx
 msgid "Connected. The panel saves here unless you choose another."
 msgstr "연결되었습니다. 다른 컬렉션을 선택하지 않으면 패널이 여기에 저장합니다."
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Connecting to mdbase…"
-msgstr "mdbase에 연결하는 중…"
-
 #: apps/extension/src/ConnectionPanel.tsx
-#: apps/reader/src/ReaderHeader.tsx
 msgid "Connecting…"
 msgstr "연결하는 중…"
 
@@ -2556,10 +2515,6 @@ msgstr "컬렉션을 변경하지 못했습니다. 다시 시도해 주세요."
 msgid "Could not check this annotation."
 msgstr "이 주석을 확인하지 못했습니다."
 
-#: apps/reader/src/ImportPage.tsx
-msgid "Could not connect to mdbase."
-msgstr "mdbase에 연결하지 못했습니다."
-
 #: apps/reader/src/source-part-creation.ts
 msgid "Could not create the chapter."
 msgstr "장을 생성할 수 없었습니다."
@@ -2587,10 +2542,6 @@ msgstr "이 주석의 위치를 찾지 못했습니다."
 #: apps/reader/src/annotation-navigation.ts
 msgid "Could not locate this passage. The annotation is safe; the document may have changed."
 msgstr "이 구절을 찾지 못했습니다. 주석은 안전하며, 문서가 변경되었을 수 있습니다."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Could not open mdbase approval. Allow popups and try again."
-msgstr "mdbase 승인을 열지 못했습니다. 팝업을 허용한 뒤 다시 시도해 주세요."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "Could not read export data."
@@ -2664,10 +2615,6 @@ msgstr "장 생성"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Create chapters"
 msgstr "장 생성"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Create or connect a collection…"
-msgstr "컬렉션 만들기 또는 연결…"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Create the book first:"
@@ -2926,14 +2873,6 @@ msgstr "확인할 세부 정보"
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
 msgstr "크기"
-
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Direct connection"
-msgstr "직접 연결"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Direct local access is not available for this connection."
-msgstr "이 연결에서는 직접 로컬 접근을 사용할 수 없습니다."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4893,15 +4832,6 @@ msgstr "로컬 초안 저장소를 사용할 수 없거나 읽을 수 없습니�
 msgid "Local draft storage is unavailable. Keep this window open until you save."
 msgstr "로컬 초안 저장소를 사용할 수 없습니다. 저장할 때까지 이 창을 열어 두세요."
 
-#: apps/reader/src/ReaderHeader.tsx
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access is blocked. Allow it in your browser’s site settings, then retry."
-msgstr "로컬 네트워크 접근이 차단되었습니다. 브라우저의 사이트 설정에서 허용한 후 다시 시도하세요."
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access was not granted. Allow it when your browser asks, then retry."
-msgstr "로컬 네트워크 접근이 허용되지 않았습니다. 브라우저에서 요청이 표시되면 허용한 후 다시 시도하세요."
-
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Location"
@@ -5012,10 +4942,6 @@ msgstr "문서 최대화"
 msgid "Maximize document · {0}"
 msgstr "문서 최대화 · {0}"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase answered the readiness check with something else."
-msgstr "mdbase의 준비 상태 확인 응답이 예상과 다릅니다."
-
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
 msgstr "mdbase Connect가 Reader의 앱 등록을 수락하지 않아 여기에서 컬렉션을 열 수 없습니다."
@@ -5024,14 +4950,6 @@ msgstr "mdbase Connect가 Reader의 앱 등록을 수락하지 않아 여기에�
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connect의 응답이 너무 오래 걸립니다. 잠시 후 다시 시도하세요."
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase could not start in the background. Reload the extension."
-msgstr "mdbase를 백그라운드에서 시작하지 못했습니다. 확장 프로그램을 다시 불러오세요."
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase has not started yet."
-msgstr "mdbase가 아직 시작되지 않았습니다."
-
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
 msgstr "mdbase가 아직 준비 중입니다. 잠시 후 다시 시도하세요."
@@ -5039,10 +4957,6 @@ msgstr "mdbase가 아직 준비 중입니다. 잠시 후 다시 시도하세요.
 #: apps/extension/src/use-connect.ts
 msgid "mdbase is still starting. Try again in a moment."
 msgstr "mdbase가 아직 시작 중입니다. 잠시 후 다시 시도하세요."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "mdbase isn’t reachable right now. Check your connection and try again."
-msgstr "지금은 mdbase에 연결할 수 없습니다. 연결 상태를 확인한 후 다시 시도하세요."
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/shell-messages.ts
@@ -5067,10 +4981,6 @@ msgstr "mdbase Reader가 설치되었습니다"
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
 msgstr "mdbase Reader 설정"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr "mdbase가 백그라운드에서 다시 시작되었습니다. 마지막 변경 사항이 저장되었는지 확인한 후 다시 시도하세요."
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "meanings"
@@ -6757,6 +6667,7 @@ msgstr "Reader에서 이 자료의 주석을 불러올 수 없었습니다."
 msgid "Reader could not open the file picker."
 msgstr "Reader에서 파일 선택기를 열지 못했습니다."
 
+#: apps/extension/src/source-note-session.ts
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "Reader could not open the source note."
 msgstr "Reader에서 자료 노트를 열지 못했습니다."
@@ -6765,17 +6676,9 @@ msgstr "Reader에서 자료 노트를 열지 못했습니다."
 msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
 msgstr "Reader에서 mdbase Connect에 연결하지 못했습니다. 연결 상태를 확인한 후 다시 시도해 주세요."
 
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
-msgstr "Reader에서 로컬 mdbase 커넥터에 연결하지 못했습니다. 릴레이 연결은 계속 활성 상태입니다."
-
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not remove this source."
 msgstr "Reader에서 이 자료를 제거하지 못했습니다."
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not request local network access."
-msgstr "Reader에서 로컬 네트워크 접근을 요청하지 못했습니다."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not save {key}."
@@ -6881,10 +6784,6 @@ msgstr "Reader는 자료 레코드마다 편집 가능한 편집기를 하나만
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
 msgstr "Reader에는 이 컬렉션에 자료 및 주석 정의가 필요합니다."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Reader needs your approval to write to this collection."
-msgstr "이 컬렉션에 쓰려면 Reader에 대한 승인이 필요합니다."
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
@@ -7250,10 +7149,6 @@ msgctxt "CSL item type"
 msgid "Report"
 msgstr "보고서"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr "로컬 네트워크 접근을 요청하고 이 컴퓨터의 mdbase 릴레이에 직접 연결합니다."
-
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
 msgstr "배치 초기화(탭 유지)"
@@ -7355,10 +7250,6 @@ msgstr "라이브러리 색인 재개"
 msgid "Retry connection"
 msgstr "연결 다시 시도"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Retry local access"
-msgstr "로컬 접근 다시 시도"
-
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
 msgstr "저장 다시 시도"
@@ -7389,10 +7280,6 @@ msgstr "서평"
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
 msgstr "인용 검토"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Review collection access"
-msgstr "컬렉션 접근 권한 검토"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
@@ -7634,6 +7521,7 @@ msgstr "로컬에 저장됨"
 msgid "Saved mdbase views are unavailable for this collection."
 msgstr "이 컬렉션에서는 저장된 mdbase 보기를 사용할 수 없습니다."
 
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
 msgstr "이 기기에 저장됨 · 동기화 대기 중"
@@ -7904,10 +7792,6 @@ msgstr "{0}개 이하를 선택하면 함께 열 수 있습니다"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Select a chapter to preview it."
 msgstr "장을 선택하면 미리 볼 수 있습니다."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Select a collection"
-msgstr "컬렉션 선택"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
@@ -8744,10 +8628,6 @@ msgstr "인용 키 @{0}이(가) 고유하지 않습니다."
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr "편집하는 동안 컬렉션이 변경되었습니다. 충돌을 검토한 후 계속해 주세요."
 
-#: apps/extension/src/sdk-host.ts
-msgid "The collection connection changed. Try again."
-msgstr "컬렉션 연결이 변경되었습니다. 다시 시도하세요."
-
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
 msgstr "컬렉션이 일부 변경 사항을 거부했습니다. 다른 변경 사항은 이 기기에서 아직 대기 중입니다. 로그아웃하기 전에 확인하세요."
@@ -8924,17 +8804,9 @@ msgstr "선택한 구절이 이 게시물 안에서 모호합니다. 더 긴 구
 msgid "The side panel follows the tab you are on, and pages you have saved show a mark and your highlights. Reader looks up each page’s address in your selected collection and reads page text only to draw your highlights."
 msgstr "사이드 패널은 현재 탭을 따라가며, 저장한 페이지에는 표시와 하이라이트가 나타납니다. Reader는 선택한 컬렉션에서 각 페이지의 주소를 조회하고, 하이라이트를 그리기 위해서만 페이지 텍스트를 읽습니다."
 
-#: apps/extension/src/source-note-session.ts
-msgid "The source changed before saving."
-msgstr "저장하기 전에 자료가 변경되었습니다."
-
 #: packages/core/src/application/source-import-values.ts
 msgid "The source needs a title."
 msgstr "출처에 제목이 필요합니다."
-
-#: apps/reader/src/source-draft-session.ts
-msgid "The source note changed before saving."
-msgstr "저장하기 전에 출처 노트가 변경되었습니다."
 
 #: packages/core/src/application/transclude-annotation.ts
 msgid "The source note disappeared after its annotation was inserted."
@@ -9082,10 +8954,6 @@ msgstr "지금은 이 컬렉션을 사용할 수 없습니다"
 msgid "This collection can't be used right now."
 msgstr "지금은 이 컬렉션을 사용할 수 없습니다."
 
-#: apps/extension/src/source-note-session.ts
-msgid "This collection can’t edit a source’s title and tags here."
-msgstr "이 컬렉션에서는 여기에서 자료의 제목과 태그를 편집할 수 없습니다."
-
 #: apps/reader/src/use-document-attachment.ts
 #: packages/core/src/application/source-records.ts
 msgid "This collection cannot attach files to existing sources."
@@ -9145,14 +9013,6 @@ msgstr "이 컬렉션은 자료의 상위 항목을 설정할 수 없습니다."
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection hasn’t been checked yet. Check it before saving."
 msgstr "이 컬렉션은 아직 확인되지 않았습니다. 저장하기 전에 확인해 주세요."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s setup before importing."
-msgstr "가져오기 전에 이 컬렉션에 Reader 설정이 필요합니다."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
-msgstr "이 컬렉션에는 Reader의 출처 및 주석 유형이 필요합니다. 아래에서 확인하기 전까지 라이브러리 콘텐츠는 가져오지 않습니다."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection needs you to approve mdbase Reader for it."

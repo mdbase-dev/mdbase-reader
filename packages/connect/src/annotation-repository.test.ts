@@ -2,9 +2,9 @@ import { annotationId, collectionId, dateTime, sourceId } from "@mdbase-reader/c
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
+import { mockSdk, testWrite, testRecord } from "./records.fixtures.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
+import type { RecordView } from "@mdbase-dev/sdk";
 import type { Annotation } from "@mdbase-reader/core";
 
 const legacyAuthorityFeatures = {
@@ -13,18 +13,20 @@ const legacyAuthorityFeatures = {
   ),
 };
 
-function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+function success<Value>(value: Value): Value {
+  return value;
 }
 
 describe("ConnectAnnotationRepository updates", () => {
   it("updates only the canonical body and modification time revision-safely", async () => {
     const document = annotationDocument();
-    const update = vi.fn(() => Promise.resolve(success(document)));
-    const repository = new ConnectAnnotationRepository({
-      ...legacyAuthorityFeatures,
-      update,
-    } as unknown as ReaderConnectClient);
+    const update = vi.fn(() => Promise.resolve(testWrite(success(document))));
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        update,
+      }),
+    );
     const original = annotationFixture();
 
     const updated = await repository.updateBody({
@@ -33,13 +35,15 @@ describe("ConnectAnnotationRepository updates", () => {
       modifiedAt: dateTime("2026-08-10T00:00:00.000Z"),
     });
 
-    expect(update).toHaveBeenCalledWith({
-      path: document.path,
-      ifRevision: "rev-1",
-      patch: { modified_at: "2026-08-10T00:00:00.000Z" },
-      body: document.body,
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: document.path }),
+      expect.objectContaining({
+        ifRevision: "rev-1",
+        patch: { modified_at: "2026-08-10T00:00:00.000Z" },
+        body: document.body,
+      }),
+      expect.anything(),
+    );
     expect(updated.body).toBe(document.body);
     expect(updated.recordRevision).toBe("rev-2");
   });
@@ -48,48 +52,41 @@ describe("ConnectAnnotationRepository updates", () => {
 describe("ConnectAnnotationRepository deletion", () => {
   it("reuses the confirmed preflight and removes the cached annotation", async () => {
     const original = annotationFixture();
+    const record = annotationDocument();
+    record.revision = original.recordRevision!;
     const preflight = {
-      path: original.path ?? "",
-      deleted: false as const,
-      dryRun: true as const,
-      wouldDelete: true as const,
-      brokenLinks: [{ path: "sources/src_01.md" }, { path: "sources/src_01.md" }],
+      rewrites: [],
+      broken: [
+        {
+          record: record.id,
+          target: record.id,
+          raw: "[[annotations/ann_01]]",
+          path: "sources/src_01.md",
+        },
+      ],
     };
-    const preflightDelete = vi.fn(() => Promise.resolve(success(preflight)));
-    const deleteWithProgress = vi.fn(() =>
-      Promise.resolve(success({ path: original.path ?? "", deleted: true })),
+    const preflightDelete = vi.fn(() => Promise.resolve(preflight));
+    const remove = vi.fn(() => Promise.resolve(testWrite(record)));
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({ get: vi.fn(() => Promise.resolve(record)), preflightDelete, delete: remove }),
     );
-    const repository = new ConnectAnnotationRepository({
-      ...legacyAuthorityFeatures,
-      preflightDelete,
-      deleteWithProgress,
-    } as unknown as ReaderConnectClient);
-
     const plan = await repository.preflightDelete(original);
     expect(plan.brokenLinkPaths).toEqual(["sources/src_01.md"]);
     await repository.delete(original, plan);
 
-    expect(preflightDelete).toHaveBeenCalledWith({
-      path: original.path,
-      ifRevision: original.recordRevision,
-    });
-    expect(deleteWithProgress).toHaveBeenCalledWith(
-      {
-        path: original.path,
-        ifRevision: original.recordRevision,
-        checkBacklinks: true,
-      },
-      { preflight },
-    );
+    expect(preflightDelete).toHaveBeenCalledTimes(2);
+    expect(remove).toHaveBeenCalledWith(record, { ifRevision: original.recordRevision });
   });
 
   it("refuses deletion without the authoritative preflight", async () => {
     const original = annotationFixture();
     const deleteWithProgress = vi.fn();
-    const repository = new ConnectAnnotationRepository({
-      ...legacyAuthorityFeatures,
-      deleteWithProgress,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        deleteWithProgress,
+      }),
+    );
 
     await expect(
       repository.delete(original, {
@@ -119,7 +116,7 @@ function annotationFixture(): Annotation {
   };
 }
 
-function annotationDocument(): RecordDocument {
+function annotationDocument(): RecordView {
   const fields = {
     id: "ann_01",
     source: "[[src_01]]",
@@ -128,13 +125,12 @@ function annotationDocument(): RecordDocument {
     modified_at: "2026-08-10T00:00:00.000Z",
     tags: [],
   };
-  return {
+  return testRecord({
     path: "annotations/ann_01.md",
     revision: "rev-2",
     types: ["reader-annotation"],
     frontmatter: { type: "reader-annotation", ...fields },
-    effectiveFrontmatter: fields,
+    effective: fields,
     body: "> Selected text\n\nRevised note.",
-    file: {},
-  };
+  });
 }

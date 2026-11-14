@@ -9,17 +9,12 @@ import {
   sourceNotePathCandidates,
   type ReaderNaming,
 } from "./naming-templates.js";
-import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
+import { completeReaderPages, ConnectRepositoryError } from "./repository-client.js";
 import { attachRepresentation } from "./source-attachments.js";
-import { uploadWithRecovery, type ReaderSourceFileClient } from "./source-files.js";
 import { sourceFrontmatter } from "./source-frontmatter.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type {
-  CollectionFileDescriptor,
-  MdbaseConnection,
-  RecordDocument,
-} from "@mdbase-dev/connect";
+import type { ReaderSourceFileClient } from "./source-files.js";
+import type { MdbaseClient, FileView, RecordView } from "@mdbase-dev/sdk";
 import type {
   CollectionId,
   PlannedSourceAttachment,
@@ -37,7 +32,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
   readonly #naming: ReaderNaming | undefined;
 
   public constructor(
-    private readonly records: ReaderConnectClient,
+    private readonly records: MdbaseClient,
     private readonly files: ReaderSourceFileClient,
     /** Keeps each create until the collection confirms it; one per client by default. */
     creates?: CreateFollowThrough,
@@ -60,16 +55,16 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     const matches = [...expected]
       .map((digest) => `document.revision == ${JSON.stringify(digest)}`)
       .join(" || ");
-    for await (const outcome of this.records.queryPages(
+    for await (const outcome of completeReaderPages(
+      this.records,
       {
         types: ["reader-source"],
         where: `documents != null && documents.exists(document, ${matches})`,
-        frontmatterMode: "effective",
       },
-      { ...options, firstPageSize: 50, pageSize: 50 },
+      { ...options },
     )) {
-      const page = outcomeValue(outcome, "check imported file duplicates");
-      for (const record of page.results) {
+      const page = outcome;
+      for (const record of page.records) {
         const source = sourceSummaryFromQuery(collectionId, record);
         if (source.documents.some(({ revision }) => expected.has(revision))) {
           return source;
@@ -90,7 +85,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     plan: PlannedSourceFileImport,
     options: SourceImportOptions = {},
   ): Promise<Source> {
-    const descriptors = new Map<PlannedSourceRepresentation["role"], CollectionFileDescriptor>();
+    const descriptors = new Map<PlannedSourceRepresentation["role"], FileView>();
     const uploadRank: Readonly<Record<PlannedSourceRepresentation["role"], number>> = {
       archive: 0,
       primary: 1,
@@ -101,7 +96,7 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     );
     const recoverableFiles = options.recoverExistingFiles
       ? await this.recoverableFiles(options, plan)
-      : new Map<string, CollectionFileDescriptor[]>();
+      : new Map<string, FileView[]>();
     const totalBytes = plan.representations.reduce((sum, item) => sum + item.bytes.byteLength, 0);
     let completedBytes = 0;
     for (const [index, representation] of orderedUploads.entries()) {
@@ -109,25 +104,30 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       const recovered = takeMatchingFile(recoverableFiles, representation.contentDigest);
       const descriptor =
         recovered ??
-        (await uploadWithRecovery(this.files, representation, {
-          ...(options.signal ? { signal: options.signal } : {}),
-          ...(options.onProgress
-            ? {
-                onProgress: (progress) => {
-                  if (progress.phase === "uploading") {
-                    options.onProgress?.({
-                      phase: "uploading",
-                      completedBytes: completedBytes + progress.transferredBytes,
-                      totalBytes,
-                      fileIndex: index + 1,
-                      fileCount: orderedUploads.length,
-                    });
-                  }
-                },
-              }
-            : {}),
-        }));
-      if (descriptor.contentDigest !== representation.contentDigest) {
+        (await this.files.upload(
+          representation.filePath,
+          new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
+          {
+            transferId: representation.transferId,
+            ...(options.signal ? { signal: options.signal } : {}),
+            ...(options.onProgress
+              ? {
+                  onProgress: (progress) => {
+                    {
+                      options.onProgress?.({
+                        phase: "uploading",
+                        completedBytes: completedBytes + progress.done,
+                        totalBytes,
+                        fileIndex: index + 1,
+                        fileCount: orderedUploads.length,
+                      });
+                    }
+                  },
+                }
+              : {}),
+          },
+        ));
+      if (descriptor.digest !== representation.contentDigest) {
         throw new ConnectRepositoryError(
           "verify imported file",
           "content_digest_mismatch",
@@ -166,8 +166,8 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
   private async recoverableFiles(
     options: SourceImportOptions,
     plan: PlannedSourceFileImport,
-  ): Promise<Map<string, CollectionFileDescriptor[]>> {
-    const byDigest = new Map<string, CollectionFileDescriptor[]>();
+  ): Promise<Map<string, FileView[]>> {
+    const byDigest = new Map<string, FileView[]>();
     if (!this.files.list) {
       return byDigest;
     }
@@ -180,13 +180,13 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
     });
     for await (const file of this.files.list({
       folder: "files/reader",
-      pageSize: 500,
+
       contentDigests: plan.representations.map(({ contentDigest }) => contentDigest),
       ...(options.signal ? { signal: options.signal } : {}),
     })) {
-      const matches = byDigest.get(file.contentDigest) ?? [];
+      const matches = byDigest.get(file.digest) ?? [];
       matches.push(file);
-      byDigest.set(file.contentDigest, matches);
+      byDigest.set(file.digest, matches);
     }
     return byDigest;
   }
@@ -199,8 +199,8 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
    */
   private async createRecord(
     plan: PlannedSourceFileImport,
-    descriptors: ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>,
-  ): Promise<RecordDocument> {
+    descriptors: ReadonlyMap<PlannedSourceRepresentation["role"], FileView>,
+  ): Promise<RecordView> {
     const templates = await currentNameTemplates(this.#naming);
     const candidates = await sourceNotePathCandidates(
       templates.source,
@@ -217,41 +217,27 @@ export class ConnectSourceImportRepository implements SourceImportRepository {
       undefined,
       plan.recordPathCandidates,
     );
-    return outcomeValue(
-      await this.#creates.create({
-        key: plan.sourceId,
-        collectionId: plan.collectionId,
-        kind: "source",
-        recordId: plan.sourceId,
-        label: plan.title,
-        candidates,
-        input: {
-          type: "reader-source",
-          frontmatter: sourceFrontmatter(plan, descriptors),
-          body: plan.body ?? `# ${plan.title}\n`,
-        },
-        // A retried import wrote the record already when the source contract reads our ID.
-        readBack: { contract: sourceContract, includeDocument: true },
-        isOurs: (document) => document.effectiveFrontmatter["id"] === plan.sourceId,
-      }),
-      "create imported source",
-    );
+    return await this.#creates.create({
+      key: plan.sourceId,
+      collectionId: plan.collectionId,
+      kind: "source",
+      recordId: plan.sourceId,
+      label: plan.title,
+      candidates,
+      input: {
+        type: "reader-source",
+        frontmatter: sourceFrontmatter(plan, descriptors),
+        body: plan.body ?? `# ${plan.title}\n`,
+      },
+      // A retried import wrote the record already when the source contract reads our ID.
+      readBack: { contract: sourceContract },
+      isOurs: (document) => (document.effective ?? document.frontmatter)["id"] === plan.sourceId,
+    });
   }
 }
 
-function takeMatchingFile(
-  files: Map<string, CollectionFileDescriptor[]>,
-  digest: string,
-): CollectionFileDescriptor | undefined {
+function takeMatchingFile(files: Map<string, FileView[]>, digest: string): FileView | undefined {
   return files.get(digest)?.shift();
-}
-
-export function connectSourceImportRepository(
-  connection: MdbaseConnection,
-  records: ReaderConnectClient,
-  naming?: ReaderNaming,
-): ConnectSourceImportRepository {
-  return new ConnectSourceImportRepository(records, connection.files, undefined, naming);
 }
 
 export type { ReaderSourceFileClient } from "./source-files.js";

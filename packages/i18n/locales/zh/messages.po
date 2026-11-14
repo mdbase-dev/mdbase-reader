@@ -1121,10 +1121,6 @@ msgstr "应用"
 msgid "Apply JSON"
 msgstr "应用 JSON"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Apply Reader collection setup"
-msgstr "应用 Reader 集合设置"
-
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve access"
@@ -1740,11 +1736,6 @@ msgstr "在上方选择集合"
 msgid "Choose a collection before saving."
 msgstr "保存前请选择集合。"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose a collection to import into."
-msgstr "选择要导入的集合。"
-
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
 msgstr "选择目标位置"
@@ -1764,10 +1755,6 @@ msgstr "按阅读顺序从这本书中选择起始节和结束节。"
 #: apps/reader/src/ChapterPreview.tsx
 msgid "Choose a valid start and end to preview the chapter’s location."
 msgstr "选择有效的起止位置以预览章节位置。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
-msgstr "选择现有集合，或在 mdbase 的安全批准窗口中创建新的托管集合。"
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Choose an unused official CSL field."
@@ -2131,7 +2118,6 @@ msgstr "有未保存的更改，仍要关闭？"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/OptionsApp.tsx
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/SettingsSections.tsx
 msgid "Collection"
 msgstr "集合"
@@ -2140,15 +2126,6 @@ msgstr "集合"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection"
 msgstr "集合"
-
-#: apps/reader/src/ImportDestination.tsx
-msgctxt "ImportDestination interface"
-msgid "Collection"
-msgstr "集合"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection authorization failed."
-msgstr "集合授权失败。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2159,10 +2136,6 @@ msgstr "集合编辑"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection number"
 msgstr "集合编号"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection setup failed."
-msgstr "集合设置失败。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2321,11 +2294,6 @@ msgstr "连接其他集合"
 msgid "Connect another collection…"
 msgstr "连接其他集合…"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgctxt "ReaderHeader interface"
-msgid "Connect directly"
-msgstr "直接连接"
-
 #. placeholder {0}: environment.label || "mdbase"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
@@ -2348,20 +2316,11 @@ msgctxt "CollectionMenu interface"
 msgid "Connected collections"
 msgstr "已连接的集合"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Connected directly to this computer"
-msgstr "已直接连接到这台电脑"
-
 #: apps/extension/src/CollectionSection.tsx
 msgid "Connected. The panel saves here unless you choose another."
 msgstr "已连接。除非你另选其他集合，否则面板会保存到此处。"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Connecting to mdbase…"
-msgstr "正在连接到 mdbase…"
-
 #: apps/extension/src/ConnectionPanel.tsx
-#: apps/reader/src/ReaderHeader.tsx
 msgid "Connecting…"
 msgstr "正在连接…"
 
@@ -2556,10 +2515,6 @@ msgstr "无法更改集合。请重试。"
 msgid "Could not check this annotation."
 msgstr "无法检查此注释。"
 
-#: apps/reader/src/ImportPage.tsx
-msgid "Could not connect to mdbase."
-msgstr "无法连接到 mdbase。"
-
 #: apps/reader/src/source-part-creation.ts
 msgid "Could not create the chapter."
 msgstr "无法创建章节。"
@@ -2587,10 +2542,6 @@ msgstr "无法定位此注释。"
 #: apps/reader/src/annotation-navigation.ts
 msgid "Could not locate this passage. The annotation is safe; the document may have changed."
 msgstr "无法定位此段落。注释是安全的；文档可能已发生更改。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Could not open mdbase approval. Allow popups and try again."
-msgstr "无法打开 mdbase 批准窗口。请允许弹出窗口后重试。"
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "Could not read export data."
@@ -2664,10 +2615,6 @@ msgstr "创建章节"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Create chapters"
 msgstr "创建章节"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Create or connect a collection…"
-msgstr "创建或连接集合…"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Create the book first:"
@@ -2926,14 +2873,6 @@ msgstr "待检查详情"
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
 msgstr "尺寸"
-
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Direct connection"
-msgstr "直接连接"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Direct local access is not available for this connection."
-msgstr "此连接不支持直接本地访问。"
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4893,15 +4832,6 @@ msgstr "本地草稿存储不可用或无法读取。在笔记保存到集合之
 msgid "Local draft storage is unavailable. Keep this window open until you save."
 msgstr "本地草稿存储不可用。保存之前，请保持此窗口打开。"
 
-#: apps/reader/src/ReaderHeader.tsx
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access is blocked. Allow it in your browser’s site settings, then retry."
-msgstr "本地网络访问被阻止。请在浏览器的网站设置中允许，然后重试。"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access was not granted. Allow it when your browser asks, then retry."
-msgstr "未授予本地网络访问权限。请在浏览器询问时允许，然后重试。"
-
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Location"
@@ -5012,10 +4942,6 @@ msgstr "最大化文档"
 msgid "Maximize document · {0}"
 msgstr "最大化文档 · {0}"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase answered the readiness check with something else."
-msgstr "mdbase 对就绪检查返回了意外内容。"
-
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
 msgstr "mdbase Connect 未接受 Reader 的应用注册，因此无法在此处打开集合。"
@@ -5024,14 +4950,6 @@ msgstr "mdbase Connect 未接受 Reader 的应用注册，因此无法在此处�
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connect 响应时间过长。请稍后重试。"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase could not start in the background. Reload the extension."
-msgstr "mdbase 无法在后台启动。请重新加载扩展。"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase has not started yet."
-msgstr "mdbase 尚未启动。"
-
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
 msgstr "mdbase 仍在准备中。请稍后重试。"
@@ -5039,10 +4957,6 @@ msgstr "mdbase 仍在准备中。请稍后重试。"
 #: apps/extension/src/use-connect.ts
 msgid "mdbase is still starting. Try again in a moment."
 msgstr "mdbase 仍在启动中。请稍后重试。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "mdbase isn’t reachable right now. Check your connection and try again."
-msgstr "目前无法连接到 mdbase。请检查网络连接后重试。"
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/shell-messages.ts
@@ -5067,10 +4981,6 @@ msgstr "mdbase Reader 已安装"
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
 msgstr "mdbase Reader 设置"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr "mdbase 已在后台重新启动。请检查你上次的更改是否已保存，然后重试。"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "meanings"
@@ -6757,6 +6667,7 @@ msgstr "Reader 无法加载此来源的注释。"
 msgid "Reader could not open the file picker."
 msgstr "Reader 无法打开文件选择器。"
 
+#: apps/extension/src/source-note-session.ts
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "Reader could not open the source note."
 msgstr "Reader 无法打开来源笔记。"
@@ -6765,17 +6676,9 @@ msgstr "Reader 无法打开来源笔记。"
 msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
 msgstr "Reader 无法连接到 mdbase Connect。请检查网络连接后重试。"
 
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
-msgstr "Reader 无法连接到本地 mdbase 连接器。中继连接仍然有效。"
-
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not remove this source."
 msgstr "Reader 无法移除此来源。"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not request local network access."
-msgstr "Reader 无法请求本地网络访问权限。"
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not save {key}."
@@ -6881,10 +6784,6 @@ msgstr "Reader 为每条来源记录保留一个可写编辑器。"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
 msgstr "Reader 需要此集合中的来源和注释定义。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Reader needs your approval to write to this collection."
-msgstr "Reader 需要你批准才能写入此集合。"
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
@@ -7250,10 +7149,6 @@ msgctxt "CSL item type"
 msgid "Report"
 msgstr "报告"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr "请求本地网络访问权限，并直接连接到这台电脑上的 mdbase 中继。"
-
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
 msgstr "重置排列（保留标签页）"
@@ -7355,10 +7250,6 @@ msgstr "继续建立文献库索引"
 msgid "Retry connection"
 msgstr "重试连接"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Retry local access"
-msgstr "重试本地访问"
-
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
 msgstr "重试保存"
@@ -7389,10 +7280,6 @@ msgstr "书评"
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
 msgstr "审阅引文"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Review collection access"
-msgstr "审阅集合访问权限"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
@@ -7634,6 +7521,7 @@ msgstr "已在本地保存"
 msgid "Saved mdbase views are unavailable for this collection."
 msgstr "此集合不支持已保存的 mdbase 视图。"
 
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
 msgstr "已保存在此设备上；等待同步"
@@ -7904,10 +7792,6 @@ msgstr "最多选择 {0} 项即可一起打开"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Select a chapter to preview it."
 msgstr "选择章节以预览。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Select a collection"
-msgstr "选择集合"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
@@ -8744,10 +8628,6 @@ msgstr "citekey @{0} 不唯一。"
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr "你编辑期间集合发生了更改。请审阅冲突以继续。"
 
-#: apps/extension/src/sdk-host.ts
-msgid "The collection connection changed. Try again."
-msgstr "集合连接已更改。请重试。"
-
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
 msgstr "集合拒绝了部分更改。其他更改仍在此设备上等待确认。请在退出登录之前检查这些更改。"
@@ -8924,17 +8804,9 @@ msgstr "所选段落在此帖子中有歧义。请选择更长的段落。"
 msgid "The side panel follows the tab you are on, and pages you have saved show a mark and your highlights. Reader looks up each page’s address in your selected collection and reads page text only to draw your highlights."
 msgstr "侧边栏会跟随你所在的标签页，你保存过的页面会显示标记和你的高亮。Reader 会在你所选的集合中查找每个页面的地址，并且仅为绘制你的高亮而读取页面文本。"
 
-#: apps/extension/src/source-note-session.ts
-msgid "The source changed before saving."
-msgstr "保存前来源发生了更改。"
-
 #: packages/core/src/application/source-import-values.ts
 msgid "The source needs a title."
 msgstr "来源需要标题。"
-
-#: apps/reader/src/source-draft-session.ts
-msgid "The source note changed before saving."
-msgstr "来源笔记在保存前已更改。"
 
 #: packages/core/src/application/transclude-annotation.ts
 msgid "The source note disappeared after its annotation was inserted."
@@ -9082,10 +8954,6 @@ msgstr "目前无法使用此集合"
 msgid "This collection can't be used right now."
 msgstr "目前无法使用此集合。"
 
-#: apps/extension/src/source-note-session.ts
-msgid "This collection can’t edit a source’s title and tags here."
-msgstr "此集合无法在这里编辑来源的标题和标签。"
-
 #: apps/reader/src/use-document-attachment.ts
 #: packages/core/src/application/source-records.ts
 msgid "This collection cannot attach files to existing sources."
@@ -9145,14 +9013,6 @@ msgstr "此集合无法设置父来源。"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection hasn’t been checked yet. Check it before saving."
 msgstr "此集合尚未检查。保存前请先检查。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s setup before importing."
-msgstr "导入前，此集合需要先完成 Reader 的设置。"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
-msgstr "此集合需要 Reader 的来源和注释类型。在你于下方确认之前，不会导入任何文献库内容。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection needs you to approve mdbase Reader for it."

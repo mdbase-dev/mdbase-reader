@@ -19,7 +19,7 @@ import {
   type ReaderNaming,
 } from "./naming-templates.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
+import type { MdbaseClient } from "@mdbase-dev/sdk";
 import type {
   AppSettingField,
   AppSettingsDefinition,
@@ -142,7 +142,7 @@ export class ReaderSettingsStore
   implements ReaderNaming
 {
   public constructor(
-    client: ReaderConnectClient,
+    client: MdbaseClient,
     options: Omit<AppSettingsStoreOptions<ReaderSettingsValues>, "refine"> = {},
   ) {
     super(client, readerSettingsDefinition, { ...options, refine: refineReaderSettings });

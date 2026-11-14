@@ -1,5 +1,3 @@
-import { sdkHostLockName } from "./sdk-rpc.js";
-
 /**
  * The extension's one SDK host is an offscreen document (offscreen.html): a hidden page
  * that can run the SDK's Worker, which an MV3 service worker cannot. The service worker
@@ -44,19 +42,4 @@ export async function requestSdkHost(): Promise<void> {
   if (typeof reply === "object" && reply !== null && "error" in reply) {
     throw new Error(String(reply.error));
   }
-}
-
-/** Settles once the running host has released its lifetime lock (it closed or crashed). */
-export function sdkHostGone(): Promise<void> {
-  return navigator.locks.request(sdkHostLockName, () => undefined).then(() => undefined);
-}
-
-/** In the offscreen host: holds the lifetime lock until the document goes away. */
-export function holdSdkHostLock(): Promise<void> {
-  return new Promise((resolve) => {
-    void navigator.locks.request(sdkHostLockName, () => {
-      resolve();
-      return new Promise<never>(() => undefined);
-    });
-  });
 }

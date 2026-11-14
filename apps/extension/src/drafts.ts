@@ -2,7 +2,7 @@ import { normalizedSourceUrl, type QuoteSelector } from "@mdbase-reader/core";
 
 import { highlightColors, type CaptureDraft, type HighlightColor } from "./save-capture.js";
 
-import type { JsonObject } from "@mdbase-reader/connect";
+import type { JsonObject, RecordRecoveryRef } from "@mdbase-reader/connect";
 
 /**
  * Unsaved text survives closing the panel, reloading the extension page or switching
@@ -97,6 +97,7 @@ export interface NoteDraft {
   readonly patch?: JsonObject;
   readonly baseFrontmatter?: JsonObject;
   readonly requestId?: string;
+  readonly recovery?: RecordRecoveryRef;
 }
 
 function noteDraftKey(collectionId: string, sourceId: string): string {

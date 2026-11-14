@@ -43,8 +43,8 @@ interface AnnotationEditController {
   readonly confirmDelete: () => void;
 }
 export function useAnnotationEdit(props: AnnotationEditProps): AnnotationEditController {
-  const { annotation, onCancel, onSave } = props;
-  const session = useAnnotationSession(annotation, onSave);
+  const { annotation, onCancel } = props;
+  const session = useAnnotationSession(annotation);
   const snapshot = useSyncExternalStore(
     session.subscribe,
     session.getSnapshot,

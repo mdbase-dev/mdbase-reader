@@ -1,3 +1,4 @@
+import { isMdbaseError } from "@mdbase-dev/sdk";
 import {
   CitationChangedElsewhereError,
   cslProblemSummary,
@@ -13,15 +14,14 @@ import {
 } from "@mdbase-reader/core";
 
 import { sourceFromDocument } from "./mapping.js";
-import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
+import { frontmatterChanges, updateRecord, ConnectRepositoryError } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { RecordDocument } from "@mdbase-dev/connect";
+import type { MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 
 const maxCitationSaveAttempts = 3;
 
 export async function writeSourceCitation(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   path: string,
   input: Parameters<SourceRepository["updateCitation"]>[0],
 ): Promise<Source> {
@@ -48,49 +48,49 @@ export async function writeSourceCitation(
         ? { [cslProvenanceKey]: Object.keys(provenance).length ? provenance : null }
         : {}),
     };
-    const outcome = await client.update({
-      path,
-      ...(revision === undefined ? {} : { ifRevision: revision }),
-      patch,
-      includeDocument: true,
-    });
-    if (
-      !outcome.ok &&
-      revision !== undefined &&
-      outcome.problem.code === "concurrent_modification"
-    ) {
-      // Recompare only CSL after a raced write; unrelated frontmatter changes are safe to rebase.
+    try {
+      const record = await updateRecord(client, current ?? { path }, {
+        ...(revision === undefined ? {} : { ifRevision: revision }),
+        ...frontmatterChanges(patch),
+      });
+      return sourceFromDocument(input.collectionId, record);
+    } catch (error) {
+      if (!isMdbaseError(error, "conflict") || revision === undefined) {
+        throw error;
+      }
       if (attempt < maxCitationSaveAttempts) {
         continue;
       }
       await citationBeforeSave(client, path, input);
+      throw error;
     }
-    return sourceFromDocument(input.collectionId, outcomeValue(outcome, "save citation metadata"));
   }
 }
 
 function citationProvenanceForSave(
   provenance: CslProvenance | undefined,
-  current: RecordDocument | undefined,
+  current: RecordView | undefined,
 ): CslProvenance | undefined {
   return provenance === undefined
     ? undefined
     : preserveCslDismissals(
         provenance,
-        parseCslProvenance(current?.effectiveFrontmatter[cslProvenanceKey]),
+        parseCslProvenance(
+          current ? (current.effective ?? current.frontmatter)[cslProvenanceKey] : undefined,
+        ),
       );
 }
 
 async function citationBeforeSave(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   path: string,
   input: Parameters<SourceRepository["updateCitation"]>[0],
-): Promise<RecordDocument> {
-  const current = outcomeValue(
-    await client.read({ path, includeDocument: true }),
-    "read source before saving citation metadata",
+): Promise<RecordView> {
+  const current = await client.get(
+    { path: path },
+    { include: { effective: true, body: true, document: true } },
   );
-  const citation = current.effectiveFrontmatter["csl"];
+  const citation = (current.effective ?? current.frontmatter)["csl"];
   // `null` is the baseline for a record that had no `csl` when it was loaded.
   if (
     "expectedCitation" in input &&
@@ -98,7 +98,7 @@ async function citationBeforeSave(
   ) {
     throw new CitationChangedElsewhereError(
       citation,
-      parseCslProvenance(current.effectiveFrontmatter[cslProvenanceKey]),
+      parseCslProvenance((current.effective ?? current.frontmatter)[cslProvenanceKey]),
     );
   }
   return current;

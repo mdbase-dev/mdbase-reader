@@ -2,9 +2,9 @@ import { recordRevision } from "@mdbase-reader/core";
 
 import { sourceFromDocument } from "./mapping.js";
 import { positionFrontmatter } from "./reading-position.js";
-import { outcomeValue } from "./repository-client.js";
+import { frontmatterChanges, updateRecord } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
+import type { MdbaseClient } from "@mdbase-dev/sdk";
 import type {
   CollectionId,
   DateTime,
@@ -23,31 +23,24 @@ export interface ReadingStatusChange {
 }
 
 export async function writeReadingStatus(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   path: string,
   input: ReadingStatusChange,
 ): Promise<Source> {
-  const current = outcomeValue(
-    await client.read({ path, includeDocument: true }),
-    "read source before changing reading status",
+  const current = await client.get(
+    { path },
+    { include: { effective: true, body: true, document: true } },
   );
   const existing = current.frontmatter["reading"];
   const reading = readingWithStatus(
-    typeof existing === "object" && existing !== null && !Array.isArray(existing)
-      ? (existing as Readonly<Record<string, unknown>>)
-      : {},
+    typeof existing === "object" && existing !== null && !Array.isArray(existing) ? existing : {},
     input.status,
     input.changedAt,
   );
-  const updated = outcomeValue(
-    await client.update({
-      path,
-      ifRevision: recordRevision(current.revision),
-      patch: { reading },
-      includeDocument: true,
-    }),
-    "change reading status",
-  );
+  const updated = await updateRecord(client, current, {
+    ifRevision: recordRevision(current.revision),
+    ...frontmatterChanges({ reading }),
+  });
   return sourceFromDocument(input.collectionId, updated);
 }
 

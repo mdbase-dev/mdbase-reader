@@ -54,6 +54,8 @@ jobs:
       - run: pnpm check
       - name: Install Chromium for PDF touch regression tests
         run: pnpm --filter @mdbase-reader/app exec playwright install --with-deps chromium
+      - name: Verify extension shared-session writes across separate bundles
+        run: pnpm --filter @mdbase-reader/extension test:browser
       - name: Verify PDF gestures and mobile highlight persistence
         run: pnpm --filter @mdbase-reader/app test:pdf-touch
       - name: Verify imported SVG rendering in the HTML sandbox

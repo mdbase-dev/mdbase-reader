@@ -21,7 +21,7 @@ import {
 import { readingPositionFromFrontmatter } from "./reading-position.js";
 import { partOfFromResult } from "./source-part-links.js";
 
-import type { QueryRecord, RecordDocument } from "@mdbase-dev/connect";
+import type { ContractQueryRecord, RecordView } from "@mdbase-dev/sdk";
 
 export { annotationFromDocument, annotationFrontmatter } from "./annotation-mapping.js";
 
@@ -178,9 +178,9 @@ function citationFields(value: unknown): ReturnType<typeof validateCslItem> | un
 
 export function sourceSummaryFromQuery(
   collection: CollectionId,
-  record: QueryRecord,
+  record: RecordView,
 ): SourceSummary {
-  const frontmatter = record.effectiveFrontmatter ?? record.frontmatter ?? {};
+  const frontmatter = record.effective ?? record.frontmatter;
   // Library views can show any field as a column, so the listing keeps the frontmatter.
   const partOf = partOfFromResult(record);
   return {
@@ -192,14 +192,14 @@ export function sourceSummaryFromQuery(
 
 export function sourceFromDocument(
   collection: CollectionId,
-  record: RecordDocument,
+  record: RecordView,
   partOf?: SourceId,
 ): Source {
-  const provenance = record.effectiveFrontmatter[cslProvenanceKey];
+  const provenance = (record.effective ?? record.frontmatter)[cslProvenanceKey];
   return {
-    ...sourceFields(collection, record.path, record.effectiveFrontmatter),
+    ...sourceFields(collection, record.path, record.effective ?? record.frontmatter),
     ...(partOf ? { partOf } : {}),
-    properties: record.effectiveFrontmatter,
+    properties: record.effective ?? record.frontmatter,
     ...(provenance !== undefined ? { cslProvenance: parseCslProvenance(provenance) } : {}),
     body: record.body ?? "",
     recordRevision: recordRevision(record.revision),
@@ -208,3 +208,21 @@ export function sourceFromDocument(
 }
 
 export const connectCollectionId = collectionId;
+
+/** Read the declared contract roles, retaining the genuine record solely for query metadata. */
+export function sourceSummaryFromContract(
+  collection: CollectionId,
+  record: ContractQueryRecord,
+  views: readonly RecordView[],
+): SourceSummary {
+  const implementation =
+    record.implementations.length === 1 ? record.implementations[0] : undefined;
+  const view = views.find((candidate) => candidate.id === record.id);
+  if (!implementation || !view) {
+    throw new Error("Reader cannot select a unique source contract implementation.");
+  }
+  return {
+    ...sourceFields(collection, view.path, implementation.fields),
+    properties: implementation.fields,
+  };
+}

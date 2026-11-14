@@ -4,7 +4,6 @@ import { useCallback, useContext, useSyncExternalStore, type JSX } from "react";
 import { Menu } from "./Menu.js";
 import { sdkOffline, sdkSyncIncidents } from "./sdk-connection-state.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
-import { useSustained } from "./use-sustained.js";
 
 import type { Mdbase, MdbaseSnapshot } from "@mdbase-reader/connect/native";
 
@@ -12,7 +11,7 @@ const noop = (): void => undefined;
 
 export function ReaderSaveStatus({
   mdbase,
-  online: browserOnline,
+  online: _browserOnline,
 }: {
   readonly mdbase: Mdbase | null;
   readonly online: boolean;
@@ -27,11 +26,11 @@ export function ReaderSaveStatus({
     () => mdbase?.getSnapshot() ?? null,
     () => null,
   );
-  const online = browserOnline && !sdkOffline(snapshot);
+  const online = !sdkOffline(snapshot);
   const { pending, rejected } = snapshot?.sync?.writes ?? { pending: [], rejected: [] };
   const incidents = sdkSyncIncidents(snapshot);
   const needsAttention = rejected.length + incidents.length > 0;
-  const stalled = useSustained(online && Boolean(pending.length), 30_000);
+  const stalled = snapshot?.sync?.pendingFor === "long";
   if (!pending.length && !needsAttention) {
     return null;
   }

@@ -1,5 +1,8 @@
 // @vitest-environment happy-dom
 /* eslint-disable @typescript-eslint/require-await -- async act flushes React's queued work */
+import { sourceFromDocument } from "@mdbase-reader/connect";
+import { createTestApp } from "@mdbase-reader/connect/testing";
+import { collectionId } from "@mdbase-reader/core";
 import { act } from "react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
@@ -9,29 +12,33 @@ import { fakeChrome } from "./testing/fake-chrome.js";
 import { createRoot } from "./testing/i18n.js";
 
 import type { ExtensionCaptureController } from "./capture-controller.js";
-import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
+import type { Mdbase, MdbaseClient } from "@mdbase-dev/sdk";
 import type { Source } from "@mdbase-reader/core";
 import type { Root } from "react-dom/client";
+import type { MockInstance } from "vitest";
 
 let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-  vi.useFakeTimers();
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal("chrome", fakeChrome().chrome);
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
 });
-afterEach(() => {
+const closes: (() => Promise<void>)[] = [];
+afterEach(async () => {
   act(() => root.unmount());
   host.remove();
   vi.unstubAllGlobals();
   vi.useRealTimers();
+  for (const close of closes.splice(0)) {
+    await close();
+  }
 });
 
-const saved = {
+let saved = {
   id: "s1",
   collectionId: "c1",
   path: "sources/s1.md",
@@ -44,38 +51,37 @@ const saved = {
   recordRevision: "r1",
 } as unknown as Source;
 
-/** One source; field writes go over whatever is current, as the repository's do. */
-function collection(): {
-  readonly collection: ReaderConnectedCollection;
-  readonly updateFields: ReturnType<typeof vi.fn>;
-  edit(changes: Partial<Source>): void;
-} {
-  let current = saved;
-  let revision = 1;
-  const next = (changes: Partial<Source>): Source => {
-    revision += 1;
-    current = { ...current, ...changes, recordRevision: `r${String(revision)}` } as Source;
-    return current;
-  };
-  const updateFields = vi.fn((input: { readonly fields: Partial<Source> }) =>
-    Promise.resolve(next(input.fields)),
+async function collection(): Promise<{
+  mdbase: Mdbase;
+  updateFields: MockInstance<MdbaseClient["update"]>;
+  edit: (changes: { title: string }) => void;
+}> {
+  const app = await createTestApp({
+    collections: [
+      {
+        name: "Reading",
+        records: [
+          {
+            path: "sources/s1.md",
+            types: ["reader-source"],
+            frontmatter: { id: "s1", title: "[test] Saved", tags: ["ml"] },
+            body: "My note",
+          },
+        ],
+      },
+    ],
+  });
+  closes.push(() => app.close());
+  const client = app.client();
+  saved = sourceFromDocument(
+    collectionId(client.collection),
+    await client.get({ path: "sources/s1.md" }, { include: { effective: true, body: true } }),
   );
-  const sources = {
-    get: () => Promise.resolve(current),
-    updateFields,
-    updateBody: (input: { readonly expectedRevision: string; readonly body: string }) =>
-      input.expectedRevision === current.recordRevision
-        ? Promise.resolve(next({ body: input.body }))
-        : Promise.reject(new Error("The source changed before saving.")),
-  };
   return {
-    collection: {
-      collectionId: "c1",
-      sources,
-      bodyRecovery: { pending: () => false, recoverSource: vi.fn() },
-    } as unknown as ReaderConnectedCollection,
-    updateFields,
-    edit: next,
+    mdbase: app.mdbase,
+    updateFields: vi.spyOn(client, "update"),
+    edit: (changes: { title: string }) =>
+      app.replica().editElsewhere(saved.path, { frontmatter: changes }),
   };
 }
 
@@ -110,8 +116,10 @@ function type(input: HTMLInputElement | null, value: string): void {
 }
 
 it("autosaves a saved source's title and tags as they are typed", async () => {
-  const fake = collection();
-  const session = new SourceNoteSession(saved, fake.collection, memory);
+  const fake = await collection();
+  const session = new SourceNoteSession(fake.mdbase, saved, memory);
+  await session.start();
+  vi.useFakeTimers();
   await show(session);
   const title = host.querySelector<HTMLInputElement>("#saved-title");
   const tags = host.querySelector<HTMLInputElement>("#saved-tags");
@@ -128,7 +136,14 @@ it("autosaves a saved source's title and tags as they are typed", async () => {
   await act(async () => vi.advanceTimersByTimeAsync(1100));
 
   expect(fake.updateFields).toHaveBeenCalledWith(
-    expect.objectContaining({ fields: { title: "[test] Renamed", tags: ["ml", "vision"] } }),
+    expect.objectContaining({ path: saved.path }),
+    expect.objectContaining({
+      patch: new Map([
+        ["title", "[test] Renamed"],
+        ["tags", ["ml", "vision"]],
+      ] as [string, string | string[]][]),
+    }),
+    expect.anything(),
   );
   expect(host.querySelector(".note-state")?.textContent).toBe("Saved");
   // The trailing separator being typed stays.
@@ -136,8 +151,10 @@ it("autosaves a saved source's title and tags as they are typed", async () => {
 });
 
 it("keeps a cleared title out of the collection and says which one is kept", async () => {
-  const fake = collection();
-  const session = new SourceNoteSession(saved, fake.collection, memory);
+  const fake = await collection();
+  const session = new SourceNoteSession(fake.mdbase, saved, memory);
+  await session.start();
+  vi.useFakeTimers();
   await show(session);
   const title = host.querySelector<HTMLInputElement>("#saved-title");
   act(() => {
@@ -151,8 +168,10 @@ it("keeps a cleared title out of the collection and says which one is kept", asy
 });
 
 it("stops on a conflicting title with both versions in reach, and flags the tab", async () => {
-  const fake = collection();
-  const session = new SourceNoteSession(saved, fake.collection, memory);
+  const fake = await collection();
+  const session = new SourceNoteSession(fake.mdbase, saved, memory);
+  await session.start();
+  vi.useFakeTimers();
   await show(session);
   const title = host.querySelector<HTMLInputElement>("#saved-title");
   act(() => {
@@ -174,7 +193,9 @@ it("stops on a conflicting title with both versions in reach, and flags the tab"
   await act(async () => keep?.click());
   await act(async () => vi.advanceTimersByTimeAsync(1100));
   expect(fake.updateFields).toHaveBeenCalledWith(
-    expect.objectContaining({ fields: { title: "[test] Mine" } }),
+    expect.objectContaining({ path: saved.path }),
+    expect.objectContaining({ patch: new Map([["title", "[test] Mine"]]) }),
+    expect.anything(),
   );
   expect(host.querySelector(".conflict")).toBeNull();
   expect(host.querySelector("#panel-tab-note")?.textContent).not.toContain("attention");

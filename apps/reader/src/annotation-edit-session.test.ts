@@ -1,19 +1,12 @@
-import {
-  annotationId,
-  collectionId,
-  dateTime,
-  recordRevision,
-  sourceId,
-  type Annotation,
-} from "@mdbase-reader/core";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 
 import { AnnotationDeletionLease } from "./annotation-deletion-lease.js";
 import { AnnotationEditSession } from "./annotation-edit-session.js";
-import { hasUnsavedAnnotationEdits, trackAnnotationEdits } from "./unsaved-annotation-edits.js";
+import { editorFixture } from "./editor.fixtures.js";
+import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
 
 const legacy = vi.hoisted(() => ({
-  value: null as { body: string; baseBody: string } | null,
+  value: null as { body: string; baseBody?: string } | null,
   clear: vi.fn(),
 }));
 vi.mock("./annotation-edit-recovery.js", () => ({
@@ -21,219 +14,150 @@ vi.mock("./annotation-edit-recovery.js", () => ({
     ready(legacy.value),
   clearLegacyEdits: legacy.clear,
 }));
-const annotation: Annotation = {
-  id: annotationId("a"),
-  collectionId: collectionId("c"),
-  sourceId: sourceId("s"),
-  source: "[[s]]",
-  path: "annotations/a.md",
-  recordRevision: recordRevision("1"),
-  annotationType: "note",
-  tags: [],
-  body: "Original",
-  createdAt: dateTime("2026-08-01T00:00:00Z"),
-};
-function saved(body: string, revision = "2"): Annotation {
-  return { ...annotation, body, recordRevision: recordRevision(revision) };
-}
-const sessions: AnnotationEditSession[] = [];
-function fixture(
-  persist = vi.fn((_base: Annotation, body: string) => Promise.resolve(saved(body))),
-): { session: AnnotationEditSession; persist: typeof persist } {
-  const session = new AnnotationEditSession(annotation, persist);
-  sessions.push(session);
-  session.start();
-  return { session, persist };
-}
-beforeEach(() => {
-  vi.useFakeTimers();
+const cleanup: (() => void | Promise<void>)[] = [];
+afterEach(async () => {
+  for (const close of cleanup.splice(0)) {
+    await close();
+  }
   legacy.value = null;
   legacy.clear.mockClear();
+  vi.restoreAllMocks();
 });
-afterEach(() => {
-  for (const session of sessions.splice(0)) {
-    trackAnnotationEdits(session, annotation, false);
+async function fixture(): Promise<
+  Awaited<ReturnType<typeof editorFixture>> & {
+    session: AnnotationEditSession;
+    publish: ReturnType<typeof vi.fn>;
   }
-  vi.clearAllTimers();
-  vi.useRealTimers();
-});
-it("debounces one collection write while keeping keystrokes out of shared notifications", async () => {
-  const { session, persist } = fixture();
-  const notify = vi.fn();
-  session.subscribe(notify);
-  for (let i = 0; i < 40; i += 1) {
-    session.edit(`Changed ${String(i)}`);
-    await vi.advanceTimersByTimeAsync(20);
-  }
-  expect(notify).toHaveBeenCalledOnce();
-  expect(persist).not.toHaveBeenCalled();
-  expect(hasUnsavedAnnotationEdits("c", "s")).toBe(true);
-  await vi.advanceTimersByTimeAsync(979);
-  expect(persist).not.toHaveBeenCalled();
-  await vi.advanceTimersByTimeAsync(1);
-  expect(persist).toHaveBeenCalledExactlyOnceWith(annotation, "Changed 39");
-  expect(session.getSnapshot().status).toBe("saved");
-  expect(hasUnsavedAnnotationEdits("c", "s")).toBe(false);
-  expect(legacy.clear).not.toHaveBeenCalled();
-});
-it("preserves typing during a slow save, rejects stale views and serializes the next write", async () => {
-  let finish!: (value: Annotation) => void;
-  const { session, persist } = fixture();
-  persist.mockImplementationOnce(
-    () =>
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-  );
-  session.edit("First");
-  await vi.advanceTimersByTimeAsync(1000);
-  session.edit("Second");
-  await vi.advanceTimersByTimeAsync(2000);
-  expect(persist).toHaveBeenCalledOnce();
-  expect(session.getText()).toBe("Second");
-  // The query resource can publish our first result before the write promise resolves.
-  session.receive(saved("First"));
-  expect(session.getSnapshot().conflict).toBeNull();
-  finish(saved("First"));
-  await vi.advanceTimersByTimeAsync(1);
-  expect(persist).toHaveBeenCalledTimes(2);
-  expect(persist).toHaveBeenLastCalledWith(saved("First"), "Second");
-  expect(session.getText()).toBe("Second");
-  expect(session.getSnapshot().status).toBe("saved");
-  session.receive(annotation);
-  expect(session.getText()).toBe("Second");
-});
-it("uses the verified latest base when an older response follows a matching remote edit", async () => {
-  let finish!: (value: Annotation) => void;
-  const remote = saved("Second", "3");
-  const persist = vi.fn((_base: Annotation, body: string) => Promise.resolve(saved(body)));
-  persist.mockImplementationOnce(
-    () =>
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-  );
-  persist.mockRejectedValueOnce(new Error("Revision conflict"));
-  const session = new AnnotationEditSession(annotation, persist, () => Promise.resolve(remote));
-  sessions.push(session);
+> {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const publish = vi.fn();
+  const session = new AnnotationEditSession(native.app.mdbase, native.annotation, publish);
+  cleanup.push(() => trackAnnotationEdits(session, native.annotation, false));
   session.start();
-  session.edit("First");
-  await vi.advanceTimersByTimeAsync(1000);
-  session.edit("Second");
-  session.receive(remote);
-  finish(saved("First"));
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(session.getText()).toBe("Second");
-  expect(session.getAnnotation()).toEqual(remote);
-  expect(session.getSnapshot().status).toBe("saved");
-});
-it("keeps failed edits in memory, without background retry loops", async () => {
-  const { session, persist } = fixture();
-  persist.mockRejectedValueOnce(new Error("Offline"));
-  session.edit("Offline text");
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(session.getSnapshot().status).toBe("error");
-  expect(session.getText()).toBe("Offline text");
-  await vi.advanceTimersByTimeAsync(10000);
-  expect(persist).toHaveBeenCalledOnce();
+  await vi.waitFor(() => expect(session.getSnapshot().status).toBe("saved"));
+  return { ...native, session, publish };
+}
+
+it("uses a native writer and exposes its actual acknowledgement", async () => {
+  const { session, app, annotation, publish } = await fixture();
+  const update = vi.spyOn(app.client(), "update");
+  session.edit("New annotation");
   await session.save();
   expect(session.getSnapshot().status).toBe("saved");
+  expect(update).toHaveBeenCalledOnce();
+  expect(publish).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      body: "New annotation",
+      recordRevision: session.getAnnotation().recordRevision,
+    }),
+  );
+  const saved = await app.client().get({ path: annotation.path! }, { include: { body: true } });
+  expect(saved.body).toBe("New annotation");
+  expect(saved.frontmatter["modified_at"]).toEqual(expect.any(String));
 });
-it("transfers the editor without storage and keeps its writer alive after close", async () => {
-  const { session, persist } = fixture();
-  const first = {},
-    second = {};
-  session.claimEditor(first);
-  session.edit("Pending");
+it("preserves a newer edit while a native write is held", async () => {
+  const { session, app } = await fixture();
+  const update = app.client().update.bind(app.client());
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  vi.spyOn(app.client(), "update").mockImplementationOnce(async (...args) => {
+    const write = await update(...args);
+    await held;
+    return write;
+  });
+  session.edit("First");
+  const saving = session.save();
+  await vi.waitFor(() => expect(session.getSnapshot().status).toBe("saving"));
+  session.edit("Newer");
+  release();
+  await saving;
+  await session.save();
+  expect(session.getText()).toBe("Newer");
+  expect(session.getSnapshot().status).toBe("saved");
+});
+it("transfers editor ownership while retaining one native session", async () => {
+  const { session } = await fixture();
+
+  const first = {};
+  const second = {};
+  expect(session.claimEditor(first)).toBe(true);
   expect(session.claimEditor(second)).toBe(false);
   expect(session.claimEditor(second, true)).toBe(true);
   session.releaseEditor(first);
   expect(session.ownsEditor(second)).toBe(true);
+  session.edit("Kept after close");
   session.releaseEditor(second);
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(persist).toHaveBeenCalledExactlyOnceWith(annotation, "Pending");
-});
-it("clears an unsent change only on explicit discard", async () => {
-  const { session, persist } = fixture();
-  session.edit("Discard me");
-  session.discard();
-  await vi.advanceTimersByTimeAsync(10000);
-  expect(persist).not.toHaveBeenCalled();
-  expect(session.getText()).toBe("Original");
-  expect(hasUnsavedAnnotationEdits("c", "s")).toBe(false);
-});
-it("does not discard newer typing when the previous save finishes after an undo", async () => {
-  let finish!: (value: Annotation) => void;
-  const { session, persist } = fixture();
-  persist.mockImplementationOnce(
-    () =>
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-  );
-  session.edit("First");
-  await vi.advanceTimersByTimeAsync(1000);
-  session.edit("Original");
-  expect(hasUnsavedAnnotationEdits("c", "s")).toBe(true);
-  finish(saved("First"));
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(persist).toHaveBeenLastCalledWith(saved("First"), "Original");
-  expect(session.getText()).toBe("Original");
-});
-it("retains conflicts until a revision-checked choice is explicitly saved", async () => {
-  const persist = vi.fn((_base: Annotation, body: string) => Promise.resolve(saved(body, "3")));
-  persist.mockRejectedValueOnce(new Error("Revision conflict"));
-  const remote = saved("Remote"),
-    session = new AnnotationEditSession(annotation, persist, () => Promise.resolve(remote));
-  sessions.push(session);
-  session.start();
-  session.edit("Local");
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(session.getSnapshot().conflict).toEqual(remote);
-  expect(session.getText()).toBe("Local");
-  session.resolve("local");
   await session.save();
-  expect(persist).toHaveBeenLastCalledWith(remote, "Local");
+  expect(session.getText()).toBe("Kept after close");
 });
-it("offers legacy device drafts without writing new ones or submitting on load", async () => {
-  legacy.value = { body: "Legacy text", baseBody: "Original" };
-  const { session, persist } = fixture();
-  await vi.advanceTimersByTimeAsync(10000);
-  expect(session.getText()).toBe("Legacy text");
-  expect(persist).not.toHaveBeenCalled();
-  session.edit("Reviewed legacy text");
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(legacy.clear).toHaveBeenCalledExactlyOnceWith(session.key);
+it("discards only an unsent change", async () => {
+  const { session, app } = await fixture();
+  const update = vi.spyOn(app.client(), "update");
+  session.edit("Unsent");
+  session.discard();
+  expect(session.getText()).toBe("Original annotation");
+  await session.save();
+  expect(update).not.toHaveBeenCalled();
 });
-it("holds deletion locks by owner and resumes autosave after cancelling a check", async () => {
-  const { session, persist } = fixture();
-  const first = {},
-    second = {};
-  session.edit("Pending");
+it("holds deletion by owner after flushing the SDK writer", async () => {
+  const { session } = await fixture();
+  const first = {};
+  const second = {};
+  session.edit("Before deletion");
   expect(await session.lock(first)).toBe(true);
   expect(await session.lock(second)).toBe(false);
-  session.unlock(second);
-  expect(session.claimEditor({}, true)).toBe(false);
   session.edit("Blocked");
-  await vi.advanceTimersByTimeAsync(2000);
-  expect(persist).not.toHaveBeenCalled();
+  expect(session.getText()).toBe("Before deletion");
+  session.unlock(second);
+  expect(session.getSnapshot().locked).toBe(true);
   session.unlock(first);
-  await vi.advanceTimersByTimeAsync(1);
-  expect(persist).toHaveBeenCalledExactlyOnceWith(annotation, "Pending");
+  expect(session.getSnapshot().locked).toBe(false);
 });
-it("releases abandoned checks but holds a committed deletion through unmount", async () => {
-  const { session } = fixture(),
-    lease = new AnnotationDeletionLease(session);
+it("releases an abandoned deletion check and holds a committed deletion", async () => {
+  const { session } = await fixture();
+  const lease = new AnnotationDeletionLease(session);
+  // The existing lease helper keeps deletion ownership outside the native writer.
   const detach = lease.attach();
-  await lease.acquire();
+  expect(await lease.acquire()).toBe(true);
   detach();
   expect(session.getSnapshot().locked).toBe(false);
-  const committed = new AnnotationDeletionLease(session),
-    unmount = committed.attach();
-  await committed.acquire();
-  committed.commit();
-  unmount();
+  const detachAgain = lease.attach();
+  expect(await lease.acquire()).toBe(true);
+  lease.commit();
+  detachAgain();
   expect(session.getSnapshot().locked).toBe(true);
-  session.deleted();
-  expect(hasUnsavedAnnotationEdits("c", "s")).toBe(false);
+  lease.release();
+  expect(session.getSnapshot().locked).toBe(false);
+});
+it("does not overwrite a recovered legacy draft whose base is unknown", async () => {
+  legacy.value = { body: "Earlier draft" };
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const session = new AnnotationEditSession(native.app.mdbase, native.annotation);
+  cleanup.push(() => trackAnnotationEdits(session, native.annotation, false));
+  const update = vi.spyOn(native.app.client(), "update");
+  session.start();
+  await vi.waitFor(() => expect(session.getSnapshot().conflict).not.toBeNull());
+  expect(session.getText()).toBe("Earlier draft");
+  expect(update).not.toHaveBeenCalled();
+  session.resolve("remote");
+  expect(session.getText()).toBe("Original annotation");
+  expect(legacy.clear).toHaveBeenCalledOnce();
+});
+
+it("releases a clean native lease when its last view closes and reopens on return", async () => {
+  const { session } = await fixture();
+  const detach = session.subscribe(vi.fn());
+  detach();
+  const returned = session.subscribe(vi.fn());
+  await vi.waitFor(() => {
+    session.edit("After return");
+    expect(session.getText()).toBe("After return");
+  });
+  await session.save();
+  expect(session.getSnapshot().status).toBe("saved");
+  returned();
 });

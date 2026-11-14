@@ -1,3 +1,5 @@
+import { isMdbaseError } from "@mdbase-dev/sdk";
+
 import {
   annotationSourceAt,
   annotationSourceFromResult,
@@ -5,23 +7,16 @@ import {
   withResolvedSource,
 } from "./annotation-source.js";
 import {
-  ConnectRepositoryError,
+  completeReaderPages,
   mapConcurrent,
-  outcomeValue,
   readerConnectBulkConcurrency,
 } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type {
-  QueryRecord,
-  QueryMetadataRecord,
-  QueryPage,
-  QueryMetadataPage,
-} from "@mdbase-dev/connect";
+import type { MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 import type { AnnotationListOptions, SourceId } from "@mdbase-reader/core";
 
 export async function* annotationSourcePages(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   options: AnnotationListOptions,
 ): AsyncGenerator<
   { readonly path: string; readonly source: SourceId; readonly reference: unknown }[]
@@ -34,28 +29,23 @@ export async function* annotationSourcePages(
     options.signal?.throwIfAborted();
     const input = {
       types: ["reader-annotation"],
-      frontmatterMode: "effective" as const,
-      includeBody: false,
+
       ...(scope
         ? { where: scope.map((path) => `file.path == ${JSON.stringify(path)}`).join(" || ") }
         : {}),
     };
     const paging = {
       ...(options.signal ? { signal: options.signal } : {}),
-      ...(options.replaceableFamily ? { replaceableFamily: options.replaceableFamily } : {}),
-      pageSize: 500,
     };
     let published = false;
     try {
-      const pages = client.queryPages(
-        withResolvedSource({ ...input, select: ["id", "source"] }),
-        paging,
+      const pages = completeReaderPages(
+        client,
+        withResolvedSource({ ...input, select: ["id", "source"], limit: 500 }),
+        { ...paging, include: { effective: true } },
       );
       for await (const outcome of pages) {
-        const records = outcomeValue<QueryPage | QueryMetadataPage>(
-          outcome,
-          "query annotations",
-        ).results;
+        const records = outcome.records;
         published = true;
         yield records
           .filter((record) => !selected || selected.has(record.path))
@@ -65,28 +55,21 @@ export async function* annotationSourcePages(
       }
       continue;
     } catch (error) {
-      if (
-        published ||
-        !(error instanceof ConnectRepositoryError) ||
-        error.code !== "query_budget_exceeded"
-      ) {
+      if (published || !(isMdbaseError(error) && error.reason === "query_budget_exceeded")) {
         throw error;
       }
     }
-    const pages = client.queryPages(input, paging);
+    const pages = completeReaderPages(client, input, { ...paging, include: { effective: true } });
     for await (const outcome of pages) {
-      const records = outcomeValue<QueryPage | QueryMetadataPage>(
-        outcome,
-        "query annotations",
-      ).results.filter((record) => !selected || selected.has(record.path));
+      const records = outcome.records.filter((record) => !selected || selected.has(record.path));
       yield* discoverAnnotationSources(client, records, options);
     }
   }
 }
 
 async function* discoverAnnotationSources(
-  client: ReaderConnectClient,
-  records: readonly (QueryRecord | QueryMetadataRecord)[],
+  client: MdbaseClient,
+  records: readonly RecordView[],
   options: AnnotationListOptions,
 ): AsyncGenerator<{ path: string; source: SourceId; reference: unknown }[]> {
   for (let offset = 0; offset < records.length;) {
@@ -120,13 +103,12 @@ function annotationQueryScopes(paths?: ReadonlySet<string>): (string[] | null)[]
 }
 
 function annotationSourceEntry(
-  record: QueryRecord | QueryMetadataRecord,
+  record: RecordView,
   source: SourceId | undefined,
   sourceIds?: ReadonlySet<SourceId>,
 ): { path: string; source: SourceId; reference: unknown }[] {
-  const fields =
-    "file" in record ? (record.effectiveFrontmatter ?? record.frontmatter) : record.values;
-  return stringField(fields?.["id"]) && source && (!sourceIds || sourceIds.has(source))
-    ? [{ path: record.path, source, reference: fields?.["source"] }]
+  const fields = record.effective ?? record.frontmatter;
+  return stringField(fields["id"]) && source && (!sourceIds || sourceIds.has(source))
+    ? [{ path: record.path, source, reference: fields["source"] }]
     : [];
 }

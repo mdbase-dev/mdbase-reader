@@ -203,19 +203,11 @@ function screen(snapshot: MdbaseSnapshot, usable: boolean): Screen {
     : { status: "problem", problem: retiredProblem() };
 }
 
-/**
- * `usable` is whether the SDK hands out a current READY connection right now. While the
- * SDK host restarts (`hostAvailable` false) its last snapshot is stale, so the page shows
- * mdbase opening; the SDK's own status is not changed.
- */
-export function connectionView(
-  snapshot: MdbaseSnapshot,
-  usable: boolean,
-  hostAvailable = true,
-): ConnectionView {
+/** `usable` means this context has a current READY SDK connection. */
+export function connectionView(snapshot: MdbaseSnapshot, usable: boolean): ConnectionView {
   const signedIn = snapshot.status !== "closed" && snapshot.signIn?.state === "paired";
   return {
-    ...(hostAvailable ? screen(snapshot, usable) : plain("opening")),
+    ...screen(snapshot, usable),
     collections: snapshot.status === "closed" ? [] : snapshot.collections,
     collectionId: snapshot.status === "closed" ? null : snapshot.selectedCollectionId,
     signedIn,

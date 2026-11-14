@@ -17,30 +17,35 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-it("offers a reload for old pending writes even while syncing", async () => {
+it("offers a reload only when the SDK marks pending writes as long", () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  vi.useFakeTimers();
   const host = document.createElement("div");
   document.body.append(host);
-  const mdbase = {
-    subscribe: () => () => undefined,
-    getSnapshot: () => snapshot,
-  } as unknown as Mdbase;
-  const snapshot = {
-    phase: { kind: "starting" },
+  let changed: () => void = () => undefined;
+  let snapshot = {
     sync: {
+      state: "saving",
+      pendingFor: "short",
       writes: {
         pending: [{ mutationId: "stalled", records: [], createdAt: Date.now() }],
         rejected: [],
       },
     },
   };
+  const mdbase = {
+    subscribe: (listener: () => undefined) => {
+      changed = listener;
+      return () => undefined;
+    },
+    getSnapshot: () => snapshot,
+  } as unknown as Mdbase;
   root = createRoot(host);
   act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
-  await act(() => vi.advanceTimersByTime(29_999));
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
-  await act(() => vi.advanceTimersByTime(2));
+  act(() => {
+    snapshot = { ...snapshot, sync: { ...snapshot.sync, pendingFor: "long" } };
+    changed();
+  });
   expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
     "Reload Reader",
   );
@@ -101,15 +106,17 @@ it("shows the actual pending change and drops the warning only when the ledger d
   expect(host.querySelector("details")).toBeNull();
 });
 
-it("stays calm offline and starts the stalled timer only on reconnect", async () => {
+it("keeps offline writes calm and follows the SDK's pending age after reconnect", () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  vi.useFakeTimers();
   const host = document.createElement("div");
   document.body.append(host);
-  const snapshot = {
-    phase: { kind: "starting" },
+  let changed: () => void = () => undefined;
+  let snapshot = {
     saveWarning: "storage_may_be_evicted",
     sync: {
+      connection: "offline",
+      state: "saved_on_device",
+      pendingFor: "long",
       writes: {
         pending: [{ mutationId: "offline", records: [], createdAt: Date.now() - 60_000 }],
         rejected: [],
@@ -117,81 +124,33 @@ it("stays calm offline and starts the stalled timer only on reconnect", async ()
     },
   };
   const mdbase = {
-    subscribe: () => () => undefined,
+    subscribe: (listener: () => undefined) => {
+      changed = listener;
+      return () => undefined;
+    },
     getSnapshot: () => snapshot,
   } as unknown as Mdbase;
   root = createRoot(host);
-  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={false} />));
-  await act(() => vi.advanceTimersByTime(60_000));
+  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
   expect(host.textContent).toContain("still pending on this device");
   expect(host.textContent).not.toContain("may remove");
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
-  act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
-  await act(() => vi.advanceTimersByTime(0));
+  act(() => {
+    snapshot = {
+      ...snapshot,
+      sync: { ...snapshot.sync, connection: "online", state: "saving", pendingFor: "short" },
+    };
+    changed();
+  });
   expect(host.querySelector(".reader-save-details > button")).toBeNull();
-  await act(() => vi.advanceTimersByTime(29_999));
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
-  await act(() => vi.advanceTimersByTime(1));
+  act(() => {
+    snapshot = { ...snapshot, sync: { ...snapshot.sync, pendingFor: "long" } };
+    changed();
+  });
   expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
     "Reload Reader",
   );
 });
-
-it.each(["saved_on_device", "saving"])(
-  "keeps SDK-offline %s writes calm while the browser is online",
-  async (saveState) => {
-    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-    vi.useFakeTimers();
-    expect(navigator.onLine).toBe(true);
-    const host = document.createElement("div");
-    document.body.append(host);
-    let changed: () => void = () => undefined;
-    let snapshot = {
-      phase: { kind: "starting" },
-      saveWarning: "storage_may_be_evicted",
-      sync: {
-        connection: "offline",
-        writes: {
-          saveState,
-          pending: [{ mutationId: "offline-sdk", records: [], createdAt: Date.now() }],
-          rejected: [],
-        },
-      },
-    };
-    const mdbase = {
-      subscribe: (listener: () => void) => {
-        changed = listener;
-        return () => undefined;
-      },
-      getSnapshot: () => snapshot,
-    } as unknown as Mdbase;
-    root = createRoot(host);
-    act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={navigator.onLine} />));
-    for (let reconnect = 0; reconnect < 2; reconnect += 1) {
-      await act(() => vi.advanceTimersByTime(60_000));
-      expect(host.textContent).toContain("still pending on this device");
-      expect(host.textContent).not.toContain("may remove");
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
-      act(() => {
-        snapshot = { ...snapshot, sync: { ...snapshot.sync, connection: "online" } };
-        changed();
-      });
-      await act(() => vi.advanceTimersByTime(0));
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
-      await act(() => vi.advanceTimersByTime(29_999));
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
-      await act(() => vi.advanceTimersByTime(1));
-      expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
-        "Reload Reader",
-      );
-      act(() => {
-        snapshot = { ...snapshot, sync: { ...snapshot.sync, connection: "offline" } };
-        changed();
-      });
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
-    }
-  },
-);
 
 it.each([
   [0, 1, "The collection refused these changes."],

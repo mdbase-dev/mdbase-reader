@@ -170,6 +170,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     return this.sourceChanges(() => {
       this.#libraryGeneration += 1;
       this.#library = null;
+      this.#sourcesById.clear();
       listener();
     });
   };
@@ -208,12 +209,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     if (cached) {
       return cached;
     }
+    const generation = this.#libraryGeneration;
     return this.#sourceLoads.get(id, options, async (signal) => {
       const source = await this.sources.get(this.collectionId, id, { signal });
       signal.throwIfAborted();
       // A local write or explicit refresh may have overtaken the pending read.
       const latest = this.#sourcesById.get(id) ?? source;
-      if (latest) {
+      if (latest && generation === this.#libraryGeneration) {
         this.#sourcesById.set(id, latest);
       }
       return latest;
@@ -241,7 +243,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     // "Annotations for this source" needs a source to run against, so it is not a library view.
     return [
       defaultLibraryView,
-      ...listed.views.flatMap((document) =>
+      ...listed.sources.flatMap((document) =>
         document.views
           .filter((view) => {
             const kind = readerViewKind(view.presentation);
@@ -283,11 +285,14 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     // The view query does not depend on the library, so neither waits for the other.
     const [library, execution] = await Promise.all([
       this.library(options),
-      this.libraryViewRepository.execute({ path: view.path, view: view.viewId }, options),
+      this.libraryViewRepository.execute({ path: view.path }, view.viewId, {
+        ...options,
+        include: { effective: true },
+      }),
     ]);
     const byPath = new Map(library.sources.map((source) => [source.path, source]));
     const valuesByPath = new Map<string, Readonly<Record<string, unknown>>>();
-    const sources = execution.results.flatMap((row) => {
+    const sources = execution.records.flatMap((row) => {
       const source = byPath.get(row.path);
       if (!source) {
         return [];
@@ -295,7 +300,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       valuesByPath.set(row.path, row.values ?? {});
       return [source];
     });
-    return { sources, valuesByPath, totalCount: execution.meta.totalCount };
+    return { sources, valuesByPath, totalCount: execution.totalCount ?? execution.records.length };
   }
 
   async saveLibraryView(request: LibraryViewSaveRequest): Promise<MdbaseLibraryView> {
@@ -343,11 +348,11 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
         translate({ message: "Saved mdbase views are unavailable for this collection." }),
       );
     }
-    const execution = await this.libraryViewRepository.execute(
-      { path: view.path, view: view.viewId },
-      options,
-    );
-    return new Set(execution.results.map((row) => row.path));
+    const execution = await this.libraryViewRepository.execute({ path: view.path }, view.viewId, {
+      ...options,
+      include: { effective: true },
+    });
+    return new Set(execution.records.map((row) => row.path));
   }
 
   async ensureSourceAnnotationsView(): Promise<{
@@ -360,7 +365,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       );
     }
     const listed = await this.libraryViewRepository.list();
-    const existing = listed.views.find((document) =>
+    const existing = listed.sources.find((document) =>
       document.views.some((view) => readerViewKind(view.presentation) === "source-annotations"),
     );
     if (existing) {
@@ -944,5 +949,5 @@ function replaceInOrder(
 
 /** New views live beside each other under `views/`, named by their stable view ID. */
 function viewPath(frontmatter: JsonObject): string {
-  return `views/${String(frontmatter["id"])}.md`;
+  return `views/${frontmatter["id"] as string}.md`;
 }

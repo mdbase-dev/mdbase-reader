@@ -1121,10 +1121,6 @@ msgstr "Anwenden"
 msgid "Apply JSON"
 msgstr "JSON anwenden"
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Apply Reader collection setup"
-msgstr "Reader-Sammlungseinrichtung anwenden"
-
 #: apps/extension/src/connection-view.ts
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Approve access"
@@ -1740,11 +1736,6 @@ msgstr "Wählen Sie oben eine Sammlung"
 msgid "Choose a collection before saving."
 msgstr "Wählen Sie vor dem Speichern eine Sammlung aus."
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose a collection to import into."
-msgstr "Wählen Sie eine Sammlung für den Import aus."
-
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/NativeImportPage.tsx
 msgid "Choose a destination"
 msgstr "Ziel auswählen"
@@ -1764,10 +1755,6 @@ msgstr "Wählen Sie in diesem Buch einen Anfangs- und einen Endabschnitt in Lese
 #: apps/reader/src/ChapterPreview.tsx
 msgid "Choose a valid start and end to preview the chapter’s location."
 msgstr "Wählen Sie einen gültigen Anfang und ein gültiges Ende, um die Kapitellage in der Vorschau zu sehen."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Choose an existing collection, or create a fresh hosted collection in mdbase’s secure approval window."
-msgstr "Wählen Sie eine vorhandene Sammlung aus oder erstellen Sie im sicheren Bestätigungsfenster von mdbase eine neue gehostete Sammlung."
 
 #: apps/reader/src/CitationAdditionalFields.tsx
 msgid "Choose an unused official CSL field."
@@ -2131,7 +2118,6 @@ msgstr "Mit ungespeicherten Änderungen schließen?"
 
 #: apps/extension/src/ConnectionPanel.tsx
 #: apps/extension/src/OptionsApp.tsx
-#: apps/reader/src/ImportDestination.tsx
 #: apps/reader/src/SettingsSections.tsx
 msgid "Collection"
 msgstr "Sammlung"
@@ -2140,15 +2126,6 @@ msgstr "Sammlung"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection"
 msgstr "Sammlung"
-
-#: apps/reader/src/ImportDestination.tsx
-msgctxt "ImportDestination interface"
-msgid "Collection"
-msgstr "Sammlung"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection authorization failed."
-msgstr "Sammlungsautorisierung fehlgeschlagen."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2159,10 +2136,6 @@ msgstr "Sammlungseditor"
 msgctxt "CSL bibliographic field or item type"
 msgid "Collection number"
 msgstr "Sammlungsnummer"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Collection setup failed."
-msgstr "Einrichten der Sammlung fehlgeschlagen."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -2321,11 +2294,6 @@ msgstr "Andere Sammlung verbinden"
 msgid "Connect another collection…"
 msgstr "Andere Sammlung verbinden…"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgctxt "ReaderHeader interface"
-msgid "Connect directly"
-msgstr "Direkt verbinden"
-
 #. placeholder {0}: environment.label || "mdbase"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
@@ -2348,20 +2316,11 @@ msgctxt "CollectionMenu interface"
 msgid "Connected collections"
 msgstr "Verbundene Sammlungen"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Connected directly to this computer"
-msgstr "Direkt mit diesem Computer verbunden"
-
 #: apps/extension/src/CollectionSection.tsx
 msgid "Connected. The panel saves here unless you choose another."
 msgstr "Verbunden. Die Seitenleiste speichert hier, sofern Sie keine andere Sammlung auswählen."
 
-#: apps/reader/src/ImportDestination.tsx
-msgid "Connecting to mdbase…"
-msgstr "Verbindung zu mdbase wird hergestellt…"
-
 #: apps/extension/src/ConnectionPanel.tsx
-#: apps/reader/src/ReaderHeader.tsx
 msgid "Connecting…"
 msgstr "Verbindung wird hergestellt…"
 
@@ -2556,10 +2515,6 @@ msgstr "Sammlung konnte nicht gewechselt werden. Versuchen Sie es erneut."
 msgid "Could not check this annotation."
 msgstr "Diese Anmerkung konnte nicht geprüft werden."
 
-#: apps/reader/src/ImportPage.tsx
-msgid "Could not connect to mdbase."
-msgstr "Verbindung zu mdbase konnte nicht hergestellt werden."
-
 #: apps/reader/src/source-part-creation.ts
 msgid "Could not create the chapter."
 msgstr "Das Kapitel konnte nicht erstellt werden."
@@ -2587,10 +2542,6 @@ msgstr "Diese Anmerkung konnte nicht gefunden werden."
 #: apps/reader/src/annotation-navigation.ts
 msgid "Could not locate this passage. The annotation is safe; the document may have changed."
 msgstr "Diese Textstelle konnte nicht gefunden werden. Die Anmerkung ist sicher; möglicherweise hat sich das Dokument geändert."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Could not open mdbase approval. Allow popups and try again."
-msgstr "Das Bestätigungsfenster von mdbase konnte nicht geöffnet werden. Lassen Sie Pop-ups zu und versuchen Sie es erneut."
 
 #: apps/capacitor/src/capacitor-platform.ts
 msgid "Could not read export data."
@@ -2664,10 +2615,6 @@ msgstr "Kapitel erstellen"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Create chapters"
 msgstr "Kapitel erstellen"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Create or connect a collection…"
-msgstr "Sammlung erstellen oder verbinden…"
 
 #: apps/reader/src/SourceAddDialog.tsx
 msgid "Create the book first:"
@@ -2926,14 +2873,6 @@ msgstr "Zu prüfende Details"
 msgctxt "CSL bibliographic field or item type"
 msgid "Dimensions"
 msgstr "Abmessungen"
-
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Direct connection"
-msgstr "Direktverbindung"
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Direct local access is not available for this connection."
-msgstr "Direkter lokaler Zugriff ist für diese Verbindung nicht verfügbar."
 
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
@@ -4893,15 +4832,6 @@ msgstr "Lokaler Entwurfsspeicher ist nicht verfügbar oder nicht lesbar. Lassen 
 msgid "Local draft storage is unavailable. Keep this window open until you save."
 msgstr "Lokaler Entwurfsspeicher ist nicht verfügbar. Lassen Sie dieses Fenster geöffnet, bis Sie speichern."
 
-#: apps/reader/src/ReaderHeader.tsx
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access is blocked. Allow it in your browser’s site settings, then retry."
-msgstr "Der Zugriff auf das lokale Netzwerk ist blockiert. Erlauben Sie ihn in den Website-Einstellungen Ihres Browsers und versuchen Sie es erneut."
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Local network access was not granted. Allow it when your browser asks, then retry."
-msgstr "Der Zugriff auf das lokale Netzwerk wurde nicht erlaubt. Erlauben Sie ihn auf Nachfrage Ihres Browsers und versuchen Sie es erneut."
-
 #: apps/reader/src/annotation-columns.ts
 msgctxt "Annotation table column"
 msgid "Location"
@@ -5012,10 +4942,6 @@ msgstr "Dokument maximieren"
 msgid "Maximize document · {0}"
 msgstr "Dokument maximieren · {0}"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase answered the readiness check with something else."
-msgstr "mdbase hat auf die Bereitschaftsprüfung mit etwas Unerwartetem geantwortet."
-
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
 msgstr "mdbase Connect hat die App-Registrierung von Reader nicht akzeptiert; Reader kann hier keine Sammlungen öffnen."
@@ -5024,14 +4950,6 @@ msgstr "mdbase Connect hat die App-Registrierung von Reader nicht akzeptiert; Re
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connect hat zu lange für eine Antwort gebraucht. Versuchen Sie es gleich noch einmal."
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase could not start in the background. Reload the extension."
-msgstr "mdbase konnte nicht im Hintergrund gestartet werden. Laden Sie die Erweiterung neu."
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase has not started yet."
-msgstr "mdbase wurde noch nicht gestartet."
-
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
 msgstr "mdbase wird noch vorbereitet. Versuchen Sie es gleich noch einmal."
@@ -5039,10 +4957,6 @@ msgstr "mdbase wird noch vorbereitet. Versuchen Sie es gleich noch einmal."
 #: apps/extension/src/use-connect.ts
 msgid "mdbase is still starting. Try again in a moment."
 msgstr "mdbase wird noch gestartet. Versuchen Sie es gleich noch einmal."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "mdbase isn’t reachable right now. Check your connection and try again."
-msgstr "mdbase ist derzeit nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
 #: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/shell-messages.ts
@@ -5067,10 +4981,6 @@ msgstr "mdbase Reader ist installiert"
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
 msgstr "Einstellungen von mdbase Reader"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr "mdbase wurde im Hintergrund neu gestartet. Prüfen Sie, ob Ihre letzte Änderung gespeichert wurde, und versuchen Sie es erneut."
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "meanings"
@@ -6757,6 +6667,7 @@ msgstr "Reader konnte die Anmerkungen dieser Quelle nicht laden."
 msgid "Reader could not open the file picker."
 msgstr "Reader konnte die Dateiauswahl nicht öffnen."
 
+#: apps/extension/src/source-note-session.ts
 #: apps/reader/src/use-selected-source-resources.ts
 msgid "Reader could not open the source note."
 msgstr "Reader konnte die Literaturnotiz nicht öffnen."
@@ -6765,17 +6676,9 @@ msgstr "Reader konnte die Literaturnotiz nicht öffnen."
 msgid "Reader could not reach mdbase Connect. Check your connection, then try again."
 msgstr "Reader konnte mdbase Connect nicht erreichen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
 
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not reach the local mdbase connector. The relayed connection is still active."
-msgstr "Reader konnte den lokalen mdbase-Connector nicht erreichen. Die vermittelte Verbindung ist weiterhin aktiv."
-
 #: apps/reader/src/use-source-removal.ts
 msgid "Reader could not remove this source."
 msgstr "Reader konnte diese Quelle nicht entfernen."
-
-#: apps/reader/src/use-direct-access.ts
-msgid "Reader could not request local network access."
-msgstr "Reader konnte den Zugriff auf das lokale Netzwerk nicht anfordern."
 
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reader could not save {key}."
@@ -6881,10 +6784,6 @@ msgstr "Reader hält für jeden Quelldatensatz einen beschreibbaren Editor vor."
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Reader needs its source and annotation definitions in this collection."
 msgstr "Reader benötigt seine Quellen- und Anmerkungsdefinitionen in dieser Sammlung."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Reader needs your approval to write to this collection."
-msgstr "Reader benötigt Ihre Bestätigung, um in diese Sammlung zu schreiben."
 
 #: packages/migration/src/readwise-annotations.ts
 msgid "Reader notes on documents outside this import (for example unsaved Feed)"
@@ -7250,10 +7149,6 @@ msgctxt "CSL item type"
 msgid "Report"
 msgstr "Bericht"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Request local network access and connect directly to the mdbase relay on this computer."
-msgstr "Lokalen Netzwerkzugriff anfordern und direkt mit dem mdbase-Relay auf diesem Computer verbinden."
-
 #: apps/reader/src/DockPaneActions.tsx
 msgid "Reset arrangement (keep tabs)"
 msgstr "Anordnung zurücksetzen (Tabs behalten)"
@@ -7355,10 +7250,6 @@ msgstr "Bibliotheksindizierung fortsetzen"
 msgid "Retry connection"
 msgstr "Verbindung erneut versuchen"
 
-#: apps/reader/src/ReaderHeader.tsx
-msgid "Retry local access"
-msgstr "Lokalen Zugriff erneut versuchen"
-
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "Retry save"
 msgstr "Speichern erneut versuchen"
@@ -7389,10 +7280,6 @@ msgstr "Buch prüfen"
 #: apps/reader/src/SourceDetails.tsx
 msgid "Review citation"
 msgstr "Quellenangabe prüfen"
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Review collection access"
-msgstr "Sammlungszugriff prüfen"
 
 #: apps/reader/src/CitationLookup.tsx
 msgid "Review found metadata"
@@ -7634,6 +7521,7 @@ msgstr "Lokal gespeichert"
 msgid "Saved mdbase views are unavailable for this collection."
 msgstr "Gespeicherte mdbase-Ansichten sind für diese Sammlung nicht verfügbar."
 
+#: apps/extension/src/NotePanel.tsx
 #: apps/reader/src/ReaderHeader.tsx
 msgid "Saved on this device; waiting for sync"
 msgstr "Auf diesem Gerät gespeichert; wartet auf Synchronisierung"
@@ -7904,10 +7792,6 @@ msgstr "Wählen Sie höchstens {0} aus, um sie gemeinsam zu öffnen"
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Select a chapter to preview it."
 msgstr "Wählen Sie ein Kapitel für die Vorschau aus."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "Select a collection"
-msgstr "Sammlung auswählen"
 
 #: apps/reader/src/DocumentContextualToolbar.tsx
 msgid "Select an area to annotate"
@@ -8744,10 +8628,6 @@ msgstr "Der Citekey @{0} ist nicht eindeutig."
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr "Die Sammlung wurde während Ihrer Bearbeitung geändert. Prüfen Sie den Konflikt, um fortzufahren."
 
-#: apps/extension/src/sdk-host.ts
-msgid "The collection connection changed. Try again."
-msgstr "Die Verbindung zur Sammlung wurde geändert. Versuchen Sie es erneut."
-
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."
 msgstr "Die Sammlung hat einige Änderungen abgelehnt. Andere Änderungen stehen auf diesem Gerät noch aus. Prüfen Sie sie, bevor Sie sich abmelden."
@@ -8924,17 +8804,9 @@ msgstr "Die ausgewählte Textstelle ist innerhalb dieses Beitrags mehrdeutig. W�
 msgid "The side panel follows the tab you are on, and pages you have saved show a mark and your highlights. Reader looks up each page’s address in your selected collection and reads page text only to draw your highlights."
 msgstr "Die Seitenleiste folgt dem aktuellen Tab. Gespeicherte Seiten zeigen eine Markierung und Ihre Hervorhebungen. Reader sucht die Adresse jeder Seite in Ihrer ausgewählten Sammlung und liest den Seitentext nur, um Ihre Hervorhebungen anzuzeigen."
 
-#: apps/extension/src/source-note-session.ts
-msgid "The source changed before saving."
-msgstr "Die Quelle wurde vor dem Speichern geändert."
-
 #: packages/core/src/application/source-import-values.ts
 msgid "The source needs a title."
 msgstr "Die Quelle benötigt einen Titel."
-
-#: apps/reader/src/source-draft-session.ts
-msgid "The source note changed before saving."
-msgstr "Die Literaturnotiz hat sich vor dem Speichern geändert."
 
 #: packages/core/src/application/transclude-annotation.ts
 msgid "The source note disappeared after its annotation was inserted."
@@ -9082,10 +8954,6 @@ msgstr "Diese Sammlung kann derzeit nicht verwendet werden"
 msgid "This collection can't be used right now."
 msgstr "Diese Sammlung kann derzeit nicht verwendet werden."
 
-#: apps/extension/src/source-note-session.ts
-msgid "This collection can’t edit a source’s title and tags here."
-msgstr "Diese Sammlung kann hier Titel und Tags einer Quelle nicht bearbeiten."
-
 #: apps/reader/src/use-document-attachment.ts
 #: packages/core/src/application/source-records.ts
 msgid "This collection cannot attach files to existing sources."
@@ -9145,14 +9013,6 @@ msgstr "Diese Sammlung kann keine übergeordneten Quellen festlegen."
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection hasn’t been checked yet. Check it before saving."
 msgstr "Diese Sammlung wurde noch nicht geprüft. Prüfen Sie sie vor dem Speichern."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s setup before importing."
-msgstr "Diese Sammlung muss vor dem Import für Reader eingerichtet werden."
-
-#: apps/reader/src/ImportDestination.tsx
-msgid "This collection needs Reader’s source and annotation types. No library content will be imported until you confirm below."
-msgstr "Diese Sammlung benötigt die Quellen- und Anmerkungstypen von Reader. Es werden keine Bibliotheksinhalte importiert, bevor Sie unten bestätigen."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "This collection needs you to approve mdbase Reader for it."

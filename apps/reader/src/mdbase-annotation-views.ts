@@ -53,10 +53,8 @@ const projections = {
 } as const;
 
 /** The kind of a Reader-owned view, or null for views other apps own. */
-export function readerViewKind(
-  presentation: Readonly<Record<string, unknown>> | undefined,
-): ReaderViewKind | null {
-  const options = objectValue(presentation?.["options"]);
+export function readerViewKind(presentation: unknown): ReaderViewKind | null {
+  const options = objectValue(objectValue(presentation)["options"]);
   if (options["readerViewVersion"] !== 1) {
     return null;
   }
@@ -64,10 +62,8 @@ export function readerViewKind(
   return kind === "annotations" || kind === "source-annotations" ? kind : "sources";
 }
 
-export function annotationViewConfiguration(
-  presentation: Readonly<Record<string, unknown>> | undefined,
-): AnnotationViewConfiguration {
-  const options = objectValue(presentation?.["options"]);
+export function annotationViewConfiguration(presentation: unknown): AnnotationViewConfiguration {
+  const options = objectValue(objectValue(presentation)["options"]);
   const defaults = defaultAnnotationViewConfiguration;
   const columns = Array.isArray(options["columns"])
     ? options["columns"].filter(isAnnotationColumn)
@@ -148,18 +144,25 @@ export function buildAnnotationView(request: AnnotationViewSaveRequest): JsonObj
         name: request.name.trim(),
         ...(where ? { where } : {}),
         select: selected.map(({ field }) => field),
-        order_by: orderBy(configuration.sortField, configuration.sortDirection),
+        order_by: orderBy(configuration.sortField, configuration.sortDirection).map((order) => ({
+          ...order,
+        })),
         presentation: {
           type: "table",
           fallback: "table",
           options: {
             readerViewVersion: 1,
             readerViewKind: "annotations",
-            columns: configuration.columns,
-            columnWidths: configuration.columnWidths,
+            columns: [...configuration.columns],
+            columnWidths: { ...configuration.columnWidths },
             sortField: configuration.sortField,
             sortDirection: configuration.sortDirection,
-            filter: configuration.filter,
+            filter: {
+              ...configuration.filter,
+              sourceConditions: configuration.filter.sourceConditions.map((condition) => ({
+                ...condition,
+              })),
+            },
           },
         },
       },

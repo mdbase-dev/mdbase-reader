@@ -2,21 +2,36 @@ import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { sourceContract } from "./contracts.js";
+import { mockSdk, testQuery, testRecord } from "./records.fixtures.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
-
-function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
-}
+import type { QueryResult } from "@mdbase-dev/sdk";
 
 describe("Connect source pagination", () => {
   it("streams complete libraries through the SDK's pinned cursor iterator", async () => {
-    const queryPages = vi.fn(() => sourcePages());
-    const repository = new ConnectSourceRepository({
-      queryPages,
-    } as unknown as ReaderConnectClient);
+    const first = sourceRecord("src_01", "First");
+    const second = sourceRecord("src_02", "Second");
+    const queryContract = vi
+      .fn()
+      .mockResolvedValueOnce({
+        page: testQuery({ records: [first], cursor: "opaque-next", totalCount: 2 }),
+        records: [
+          {
+            id: first.id,
+            implementations: [{ typeName: "reader-source", fields: first.frontmatter }],
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        page: testQuery({ records: [second], totalCount: 2 }),
+        records: [
+          {
+            id: second.id,
+            implementations: [{ typeName: "reader-source", fields: second.frontmatter }],
+          },
+        ],
+      });
+    const repository = new ConnectSourceRepository(mockSdk({ queryContract }));
 
     const pages: Awaited<ReturnType<typeof repository.list>>[] = [];
     for await (const page of repository.listPages(
@@ -27,45 +42,35 @@ describe("Connect source pagination", () => {
     }
 
     expect(pages.map(({ items }) => items.map(({ id }) => id))).toEqual([["src_01"], ["src_02"]]);
-    expect(queryPages).toHaveBeenCalledWith(
-      { contract: sourceContract, frontmatterMode: "effective" },
-      {
-        replaceableFamily: "reader-library-load",
-        pageSize: 1_000,
-      },
-    );
+    expect(queryContract.mock.calls).toEqual([
+      [sourceContract, { pageSize: 128 }],
+      [sourceContract, { pageSize: 128, cursor: "opaque-next" }],
+    ]);
   });
 });
 
-async function* sourcePages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
-  yield await Promise.resolve(
-    success({
-      results: [sourceRecord("src_01", "First")],
-      meta: { totalCount: 2, hasMore: true, cursor: "opaque-next" },
-      page: 0,
-      offset: 0,
-      loaded: 1,
-      complete: false,
-      cursor: "opaque-next",
-    }),
-  );
-  yield await Promise.resolve(
-    success({
-      results: [sourceRecord("src_02", "Second")],
-      meta: { totalCount: 2, hasMore: false },
-      page: 1,
-      offset: 1,
-      loaded: 2,
-      complete: true,
-    }),
-  );
+function sourceRecord(id: string, title: string): QueryResult["records"][number] {
+  return testRecord({
+    path: `sources/${id}.md`,
+    effective: { id, title },
+    types: ["reader-source"],
+  });
 }
 
-function sourceRecord(id: string, title: string): QueryPage["results"][number] {
-  return {
-    path: `sources/${id}.md`,
-    effectiveFrontmatter: { id, title },
-    types: ["reader-source"],
-    file: {},
-  };
-}
+it("refuses an incomplete contract page before publishing the library", async () => {
+  const queryContract = vi
+    .fn()
+    .mockResolvedValue({ page: testQuery({ records: [], complete: false }), records: [] });
+  const repository = new ConnectSourceRepository(mockSdk({ queryContract }));
+  const query = { collectionId: collectionId("reading"), limit: 100 };
+  await expect(repository.list(query)).rejects.toMatchObject({ reason: "query_incomplete" });
+  const published = vi.fn();
+  await expect(
+    (async () => {
+      for await (const page of repository.listPages(query)) {
+        published(page);
+      }
+    })(),
+  ).rejects.toMatchObject({ reason: "query_incomplete" });
+  expect(published).not.toHaveBeenCalled();
+});

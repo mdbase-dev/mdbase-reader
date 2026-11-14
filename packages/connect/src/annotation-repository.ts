@@ -1,7 +1,7 @@
+import { isMdbaseError } from "@mdbase-dev/sdk";
 import { sourceLink } from "@mdbase-reader/core";
 
 import { annotationCandidatesForSource, annotationRecordsAt } from "./annotation-query.js";
-import { AnnotationRecordCache } from "./annotation-record-cache.js";
 import { annotationSourcePages } from "./annotation-source-pages.js";
 import * as sources from "./annotation-source.js";
 import { CreateFollowThrough } from "./create-follow-through.js";
@@ -12,16 +12,16 @@ import {
   type ReaderNaming,
 } from "./naming-templates.js";
 import {
+  preflightDeleteRecord,
+  deleteRecord,
+  updateRecord,
   ConnectRepositoryError,
   mapConcurrent,
-  outcomeValue,
-  readWithOptions,
   readerConnectBulkConcurrency,
   recordPathById,
 } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { DeletePreflightResult, ReadManyRecord } from "@mdbase-dev/connect";
+import type { MdbaseClient, wire } from "@mdbase-dev/sdk";
 import type {
   Annotation,
   AnnotationListOptions,
@@ -35,26 +35,20 @@ import type {
 } from "@mdbase-reader/core";
 
 export class ConnectAnnotationRepository implements AnnotationRepository {
-  readonly #deletePreflights = new Map<string, DeletePreflightResult>();
+  readonly #deletePreflights = new Map<string, wire.Preflight>();
 
-  readonly #records: AnnotationRecordCache;
   readonly #creates: CreateFollowThrough;
   readonly #naming: ReaderNaming | undefined;
 
   constructor(
-    private readonly client: ReaderConnectClient,
+    private readonly client: MdbaseClient,
     /** Keeps each create until the collection confirms it; one per client by default. */
     creates?: CreateFollowThrough,
     /** The collection's name templates; Reader's default names without one. */
     naming?: ReaderNaming,
   ) {
-    this.#records = new AnnotationRecordCache(client);
     this.#creates = creates ?? new CreateFollowThrough(client);
     this.#naming = naming;
-  }
-
-  invalidateRecord(path: string): void {
-    this.#records.delete(path);
   }
 
   async sourceIdsWithAnnotations(
@@ -86,10 +80,6 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     // Keep the first batches responsive; grow publication intervals as the list grows.
     // Hydration stays bounded even when cumulative UI snapshots become less frequent.
     const annotations: Annotation[] = [];
-    const batchReads = outcomeValue(
-      await this.client.supportsAuthorityFeature("read-many-documents-v1", options),
-      "discover annotation batches",
-    );
     let published = 0;
     const publish = (): void => {
       if (options.onProgress) {
@@ -103,30 +93,26 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
         // A small first batch minimizes time to content; larger later batches limit rerenders.
         const batchSize = annotations.length === 0 ? 16 : 64;
         const entries = page.slice(offset, offset + batchSize);
-        const matches = batchReads
-          ? await annotationRecordsAt(
-              this.client,
-              entries.map(({ path }) => path),
-              options,
-            )
-          : new Map<string, ReadManyRecord>();
+        const matches = await annotationRecordsAt(
+          this.client,
+          entries.map(({ path }) => path),
+          options,
+        );
         const batch = await mapConcurrent(entries, readerConnectBulkConcurrency, async (entry) => {
-          if (batchReads && !matches.has(entry.path)) {
+          const document = matches.get(entry.path);
+          if (!document) {
             return null;
           }
-          const document =
-            revisionedAnnotation(matches.get(entry.path)) ??
-            (await this.#records.read(entry.path, options, options.refresh));
           try {
             return await this.#map(
               collection,
               document,
-              document.effectiveFrontmatter["source"] === entry.reference
+              (document.effective ?? document.frontmatter)["source"] === entry.reference
                 ? entry.source
                 : undefined,
             );
           } catch (error) {
-            if (error instanceof ConnectRepositoryError) {
+            if (isMdbaseError(error) || error instanceof ConnectRepositoryError) {
               throw error;
             }
             // Invalid records do not belong in the overview.
@@ -167,32 +153,19 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     if (paths.length === 0) {
       return [];
     }
-    const batchReads = outcomeValue(
-      await this.client.supportsAuthorityFeature("read-many-documents-v1", options),
-      "discover annotation batches",
-    );
-    const pending = annotationRecordsAt(this.client, paths, options);
-    const matches = batchReads
-      ? await pending
-      : await pending.catch(() => {
-          options.signal?.throwIfAborted();
-          return new Map<string, ReadManyRecord>();
-        });
+    const matches = await annotationRecordsAt(this.client, paths, options);
     const annotations = await mapConcurrent(paths, readerConnectBulkConcurrency, async (path) => {
-      if (batchReads && !matches.has(path)) {
+      const document = matches.get(path);
+      if (!document) {
         return null;
       }
-      // Qualified batches pair content with its revision; legacy rows still need revalidation.
-      const match = matches.get(path);
-      const document =
-        revisionedAnnotation(match) ??
-        (match && this.#records.current(match)) ??
-        (await this.#records.read(path, options, true));
       // Discovery and hydration are separate reads: re-resolve a changed source reference.
       return this.#map(
         collection,
         document,
-        document.effectiveFrontmatter["source"] === candidates.get(path) ? source : undefined,
+        (document.effective ?? document.frontmatter)["source"] === candidates.get(path)
+          ? source
+          : undefined,
       );
     });
     options.signal?.throwIfAborted();
@@ -205,26 +178,20 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
   async create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation> {
     const templates = await currentNameTemplates(this.#naming);
     const candidates = await annotationPathCandidates(templates.annotation, annotation);
-    const result = outcomeValue(
-      // A retried save keeps its mutation ID as its first intent, so it lands once
-      // instead of colliding. The create is kept until the collection confirms it.
-      await this.#creates.create({
-        key: idempotencyKey,
-        collectionId: annotation.collectionId,
-        kind: "annotation",
-        recordId: annotation.id,
-        label: annotationLabel(annotation),
-        candidates,
-        linksTo: [annotation.sourceId],
-        input: {
-          type: "reader-annotation",
-          frontmatter: annotationFrontmatter(annotation),
-          body: annotation.body,
-        },
-      }),
-      "create annotation",
-    );
-    this.#records.put(result);
+    const result = await this.#creates.create({
+      key: idempotencyKey,
+      collectionId: annotation.collectionId,
+      kind: "annotation",
+      recordId: annotation.id,
+      label: annotationLabel(annotation),
+      candidates,
+      linksTo: [annotation.sourceId],
+      input: {
+        type: "reader-annotation",
+        frontmatter: annotationFrontmatter(annotation),
+        body: annotation.body,
+      },
+    });
     // Reader wrote this link to the source it already knows.
     return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
@@ -238,17 +205,15 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     if (!annotation.path || !annotation.recordRevision) {
       throw new Error("An annotation path and revision are required for editing.");
     }
-    const result = outcomeValue(
-      await this.client.update({
-        path: annotation.path,
+    const result = await updateRecord(
+      this.client,
+      { path: annotation.path },
+      {
         ifRevision: annotation.recordRevision,
         patch: { modified_at: input.modifiedAt },
         body: input.body,
-        includeDocument: true,
-      }),
-      "update annotation",
+      },
     );
-    this.#records.put(result);
     // The revision check guarantees the source link is the one already resolved.
     return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
@@ -260,16 +225,11 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     if (!annotation.path || !annotation.recordRevision) {
       throw new Error("An annotation path and revision are required for changing its colour.");
     }
-    const result = outcomeValue(
-      await this.client.update({
-        path: annotation.path,
-        ifRevision: annotation.recordRevision,
-        patch: { color, modified_at: modifiedAt },
-        includeDocument: true,
-      }),
-      "change annotation colour",
+    const result = await updateRecord(
+      this.client,
+      { path: annotation.path },
+      { ifRevision: annotation.recordRevision, patch: { color, modified_at: modifiedAt } },
     );
-    this.#records.put(result);
     // The revision check guarantees the source link is the one already resolved.
     return this.#map(annotation.collectionId, result, annotation.sourceId);
   }
@@ -285,31 +245,26 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     ) {
       throw new Error("Moving requires a saved annotation and an owner in the same collection.");
     }
-    const result = outcomeValue(
-      await this.client.update({
-        path: annotation.path,
+    const result = await updateRecord(
+      this.client,
+      { path: annotation.path },
+      {
         ifRevision: annotation.recordRevision,
         patch: { source: sourceLink(owner), modified_at: modifiedAt },
-        includeDocument: true,
-      }),
-      "move annotation owner",
+      },
     );
-    this.#records.put(result);
     return this.#map(annotation.collectionId, result, owner.id);
   }
 
   async preflightDelete(annotation: Annotation): Promise<AnnotationDeletionPlan> {
     const { path, recordRevision } = canonicalIdentity(annotation);
-    const result = outcomeValue(
-      await this.client.preflightDelete({ path, ifRevision: recordRevision }),
-      "check annotation deletion",
-    );
+    const result = await preflightDeleteRecord(this.client, { path }, recordRevision);
     this.#deletePreflights.set(deletionKey(path, recordRevision), result);
     return {
       annotationId: annotation.id,
       path,
       expectedRevision: recordRevision,
-      brokenLinkPaths: uniquePaths(result.brokenLinks),
+      brokenLinkPaths: uniquePaths(result.broken),
     };
   }
 
@@ -321,17 +276,7 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
       throw new Error("Annotation deletion requires a current preflight confirmation.");
     }
     try {
-      const result = outcomeValue(
-        await this.client.deleteWithProgress(
-          { path, ifRevision: recordRevision, checkBacklinks: true },
-          { preflight },
-        ),
-        "delete annotation",
-      );
-      if (!result.deleted) {
-        throw new Error(`mdbase Connect did not delete annotation ${annotation.id}.`);
-      }
-      this.#records.delete(path);
+      await deleteRecord(this.client, { path }, recordRevision, preflight);
       // A create still waiting for the collection must not bring it back.
       await this.#creates.forget(annotation.id);
     } finally {
@@ -348,11 +293,10 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     if (!path) {
       return null;
     }
-    const result = outcomeValue(
-      await readWithOptions(this.client, { path, includeDocument: true }, options),
-      "read annotation",
+    const result = await this.client.get(
+      { path: path },
+      { ...options, include: { effective: true, body: true, document: true } },
     );
-    this.#records.put(result);
     return this.#map(collection, result);
   }
 
@@ -388,20 +332,6 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     }
     return listed;
   }
-}
-
-function revisionedAnnotation(
-  record: ReadManyRecord | undefined,
-): Parameters<typeof annotationFromDocument>[1] | null {
-  return record?.revision && record.frontmatter && record.effectiveFrontmatter
-    ? {
-        path: record.path,
-        revision: record.revision,
-        frontmatter: record.frontmatter,
-        effectiveFrontmatter: record.effectiveFrontmatter,
-        ...(record.body === undefined ? {} : { body: record.body }),
-      }
-    : null;
 }
 
 function canonicalIdentity(annotation: Annotation): {

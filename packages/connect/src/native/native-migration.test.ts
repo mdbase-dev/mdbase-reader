@@ -91,8 +91,12 @@ async function fixture(): Promise<
     ],
   });
   cleanup.push(memory.close);
+  const settle = memory.connection.records.settle.bind(memory.connection.records);
+  vi.spyOn(memory.connection.records, "settle").mockImplementation((write, options) =>
+    settle(write, { ...options, timeoutMs: 1 }),
+  );
   const open = (): NativeReaderCollection => {
-    const collection = nativeReaderCollection(memory.connection, { receiptWaitMs: 1 });
+    const collection = nativeReaderCollection(memory.connection, {});
     cleanup.push(() => collection.dispose());
     return collection;
   };
@@ -256,7 +260,7 @@ it("journals the original mutation before submission, even if cancelled before t
     });
   await expect(
     runMigration(plan(), collection.migration, controller.signal, vi.fn()),
-  ).rejects.toThrow("Stopped before receipt");
+  ).rejects.toMatchObject({ code: "cancelled" });
   expect(journal.size).toBe(1);
   collection.dispose();
   replica.confirmAll();

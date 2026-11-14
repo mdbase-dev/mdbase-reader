@@ -1,10 +1,11 @@
+import { mdbaseError } from "@mdbase-dev/sdk";
 import { collectionId, dateTime, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { testWrite, mockSdk, testRecord, testQuery } from "./records.fixtures.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
+import type { QueryResult, RecordView } from "@mdbase-dev/sdk";
 
 const legacyAuthorityFeatures = {
   supportsAuthorityFeature: vi.fn(() =>
@@ -12,8 +13,8 @@ const legacyAuthorityFeatures = {
   ),
 };
 
-function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+function success<Value>(value: Value): Value {
+  return value;
 }
 
 describe("Connect source reading state", () => {
@@ -32,22 +33,25 @@ describe("Connect source reading state", () => {
       last_opened_at: "2026-08-09T00:00:00.000Z",
     };
     const updated = record("rev-2", { ...frontmatter, reading: savedReading });
-    const queryPages = vi.fn(() =>
-      singleQueryPage({
-        path: current.path,
-        effectiveFrontmatter: frontmatter,
-        types: current.types,
-        file: {},
-      }),
+    const pages = vi.fn(() =>
+      singleQueryPage(
+        testRecord({
+          path: current.path,
+          effective: frontmatter,
+          types: current.types,
+        }),
+      ),
     );
     const read = vi.fn(() => Promise.resolve(success(current)));
-    const update = vi.fn(() => Promise.resolve(success(updated)));
-    const repository = new ConnectSourceRepository({
-      ...legacyAuthorityFeatures,
-      queryPages,
-      read,
-      update,
-    } as unknown as ReaderConnectClient);
+    const update = vi.fn(() => Promise.resolve(testWrite(success(updated))));
+    const repository = new ConnectSourceRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        pages,
+        get: read,
+        update,
+      }),
+    );
     await repository.get(collectionId("reading"), sourceId("src_01"));
 
     await repository.updateReading({
@@ -59,17 +63,19 @@ describe("Connect source reading state", () => {
       openedAt: dateTime("2026-08-09T00:00:00.000Z"),
     });
 
-    expect(update).toHaveBeenCalledWith({
-      path: "sources/crime.md",
-      ifRevision: "rev-1",
-      patch: {
-        reading: expect.objectContaining({
-          custom_session: "keep-me",
-          position: { pdf: { page_index: 7 } },
-        }),
-      },
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: "sources/crime.md" }),
+      expect.objectContaining({
+        ifRevision: "rev-1",
+        patch: {
+          reading: expect.objectContaining({
+            custom_session: "keep-me",
+            position: { pdf: { page_index: 7 } },
+          }),
+        },
+      }),
+      expect.anything(),
+    );
   });
 });
 
@@ -93,90 +99,92 @@ describe("Connect source reading state with a current caller revision", () => {
     update: ReturnType<typeof vi.fn>,
     read = vi.fn(),
   ): ConnectSourceRepository {
-    return new ConnectSourceRepository({
-      ...legacyAuthorityFeatures,
-      queryPages: vi.fn(() =>
-        singleQueryPage({
-          path: "sources/crime.md",
-          effectiveFrontmatter: frontmatter,
-          types: ["reader-source"],
-          file: {},
-        }),
-      ),
-      read,
-      update,
-    } as unknown as ReaderConnectClient);
+    return new ConnectSourceRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        pages: vi.fn(() =>
+          singleQueryPage(
+            testRecord({
+              path: "sources/crime.md",
+              effective: frontmatter,
+              types: ["reader-source"],
+            }),
+          ),
+        ),
+        get: read,
+        update,
+      }),
+    );
   }
 
-  it("writes against the caller's revision without re-reading the record", async () => {
-    const update = vi.fn(() => Promise.resolve(success(record("rev-2", frontmatter))));
-    const read = vi.fn();
+  it("uses a native record witness and the caller's revision", async () => {
+    const update = vi.fn(() => Promise.resolve(testWrite(success(record("rev-2", frontmatter)))));
+    const read = vi.fn(() => Promise.resolve(record("rev-1", frontmatter)));
     const repository = repositoryWith(update, read);
 
     await repository.updateReading(input);
 
-    expect(read).not.toHaveBeenCalled();
-    expect(update).toHaveBeenCalledWith({
-      path: "sources/crime.md",
-      ifRevision: "rev-1",
-      patch: {
-        reading: expect.objectContaining({
-          status: "queued",
-          custom_session: "keep-me",
-          position: { pdf: { page_index: 3 } },
-        }),
-      },
-      includeDocument: true,
-    });
+    expect(read).toHaveBeenCalledOnce();
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: "sources/crime.md" }),
+      expect.objectContaining({
+        ifRevision: "rev-1",
+        patch: {
+          reading: expect.objectContaining({
+            status: "queued",
+            custom_session: "keep-me",
+            position: { pdf: { page_index: 3 } },
+          }),
+        },
+      }),
+      expect.anything(),
+    );
   });
 
   it("rebases on a fresh read when the caller's revision has moved on", async () => {
     const newer = { ...frontmatter, reading: { status: "finished" } };
     const update = vi
       .fn()
-      .mockResolvedValueOnce({
-        ok: false,
-        // Not every authority reports this as a conflict; any refusal must rebase.
-        problem: { code: "record_written_externally", category: "state", recovery: "refresh" },
-      })
-      .mockResolvedValueOnce(success(record("rev-3", newer)));
+      .mockRejectedValueOnce(mdbaseError("conflict", "Moved on"))
+      .mockResolvedValueOnce(testWrite(success(record("rev-3", newer))));
     const read = vi.fn(() => Promise.resolve(success(record("rev-2", newer))));
     const repository = repositoryWith(update, read);
 
     await repository.updateReading(input);
 
-    expect(read).toHaveBeenCalledOnce();
+    expect(read).toHaveBeenCalledTimes(3);
     expect(update).toHaveBeenLastCalledWith(
+      expect.objectContaining({ path: "sources/crime.md" }),
       expect.objectContaining({
         ifRevision: "rev-2",
         patch: { reading: expect.objectContaining({ status: "finished" }) },
       }),
+      expect.anything(),
     );
   });
 });
 
-function record(revision: string, frontmatter: Record<string, unknown>): RecordDocument {
-  return {
+function record(revision: string, frontmatter: Record<string, unknown>): RecordView {
+  return testRecord({
     path: "sources/crime.md",
     revision,
     types: ["reader-source"],
     frontmatter,
-    effectiveFrontmatter: frontmatter,
+    effective: frontmatter,
     body: "Notes",
-    file: {},
-  };
+  });
 }
 
 async function* singleQueryPage(
-  record: QueryPage["results"][number],
-): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  record: QueryResult["records"][number],
+): AsyncGenerator<QueryResult> {
   yield await Promise.resolve(
-    success({
-      results: [record],
-      page: 0,
-      offset: 0,
-      loaded: 1,
-      complete: true,
-    }),
+    success(
+      testQuery({
+        records: [record],
+
+        complete: true,
+      }),
+    ),
   );
 }

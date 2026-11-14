@@ -7,9 +7,9 @@ import {
 } from "@mdbase-reader/core";
 
 import { sourceFromDocument } from "./mapping.js";
-import { outcomeValue } from "./repository-client.js";
+import { frontmatterChanges, updateRecord } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
+import type { MdbaseClient } from "@mdbase-dev/sdk";
 
 /**
  * Turns dotted field changes into one top-level patch, merging nested keys into the record's
@@ -70,22 +70,17 @@ function objectAt(value: unknown): Readonly<Record<string, unknown>> {
 }
 
 export async function writeSourceFields(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   path: string,
   input: SourceFieldChange,
 ): Promise<Source> {
-  const current = outcomeValue(
-    await client.read({ path, includeDocument: true }),
-    "read source before editing fields",
+  const current = await client.get(
+    { path },
+    { include: { effective: true, body: true, document: true } },
   );
-  const updated = outcomeValue(
-    await client.update({
-      path,
-      ifRevision: recordRevision(current.revision),
-      patch: fieldPatch(current.frontmatter, input.fields),
-      includeDocument: true,
-    }),
-    "edit source fields",
-  );
+  const updated = await updateRecord(client, current, {
+    ifRevision: recordRevision(current.revision),
+    ...frontmatterChanges(fieldPatch(current.frontmatter, input.fields)),
+  });
   return sourceFromDocument(input.collectionId, updated);
 }

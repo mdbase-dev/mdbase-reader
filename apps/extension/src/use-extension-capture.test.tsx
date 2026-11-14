@@ -75,7 +75,6 @@ const ready: {
 const extension = {
   application,
   connectedCollection: () => (current["status"] === "ready" ? ready : null),
-  hostAvailable: () => true,
   journalStorage: {},
   dispose: vi.fn(),
 };

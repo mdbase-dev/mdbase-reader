@@ -1,20 +1,23 @@
 import { t } from "@lingui/core/macro";
 import {
-  MdbaseRecordSession,
-  recordChanged,
-  recordFailure,
-  recordMissing,
-  recordOutcome,
-  recordSuccess,
-  type MdbaseRecordSessionSnapshot,
+  openReaderRecord,
+  sourceFromDocument,
+  type Mdbase,
+  type RecordLease,
+  type RecordRecoveryRef,
 } from "@mdbase-reader/connect";
+import { describeError } from "@mdbase-reader/connect/native";
 
-import { readerErrorMessage } from "./errors.js";
 import { LocalDraftCheckpoint } from "./local-draft-checkpoint.js";
-import { clearSourceDraft, readSourceDraft, writeSourceDraft } from "./source-draft-storage.js";
+import { recordEditStatus } from "./record-edit-status.js";
+import {
+  clearSourceDraft,
+  readSourceDraft,
+  writeSourceDraft,
+  type DraftStorage,
+} from "./source-draft-storage.js";
 import { trackUnstoredSourceChanges } from "./unsaved-source-drafts.js";
 
-import type { DraftStorage } from "./source-draft-storage.js";
 import type { Source } from "@mdbase-reader/core";
 
 export interface SourceDraftSnapshot {
@@ -28,267 +31,245 @@ export interface SourceDraftSnapshot {
   readonly savedSource?: Source;
 }
 
-const missing = (): string => t`This source no longer exists. Your local draft has been retained.`;
-
-/** Exact recovery of an interrupted write, where the gateway offers it. */
-export interface SourceDraftRecovery {
-  recover(requestId: string): Promise<Source>;
-  isPending(requestId: string): boolean;
-}
-
-/**
- * One writer per source per gateway, shared by inspector and workbench editors.
- * The SDK record session owns writing and classification; Reader owns its
- * device checkpoint and publication to the shared source resource.
- */
+/** Reader keeps its existing device checkpoint; all writing and observation use a native lease. */
 export class SourceDraftSession {
   private snapshot: SourceDraftSnapshot;
   private readonly listeners = new Set<() => void>();
-  private readonly record: MdbaseRecordSession<Source>;
+  private lease: RecordLease | null = null;
+  private opened: Promise<void> | null = null;
+  private stopLease: (() => void) | undefined;
+  private detached = false;
   private storedBody: string | undefined;
-  private acknowledged: Source;
-  private resumed = false;
+  private restoredBaseBody: string | undefined;
+  private recovery: RecordRecoveryRef | undefined;
+  private restoredConflict: Source | null = null;
+  private current: Source;
   private readonly checkpoint = new LocalDraftCheckpoint(() => this.store());
 
   constructor(
+    private readonly mdbase: Mdbase,
     base: Source,
     private readonly storage: DraftStorage,
-    persist: (source: Source, body: string) => Promise<Source>,
-    refresh: () => Promise<Source | null>,
     private readonly publish: (source: Source) => void,
-    recovery?: SourceDraftRecovery,
   ) {
-    this.acknowledged = base;
-    this.record = new MdbaseRecordSession<Source>(
-      base,
-      {
-        revision: (source) => source.recordRevision,
-        body: (source) => source.body,
-        // Refresh before writing: no silent overwrite of edits made in another application.
-        write: async (expected, change) => {
-          let current: Source | null;
-          try {
-            current = await refresh();
-          } catch (error) {
-            return recordFailure(error);
-          }
-          if (!current) {
-            return recordMissing();
-          }
-          if (current.recordRevision !== expected.recordRevision) {
-            return recordChanged(t({ message: "The source note changed before saving." }));
-          }
-          const body = change.body ?? current.body;
-          try {
-            const saved = await persist(current, body);
-            this.saved(saved, body);
-            return recordSuccess(saved);
-          } catch (error) {
-            return recordFailure(error);
-          }
-        },
-        read: () => recordOutcome(refresh),
-        ...(recovery
-          ? {
-              recover: async (requestId: string) => {
-                const recovered = await recordOutcome(() => recovery.recover(requestId));
-                if (recovered.ok) {
-                  this.saved(recovered.value, recovered.value.body);
-                }
-                return recovered;
-              },
-              isPending: (requestId: string) => recovery.isPending(requestId),
-            }
-          : {}),
-      },
-      { autosave: { idleMs: 1000 } },
-    );
+    this.current = base;
     this.snapshot = {
       body: base.body,
       status: "saved",
       error: null,
-      localProblem: null,
       locallySaved: false,
+      localProblem: null,
       recovered: false,
       conflict: null,
     };
     try {
       const draft = readSourceDraft(storage, base);
       this.storedBody = draft?.body;
+      this.recovery = draft?.recovery;
       if (draft && draft.body !== base.body) {
-        this.record.restore(draft);
-        this.snapshot = { ...this.snapshot, locallySaved: true, recovered: true };
-        // The first mounted subscriber resumes safe recovery; conflicts still require a decision.
+        this.restoredBaseBody = draft.baseBody;
+        this.snapshot = {
+          ...this.snapshot,
+          body: draft.body,
+          status: "unsaved",
+          locallySaved: true,
+          recovered: true,
+        };
       } else if (draft) {
         clearSourceDraft(storage, base, base.body);
       }
     } catch {
       this.snapshot = {
         ...this.snapshot,
-        localProblem: t({
-          message:
-            "Local draft storage is unavailable or unreadable. Keep this tab open until the note is saved to the collection.",
-        }),
+        localProblem: t`Local draft storage is unavailable or unreadable. Keep this tab open until the note is saved to the collection.`,
       };
     }
-    this.snapshot = this.project(this.snapshot);
-    this.record.subscribe(() => this.sync());
+    this.open();
+  }
+
+  private open(): void {
+    if (this.opened) {
+      return;
+    }
+    const base = this.current;
+    const recovery = this.recovery;
+    this.opened = openReaderRecord(this.mdbase, base.collectionId, base.path, {
+      autosave: { idleMs: 1000 },
+      ...(recovery ? { recovery } : {}),
+    })
+      .then((lease) => {
+        this.lease = lease;
+        this.recovery = undefined;
+        const record = lease.session.getSnapshot();
+        const local = this.snapshot.body;
+        const changed = local !== base.body || this.snapshot.recovered;
+        this.current = sourceFromDocument(base.collectionId, record.record);
+        if (
+          !recovery &&
+          changed &&
+          (this.restoredBaseBody ?? base.body) !== this.current.body &&
+          local !== this.current.body
+        ) {
+          this.restoredConflict = this.current;
+          this.update({ conflict: this.current, status: "unsaved" });
+        } else if (changed) {
+          lease.session.setBody(local);
+        }
+        this.stopLease = lease.session.subscribe(() => this.sync());
+        this.sync();
+      })
+      .catch((error: unknown) =>
+        this.update({
+          status: "error",
+          error:
+            describeError(error)?.message ??
+            t`Reader could not save this note. Your draft is retained.`,
+        }),
+      );
   }
 
   getSnapshot = (): SourceDraftSnapshot => this.snapshot;
   getText = (): string => this.snapshot.body;
   subscribe = (listener: () => void): (() => void) => {
+    this.detached = false;
     this.listeners.add(listener);
-    if (this.snapshot.recovered && !this.snapshot.conflict && !this.resumed) {
-      this.resumed = true;
-      this.record.autosave();
-    }
+    this.open();
     return () => {
       this.listeners.delete(listener);
       if (!this.listeners.size) {
+        this.detached = true;
         this.checkpoint.flush();
+        this.releaseSaved();
       }
     };
   };
-
   edit = (body: string): void => {
     if (body === this.snapshot.body) {
       return;
     }
-    this.snapshot = { ...this.snapshot, recovered: false, locallySaved: false };
-    this.record.setBody(body);
+    this.update({ body, status: "unsaved", recovered: false, locallySaved: false });
+    if (!this.restoredConflict) {
+      this.lease?.session.setBody(body);
+    }
     this.checkpoint.schedule();
   };
-
-  /** Records published by other views or refreshes; the session classifies them. */
-  receive(source: Source): void {
-    this.record.receive(source);
-  }
-
-  save = (): Promise<void> => {
+  // The native lease observes remote changes by UUID; a domain refresh never replaces its witness.
+  save = async (): Promise<void> => {
+    this.open();
     this.checkpoint.flush();
-    this.snapshot = { ...this.snapshot, recovered: false };
-    return this.record.save().then(() => undefined);
+    await this.opened;
+    if (!this.lease || this.restoredConflict) {
+      return;
+    }
+    await this.lease.session.flush();
+    this.sync();
   };
-
   async flush(): Promise<Source> {
-    this.checkpoint.flush();
-    const flushed = await this.record.flush();
-    if (!flushed.ok) {
+    await this.save();
+    if (!this.lease || this.restoredConflict || this.snapshot.status !== "saved") {
       throw new Error(
-        this.snapshot.error ??
-          t({ message: "Resolve the source note conflict before continuing." }),
+        this.snapshot.error ?? t`Resolve the source note conflict before continuing.`,
       );
     }
-    return flushed.value;
+    return this.current;
   }
-
   resolve = (choice: "local" | "remote"): void => {
-    const remote = this.snapshot.conflict;
-    if (!remote || this.snapshot.status === "saving") {
+    if (!this.lease || !this.snapshot.conflict || this.snapshot.status === "saving") {
       return;
+    }
+    const checkpointBody = this.storedBody ?? this.snapshot.body;
+    if (this.restoredConflict) {
+      this.restoredConflict = null;
+      this.lease.session.setBody(choice === "local" ? this.snapshot.body : this.current.body);
+    } else {
+      this.lease.session.resolve({ keep: choice === "local" ? "mine" : "theirs" });
     }
     if (choice === "remote") {
       this.checkpoint.cancel();
       try {
-        clearSourceDraft(this.storage, remote, this.storedBody ?? this.snapshot.body);
+        clearSourceDraft(this.storage, this.current, checkpointBody);
         this.storedBody = undefined;
       } catch {
-        /* Retain on failure. */
+        /* Retain the checkpoint on failure. */
       }
-      this.snapshot = {
-        ...this.snapshot,
-        recovered: false,
-        locallySaved: false,
-        savedSource: remote,
-      };
-      this.record.resolve({ keep: "theirs" });
-      this.publish(remote);
+      this.update({ recovered: false, locallySaved: false, conflict: null });
     } else {
-      this.snapshot = { ...this.snapshot, recovered: false };
-      this.record.resolve({ keep: "mine" });
       this.store();
       void this.save();
     }
+    this.sync();
   };
-
-  /** Our own acknowledgement: publish it and retire the device copy it supersedes. */
-  private saved(saved: Source, body: string): void {
-    this.publish(saved);
-    this.snapshot = { ...this.snapshot, savedSource: saved };
-    try {
-      clearSourceDraft(this.storage, saved, body);
-      if (this.storedBody === body) {
-        this.storedBody = undefined;
-      }
-    } catch {
-      // A stale recovery copy is safer than discarding unsaved work.
-    }
-  }
-
   private sync(): void {
-    const previous = this.snapshot;
-    const next = this.project(previous);
-    const acknowledged = this.record.snapshot.record !== this.acknowledged;
-    this.acknowledged = this.record.snapshot.record;
-    if (next.status === "saved" && previous.status !== "saved") {
-      this.checkpoint.cancel();
-      this.update({ ...next, locallySaved: false });
+    if (!this.lease || this.restoredConflict) {
       return;
     }
-    this.update(next);
-    // Typing during a write: keep the newer text on the device until it is committed.
-    if (acknowledged && next.status === "unsaved" && !next.conflict) {
-      this.store();
+    const record = this.lease.session.getSnapshot();
+    const source = sourceFromDocument(this.current.collectionId, record.record);
+    const status = recordEditStatus(record.state);
+    const acknowledged = source.recordRevision !== this.current.recordRevision;
+    this.current = source;
+    if (record.state === "saved") {
+      this.checkpoint.cancel();
+      try {
+        clearSourceDraft(this.storage, source, record.body);
+        this.storedBody = undefined;
+      } catch {
+        /* Keep an older checkpoint if storage is unavailable. */
+      }
     }
-  }
-
-  private project(current: SourceDraftSnapshot): SourceDraftSnapshot {
-    const record: MdbaseRecordSessionSnapshot<Source> = this.record.snapshot;
-    const status: SourceDraftSnapshot["status"] =
-      record.state === "saved"
-        ? "saved"
-        : record.state === "saving"
-          ? "saving"
-          : record.state === "unsaved" || record.state === "conflict"
-            ? "unsaved"
-            : "error";
-    return {
-      ...current,
+    this.update({
       body: record.body,
       status,
-      conflict: record.remote,
+      conflict: record.remote ? sourceFromDocument(source.collectionId, record.remote) : null,
       error:
         record.state === "deleted"
-          ? missing()
+          ? t`This source no longer exists. Your local draft has been retained.`
           : status === "error"
-            ? readerErrorMessage(
-                record.problem?.message,
-                t({ message: "Reader could not save this note. Your draft is retained." }),
-              )
+            ? (describeError(record.problem)?.message ??
+              t`Reader could not save this note. Your draft is retained.`)
             : null,
-    };
+      ...(record.state === "saved" ? { locallySaved: false, recovered: false } : {}),
+      ...(acknowledged ? { savedSource: source } : {}),
+    });
+    if (acknowledged) {
+      this.publish(source);
+    }
+    if (record.recovery) {
+      this.store();
+    }
+    this.releaseSaved();
   }
-
+  private releaseSaved(): void {
+    const record = this.lease?.session.getSnapshot();
+    if (!this.detached || record?.state !== "saved" || record.dirty || record.recovery) {
+      return;
+    }
+    this.stopLease?.();
+    this.stopLease = undefined;
+    this.lease?.release();
+    this.lease = null;
+    this.opened = null;
+  }
   private store(): void {
     this.checkpoint.cancel();
     try {
-      writeSourceDraft(this.storage, this.record.snapshot.record, this.snapshot.body);
+      writeSourceDraft(
+        this.storage,
+        this.current,
+        this.snapshot.body,
+        this.lease?.session.getSnapshot().recovery ?? undefined,
+      );
       this.storedBody = this.snapshot.body;
       this.update({ locallySaved: true, localProblem: null });
     } catch {
       this.update({
         locallySaved: false,
-        localProblem: t({
-          message:
-            "This draft could not be saved locally. Keep this tab open and retry saving to the collection.",
-        }),
+        localProblem: t`This draft could not be saved locally. Keep this tab open and retry saving to the collection.`,
       });
     }
   }
-
-  private update(patch: Partial<SourceDraftSnapshot>): void {
-    this.snapshot = { ...this.snapshot, ...patch };
+  private update(value: Partial<SourceDraftSnapshot>): void {
+    this.snapshot = { ...this.snapshot, ...value };
     trackUnstoredSourceChanges(
       this,
       this.snapshot.status !== "saved" && !this.snapshot.locallySaved,
