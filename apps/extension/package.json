@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@fontsource-variable/source-serif-4": "^5.3.1",
-    "@mdbase-dev/sdk": "0.1.0-beta.205",
+    "@mdbase-dev/sdk": "0.1.0-beta.206",
     "@mdbase-dev/sdk-lab": "file:../../packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz",
     "@mdbase-dev/sdk-staging": "file:../../packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz",
     "@lingui/core": "6.10.1",
