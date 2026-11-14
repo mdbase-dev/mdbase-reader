@@ -48,8 +48,8 @@ importers:
         specifier: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
         version: file:packages/connect/vendor/mdbase-dev-connect-protocol-0.1.0-beta.129-c280cd194ffd.tgz
       '@mdbase-dev/i18n':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.205
+        version: 0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-reader/i18n':
         specifier: workspace:0.1.0-beta.0
         version: link:packages/i18n
@@ -145,8 +145,8 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@8.0.9)(react@19.3.1)
       '@mdbase-dev/i18n':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.205
+        version: 0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/sdk':
         specifier: 0.1.0-beta.212
         version: 0.1.0-beta.212
@@ -157,8 +157,8 @@ importers:
         specifier: file:../../packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
         version: file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
       '@mdbase-dev/ui':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.211
+        version: 0.1.0-beta.211(@codemirror/commands@6.11.1)(@codemirror/language@6.13.1)(@codemirror/state@6.7.6)(@codemirror/view@6.43.15)(@lezer/common@1.5.4)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -215,8 +215,8 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@8.0.9)(react@19.3.1)
       '@mdbase-dev/i18n':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.205
+        version: 0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/sdk':
         specifier: 0.1.0-beta.212
         version: 0.1.0-beta.212
@@ -230,8 +230,8 @@ importers:
         specifier: file:../../packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
         version: file:packages/connect/vendor/sdk-e8ffb806-staging-beta188.tgz
       '@mdbase-dev/ui':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.211
+        version: 0.1.0-beta.211(@codemirror/commands@6.11.1)(@codemirror/language@6.13.1)(@codemirror/state@6.7.6)(@codemirror/view@6.43.15)(@lezer/common@1.5.4)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/connect':
         specifier: workspace:*
         version: link:../../packages/connect
@@ -353,11 +353,11 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@8.0.9)(react@19.3.1)
       '@mdbase-dev/i18n':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.205
+        version: 0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.211
+        version: 0.1.0-beta.211(@codemirror/commands@6.11.1)(@codemirror/language@6.13.1)(@codemirror/state@6.7.6)(@codemirror/view@6.43.15)(@lezer/common@1.5.4)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -406,7 +406,7 @@ importers:
         version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
         specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-reader/core':
         specifier: workspace:*
         version: link:../core
@@ -584,11 +584,11 @@ importers:
         specifier: 6.10.1
         version: 6.10.1(@babel/core@8.0.9)
       '@mdbase-dev/i18n':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+        specifier: 0.1.0-beta.205
+        version: 0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
       '@mdbase-dev/ui':
-        specifier: 0.1.0-beta.149
-        version: 0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        specifier: 0.1.0-beta.211
+        version: 0.1.0-beta.211(@codemirror/commands@6.11.1)(@codemirror/language@6.13.1)(@codemirror/state@6.7.6)(@codemirror/view@6.43.15)(@lezer/common@1.5.4)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -1349,6 +1349,9 @@ packages:
   '@fontsource/azeret-mono@5.3.0':
     resolution: {integrity: sha512-Ag/+gN67fUry7i1yLlTnk16Rr1nnTQI2YefA/G7tYcCSr/+TC/ayMrE8Km7O0OKRgI/B5Mfel46Gq9IGY50Uaw==}
 
+  '@fontsource/ibm-plex-sans@5.3.0':
+    resolution: {integrity: sha512-CbE4CbbEEZJX860XyUiRpsksXIQR8Rp2XDva2VO53NJox9tVNtusrysd2x5YkUEY3ErQ66W1IiiQL8/wihhw5w==}
+
   '@gar/promise-retry@1.0.3':
     resolution: {integrity: sha512-GmzA9ckNokPypTg10pgpeHNQe7ph+iIKKmhKu3Ob9ANkswreCx7R3cKmY781K8QK3AqVL3xVh9A42JvIAbkkSA==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -1685,6 +1688,14 @@ packages:
       '@lingui/react': 6.9.0
       react: ^19.2.0
 
+  '@mdbase-dev/i18n@0.1.0-beta.205':
+    resolution: {integrity: sha512-wip72/0ywPdfUuhqz8Kf1NkSuxdO0hIHVfSf+pn4kVnpMdqlaAQWcklAW/s8xxD2gO1kU17sLpj70J3X0tD9pA==}
+    hasBin: true
+    peerDependencies:
+      '@lingui/core': 6.9.0
+      '@lingui/react': 6.9.0
+      react: ^19.2.0
+
   '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz':
     resolution: {integrity: sha512-Tc/R1WhEBNDc2ODSWSOkmw35Fr+EhKGogdfECBgNS9R1gawItPaMiqA96D1S2/vlh01+CH2X8H0e9fG1alUXRw==, tarball: file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz}
     version: 0.1.0-beta.188
@@ -1722,6 +1733,36 @@ packages:
       react-dom: ^19.2.0
     peerDependenciesMeta:
       '@codemirror/view':
+        optional: true
+      '@mdbase-dev/sdk':
+        optional: true
+      react-dom:
+        optional: true
+
+  '@mdbase-dev/ui@0.1.0-beta.211':
+    resolution: {integrity: sha512-TX08ed8XJlNphuPGxXUxy06zW8NAPrU8gDSJc+NvSL+6mPWOzTMPqvolK9SBVjJp8efmZPKX909dQR9Tl1Y+iA==}
+    peerDependencies:
+      '@codemirror/commands': ^6.0.0
+      '@codemirror/language': ^6.0.0
+      '@codemirror/state': ^6.0.0
+      '@codemirror/view': ^6.42.1
+      '@lezer/common': 1.5.4
+      '@lingui/core': 6.9.0
+      '@lingui/react': 6.9.0
+      '@mdbase-dev/i18n': '*'
+      '@mdbase-dev/sdk': '>=0.1.0-beta.188'
+      react: ^19.2.0
+      react-dom: ^19.2.0
+    peerDependenciesMeta:
+      '@codemirror/commands':
+        optional: true
+      '@codemirror/language':
+        optional: true
+      '@codemirror/state':
+        optional: true
+      '@codemirror/view':
+        optional: true
+      '@lezer/common':
         optional: true
       '@mdbase-dev/sdk':
         optional: true
@@ -5413,6 +5454,8 @@ snapshots:
 
   '@fontsource/azeret-mono@5.3.0': {}
 
+  '@fontsource/ibm-plex-sans@5.3.0': {}
+
   '@gar/promise-retry@1.0.3': {}
 
   '@humanfs/core@0.19.2':
@@ -5870,6 +5913,22 @@ snapshots:
       - rolldown
       - supports-color
 
+  '@mdbase-dev/i18n@0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)':
+    dependencies:
+      '@lingui/cli': 6.9.0(rolldown@1.2.15)
+      '@lingui/conf': 6.9.0
+      '@lingui/core': 6.10.1(@babel/core@8.0.9)
+      '@lingui/format-po': 6.9.0
+      '@lingui/message-utils': 6.9.0
+      '@lingui/react': 6.10.1(@babel/core@8.0.9)(react@19.3.1)
+      react: 19.3.1
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - esbuild
+      - rolldown
+      - supports-color
+
   '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz':
     dependencies:
       '@noble/ciphers': 2.4.0
@@ -5894,7 +5953,7 @@ snapshots:
       '@noble/curves': 2.4.0
       '@noble/hashes': 2.4.0
 
-  '@mdbase-dev/ui@0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+  '@mdbase-dev/ui@0.1.0-beta.149(@codemirror/view@6.43.15)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.149(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@fontsource-variable/atkinson-hyperlegible-next': 5.3.0
       '@fontsource/azeret-mono': 5.3.0
@@ -5904,6 +5963,22 @@ snapshots:
       react: 19.3.1
     optionalDependencies:
       '@codemirror/view': 6.43.15
+      react-dom: 19.3.1(react@19.3.1)
+
+  '@mdbase-dev/ui@0.1.0-beta.211(@codemirror/commands@6.11.1)(@codemirror/language@6.13.1)(@codemirror/state@6.7.6)(@codemirror/view@6.43.15)(@lezer/common@1.5.4)(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(@mdbase-dev/i18n@0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15))(@mdbase-dev/sdk@0.1.0-beta.212)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@fontsource/azeret-mono': 5.3.0
+      '@fontsource/ibm-plex-sans': 5.3.0
+      '@lingui/core': 6.10.1(@babel/core@8.0.9)
+      '@lingui/react': 6.10.1(@babel/core@8.0.9)(react@19.3.1)
+      '@mdbase-dev/i18n': 0.1.0-beta.205(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+      react: 19.3.1
+    optionalDependencies:
+      '@codemirror/commands': 6.11.1
+      '@codemirror/language': 6.13.1
+      '@codemirror/state': 6.7.6
+      '@codemirror/view': 6.43.15
+      '@lezer/common': 1.5.4
       '@mdbase-dev/sdk': 0.1.0-beta.212
       react-dom: 19.3.1(react@19.3.1)
 
