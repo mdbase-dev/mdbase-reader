@@ -139,9 +139,9 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
   await expect(tools.getByText("No matching annotations", { exact: true })).toBeVisible();
   await tools.getByRole("button", { name: "Clear filters", exact: true }).click();
   await tools.getByLabel("Filter annotations", { exact: true }).click();
-  await tools.getByRole("radio", { name: /^With comments/u }).click();
+  await page.getByRole("radio", { name: /^With comments/u }).click();
   await expect(tools.locator(".annotation-card")).toHaveCount(2);
-  await tools.getByRole("radio", { name: "Newest first", exact: true }).click();
+  await page.getByRole("radio", { name: "Newest first", exact: true }).click();
   await tools.getByLabel("Filter annotations (changed)", { exact: true }).click();
   await screenshot("annotation-browsing-desktop");
   await tools.getByRole("button", { name: "Show in document" }).first().click();
@@ -194,12 +194,12 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
 
 /** The library's annotations view lists annotations across sources and opens one in place. */
 async function auditAnnotationOverview(page, screenshot) {
-  await page.getByRole("tab", { name: "Library" }).click();
+  await page.getByRole("tab", { name: "All sources" }).click();
   await page.getByRole("button", { name: "Annotations", exact: true }).click();
   const grid = page.getByRole("grid", { name: "Annotations" });
   const rows = grid.locator(".library-table-body .library-table-row");
   await expect.poll(() => rows.count()).toBeGreaterThan(1);
-  await auditAnnotationColumns(page, grid);
+  await auditAnnotationColumns(page, grid, screenshot);
   await page.getByRole("textbox", { name: "Search annotations" }).fill("Patient attention and");
   await expect(rows.filter({ hasText: "Research 0021" }).first()).toBeVisible();
   await auditAnnotationViewSaving(page, grid, rows);
@@ -212,7 +212,7 @@ async function auditAnnotationOverview(page, screenshot) {
 }
 
 /** Headers sort, resize from the keyboard, and hide or restore columns, as in the sources table. */
-async function auditAnnotationColumns(page, grid) {
+async function auditAnnotationColumns(page, grid, screenshot) {
   const sourceHeader = grid.getByRole("columnheader").filter({ hasText: /^Source/ });
   await grid.getByRole("button", { name: "Source", exact: true }).click();
   await expect(sourceHeader).toHaveAttribute("aria-sort", "ascending");
@@ -224,12 +224,118 @@ async function auditAnnotationColumns(page, grid) {
   await expect(resizer).toHaveAttribute("aria-valuenow", String(before + 32));
   const headers = grid.getByRole("columnheader");
   const count = await headers.count();
+  await auditColumnMenuPlacement(page, grid, screenshot);
   await grid.getByLabel("Type column options").click();
   await page.getByRole("button", { name: "Hide column" }).click();
   await expect(headers).toHaveCount(count - 1);
   await grid.getByLabel("Add column").click();
   await page.getByRole("button", { name: "Type", exact: true }).click();
   await expect(headers).toHaveCount(count);
+}
+
+async function auditColumnMenuPlacement(page, grid, screenshot) {
+  const viewport = page.viewportSize();
+  const frame = grid.locator("..");
+  const originalStyle = await frame.getAttribute("style");
+  const notes = page.getByRole("button", { name: "Toggle Notes panel", exact: true });
+  const notesOpen = (await notes.getAttribute("aria-pressed")) === "true";
+  if (notesOpen) await notes.click();
+  try {
+    const width = 1440;
+    await page.setViewportSize({ width, height: 844 });
+    for (const edge of [false, true]) {
+      await frame.evaluate((element, edge) => {
+        if (edge) {
+          element.style.cssText =
+            "position: fixed; right: 0; bottom: 0; width: min(380px, 100vw); height: 120px; z-index: 100";
+        } else {
+          element.removeAttribute("style");
+        }
+      }, edge);
+      for (const column of ["Passage", "Type"]) {
+        const trigger = grid.getByLabel(`${column} column options`);
+        await trigger.click();
+        const panel = page.locator(".reader-menu-panel:visible");
+        const action = panel.getByRole("button", {
+          name: column === "Passage" ? "Widen column" : "Hide column",
+        });
+        await expect(action).toBeVisible();
+        await action.click({ trial: true });
+        const bounds = await panel.boundingBox();
+        const anchor = await trigger.boundingBox();
+        if (edge) {
+          const tableBounds = await frame.boundingBox();
+          expect(tableBounds.x + tableBounds.width).toBe(width);
+          expect(tableBounds.y + tableBounds.height).toBe(844);
+        }
+        expect(bounds.x).toBeGreaterThanOrEqual(8);
+        expect(bounds.y).toBeGreaterThanOrEqual(8);
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(width - 8);
+        expect(bounds.y + bounds.height).toBeLessThanOrEqual(836);
+        if (edge) {
+          expect(bounds.y + bounds.height).toBeLessThanOrEqual(anchor.y - 5);
+          if (column === "Type") await screenshot(`column-menu-edge-${width}`);
+        }
+        const expectedLeft =
+          column === "Passage" ? anchor.x : anchor.x + anchor.width - bounds.width;
+        expect(
+          Math.abs(bounds.x - Math.max(8, Math.min(expectedLeft, width - bounds.width - 8))),
+        ).toBeLessThanOrEqual(1);
+        await page.keyboard.press("Tab");
+        await expect(panel.locator("button:not(:disabled)").first()).toBeFocused();
+        await page.keyboard.press("Shift+Tab");
+        await expect(trigger).toBeFocused();
+        await page.keyboard.press("Tab");
+        await page.keyboard.press("Escape");
+        await expect(panel).toBeHidden();
+        await expect(trigger).toBeFocused();
+        await trigger.click();
+        await page.getByRole("button", { name: "Annotations", exact: true }).click();
+        await expect(panel).toBeHidden();
+        if (column === "Type") {
+          const headers = grid.getByRole("columnheader");
+          const count = await headers.count();
+          await trigger.click();
+          await action.click();
+          await expect(headers).toHaveCount(count - 1);
+          await grid.getByLabel("Add column").click();
+          await page.getByRole("button", { name: "Type", exact: true }).click();
+          await expect(headers).toHaveCount(count);
+        }
+      }
+    }
+    await auditPhoneMenuPlacement(page, grid, screenshot);
+  } finally {
+    await frame.evaluate((element, style) => {
+      if (style === null) element.removeAttribute("style");
+      else element.setAttribute("style", style);
+    }, originalStyle);
+    await page.setViewportSize(viewport);
+    if (notesOpen) await notes.click();
+  }
+}
+
+async function auditPhoneMenuPlacement(page, grid, screenshot) {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(grid.getByLabel("Passage column options")).toBeHidden();
+  const trigger = page.getByLabel(/^Annotation view options/);
+  await trigger.click();
+  const panel = page.locator(".reader-menu-panel:visible");
+  const refresh = panel.getByRole("button", { name: "Refresh annotations", exact: true });
+  await refresh.click({ trial: true });
+  const bounds = await panel.boundingBox();
+  expect(bounds.x).toBeGreaterThanOrEqual(8);
+  expect(bounds.y).toBeGreaterThanOrEqual(8);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(382);
+  expect(bounds.y + bounds.height).toBeLessThanOrEqual(836);
+  await screenshot("menu-phone-390");
+  await refresh.focus();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await refresh.click();
+  await expect(panel).toBeHidden();
 }
 
 /** A filtered annotations view saves as an mdbase view and reopens in annotations mode. */

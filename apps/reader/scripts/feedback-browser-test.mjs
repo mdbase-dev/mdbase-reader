@@ -1,13 +1,16 @@
 // Sample-data acceptance only. Intercepts every feedback POST; never sends mail.
 /* global window, document, requestAnimationFrame, getComputedStyle */
 import assert from "node:assert/strict";
-import { writeFile } from "node:fs/promises";
+import { mkdtemp, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 const origin = process.env.READER_FEEDBACK_TEST_ORIGIN ?? "http://127.0.0.1:8891";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
   throw new Error("Feedback acceptance requires a loopback preview.");
 }
+const directory = await mkdtemp(join(tmpdir(), "reader-feedback-"));
 const browser = await chromium.launch();
 const motion = [];
 async function trace(page, action) {
@@ -108,7 +111,9 @@ try {
         await expect(dialog.locator("details")).not.toHaveAttribute("open");
         assert.equal(await page.evaluate(() => window.feedbackCaptures), 0);
         await message.fill("A private sample draft");
-        await page.screenshot({ path: `/tmp/shared-feedback-reader-form-${width}.png` });
+        await page.screenshot({
+          path: join(directory, `shared-feedback-reader-form-${width}.png`),
+        });
         await message.press("Control+k");
         assert.equal(await page.locator("dialog[open]").count(), 1);
         await message.press("Escape");
@@ -129,13 +134,14 @@ try {
         assert.ok(["library", "document"].includes(payload.application.source_view));
         for (const key of ["context", "diagnostics", "screenshot", "reply_email"])
           assert.equal(payload[key], undefined);
-        await page.screenshot({ path: `/tmp/shared-feedback-reader-${width}.png` });
+        await page.screenshot({ path: join(directory, `shared-feedback-reader-${width}.png`) });
         await context.close();
       }
     }
   }
-  await writeFile("/tmp/reader-feedback-motion.json", JSON.stringify(motion, null, 2));
+  await writeFile(join(directory, "reader-feedback-motion.json"), JSON.stringify(motion, null, 2));
   console.log("Reader feedback desktop/mobile acceptance passed; all delivery intercepted.");
+  console.log("Evidence: " + directory);
 } finally {
   await browser.close();
 }

@@ -90,7 +90,7 @@ it("batch-loads the family, labels owners and filters chapters without new queri
   expect(groupSources()).toEqual(["Chapter 1"]);
   // Newest first has no headings, so a card from another source names it itself.
   act(() =>
-    [...host.querySelectorAll<HTMLButtonElement>(".annotation-filter-choice")]
+    [...document.querySelectorAll<HTMLButtonElement>(".annotation-filter-choice")]
       .find((button) => button.textContent === "Newest first")!
       .click(),
   );

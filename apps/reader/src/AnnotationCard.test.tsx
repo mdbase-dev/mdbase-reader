@@ -192,10 +192,10 @@ it("changes a highlight's colour from the More menu, even with one owner", async
   document.body.append(host);
   const root = createRoot(host);
   await act(async () => root.render(card(highlight, vi.fn(), { onRecolor })));
-  const blue = host.querySelector(".annotation-card-colors [data-highlight-color='blue']");
+  const blue = document.querySelector(".annotation-card-colors [data-highlight-color='blue']");
   expect(blue?.getAttribute("aria-pressed")).toBe("true");
   await act(async () =>
-    host
+    document
       .querySelector<HTMLButtonElement>(".annotation-card-colors [data-highlight-color='purple']")
       ?.click(),
   );
@@ -221,7 +221,7 @@ it("keeps a hidden colour's highlight in its colour, with its meaning", async ()
   expect(element?.getAttribute("data-highlight-color")).toBe("blue");
   expect(host.querySelector(".annotation-meaning")?.textContent).toBe("Definition");
   const offered = [
-    ...host.querySelectorAll<HTMLElement>(".annotation-card-colors .highlight-swatch"),
+    ...document.querySelectorAll<HTMLElement>(".annotation-card-colors .highlight-swatch"),
   ];
   expect(offered.map((swatch) => swatch.dataset["highlightColor"])).toEqual(["green", "pink"]);
   await act(async () => root.unmount());
