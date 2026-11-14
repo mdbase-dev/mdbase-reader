@@ -16,6 +16,7 @@ import { selectRow, type RowSelection } from "./library-row-selection.js";
 import { readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
 import { OverlayPresence } from "./OverlayPresence.js";
 import { supportsChapterCreation } from "./source-parts-features.js";
+import { useMenuPosition } from "./use-menu-position.js";
 
 import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core";
 
@@ -54,6 +55,9 @@ export function LibraryRowMenu({
   const { t } = useLingui();
   const ref = useRef<HTMLDivElement>(null);
   const position = useMenuPosition(ref, target);
+  useLayoutEffect(() => {
+    ref.current?.querySelector<HTMLElement>("[role^=menuitem]")?.focus({ preventScroll: true });
+  }, []);
   useDismiss(ref, onClose);
   const { source } = target;
   const status = source.reading?.status ?? source.readingStatus ?? "inbox";
@@ -218,27 +222,6 @@ export function useLibraryRowMenu(input: {
       document.querySelector("main") ?? document.body,
     ),
   };
-}
-
-/** Keeps the menu inside the viewport, opening up or left when the pointer is near an edge. */
-function useMenuPosition(
-  ref: RefObject<HTMLDivElement | null>,
-  target: LibraryRowMenuTarget,
-): { readonly x: number; readonly y: number } {
-  const [position, setPosition] = useState({ x: target.x, y: target.y });
-  useLayoutEffect(() => {
-    const menu = ref.current;
-    if (!menu) {
-      return;
-    }
-    const { width, height } = menu.getBoundingClientRect();
-    setPosition({
-      x: Math.max(8, Math.min(target.x, window.innerWidth - width - 8)),
-      y: target.y + height > window.innerHeight - 8 ? Math.max(8, target.y - height) : target.y,
-    });
-    menu.querySelector<HTMLElement>("[role^=menuitem]")?.focus({ preventScroll: true });
-  }, [ref, target]);
-  return position;
 }
 
 function useDismiss(

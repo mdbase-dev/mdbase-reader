@@ -37,11 +37,11 @@ it("offers a reload for old pending writes even while syncing", async () => {
   };
   root = createRoot(host);
   act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  expect(document.querySelector(".reader-save-details > button")).toBeNull();
   await act(() => vi.advanceTimersByTime(29_999));
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  expect(document.querySelector(".reader-save-details > button")).toBeNull();
   await act(() => vi.advanceTimersByTime(2));
-  expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
+  expect(document.querySelector(".reader-save-details > button")?.textContent).toContain(
     "Reload Reader",
   );
 });
@@ -82,18 +82,20 @@ it("shows the actual pending change and drops the warning only when the ledger d
   );
   act(() => host.querySelector("summary")?.click());
   expect(host.querySelector("details")?.open).toBe(true);
-  expect(host.textContent).toContain("1 pending");
-  expect(host.textContent).toContain("owned-write");
-  expect(host.textContent).toContain("owned-file");
-  expect(host.querySelector(".reader-save-details li > strong")?.textContent).toBe(
+  expect(document.body.textContent).toContain("1 pending");
+  expect(document.body.textContent).toContain("owned-write");
+  expect(document.body.textContent).toContain("owned-file");
+  expect(document.querySelector(".reader-save-details li > strong")?.textContent).toBe(
     "Changes to An owned source",
   );
-  expect(host.querySelector(".reader-save-details li > span")?.textContent).toBe(
+  expect(document.querySelector(".reader-save-details li > span")?.textContent).toBe(
     "Waiting for confirmation",
   );
-  expect(host.textContent).toContain("This browser may remove its local copy");
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
-  expect(host.querySelector(".reader-save-details li details")?.hasAttribute("open")).toBe(false);
+  expect(document.body.textContent).toContain("This browser may remove its local copy");
+  expect(document.querySelector(".reader-save-details > button")).toBeNull();
+  expect(document.querySelector(".reader-save-details li details")?.hasAttribute("open")).toBe(
+    false,
+  );
   act(() => {
     snapshot = { ...snapshot, sync: { writes: { pending: [], rejected: [] } } };
     changed();
@@ -123,16 +125,16 @@ it("stays calm offline and starts the stalled timer only on reconnect", async ()
   root = createRoot(host);
   act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={false} />));
   await act(() => vi.advanceTimersByTime(60_000));
-  expect(host.textContent).toContain("still pending on this device");
-  expect(host.textContent).not.toContain("may remove");
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  expect(document.body.textContent).toContain("still pending on this device");
+  expect(document.body.textContent).not.toContain("may remove");
+  expect(document.querySelector(".reader-save-details > button")).toBeNull();
   act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
   await act(() => vi.advanceTimersByTime(0));
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  expect(document.querySelector(".reader-save-details > button")).toBeNull();
   await act(() => vi.advanceTimersByTime(29_999));
-  expect(host.querySelector(".reader-save-details > button")).toBeNull();
+  expect(document.querySelector(".reader-save-details > button")).toBeNull();
   await act(() => vi.advanceTimersByTime(1));
-  expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
+  expect(document.querySelector(".reader-save-details > button")?.textContent).toContain(
     "Reload Reader",
   );
 });
@@ -169,26 +171,26 @@ it.each(["saved_on_device", "saving"])(
     act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={navigator.onLine} />));
     for (let reconnect = 0; reconnect < 2; reconnect += 1) {
       await act(() => vi.advanceTimersByTime(60_000));
-      expect(host.textContent).toContain("still pending on this device");
-      expect(host.textContent).not.toContain("may remove");
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+      expect(document.body.textContent).toContain("still pending on this device");
+      expect(document.body.textContent).not.toContain("may remove");
+      expect(document.querySelector(".reader-save-details > button")).toBeNull();
       act(() => {
         snapshot = { ...snapshot, sync: { ...snapshot.sync, connection: "online" } };
         changed();
       });
       await act(() => vi.advanceTimersByTime(0));
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+      expect(document.querySelector(".reader-save-details > button")).toBeNull();
       await act(() => vi.advanceTimersByTime(29_999));
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+      expect(document.querySelector(".reader-save-details > button")).toBeNull();
       await act(() => vi.advanceTimersByTime(1));
-      expect(host.querySelector(".reader-save-details > button")?.textContent).toContain(
+      expect(document.querySelector(".reader-save-details > button")?.textContent).toContain(
         "Reload Reader",
       );
       act(() => {
         snapshot = { ...snapshot, sync: { ...snapshot.sync, connection: "offline" } };
         changed();
       });
-      expect(host.querySelector(".reader-save-details > button")).toBeNull();
+      expect(document.querySelector(".reader-save-details > button")).toBeNull();
     }
   },
 );
@@ -239,17 +241,19 @@ it.each([
     } as unknown as Mdbase;
     root = createRoot(host);
     act(() => root.render(<ReaderSaveStatus mdbase={mdbase} online={true} />));
-    expect(host.textContent).toContain("Changes need attention");
-    expect(host.textContent).toContain(message);
-    expect(host.textContent.includes("pending on this device")).toBe(Boolean(pending));
-    expect(host.textContent.includes("The collection refused")).toBe(Boolean(rejected));
-    expect(host.querySelector(".reader-save-details > details")?.hasAttribute("open")).toBe(false);
-    expect(host.querySelector(".reader-save-details > button")?.className).toBe(
+    expect(document.body.textContent).toContain("Changes need attention");
+    expect(document.body.textContent).toContain(message);
+    expect(document.body.textContent.includes("pending on this device")).toBe(Boolean(pending));
+    expect(document.body.textContent.includes("The collection refused")).toBe(Boolean(rejected));
+    expect(document.querySelector(".reader-save-details > details")?.hasAttribute("open")).toBe(
+      false,
+    );
+    expect(document.querySelector(".reader-save-details > button")?.className).toBe(
       "connection-secondary",
     );
-    expect(host.textContent).toContain("append_refused");
-    expect(host.textContent).toContain("collection_read_only");
-    expect(host.querySelector(".reader-save-details > details")?.textContent).toContain(
+    expect(document.body.textContent).toContain("append_refused");
+    expect(document.body.textContent).toContain("collection_read_only");
+    expect(document.querySelector(".reader-save-details > details")?.textContent).toContain(
       "log_regressed",
     );
     expect(snapshot.sync.writes.pending).toHaveLength(pending);

@@ -43,7 +43,7 @@ it("does not load an unopened menu; intent and opening share the same download",
       details.dispatchEvent(new Event("toggle"));
     }
   });
-  expect(host.textContent).toContain("Ready settings");
+  expect(document.body.textContent).toContain("Ready settings");
   expect(load).toHaveBeenCalledOnce();
 });
 

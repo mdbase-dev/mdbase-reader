@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState, type JSX, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
+
+import { useMenuPosition } from "./use-menu-position.js";
+
+const focusableSelector =
+  'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex="0"]';
 
 /**
  * A disclosure menu built on native details/summary. It closes on an outside
@@ -25,19 +31,37 @@ export function Menu({
   readonly defer?: boolean;
   readonly onIntent?: () => void;
 }): JSX.Element {
-  const ref = useDismissableDetails();
-  const [opened, setOpened] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement>(null);
+  const [open, setOpen] = useState(false);
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  const ref = useDismissableDetails(panelRef, setOpen, container);
+  const position = useMenuPosition(panelRef, open ? triggerRef : null, align);
+  const panel = (
+    <div className={`reader-menu-portal${className ? ` ${className}` : ""}`}>
+      <div
+        ref={panelRef}
+        className="reader-menu-panel"
+        hidden={!open}
+        style={{ left: position.x, top: position.y }}
+      >
+        {!defer || container !== null ? children : null}
+      </div>
+    </div>
+  );
   return (
     <details
       ref={ref}
       className={`reader-menu is-${align}${className ? ` ${className}` : ""}`}
       onToggle={(event) => {
+        setOpen(event.currentTarget.open);
         if (event.currentTarget.open) {
-          setOpened(true);
+          setContainer(document.querySelector("main") ?? document.body);
         }
       }}
     >
       <summary
+        ref={triggerRef}
         className={triggerClassName}
         aria-label={label}
         title={title ?? label}
@@ -46,48 +70,93 @@ export function Menu({
       >
         {trigger}
       </summary>
-      <div className="reader-menu-panel">{!defer || opened ? children : null}</div>
+      {container ? createPortal(panel, container) : panel}
     </details>
   );
 }
 
-/** Closes a details disclosure on an outside pointer, Escape, or after an item runs. */
-export function useDismissableDetails(): RefObject<HTMLDetailsElement | null> {
+function useDismissableDetails(
+  panelRef: RefObject<HTMLDivElement | null>,
+  setOpen: (open: boolean) => void,
+  container: HTMLElement | null,
+): RefObject<HTMLDetailsElement | null> {
   const ref = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const details = ref.current;
-    if (!details) {
+    const panel = panelRef.current;
+    const trigger = details?.querySelector("summary");
+    if (!details || !panel || !trigger) {
       return;
     }
     const close = (): void => {
       details.open = false;
+      setOpen(false);
     };
     const onPointerDown = (event: PointerEvent): void => {
-      if (details.open && !details.contains(event.target as Node)) {
+      if (
+        details.open &&
+        !details.contains(event.target as Node) &&
+        !panel.contains(event.target as Node)
+      ) {
         close();
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape" && details.open) {
-        event.stopPropagation();
-        close();
-        details.querySelector("summary")?.focus();
       }
     };
     const onClick = (event: MouseEvent): void => {
       const item = (event.target as HTMLElement).closest("button, a");
-      if (item && details.contains(item) && !item.closest("[data-menu-keep-open]")) {
+      if (item && panel.contains(item) && !item.closest("[data-menu-keep-open]")) {
         close();
       }
     };
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (!details.open) {
+        return;
+      }
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        close();
+        trigger.focus();
+      } else if (event.key === "Tab") {
+        moveDisclosureFocus(event, panel, trigger, close);
+      }
+    };
     document.addEventListener("pointerdown", onPointerDown);
+    panel.addEventListener("click", onClick);
+    panel.addEventListener("keydown", onKeyDown);
     details.addEventListener("keydown", onKeyDown);
-    details.addEventListener("click", onClick);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
+      panel.removeEventListener("click", onClick);
+      panel.removeEventListener("keydown", onKeyDown);
       details.removeEventListener("keydown", onKeyDown);
-      details.removeEventListener("click", onClick);
     };
-  }, []);
+  }, [container, panelRef, setOpen]);
   return ref;
+}
+
+function moveDisclosureFocus(
+  event: KeyboardEvent,
+  panel: HTMLDivElement,
+  trigger: HTMLElement,
+  close: () => void,
+): void {
+  const controls = [...panel.querySelectorAll<HTMLElement>(focusableSelector)].filter(
+    (element) => element.tabIndex >= 0 && element.getClientRects().length > 0,
+  );
+  const first = controls[0];
+  const boundary = event.shiftKey ? first : controls.at(-1);
+  if (event.target === trigger) {
+    if (!event.shiftKey && first) {
+      event.preventDefault();
+      first.focus();
+    } else if (event.shiftKey) {
+      close();
+    }
+  } else if (event.target === boundary) {
+    trigger.focus();
+    if (event.shiftKey) {
+      event.preventDefault();
+    } else {
+      close();
+    }
+  }
 }

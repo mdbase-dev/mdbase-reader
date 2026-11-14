@@ -91,10 +91,12 @@
 }
 
 .reader-menu-panel {
-  position: absolute;
-  top: calc(100% + 6px);
-  z-index: 60;
+  position: fixed;
+  z-index: 200;
   min-width: 220px;
+  max-width: calc(100dvw - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
   display: grid;
   gap: 1px;
   padding: 6px;
@@ -105,13 +107,12 @@
   font-size: var(--ui-control);
 }
 
-/* A context menu opens at the pointer rather than under a trigger. */
-.library-row-menu {
-  position: fixed;
-  top: auto;
-  z-index: 200;
-  max-height: calc(100dvh - 16px);
-  overflow-y: auto;
+.reader-menu-panel[hidden] {
+  display: none;
+}
+
+.reader-menu-portal {
+  display: contents;
 }
 .library-row-menu > button[aria-checked="true"] {
   color: var(--ink);
@@ -129,14 +130,6 @@
   font: 11px var(--mono);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.reader-menu.is-end > .reader-menu-panel {
-  right: 0;
-}
-
-.reader-menu.is-start > .reader-menu-panel {
-  left: 0;
 }
 
 .reader-menu-panel > button,
@@ -1886,7 +1879,7 @@
 }
 @media (max-width: 680px), (pointer: coarse) {
   .library-workspace .library-workspace-header :is(button, summary, input, select),
-  .library-workspace .reader-menu-panel :is(button, input, select),
+  .reader-menu-panel :is(button, input, select),
   .library-row-more,
   .library-part-toggle,
   .inspector-tabs button {
@@ -3451,8 +3444,6 @@
 }
 
 .library-bulk-field .reader-menu-panel {
-  top: auto;
-  bottom: calc(100% + 6px);
   width: 260px;
   max-width: calc(100vw - 48px);
   max-height: min(420px, 50vh);
