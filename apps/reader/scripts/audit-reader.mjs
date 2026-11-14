@@ -307,12 +307,13 @@ try {
         .locator('.library-table[aria-label="Sources"]')
         .getByRole("columnheader", { name: /^Published/u }),
     ).toHaveAttribute("aria-sort", "descending");
-    await page.getByLabel("Library actions", { exact: true }).click();
+    await page.getByLabel("Library actions", { exact: true }).and(page.locator("summary")).click();
     await page.getByRole("button", { name: "Reset columns and layout" }).click();
     await expect.poll(titleWidth).toBe(before);
     completed.push("Column widths and header sorting persist on this device and reset cleanly");
 
-    await page.getByRole("button", { name: "Continue reading", exact: false }).first().click();
+    // Fresh fixtures have no saved reading position, so open the source through search.
+    await openSource(0);
     await expect(page.locator("iframe.html-viewer")).toBeVisible({ timeout: 30000 });
     await page.getByLabel("More document actions", { exact: true }).click();
     await page.getByRole("button", { name: "Source note", exact: true }).click();

@@ -122,7 +122,7 @@ async function render(
   editingId: ReturnType<typeof annotationId> | null = null,
   activeId: ReturnType<typeof annotationId> | null = null,
   readingId: ReturnType<typeof annotationId> | null = null,
-): Promise<HTMLDivElement> {
+): Promise<HTMLElement> {
   if (!host) {
     host = document.createElement("div");
     document.body.append(host);
@@ -134,7 +134,7 @@ async function render(
     );
     await Promise.resolve();
   });
-  return host;
+  return document.body;
 }
 
 describe("virtual annotation sidebar", () => {
@@ -320,7 +320,7 @@ const kinds: Annotation[] = [
   { ...annotations[1]!, id: annotationId("bookmark"), annotationType: "bookmark" },
   { ...annotations[2]!, id: annotationId("comment"), annotationType: "note" },
 ];
-async function mount(element: JSX.Element): Promise<HTMLDivElement> {
+async function mount(element: JSX.Element): Promise<HTMLElement> {
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -328,9 +328,9 @@ async function mount(element: JSX.Element): Promise<HTMLDivElement> {
     root!.render(element);
     await Promise.resolve();
   });
-  return host;
+  return document.body;
 }
-const renderKinds = (): Promise<HTMLDivElement> =>
+const renderKinds = (): Promise<HTMLElement> =>
   mount(
     <AnnotationList
       {...props}
