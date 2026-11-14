@@ -1806,10 +1806,6 @@ msgstr "Choose or drop a file"
 msgid "Choose posts to save"
 msgstr "Choose posts to save"
 
-#: apps/extension/src/PostPicker.tsx
-msgid "Choose posts…"
-msgstr "Choose posts…"
-
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Choose sections in reading order. The first and last sections are included in full."
 msgstr "Choose sections in reading order. The first and last sections are included in full."
@@ -6390,6 +6386,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Post"
 msgstr "Post"
 
+#: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/PostPicker.tsx
 msgid "Posts"
 msgstr "Posts"

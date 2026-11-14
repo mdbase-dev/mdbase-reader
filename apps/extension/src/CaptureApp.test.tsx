@@ -37,11 +37,35 @@ it("shows a feed picker with the viewport post preselected, without offering to 
       save: vi.fn(),
     },
   });
-  expect(html).toContain("Choose posts to save");
+  expect(html.match(/Choose posts to save/gu)).toHaveLength(1);
   expect(html).toContain("Feeds are never saved");
   expect(html).toContain("Second author");
   expect(html).toContain("Save 1 selected");
   expect(html.match(/checked=""/gu)).toHaveLength(1);
+});
+it("offers one enabled way into the post picker on a feed, which needs no title", () => {
+  const html = markup({
+    capture: {
+      kind: "html",
+      pageTitle: "",
+      canonicalUrl: "https://x.com/home",
+      selection: null,
+    } as unknown as ExtensionCaptureController["capture"],
+    draft: { title: "" } as ExtensionCaptureController["draft"],
+    postPicker: {
+      open: false,
+      preselected: null,
+      items: [],
+      show: vi.fn(),
+      close: vi.fn(),
+      save: vi.fn(),
+    },
+  });
+  expect(html).toContain("<h1>Posts</h1>");
+  expect(html.match(/Choose posts/gu)).toHaveLength(1);
+  expect(html).toMatch(/<button class="primary" type="button"[^>]*>Choose posts to save</u);
+  expect(html).not.toContain("disabled");
+  expect(html).not.toContain("Give the source a title");
 });
 
 const ready = {

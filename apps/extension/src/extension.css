@@ -190,9 +190,6 @@ kbd {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.panel-body > .secondary.compact {
-  margin: var(--sp-3) var(--gutter) 0;
-}
 .page-card {
   padding: var(--sp-3) var(--gutter) var(--sp-4);
   border-bottom: 1px solid var(--line);

@@ -1806,10 +1806,6 @@ msgstr "ファイルを選択またはドロップ"
 msgid "Choose posts to save"
 msgstr "保存する投稿を選択"
 
-#: apps/extension/src/PostPicker.tsx
-msgid "Choose posts…"
-msgstr "投稿を選択…"
-
 #: apps/reader/src/SourcePartCreation.tsx
 msgid "Choose sections in reading order. The first and last sections are included in full."
 msgstr "閲覧順にセクションを選択してください。最初と最後のセクションは全体が含まれます。"
@@ -6390,6 +6386,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Post"
 msgstr "投稿"
 
+#: apps/extension/src/CaptureApp.tsx
 #: apps/extension/src/PostPicker.tsx
 msgid "Posts"
 msgstr "投稿"
