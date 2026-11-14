@@ -321,7 +321,7 @@ function ReaderDockTab(props: IDockviewPanelHeaderProps<{ tab?: WorkspaceTab }>)
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => {
             event.stopPropagation();
-            close();
+            dock.close(props.api.id);
           }}
         >
           <CloseIcon />
