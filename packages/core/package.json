@@ -11,6 +11,6 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@lingui/core": "6.10.1"
+    "@lingui/core": "6.12.0"
   }
 }
