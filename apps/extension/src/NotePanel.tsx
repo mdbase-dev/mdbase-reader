@@ -381,6 +381,8 @@ function noteStateLabel(state: SourceNoteSnapshot["state"]): string {
   switch (state) {
     case "saved":
       return t({ message: "Saved", context: "Reader save status" });
+    case "saved_on_device":
+      return t`Saved on this device; waiting for sync`;
     case "unsaved":
       return t`Unsaved changes`;
     case "saving":

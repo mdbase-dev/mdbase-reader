@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { problemMessage } from "./capture-model.js";
 import { SourceNoteSession } from "./source-note-session.js";
 
-import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
+import type { ReaderConnectedCollection, Mdbase } from "@mdbase-reader/connect";
 import type { Source, SourceSummary } from "@mdbase-reader/core";
 
 export interface SourceNoteController {
@@ -25,6 +25,7 @@ type Loaded =
  * session per source for the panel's lifetime, so returning to a page resumes its text.
  */
 export function useSourceNote(
+  mdbase: Mdbase | null,
   collection: () => ReaderConnectedCollection | null,
   source: SourceSummary | null,
   onSaved: (source: Source) => void,
@@ -42,7 +43,7 @@ export function useSourceNote(
 
   const load = useCallback(() => {
     const connected = collection();
-    if (!sourceId || !connected) {
+    if (!sourceId || !connected || !mdbase) {
       return;
     }
     const kept = sessions.current.get(sourceId);
@@ -56,7 +57,7 @@ export function useSourceNote(
         if (!full) {
           throw new Error(t`This source is no longer in the collection.`);
         }
-        const created = new SourceNoteSession(full, connected, undefined, (saved) => {
+        const created = new SourceNoteSession(mdbase, full, undefined, (saved) => {
           if (shown.current.sourceId === saved.id) {
             shown.current.onSaved(saved);
           }
@@ -68,7 +69,7 @@ export function useSourceNote(
       (reason: unknown) =>
         setLoaded({ sourceId, status: "failed", problem: problemMessage(reason) }),
     );
-  }, [collection, sourceId]);
+  }, [mdbase, collection, sourceId]);
 
   useEffect(() => {
     if (!session) {

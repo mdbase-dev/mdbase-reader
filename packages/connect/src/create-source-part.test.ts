@@ -1,12 +1,14 @@
+import { mdbaseError } from "@mdbase-dev/sdk";
 import { recordRevision, sourceId, type PlannedSourcePart } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createSourcePart } from "./create-source-part.js";
 import { sourceFromDocument } from "./mapping.js";
+import { testWrite, mockSdk, testRecord } from "./records.fixtures.js";
 import { recordDocument, plan as importPlan } from "./source-imports.fixtures.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
+import type { JsonObject, MdbaseClient } from "@mdbase-dev/sdk";
 
 function plan(): PlannedSourcePart {
   const parent = sourceFromDocument(importPlan().collectionId, recordDocument());
@@ -32,20 +34,19 @@ describe("guarded reference-existing-file chapter create", () => {
   it("creates the relation, shared file range and chapter citation in one write without uploading", async () => {
     const proposed = plan();
     vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
-    const create = vi
-      .fn()
-      .mockImplementation((input: Parameters<ReaderConnectClient["create"]>[0]) =>
-        Promise.resolve({
-          ok: true,
-          value: {
+    const create = vi.fn().mockImplementation((input: Parameters<MdbaseClient["create"]>[0]) =>
+      Promise.resolve(
+        testWrite(
+          testRecord({
             ...recordDocument(),
-            path: input.path,
-            frontmatter: input.frontmatter,
-            effectiveFrontmatter: input.frontmatter,
-          },
-        }),
-      );
-    await createSourcePart({ create } as unknown as ReaderConnectClient, proposed);
+            path: input.path!,
+            frontmatter: input.frontmatter as Record<string, unknown>,
+            effective: input.frontmatter as Record<string, unknown>,
+          }),
+        ),
+      ),
+    );
+    await createSourcePart(mockSdk({ create }), proposed);
     expect(create).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({
         path: proposed.recordPath,
@@ -75,37 +76,28 @@ describe("guarded reference-existing-file chapter create", () => {
     const get = vi
       .spyOn(ConnectSourceRepository.prototype, "get")
       .mockResolvedValue({ ...proposed.parent, recordRevision: recordRevision("changed") });
-    await expect(
-      createSourcePart({ create } as unknown as ReaderConnectClient, proposed),
-    ).rejects.toThrow("book changed");
+    await expect(createSourcePart(mockSdk({ create }), proposed)).rejects.toThrow("book changed");
     const parent = { ...proposed.parent, partOf: sourceId("missing") };
     get.mockImplementation((_collection, id) => Promise.resolve(id === parent.id ? parent : null));
-    await expect(
-      createSourcePart({ create } as unknown as ReaderConnectClient, { ...proposed, parent }),
-    ).rejects.toThrow("incomplete");
+    await expect(createSourcePart(mockSdk({ create }), { ...proposed, parent })).rejects.toThrow(
+      "incomplete",
+    );
     expect(create).not.toHaveBeenCalled();
   });
-  it("reconciles an unknown outcome at the exact reviewed path without generating another identity", async () => {
+  it("retains an unknown native mutation without submitting a second chapter", async () => {
     const proposed = plan();
     vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
-    let saved: unknown;
-    const create = vi.fn((input: Parameters<ReaderConnectClient["create"]>[0]) => {
-      // An earlier attempt landed with its own save time.
-      const frontmatter = { ...input.frontmatter, saved_at: "2026-01-01T00:00:00.000Z" };
-      saved = { ...recordDocument(), frontmatter, effectiveFrontmatter: frontmatter };
-      return Promise.resolve({
-        ok: false,
-        problem: { code: "unknown", message: "Outcome unknown" },
-      });
+    const create = vi.fn(() => Promise.resolve(testWrite(recordDocument())));
+    const settle = vi.fn().mockResolvedValue({
+      outcome: "unknown",
+      mutationId: "chapter-mutation",
+      problem: { code: "outcome_unknown", recovery: "resolve_outcome", message: "Unknown" },
     });
-    const read = vi.fn(() => Promise.resolve({ ok: true, value: saved }));
-    const recovered = await createSourcePart(
-      { create, read } as unknown as ReaderConnectClient,
-      proposed,
-    );
-    expect(recovered.id).toBe(proposed.sourceId);
+    await expect(createSourcePart(mockSdk({ create, settle }), proposed)).rejects.toMatchObject({
+      code: "outcome_unknown",
+      mutationId: "chapter-mutation",
+    });
     expect(create).toHaveBeenCalledOnce();
-    expect(read).toHaveBeenCalledWith(expect.objectContaining({ path: proposed.recordPath }));
   });
 });
 
@@ -113,49 +105,40 @@ describe("chapter names", () => {
   it("never writes a second record with the chapter's id when its name holds different fields", async () => {
     const proposed = plan();
     vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
-    const create = vi.fn(() =>
-      Promise.resolve({ ok: false, problem: { code: "path_conflict", message: "Path taken" } }),
-    );
+    const create = vi.fn(() => Promise.reject(mdbaseError("conflict", "Path taken", "path_taken")));
     // An earlier attempt of this chapter, edited since.
     const earlier = recordDocument();
     const read = vi.fn(() =>
       Promise.resolve({
-        ok: true,
-        value: {
-          ...earlier,
-          effectiveFrontmatter: { id: proposed.sourceId, title: "Chapter, edited" },
-        },
+        ...earlier,
+        effective: { id: proposed.sourceId, title: "Chapter, edited" },
       }),
     );
-    await expect(
-      createSourcePart({ create, read } as unknown as ReaderConnectClient, proposed),
-    ).rejects.toThrow();
+    await expect(createSourcePart(mockSdk({ create, get: read }), proposed)).rejects.toThrow(
+      "Path taken",
+    );
     expect(create).toHaveBeenCalledOnce();
   });
   it("moves to the next name when another source already has the chapter's", async () => {
     const proposed = plan();
     vi.spyOn(ConnectSourceRepository.prototype, "get").mockResolvedValue(proposed.parent);
-    const create = vi.fn((input: Parameters<ReaderConnectClient["create"]>[0]) =>
-      Promise.resolve(
-        input.path === "sources/chapter.md"
-          ? { ok: false, problem: { code: "path_conflict", message: "Path taken" } }
-          : {
-              ok: true,
-              value: {
+    const create = vi.fn((input: Parameters<MdbaseClient["create"]>[0]) =>
+      input.path === "sources/chapter.md"
+        ? Promise.reject(mdbaseError("conflict", "Path taken", "path_taken"))
+        : Promise.resolve(
+            testWrite(
+              testRecord({
                 ...recordDocument(),
-                path: input.path,
-                frontmatter: input.frontmatter,
-                effectiveFrontmatter: input.frontmatter,
-              },
-            },
-      ),
+                path: input.path!,
+                frontmatter: input.frontmatter as JsonObject,
+                effective: input.frontmatter as JsonObject,
+              }),
+            ),
+          ),
     );
     // Another book's chapter of the same name.
-    const read = vi.fn(() => Promise.resolve({ ok: true, value: recordDocument() }));
-    const created = await createSourcePart(
-      { create, read } as unknown as ReaderConnectClient,
-      proposed,
-    );
+    const read = vi.fn(() => Promise.resolve(recordDocument()));
+    const created = await createSourcePart(mockSdk({ create, get: read }), proposed);
     expect(create.mock.calls.map(([input]) => input.path)).toEqual([
       "sources/chapter.md",
       "sources/chapter-smith-2019.md",

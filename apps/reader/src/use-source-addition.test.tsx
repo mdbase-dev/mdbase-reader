@@ -20,17 +20,21 @@ vi.mock("./use-web-capture.js", () => ({
 
 it("clears offline addition errors on reconnect even while existing writes are syncing", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
-  const snapshot = {
+  let changed: () => void = () => undefined;
+  let snapshot = {
     phase: { kind: "ready" },
     sync: {
+      state: "offline",
       attention: [],
       incidents: [],
       writes: { pending: [{}], rejected: [], saveState: "saving" },
     },
   };
   const mdbase = {
-    subscribe: () => () => undefined,
+    subscribe: (listener: () => undefined) => {
+      changed = listener;
+      return () => undefined;
+    },
     getSnapshot: () => snapshot,
   } as unknown as Mdbase;
   const workspace = { library: { status: "loading" } } as unknown as ReaderWorkspaceController;
@@ -51,9 +55,9 @@ it("clears offline addition errors on reconnect even while existing writes are s
     );
     await act(async () => addition.addFile(new File(["bad"], "[test] unsupported.exe")));
     expect(host.textContent).toContain("isn’t a PDF");
-    online.mockReturnValue(true);
+    snapshot = { ...snapshot, sync: { ...snapshot.sync, state: "saving" } };
     act(() => {
-      window.dispatchEvent(new Event("online"));
+      changed();
     });
     expect(host.textContent).toBe("");
     expect(mocks.clearFile).toHaveBeenCalledOnce();

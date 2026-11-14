@@ -7,8 +7,9 @@ import {
   sourceFromDocument,
   sourceSummaryFromQuery,
 } from "./mapping.js";
+import { testRecord } from "./records.fixtures.js";
 
-import type { JsonObject, QueryRecord, RecordDocument } from "@mdbase-dev/connect";
+import type { RecordView, JsonObject } from "@mdbase-dev/sdk";
 
 const sourceFrontmatter: JsonObject = {
   id: "src_01",
@@ -42,12 +43,11 @@ const sourceFrontmatter: JsonObject = {
 
 describe("Connect contract mapping", () => {
   it("normalizes source query projections", () => {
-    const record = {
+    const record = testRecord({
       path: "sources/crime.md",
-      effectiveFrontmatter: sourceFrontmatter,
+      effective: sourceFrontmatter,
       types: ["reader-source"],
-      file: {},
-    } satisfies QueryRecord;
+    }) satisfies RecordView;
     expect(sourceSummaryFromQuery(collectionId("reading"), record)).toMatchObject({
       id: "src_01",
       title: "Crime and Punishment",
@@ -68,15 +68,14 @@ describe("Connect contract mapping", () => {
   });
 
   it("keeps invalid citation metadata visible without dropping the source", () => {
-    const record = {
+    const record = testRecord({
       path: "sources/crime.md",
-      effectiveFrontmatter: {
+      effective: {
         ...sourceFrontmatter,
         csl: { id: "bad key", type: "novel" },
       },
       types: ["reader-source"],
-      file: {},
-    } satisfies QueryRecord;
+    }) satisfies RecordView;
 
     expect(sourceSummaryFromQuery(collectionId("reading"), record)).toMatchObject({
       id: "src_01",
@@ -88,15 +87,14 @@ describe("Connect contract mapping", () => {
   });
 
   it("keeps the persisted source frontmatter and exact revision", () => {
-    const record = {
+    const record = testRecord({
       path: "sources/crime.md",
       revision: "record-rev-2",
       types: ["reader-source"],
       frontmatter: sourceFrontmatter,
-      effectiveFrontmatter: sourceFrontmatter,
+      effective: sourceFrontmatter,
       body: "My literature note.",
-      file: {},
-    } satisfies RecordDocument;
+    }) satisfies RecordView;
     expect(sourceFromDocument(collectionId("reading"), record)).toMatchObject({
       body: "My literature note.",
       recordRevision: "record-rev-2",
@@ -106,36 +104,39 @@ describe("Connect contract mapping", () => {
   });
 
   it("normalizes independently addressable annotations", () => {
-    const annotation = annotationFromDocument(collectionId("reading"), {
-      path: "annotations/ann_01.md",
-      revision: "ann-rev-1",
-      frontmatter: {},
-      effectiveFrontmatter: {
-        id: "ann_01",
-        source: "[[src_01|Crime and Punishment]]",
-        annotation_type: "highlight",
-        created_at: "2026-08-09T14:21:00+10:00",
-        document: {
-          file_id: "file-01",
-          file: "[[files/crime.pdf]]",
-          revision: "sha256:19e81c",
-        },
-        locator: { label: "p. 16" },
-        target: {
-          quote: { exact: "Pain and suffering are always inevitable" },
-          pdf: {
-            page_index: 15,
-            coordinate_space: {
-              profile: "embedpdf-page-points-v1",
-              box: "crop",
-              origin: "top_left",
+    const annotation = annotationFromDocument(
+      collectionId("reading"),
+      testRecord({
+        path: "annotations/ann_01.md",
+        revision: "ann-rev-1",
+        frontmatter: {},
+        effective: {
+          id: "ann_01",
+          source: "[[src_01|Crime and Punishment]]",
+          annotation_type: "highlight",
+          created_at: "2026-08-09T14:21:00+10:00",
+          document: {
+            file_id: "file-01",
+            file: "[[files/crime.pdf]]",
+            revision: "sha256:19e81c",
+          },
+          locator: { label: "p. 16" },
+          target: {
+            quote: { exact: "Pain and suffering are always inevitable" },
+            pdf: {
+              page_index: 15,
+              coordinate_space: {
+                profile: "embedpdf-page-points-v1",
+                box: "crop",
+                origin: "top_left",
+              },
+              quad_points: [[91.2, 201.4, 477.8, 201.4, 91.2, 238.1, 477.8, 238.1]],
             },
-            quad_points: [[91.2, 201.4, 477.8, 201.4, 91.2, 238.1, 477.8, 238.1]],
           },
         },
-      },
-      body: "> Pain and suffering are always inevitable",
-    });
+        body: "> Pain and suffering are always inevitable",
+      }),
+    );
     expect(annotation).toMatchObject({
       id: "ann_01",
       sourceId: "src_01",
@@ -168,14 +169,16 @@ describe("Connect citation provenance mapping", () => {
       issued: "invalid",
     };
     const frontmatter = { ...sourceFrontmatter, "csl-provenance": provenance };
-    const source = sourceFromDocument(collectionId("reading"), {
-      path: "sources/crime.md",
-      revision: "record-rev-2",
-      types: ["reader-source"],
-      frontmatter,
-      effectiveFrontmatter: frontmatter,
-      file: {},
-    });
+    const source = sourceFromDocument(
+      collectionId("reading"),
+      testRecord({
+        path: "sources/crime.md",
+        revision: "record-rev-2",
+        types: ["reader-source"],
+        frontmatter,
+        effective: frontmatter,
+      }),
+    );
 
     expect(source.cslProvenance).toEqual({ title: provenance.title });
     expect(source.citation).toEqual(sourceFrontmatter["csl"]);
@@ -186,14 +189,16 @@ describe("Connect citation provenance mapping", () => {
     "ignores malformed provenance %j without invalidating the citation",
     (provenance) => {
       const frontmatter = { ...sourceFrontmatter, "csl-provenance": provenance };
-      const source = sourceFromDocument(collectionId("reading"), {
-        path: "sources/crime.md",
-        revision: "record-rev-2",
-        types: ["reader-source"],
-        frontmatter,
-        effectiveFrontmatter: frontmatter,
-        file: {},
-      });
+      const source = sourceFromDocument(
+        collectionId("reading"),
+        testRecord({
+          path: "sources/crime.md",
+          revision: "record-rev-2",
+          types: ["reader-source"],
+          frontmatter,
+          effective: frontmatter,
+        }),
+      );
 
       expect(source.cslProvenance).toEqual({});
       expect(source.citation).toEqual(sourceFrontmatter["csl"]);
@@ -204,24 +209,27 @@ describe("Connect citation provenance mapping", () => {
 
 describe("Connect EPUB annotation mapping", () => {
   it("round-trips an EPUB CFI", () => {
-    const annotation = annotationFromDocument(collectionId("reading"), {
-      path: "annotations/ann_epub.md",
-      revision: "ann-rev-2",
-      frontmatter: {},
-      effectiveFrontmatter: {
-        id: "ann_epub",
-        source: "[[src_01]]",
-        annotation_type: "highlight",
-        created_at: "2026-08-09T14:21:00+10:00",
-        target: {
-          quote: { exact: "Selected EPUB text" },
-          epub: {
-            cfi: "epubcfi(/6/4!/4/2,/1:0,/1:12)",
+    const annotation = annotationFromDocument(
+      collectionId("reading"),
+      testRecord({
+        path: "annotations/ann_epub.md",
+        revision: "ann-rev-2",
+        frontmatter: {},
+        effective: {
+          id: "ann_epub",
+          source: "[[src_01]]",
+          annotation_type: "highlight",
+          created_at: "2026-08-09T14:21:00+10:00",
+          target: {
+            quote: { exact: "Selected EPUB text" },
+            epub: {
+              cfi: "epubcfi(/6/4!/4/2,/1:0,/1:12)",
+            },
           },
         },
-      },
-      body: "> Selected EPUB text",
-    });
+        body: "> Selected EPUB text",
+      }),
+    );
 
     expect(annotation.target?.epub).toEqual({
       cfi: "epubcfi(/6/4!/4/2,/1:0,/1:12)",
@@ -238,20 +246,23 @@ describe("Connect EPUB annotation mapping", () => {
 
 describe("Connect bookmark mapping", () => {
   it("round-trips a position without a quotation", () => {
-    const annotation = annotationFromDocument(collectionId("reading"), {
-      path: "annotations/ann_bookmark.md",
-      revision: "ann-rev-3",
-      frontmatter: {},
-      effectiveFrontmatter: {
-        id: "ann_bookmark",
-        source: "[[src_01]]",
-        annotation_type: "bookmark",
-        created_at: "2026-08-09T14:21:00+10:00",
-        locator: { label: "p. 42" },
-        target: { position: { pdf: { page_index: 41 } } },
-      },
-      body: "",
-    });
+    const annotation = annotationFromDocument(
+      collectionId("reading"),
+      testRecord({
+        path: "annotations/ann_bookmark.md",
+        revision: "ann-rev-3",
+        frontmatter: {},
+        effective: {
+          id: "ann_bookmark",
+          source: "[[src_01]]",
+          annotation_type: "bookmark",
+          created_at: "2026-08-09T14:21:00+10:00",
+          locator: { label: "p. 42" },
+          target: { position: { pdf: { page_index: 41 } } },
+        },
+        body: "",
+      }),
+    );
 
     expect(annotation.target).toEqual({ position: { kind: "pdf", pageIndex: 41 } });
     expect(annotationFrontmatter(annotation)).toMatchObject({

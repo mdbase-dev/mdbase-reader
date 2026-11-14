@@ -53,7 +53,7 @@ describe("readerErrorMessage", () => {
       ],
     );
     expect(readerErrorMessage(error, "Try again.")).toBe(
-      `mdbase Connect could not ${operation}: The record would not be valid: Saved date is required`,
+      "The record would not be valid: Saved date is required",
     );
   });
 

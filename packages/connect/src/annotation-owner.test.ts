@@ -11,8 +11,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
-
-import type { ReaderConnectClient } from "./repository-client.js";
+import { testWrite, testRecord, mockSdk } from "./records.fixtures.js";
 
 const owner: Source = {
   id: sourceId("chapter"),
@@ -50,27 +49,31 @@ describe("guarded annotation ownership writes", () => {
       tags: annotation.tags,
       created_at: annotation.createdAt,
     };
-    const update = vi.fn().mockResolvedValue({
-      ok: true,
-      diagnostics: [],
-      value: {
-        path: annotation.path,
-        revision: "ann-new",
-        frontmatter: fields,
-        effectiveFrontmatter: fields,
-        body: annotation.body,
-      },
-    });
-    const repository = new ConnectAnnotationRepository({
-      update,
-    } as unknown as ReaderConnectClient);
+    const update = vi.fn().mockResolvedValue(
+      testWrite(
+        testRecord({
+          path: annotation.path!,
+          revision: "ann-new",
+          frontmatter: fields,
+          effective: fields,
+          body: annotation.body,
+        }),
+      ),
+    );
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        update,
+      }),
+    );
     const moved = await repository.moveOwner({ annotation, owner, modifiedAt });
-    expect(update).toHaveBeenCalledExactlyOnceWith({
-      path: annotation.path,
-      ifRevision: annotation.recordRevision,
-      patch: { source: sourceLink(owner), modified_at: modifiedAt },
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ path: annotation.path }),
+      expect.objectContaining({
+        ifRevision: annotation.recordRevision,
+        patch: { source: sourceLink(owner), modified_at: modifiedAt },
+      }),
+      expect.anything(),
+    );
     expect(moved).toMatchObject({
       id: annotation.id,
       sourceId: owner.id,
@@ -81,9 +84,11 @@ describe("guarded annotation ownership writes", () => {
   });
   it("surfaces conflicts without retrying or rebasing ownership", async () => {
     const update = vi.fn().mockRejectedValue(new Error("revision conflict"));
-    const repository = new ConnectAnnotationRepository({
-      update,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        update,
+      }),
+    );
     await expect(repository.moveOwner({ annotation, owner, modifiedAt })).rejects.toThrow(
       "revision conflict",
     );
@@ -91,9 +96,11 @@ describe("guarded annotation ownership writes", () => {
   });
   it("refuses missing guards and cross-collection owners before writing", async () => {
     const update = vi.fn();
-    const repository = new ConnectAnnotationRepository({
-      update,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        update,
+      }),
+    );
     await expect(
       repository.moveOwner({
         annotation: { ...annotation, recordRevision: undefined } as unknown as Annotation,

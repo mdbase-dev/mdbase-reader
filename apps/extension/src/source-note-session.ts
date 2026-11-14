@@ -1,16 +1,16 @@
 import { i18n } from "@lingui/core";
 import { t as translate, msg } from "@lingui/core/macro";
 import {
-  MdbaseRecordSession,
-  recordChanged,
-  recordFailure,
-  recordMissing,
-  recordOutcome,
-  recordSuccess,
+  openReaderRecord,
+  sourceFromDocument,
+  type Mdbase,
   type JsonObject,
-  type MdbaseRecordSessionState,
-  type ReaderConnectedCollection,
+  type RecordLease,
+  type RecordSession,
+  type RecordSessionState,
+  type RecordSessionSnapshot,
 } from "@mdbase-reader/connect";
+import { describeError } from "@mdbase-reader/connect/native";
 
 import { loadNoteDraft, saveNoteDraft, type NoteDraft } from "./drafts.js";
 
@@ -23,7 +23,7 @@ export interface SourceDetails {
 }
 
 export interface SourceNoteSnapshot {
-  readonly state: MdbaseRecordSessionState;
+  readonly state: RecordSessionState;
   readonly body: string;
   /** The title and tags with this panel's unsaved edits. */
   readonly details: SourceDetails;
@@ -48,19 +48,19 @@ const localProblem = msg`Your browser could not keep a copy of this note. Keep t
 /** Typing is copied to browser storage after this pause, so closing the panel loses little. */
 const storeDelayMs = 250;
 
-type NoteCollection = Pick<ReaderConnectedCollection, "collectionId" | "sources" | "bodyRecovery">;
-
 /**
  * A saved source's literature note, edited in the panel. The SDK record session owns
  * autosave, revision checks, conflicts and exact recovery; this adds the copy in
  * `chrome.storage.session` that survives closing the panel.
  */
 export class SourceNoteSession {
-  readonly #record: MdbaseRecordSession<Source>;
+  private record: RecordSession | null = null;
+  private lease: RecordLease | null = null;
+  private base: Source;
+  private restoredRemote: Source | null = null;
   readonly #listeners = new Set<() => void>();
   readonly #collectionId: string;
   readonly #sourceId: string;
-  readonly #pending: (requestId: string) => boolean;
   #restored = false;
   #localProblem: string | null = null;
   #storeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -69,107 +69,102 @@ export class SourceNoteSession {
   #snapshot: SourceNoteSnapshot;
 
   constructor(
+    private readonly mdbase: Mdbase,
     base: Source,
-    collection: NoteCollection,
     private readonly store: NoteDraftStore = browserSession,
-    /** Each newer copy of the source this session saves or reads, for the rest of the panel. */
     private readonly publish: (source: Source) => void = () => undefined,
   ) {
-    this.#collectionId = collection.collectionId;
+    this.base = base;
+    this.#collectionId = base.collectionId;
     this.#sourceId = base.id;
-    const { collectionId, sources, bodyRecovery } = collection;
-    this.#pending = (requestId) => bodyRecovery.pending(requestId);
-    this.#record = new MdbaseRecordSession<Source>(
-      base,
-      {
-        revision: (source) => source.recordRevision,
-        body: (source) => source.body,
-        // Only these fields are compared, so an edit elsewhere to any other is never a conflict.
-        frontmatter: (source) => ({ title: source.title, tags: [...source.tags] }),
-        write: async (expected, change) => {
-          try {
-            let target = expected;
-            if (change.patch) {
-              // Field updates take no revision, so check first that nothing moved on. A change
-              // made between this read and the write is overwritten for these two fields only.
-              const current = await sources.get(collectionId, expected.id);
-              if (!current) {
-                return recordMissing();
-              }
-              if (current.recordRevision !== expected.recordRevision) {
-                return recordChanged(translate({ message: "The source changed before saving." }));
-              }
-              if (!sources.updateFields) {
-                throw new Error(
-                  translate({
-                    message: "This collection can’t edit a source’s title and tags here.",
-                  }),
-                );
-              }
-              target = await sources.updateFields({
-                collectionId,
-                sourceId: expected.id,
-                fields: change.patch,
-              });
-              if (change.body === undefined) {
-                return recordSuccess(target);
-              }
-            }
-            return recordSuccess(
-              await sources.updateBody({
-                collectionId,
-                sourceId: target.id,
-                expectedRevision: target.recordRevision,
-                body: change.body ?? target.body,
-              }),
-            );
-          } catch (error) {
-            return recordFailure(error);
-          }
-        },
-        read: (current) => recordOutcome(() => sources.get(collectionId, current.id)),
-        recover: (requestId) =>
-          recordOutcome(() => bodyRecovery.recoverSource({ collectionId, requestId })),
-        isPending: this.#pending,
-      },
-      { autosave: { idleMs: 1000 } },
-    );
-    this.#snapshot = this.#project();
-    this.#record.subscribe(() => this.#sync());
+    this.#snapshot = {
+      state: "saved",
+      body: base.body,
+      details: { title: base.title, tags: base.tags },
+      source: base,
+      remote: null,
+      problem: null,
+      restored: false,
+      localProblem: null,
+    };
   }
 
-  /** Brings back text left unsaved by an earlier panel, and resumes an interrupted write. */
   async start(): Promise<void> {
-    let draft: NoteDraft | null;
+    if (this.lease) {
+      return;
+    }
     try {
-      draft = await this.store.load(this.#collectionId, this.#sourceId);
-    } catch {
-      this.#update({ localProblem: i18n._(localProblem) });
-      return;
+      const draft = await this.store.load(this.#collectionId, this.#sourceId);
+      const lease = await openReaderRecord(this.mdbase, this.base.collectionId, this.base.path, {
+        autosave: { idleMs: 1000 },
+        ...(draft?.recovery ? { recovery: draft.recovery } : {}),
+      });
+      if (
+        draft?.requestId &&
+        !draft.recovery &&
+        lease.session.getSnapshot().recovery?.mutationId !== draft.requestId
+      ) {
+        lease.release();
+        throw new Error(
+          "This earlier edit needs its original recovery information. Your local text has been retained.",
+        );
+      }
+      this.lease = lease;
+      this.record = lease.session;
+      this.base = sourceFromDocument(this.base.collectionId, this.record.getSnapshot().record);
+      if (draft) {
+        this.restoreDraft(draft, lease.session);
+      }
+      this.record.subscribe(() => this.#sync());
+      if (this.restoredRemote) {
+        this.#emit();
+      } else {
+        this.#sync();
+      }
+    } catch (error) {
+      this.#snapshot = {
+        ...this.#snapshot,
+        state: "error",
+        problem: describeError(error)?.message ?? translate`Reader could not open the source note.`,
+      };
+      this.#emit();
     }
-    // Typing that began while the copy loaded is newer than the copy.
-    if (!draft || this.#record.snapshot.dirty) {
-      return;
-    }
+  }
+
+  private restoreDraft(draft: NoteDraft, record: RecordSession): void {
     this.#stored = true;
-    // An earlier panel's write whose outcome is unknown settles before anything new is sent.
-    if (draft.requestId && this.#pending(draft.requestId)) {
-      this.#record.resumeRecovery(draft.requestId);
-    }
-    if (draft.body === this.#record.snapshot.record.body && !draft.patch) {
+    if (draft.body !== this.base.body || draft.patch) {
+      this.#restored = true;
+      if (
+        !draft.recovery &&
+        (draft.baseBody !== this.base.body ||
+          (draft.baseFrontmatter &&
+            Object.entries(draft.baseFrontmatter).some(
+              ([key, value]) =>
+                JSON.stringify(record.getSnapshot().frontmatter[key]) !== JSON.stringify(value),
+            )))
+      ) {
+        this.restoredRemote = this.base;
+        this.#snapshot = {
+          ...this.#snapshot,
+          state: "conflict",
+          body: draft.body,
+          remote: this.base,
+          restored: true,
+          details: sourceDetails({
+            title: this.base.title,
+            tags: [...this.base.tags],
+            ...draft.patch,
+          }),
+        };
+      } else {
+        record.setBody(draft.body);
+        if (draft.patch) {
+          record.patchFrontmatter(draft.patch);
+        }
+      }
+    } else {
       this.#clearStored();
-      return;
-    }
-    this.#restored = true;
-    this.#record.restore({
-      body: draft.body,
-      baseBody: draft.baseBody,
-      ...(draft.patch ? { patch: draft.patch } : {}),
-      ...(draft.baseFrontmatter ? { baseFrontmatter: draft.baseFrontmatter } : {}),
-    });
-    // A restored draft that conflicts waits for a decision; otherwise it saves itself.
-    if (this.#record.snapshot.state === "unsaved") {
-      this.#record.autosave();
     }
   }
 
@@ -184,7 +179,12 @@ export class SourceNoteSession {
       return;
     }
     this.#restored = false;
-    this.#record.setBody(body);
+    if (this.restoredRemote) {
+      this.#snapshot = { ...this.#snapshot, body };
+      this.#emit();
+    } else {
+      this.record?.setBody(body);
+    }
   }
 
   /** A changed title or tags, autosaved with the note. An empty title is not saved. */
@@ -196,28 +196,54 @@ export class SourceNoteSession {
     });
     if (patch) {
       this.#restored = false;
-      this.#record.patchFrontmatter(patch);
+      if (this.restoredRemote) {
+        this.#snapshot = {
+          ...this.#snapshot,
+          details: sourceDetails({
+            ...this.#snapshot.details,
+            tags: [...this.#snapshot.details.tags],
+            ...patch,
+          }),
+        };
+        this.#emit();
+      } else {
+        this.record?.patchFrontmatter(patch);
+      }
     }
   }
 
   /** Saves now instead of after the autosave pause. */
   save(): void {
-    void this.#record.save();
+    void this.record?.flush();
   }
 
   /** Reads the collection's copy, as when the panel is shown again after a while. */
   refresh(): void {
-    if (this.#snapshot.state !== "saving" && this.#snapshot.state !== "recovery") {
-      void this.#record.refresh();
+    if (this.record && !this.restoredRemote) {
+      this.#sync();
     }
   }
 
-  /** Keep this panel's text on top of the newer note, or take the newer note. */
   resolve(keep: "mine" | "theirs"): void {
+    if (!this.record) {
+      return;
+    }
     this.#restored = false;
-    this.#record.resolve({ keep });
+    if (this.restoredRemote) {
+      this.restoredRemote = null;
+      if (keep === "mine") {
+        this.record.setBody(this.#snapshot.body);
+        this.record.patchFrontmatter({
+          title: this.#snapshot.details.title,
+          tags: [...this.#snapshot.details.tags],
+        });
+      }
+    } else {
+      this.record.resolve({ keep });
+    }
+    this.#sync();
     if (keep === "mine") {
-      void this.#record.save();
+      void this.record.flush();
     }
   }
 
@@ -231,8 +257,11 @@ export class SourceNoteSession {
   }
 
   #sync(): void {
-    const next = this.#project();
-    if (!this.#record.snapshot.dirty && next.state === "saved") {
+    if (!this.record || this.restoredRemote) {
+      return;
+    }
+    const next = this.#project(this.record.getSnapshot());
+    if (!this.record.getSnapshot().dirty && next.state === "saved") {
       this.#clearStored();
     } else if (
       next.body !== this.#snapshot.body ||
@@ -249,8 +278,7 @@ export class SourceNoteSession {
     }
   }
 
-  #project(): SourceNoteSnapshot {
-    const record = this.#record.snapshot;
+  #project(record: RecordSessionSnapshot): SourceNoteSnapshot {
     const previous = this.#snapshot as SourceNoteSnapshot | undefined;
     const details = sourceDetails(record.frontmatter);
     return {
@@ -261,8 +289,8 @@ export class SourceNoteSession {
         previous?.details.title === details.title && sameTags(previous.details.tags, details.tags)
           ? previous.details
           : details,
-      source: record.record,
-      remote: record.remote,
+      source: sourceFromDocument(this.base.collectionId, record.record),
+      remote: record.remote ? sourceFromDocument(this.base.collectionId, record.remote) : null,
       problem:
         record.state === "deleted"
           ? translate`This source is no longer in the collection. Your text is kept in this panel.`
@@ -283,18 +311,31 @@ export class SourceNoteSession {
   }
 
   #store(): void {
-    const record = this.#record.snapshot;
+    const record = this.record?.getSnapshot();
+    if (!record) {
+      return;
+    }
     if (!record.dirty) {
       return;
     }
     this.#stored = true;
-    const base = { title: record.record.title, tags: [...record.record.tags] };
+    const details = sourceDetails(record.record.frontmatter);
+    const base = { title: details.title, tags: [...details.tags] };
     const patch = detailsPatch(base, sourceDetails(record.frontmatter));
     const draft: NoteDraft = {
       body: record.body,
-      baseBody: record.record.body,
+      baseBody: record.record.body ?? "",
       ...(patch ? { patch, baseFrontmatter: base } : {}),
-      ...(record.pendingRequestId ? { requestId: record.pendingRequestId } : {}),
+      ...(record.recovery
+        ? {
+            requestId: record.recovery.mutationId,
+            recovery: {
+              mutationId: record.recovery.mutationId,
+              recordId: record.recovery.recordId,
+              baseRevision: record.recovery.baseRevision,
+            },
+          }
+        : {}),
     };
     this.store.save(this.#collectionId, this.#sourceId, draft).then(
       () => this.#update({ localProblem: null }),

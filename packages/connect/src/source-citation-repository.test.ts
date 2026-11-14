@@ -1,11 +1,17 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
+import { mdbaseError } from "@mdbase-dev/sdk";
 import { collectionId, DomainError, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { mockSdk, testWrite, testRecord, testQuery } from "./records.fixtures.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, RecordDocument, UpdateInput } from "@mdbase-dev/connect";
+import type {
+  RecordRef,
+  MdbaseClient,
+  QueryResult,
+  RecordView,
+  UpdateInput,
+} from "@mdbase-dev/sdk";
 import type { Mock } from "vitest";
 
 const path = "sources/crime.md";
@@ -17,15 +23,15 @@ const input = {
   citation,
 };
 
-function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+function success<Value>(value: Value): Value {
+  return value;
 }
 
 function fixture(): {
   repository: ConnectSourceRepository;
-  update: Mock<ReaderConnectClient["update"]>;
-  read: Mock<ReaderConnectClient["read"]>;
-  setCurrent: (record: RecordDocument) => void;
+  update: Mock<MdbaseClient["update"]>;
+  read: Mock<MdbaseClient["get"]>;
+  setCurrent: (record: RecordView) => void;
 } {
   let current = document(
     {
@@ -36,31 +42,40 @@ function fixture(): {
     },
     "rev-1",
   );
-  const queryPages = vi.fn(() =>
-    singleQueryPage({
-      path,
-      effectiveFrontmatter: current.effectiveFrontmatter,
-      types: ["reader-source"],
-      file: {},
-    }),
+  const pages = vi.fn(() =>
+    singleQueryPage(
+      testRecord({
+        path,
+        effective: current.effective,
+        types: ["reader-source"],
+      }),
+    ),
   );
-  const update = vi.fn((request: UpdateInput) => {
-    const frontmatter = { ...current.frontmatter, ...request.patch };
+  const update = vi.fn((_record: RecordRef, request: UpdateInput) => {
+    const frontmatter = {
+      ...current.frontmatter,
+      ...(request.patch instanceof Map ? Object.fromEntries(request.patch) : request.patch),
+    };
+    for (const key of request.unset ?? []) {
+      Reflect.deleteProperty(frontmatter, key);
+    }
     for (const [key, value] of Object.entries(request.patch ?? {})) {
       if (value === null) {
         Reflect.deleteProperty(frontmatter, key);
       }
     }
     current = document(frontmatter);
-    return Promise.resolve(success(current));
+    return Promise.resolve(testWrite(success(current)));
   });
   const read = vi.fn(() => Promise.resolve(success(current)));
-  const repository = new ConnectSourceRepository({
-    supportsAuthorityFeature: vi.fn(() => Promise.resolve(success(false))),
-    queryPages,
-    update,
-    read,
-  } as unknown as ReaderConnectClient);
+  const repository = new ConnectSourceRepository(
+    mockSdk({
+      supportsAuthorityFeature: vi.fn(() => Promise.resolve(success(false))),
+      pages,
+      update,
+      get: read,
+    }),
+  );
   return {
     repository,
     update,
@@ -71,16 +86,15 @@ function fixture(): {
   };
 }
 
-function document(frontmatter: Record<string, unknown>, revision = "rev-2"): RecordDocument {
-  return {
+function document(frontmatter: Record<string, unknown>, revision = "rev-2"): RecordView {
+  return testRecord({
     path,
     revision,
     types: ["reader-source"],
     frontmatter,
-    effectiveFrontmatter: frontmatter,
+    effective: frontmatter,
     body: "Notes",
-    file: {},
-  };
+  });
 }
 
 describe("Connect source citation metadata", () => {
@@ -88,11 +102,11 @@ describe("Connect source citation metadata", () => {
     const { repository, update } = fixture();
     const updated = await repository.updateCitation(input);
 
-    expect(update).toHaveBeenCalledWith({
-      path,
-      patch: { csl: citation },
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: path }),
+      expect.objectContaining({ patch: { csl: citation } }),
+      expect.anything(),
+    );
     expect(updated.citation).toEqual(citation);
     expect(updated.cslProvenance).toEqual(provenance);
     expect(updated.recordRevision).toBe("rev-2");
@@ -103,11 +117,11 @@ describe("Connect source citation metadata", () => {
     const nextProvenance = { title: { value: citation.title, source: "registry:doi.org" } };
     const updated = await repository.updateCitation({ ...input, provenance: nextProvenance });
 
-    expect(update).toHaveBeenCalledExactlyOnceWith({
-      path,
-      patch: { csl: citation, "csl-provenance": nextProvenance },
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ path: path }),
+      expect.objectContaining({ patch: { csl: citation, "csl-provenance": nextProvenance } }),
+      expect.anything(),
+    );
     expect(updated.citation).toEqual(citation);
     expect(updated.cslProvenance).toEqual(nextProvenance);
   });
@@ -116,11 +130,11 @@ describe("Connect source citation metadata", () => {
     const { repository, update } = fixture();
     const updated = await repository.updateCitation({ ...input, provenance: {} });
 
-    expect(update).toHaveBeenCalledExactlyOnceWith({
-      path,
-      patch: { csl: citation, "csl-provenance": null },
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ path: path }),
+      expect.objectContaining({ patch: { csl: citation }, unset: ["csl-provenance"] }),
+      expect.anything(),
+    );
     expect(updated.frontmatter).not.toHaveProperty("csl-provenance");
     expect(updated.cslProvenance).toBeUndefined();
     expect(updated.citation).toEqual(citation);
@@ -134,8 +148,15 @@ describe("Connect citation compare-and-save", () => {
       const { repository, read, update, setCurrent } = fixture();
       setCurrent(document({ id: "src_01", title: "Crime", csl: expectedCitation }, "rev-9"));
       await repository.updateCitation({ ...input, expectedCitation });
-      expect(read).toHaveBeenCalledExactlyOnceWith({ path, includeDocument: true });
-      expect(update).toHaveBeenCalledWith(expect.objectContaining({ ifRevision: "rev-9" }));
+      expect(read).toHaveBeenCalledExactlyOnceWith(
+        { path },
+        expect.objectContaining({ include: { effective: true, body: true, document: true } }),
+      );
+      expect(update).toHaveBeenCalledWith(
+        expect.objectContaining({ path }),
+        expect.objectContaining({ ifRevision: "rev-9" }),
+        expect.anything(),
+      );
     },
   );
 
@@ -164,13 +185,18 @@ describe("Connect citation compare-and-save", () => {
       provenance,
     });
 
-    expect(read).toHaveBeenCalledExactlyOnceWith({ path, includeDocument: true });
-    expect(update).toHaveBeenCalledExactlyOnceWith({
-      path,
-      ifRevision: "rev-7",
-      patch: { csl: citation, "csl-provenance": provenance },
-      includeDocument: true,
-    });
+    expect(read).toHaveBeenCalledExactlyOnceWith(
+      { path },
+      expect.objectContaining({ include: { effective: true, body: true, document: true } }),
+    );
+    expect(update).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ path: path }),
+      expect.objectContaining({
+        ifRevision: "rev-7",
+        patch: { csl: citation, "csl-provenance": provenance },
+      }),
+      expect.anything(),
+    );
     expect(updated.citation).toEqual(citation);
   });
 
@@ -230,7 +256,7 @@ describe("Connect citation compare-and-save", () => {
 
     await repository.updateCitation({ ...input, expectedCitation });
 
-    expect(update.mock.calls[0]?.[0].ifRevision).toBe("rev-4");
+    expect(update.mock.calls[0]?.[1].ifRevision).toBe("rev-4");
   });
 
   it("refuses to save over a citation added elsewhere after loading none", async () => {
@@ -243,13 +269,13 @@ describe("Connect citation compare-and-save", () => {
     expect(update).not.toHaveBeenCalled();
   });
 
-  it("saves without a read or precondition when no baseline is supplied", async () => {
+  it("obtains a native view without adding a CSL precondition when no baseline is supplied", async () => {
     const { repository, read, update } = fixture();
 
     await repository.updateCitation(input);
 
-    expect(read).not.toHaveBeenCalled();
-    expect(update.mock.calls[0]?.[0]).not.toHaveProperty("ifRevision");
+    expect(read).toHaveBeenCalledOnce();
+    expect(update.mock.calls[0]?.[1]).not.toHaveProperty("ifRevision");
   });
 });
 
@@ -261,7 +287,7 @@ describe("Connect citation revision races", () => {
       setCurrent(
         document({ id: "src_01", title: "New source title", csl: citation, reading }, "rev-3"),
       );
-      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+      return Promise.reject(mdbaseError("conflict", "Changed"));
     });
 
     const updated = await repository.updateCitation({
@@ -272,12 +298,10 @@ describe("Connect citation revision races", () => {
 
     expect(read).toHaveBeenCalledTimes(2);
     expect(update).toHaveBeenCalledTimes(2);
-    expect(update.mock.calls[0]?.[0].ifRevision).toBe("rev-1");
-    expect(update.mock.calls[1]?.[0]).toEqual({
-      path,
+    expect(update.mock.calls[0]?.[1].ifRevision).toBe("rev-1");
+    expect(update.mock.calls[1]?.[1]).toEqual({
       ifRevision: "rev-3",
       patch: { csl: citation, "csl-provenance": provenance },
-      includeDocument: true,
     });
     expect(updated.frontmatter["reading"]).toEqual(reading);
     expect(updated.title).toBe("New source title");
@@ -288,7 +312,7 @@ describe("Connect citation revision races", () => {
     const currentCitation = { ...citation, title: "Outside edit" };
     update.mockImplementationOnce(() => {
       setCurrent(document({ id: "src_01", title: "Crime", csl: currentCitation }, "rev-3"));
-      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+      return Promise.reject(mdbaseError("conflict", "Changed"));
     });
 
     await expect(
@@ -300,14 +324,16 @@ describe("Connect citation revision races", () => {
 
   it("bounds revision-conflict retries to three conditional writes", async () => {
     const { repository, read, update } = fixture();
-    update.mockResolvedValue(connectFailure(connectProblem("concurrent_modification", "Changed")));
+    update.mockRejectedValue(mdbaseError("conflict", "Changed"));
 
     await expect(
       repository.updateCitation({ ...input, expectedCitation: citation }),
-    ).rejects.toMatchObject({ problem: { code: "concurrent_modification" } });
+    ).rejects.toMatchObject({ code: "conflict" });
     expect(read).toHaveBeenCalledTimes(4);
     expect(update).toHaveBeenCalledTimes(3);
-    expect(update.mock.calls.every(([request]) => request.ifRevision === "rev-1")).toBe(true);
+    expect(update.mock.calls.every(([_record, request]) => request.ifRevision === "rev-1")).toBe(
+      true,
+    );
   });
 
   it("reports an outside citation edit even on the last permitted write", async () => {
@@ -317,7 +343,7 @@ describe("Connect citation revision races", () => {
       if (update.mock.calls.length === 3) {
         setCurrent(document({ id: "src_01", title: "Crime", csl: currentCitation }, "rev-4"));
       }
-      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+      return Promise.reject(mdbaseError("conflict", "Changed"));
     });
 
     await expect(
@@ -329,28 +355,22 @@ describe("Connect citation revision races", () => {
 
   it("does not retry other write failures or uncertain outcomes", async () => {
     const { repository, read, update } = fixture();
-    update.mockResolvedValue(
-      connectFailure(
-        connectProblem("operation_outcome_unknown", "Uncertain", {
-          details: { request_id: "citation-request" },
-        }),
-      ),
-    );
+    update.mockRejectedValue(mdbaseError("outcome_unknown", "Uncertain"));
 
     await expect(
       repository.updateCitation({ ...input, expectedCitation: citation }),
-    ).rejects.toMatchObject({ problem: { code: "operation_outcome_unknown" } });
+    ).rejects.toMatchObject({ code: "outcome_unknown" });
     expect(read).toHaveBeenCalledOnce();
     expect(update).toHaveBeenCalledOnce();
   });
 
   it("does not write when the current record cannot be read", async () => {
     const { repository, read, update } = fixture();
-    read.mockResolvedValue(connectFailure(connectProblem("file_not_found", "Missing")));
+    read.mockRejectedValue(mdbaseError("not_found", "Missing"));
 
     await expect(
       repository.updateCitation({ ...input, expectedCitation: citation }),
-    ).rejects.toMatchObject({ problem: { code: "file_not_found" } });
+    ).rejects.toMatchObject({ code: "not_found" });
     expect(update).not.toHaveBeenCalled();
   });
 });
@@ -377,7 +397,9 @@ describe("Connect preserves citation dismissals", () => {
         provenance: {},
         ...(guarded ? { expectedCitation: citation } : {}),
       });
-      expect(update.mock.lastCall?.[0].patch?.["csl-provenance"]).toEqual({ publisher: dismissal });
+      expect(update.mock.lastCall?.[1].patch).toMatchObject({
+        "csl-provenance": { publisher: dismissal },
+      });
       expect(updated.cslProvenance).toEqual({ publisher: dismissal });
       expect(updated.citation).toEqual(citation);
     },
@@ -423,7 +445,7 @@ describe("Connect preserves citation dismissals", () => {
           "rev-3",
         ),
       );
-      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Changed")));
+      return Promise.reject(mdbaseError("conflict", "Changed"));
     });
     const updated = await repository.updateCitation({
       ...input,
@@ -431,21 +453,21 @@ describe("Connect preserves citation dismissals", () => {
       provenance,
     });
     expect(update).toHaveBeenCalledTimes(2);
-    expect(update.mock.lastCall?.[0].ifRevision).toBe("rev-3");
+    expect(update.mock.lastCall?.[1].ifRevision).toBe("rev-3");
     expect(updated.cslProvenance).toEqual({ ...provenance, publisher: dismissal });
   });
 });
 
 async function* singleQueryPage(
-  record: QueryPage["results"][number],
-): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  record: QueryResult["records"][number],
+): AsyncGenerator<QueryResult> {
   yield await Promise.resolve(
-    success({
-      results: [record],
-      page: 0,
-      offset: 0,
-      loaded: 1,
-      complete: true,
-    }),
+    success(
+      testQuery({
+        records: [record],
+
+        complete: true,
+      }),
+    ),
   );
 }

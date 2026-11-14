@@ -1,112 +1,72 @@
-import {
-  annotationId,
-  collectionId,
-  dateTime,
-  recordRevision,
-  sourceId,
-  type Annotation,
-} from "@mdbase-reader/core";
-import { afterEach, beforeEach, expect, it, vi, type Mock } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 
 import { AnnotationEditSession } from "./annotation-edit-session.js";
+import { editorFixture } from "./editor.fixtures.js";
 import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
 
 vi.mock("./annotation-edit-recovery.js", () => ({
   readLegacyEdits: (_key: string, ready: (value: null) => void) => ready(null),
   clearLegacyEdits: vi.fn(),
 }));
-const annotation: Annotation = {
-  id: annotationId("ack"),
-  collectionId: collectionId("c"),
-  sourceId: sourceId("s"),
-  source: "[[s]]",
-  path: "annotations/ack.md",
-  recordRevision: recordRevision("1"),
-  annotationType: "note",
-  tags: [],
-  body: "Original",
-  createdAt: dateTime("2026-09-17T00:00:00Z"),
-};
-const sessions: AnnotationEditSession[] = [];
-function saved(body: string, revision = "2"): Annotation {
-  return { ...annotation, body, recordRevision: recordRevision(revision) };
-}
-function fixture(): {
-  session: AnnotationEditSession;
-  persist: Mock<(base: Annotation, body: string) => Promise<Annotation>>;
-  pending: Promise<void>;
-  finish: (value: Annotation) => void;
-} {
-  let finish!: (value: Annotation) => void;
-  const persist = vi.fn((_base: Annotation, body: string) => Promise.resolve(saved(body, "4")));
-  persist.mockImplementationOnce(
-    () =>
-      new Promise((resolve) => {
-        finish = resolve;
-      }),
-  );
-  const session = new AnnotationEditSession(annotation, persist);
-  sessions.push(session);
-  session.start();
-  session.edit("First");
-  const pending = session.save();
-  return { session, persist, pending, finish: (value: Annotation) => finish(value) };
-}
-beforeEach(() => vi.useFakeTimers());
-afterEach(() => {
-  for (const session of sessions.splice(0)) {
-    trackAnnotationEdits(session, annotation, false);
+const cleanup: (() => void | Promise<void>)[] = [];
+afterEach(async () => {
+  for (const close of cleanup.splice(0)) {
+    await close();
   }
-  vi.clearAllTimers();
-  vi.useRealTimers();
+  vi.restoreAllMocks();
 });
+async function fixture(): Promise<
+  Awaited<ReturnType<typeof editorFixture>> & { session: AnnotationEditSession }
+> {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const session = new AnnotationEditSession(native.app.mdbase, native.annotation);
+  cleanup.push(() => trackAnnotationEdits(session, native.annotation, false));
+  session.start();
+  await vi.waitFor(() => expect(session.getSnapshot().status).toBe("saved"));
+  return { ...native, session };
+}
 it.each([false, true])(
-  "recognizes its normalized save response before publication completes (newer typing: %s)",
+  "accepts the native normalized acknowledgement with newer typing: %s",
   async (typing) => {
-    const { session, persist, pending, finish } = fixture();
+    const { app, session } = await fixture();
+    const update = app.client().update.bind(app.client());
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const writes = vi
+      .spyOn(app.client(), "update")
+      .mockImplementationOnce(async (ref, input, options) => {
+        const write = await update(ref, { ...input, body: `${input.body ?? ""}\n` }, options);
+        await held;
+        return write;
+      });
+    session.edit("First");
+    const saving = session.save();
+    await vi.waitFor(() => expect(writes).toHaveBeenCalledOnce());
     if (typing) {
       session.edit("Second");
     }
-    const acknowledged = saved("First\n");
-    session.receive(acknowledged); // Shared resource publishes before the save promise settles.
-    expect(session.getSnapshot().conflict).toBeNull();
-    finish(acknowledged);
-    await pending;
+    release();
+    await saving;
     expect(session.getSnapshot().conflict).toBeNull();
     expect(session.getText()).toBe(typing ? "Second" : "First\n");
     if (typing) {
-      await vi.advanceTimersByTimeAsync(1000);
-      expect(persist).toHaveBeenLastCalledWith(acknowledged, "Second");
+      await session.save();
+      expect(session.getAnnotation().body).toBe("Second");
     }
   },
 );
-it.each([false, true])(
-  "does not hide another revision behind its normalized acknowledgement (ack first: %s)",
-  async (ackFirst) => {
-    const { session, persist, pending, finish } = fixture();
+it.each(["Other client\n", "Original annotation\n"])(
+  "keeps local edits when a remote revision changes the body to %s",
+  async (body) => {
+    const { app, annotation, session } = await fixture();
+    const writes = vi.spyOn(app.client(), "update");
     session.edit("Second");
-    const acknowledged = saved("First\n"),
-      external = saved("Other client\n", "3");
-    for (const record of ackFirst ? [acknowledged, external] : [external, acknowledged]) {
-      session.receive(record);
-    }
-    finish(acknowledged);
-    await pending;
-    expect(session.getSnapshot().conflict).toEqual(external);
+    app.replica().editElsewhere(annotation.path!, { body });
+    await vi.waitFor(() => expect(session.getSnapshot().conflict?.body).toBe(body));
     expect(session.getText()).toBe("Second");
-    await vi.advanceTimersByTimeAsync(5000);
-    expect(persist).toHaveBeenCalledOnce();
+    expect(writes).not.toHaveBeenCalled();
   },
 );
-it("still conflicts on another revision's whitespace-only edit", async () => {
-  const { session, pending, finish } = fixture();
-  session.edit("Second");
-  const acknowledged = saved("First\n"),
-    external = saved("First\n\n", "3");
-  session.receive(external);
-  session.receive(acknowledged);
-  finish(acknowledged);
-  await pending;
-  expect(session.getSnapshot().conflict).toEqual(external);
-  expect(session.getText()).toBe("Second");
-});

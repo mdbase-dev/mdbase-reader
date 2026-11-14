@@ -1,30 +1,31 @@
 import { annotationDraftKey } from "./annotation-drafts.js";
-import {
-  AnnotationEditSession,
-  type AnnotationRecovery,
-  type PersistAnnotation,
-} from "./annotation-edit-session.js";
+import { AnnotationEditSession } from "./annotation-edit-session.js";
 
+import type { Mdbase } from "@mdbase-reader/connect";
 import type { Annotation } from "@mdbase-reader/core";
 
-const sessions = new WeakMap<object, Map<string, AnnotationEditSession>>();
-
+const sessions = new WeakMap<
+  NonNullable<ReturnType<Mdbase["connection"]>>,
+  Map<string, AnnotationEditSession>
+>();
 export function annotationEditSession(
-  scope: object,
+  mdbase: Mdbase,
   annotation: Annotation,
-  persist: PersistAnnotation,
-  refresh?: (annotation: Annotation) => Promise<Annotation | null>,
-  recovery?: AnnotationRecovery,
+  publish: (annotation: Annotation) => void,
 ): AnnotationEditSession {
-  let cache = sessions.get(scope);
+  const connection = mdbase.connection(annotation.collectionId);
+  if (!connection) {
+    throw new Error("Annotation editing requires an open collection.");
+  }
+  let cache = sessions.get(connection);
   if (!cache) {
     cache = new Map();
-    sessions.set(scope, cache);
+    sessions.set(connection, cache);
   }
   const key = annotationDraftKey(annotation.collectionId, annotation.sourceId, annotation.id);
   let session = cache.get(key);
   if (!session) {
-    session = new AnnotationEditSession(annotation, persist, refresh, recovery);
+    session = new AnnotationEditSession(mdbase, annotation, publish);
     cache.set(key, session);
   }
   return session;

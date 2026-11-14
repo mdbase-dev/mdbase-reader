@@ -16,8 +16,7 @@ export function sdkSyncIncidents(
 /** The device has no network or the sync service did not answer. A busy or
  * rate-limited service is not offline. */
 export function sdkOffline(snapshot: SdkSnapshot | null): boolean {
-  const sync = snapshot?.sync;
-  return sync?.connection === "offline" || sync?.health === "unreachable";
+  return snapshot?.sync?.connection === "offline" || snapshot?.sync?.state === "offline";
 }
 
 /** The header's connection state from the SDK: never "connected" while it is
@@ -26,35 +25,22 @@ export function sdkConnectionState(
   snapshot: ReturnType<Mdbase["getSnapshot"]> | null,
   fallback: ReaderConnectionState,
 ): ReaderConnectionState {
-  if (!snapshot) {
-    return fallback;
+  switch (snapshot?.sync?.state) {
+    case "attention":
+      return "attention";
+    case "saved_on_device":
+      return "saved_on_device";
+    case "offline":
+    case "reconnecting":
+      return "offline";
+    case "saving":
+    case "catching_up":
+      return "syncing";
+    case "saved":
+      return "connected";
+    default:
+      return fallback;
   }
-  const sync = snapshot.sync;
-  const writes = sync?.writes;
-  if (
-    sdkSyncIncidents(snapshot).length ||
-    writes?.rejected.length ||
-    sync?.attention.some((reason) =>
-      [
-        "update_required",
-        "account_suspended",
-        "collection_migrating",
-        "collection_not_yet_migrated",
-      ].includes(reason),
-    )
-  ) {
-    return "attention";
-  }
-  if (writes?.saveState === "saved_on_device") {
-    return "saved_on_device";
-  }
-  if (sdkOffline(snapshot)) {
-    return "offline";
-  }
-  if (writes?.pending.length || snapshot.saveWarning) {
-    return "syncing";
-  }
-  return fallback;
 }
 
 export function useSdkConnectionState(
@@ -63,20 +49,11 @@ export function useSdkConnectionState(
 ): ReaderConnectionState {
   const subscribe = useCallback(
     (listener: () => void) => {
-      const unsubscribe = mdbase?.subscribe(listener) ?? noop;
-      window.addEventListener("online", listener);
-      window.addEventListener("offline", listener);
-      return () => {
-        unsubscribe();
-        window.removeEventListener("online", listener);
-        window.removeEventListener("offline", listener);
-      };
+      return mdbase?.subscribe(listener) ?? noop;
     },
     [mdbase],
   );
   return useSyncExternalStore(subscribe, () =>
-    !globalThis.navigator.onLine && mdbase
-      ? "offline"
-      : sdkConnectionState(mdbase?.getSnapshot() ?? null, fallback),
+    sdkConnectionState(mdbase?.getSnapshot() ?? null, fallback),
   );
 }

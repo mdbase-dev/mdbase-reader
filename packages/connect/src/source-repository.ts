@@ -1,3 +1,4 @@
+import { isMdbaseError } from "@mdbase-dev/sdk";
 import {
   bodyEmbedsAnnotation,
   filterSources,
@@ -18,13 +19,19 @@ import {
 } from "@mdbase-reader/core";
 
 import { sourceContract } from "./contracts.js";
-import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
+import {
+  sourceSummaryFromContract,
+  sourceFromDocument,
+  sourceSummaryFromQuery,
+} from "./mapping.js";
 import { readingPatch, writeReadingStatus, type ReadingStatusChange } from "./reading-status.js";
 import {
+  requireCompleteQuery,
+  completeReaderPages,
+  preflightDeleteRecord,
+  deleteRecord,
+  updateRecord,
   ConnectRepositoryError,
-  outcomeValue,
-  queryWithOptions,
-  readWithOptions,
   recordPathById,
 } from "./repository-client.js";
 import { writeSourceCitation } from "./source-citation.js";
@@ -43,46 +50,37 @@ import {
 } from "./source-parts.js";
 
 import type { CreateFollowThrough } from "./create-follow-through.js";
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { DeletePreflightResult, QueryRecord } from "@mdbase-dev/connect";
+import type { JsonObject, MdbaseClient, RecordView, wire } from "@mdbase-dev/sdk";
 
 export class ConnectSourceRepository implements SourceRepository {
-  readonly #deletePreflights = new Map<string, DeletePreflightResult>();
+  readonly #deletePreflights = new Map<string, wire.Preflight>();
 
   constructor(
-    private readonly client: ReaderConnectClient,
+    private readonly client: MdbaseClient,
     /** Told of removals, so a create still waiting for the collection is let go of. */
     private readonly creates?: Pick<CreateFollowThrough, "forget">,
   ) {}
 
   async list(query: SourceQuery, options: ReaderRequestOptions = {}): Promise<Page<SourceSummary>> {
-    const parsedOffset = Number.parseInt(query.cursor ?? "", 10);
-    const offset = Number.isSafeInteger(parsedOffset) && parsedOffset >= 0 ? parsedOffset : 0;
-    const result = outcomeValue(
-      await queryWithOptions(
-        this.client,
-        {
-          contract: sourceContract,
-          frontmatterMode: "effective",
-          limit: query.limit,
-          offset,
-        },
-        options,
-      ),
-      "query sources",
+    const result = await this.client.queryContract(sourceContract, {
+      pageSize: query.limit,
+      ...(query.cursor ? { cursor: query.cursor } : {}),
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
+    requireCompleteQuery(result.page);
+    const records = result.records.map((record) =>
+      sourceSummaryFromContract(query.collectionId, record, result.page.records),
     );
     const items = await resolveSourceSummaryParts(
       this.client,
-      this.#sourceItems(query, result.results),
+      filterSources(records, query.search),
       options,
     );
-    const hasMore = result.meta?.hasMore ?? false;
+    const cursor = result.page.cursor;
     return {
       items,
-      ...(hasMore ? { nextCursor: String(offset + result.results.length) } : {}),
-      ...(typeof result.meta?.totalCount === "number"
-        ? { totalCount: result.meta.totalCount }
-        : {}),
+      ...(cursor !== undefined ? { nextCursor: cursor } : {}),
+      ...(typeof result.page.totalCount === "number" ? { totalCount: result.page.totalCount } : {}),
     };
   }
 
@@ -90,28 +88,32 @@ export class ConnectSourceRepository implements SourceRepository {
     query: Omit<SourceQuery, "cursor">,
     options: ReaderRequestOptions = {},
   ): AsyncIterable<Page<SourceSummary>> {
-    for await (const outcome of this.client.queryPages(
-      {
-        contract: sourceContract,
-        frontmatterMode: "effective",
-      },
-      {
-        ...options,
-        pageSize: 1_000,
-      },
-    )) {
-      const page = outcomeValue(outcome, "query sources");
+    let cursor: string | undefined;
+    do {
+      const result = await this.client.queryContract(sourceContract, {
+        pageSize: 128,
+        ...(cursor ? { cursor } : {}),
+        ...(options.signal ? { signal: options.signal } : {}),
+      });
+      requireCompleteQuery(result.page);
+      const summaries = result.records
+        .map((record) => sourceSummaryFromContract(query.collectionId, record, result.page.records))
+        .filter(
+          (source) =>
+            query.readingStatus === undefined || source.readingStatus === query.readingStatus,
+        );
       const items = await resolveSourceSummaryParts(
         this.client,
-        this.#sourceItems(query, page.results),
+        filterSources(summaries, query.search),
         options,
       );
+      cursor = result.page.cursor;
       yield {
         items,
-        ...(page.cursor ? { nextCursor: page.cursor } : {}),
-        ...(typeof page.meta?.totalCount === "number" ? { totalCount: page.meta.totalCount } : {}),
+        ...(cursor ? { nextCursor: cursor } : {}),
+        ...(result.page.totalCount === undefined ? {} : { totalCount: result.page.totalCount }),
       };
-    }
+    } while (cursor);
   }
 
   async sourceParts(
@@ -120,19 +122,15 @@ export class ConnectSourceRepository implements SourceRepository {
     options: ReaderRequestOptions = {},
   ): Promise<readonly SourceSummary[]> {
     const records: SourceSummary[] = [];
-    for await (const outcome of this.client.queryPages(
+    for await (const outcome of completeReaderPages(
+      this.client,
       withResolvedSourceParts({
         types: ["reader-source"],
         where: sourcePartsWhere(id),
-        frontmatterMode: "effective",
       }),
       options,
     )) {
-      records.push(
-        ...outcomeValue(outcome, "list source parts").results.map((record) =>
-          sourceSummaryFromQuery(collection, record),
-        ),
-      );
+      records.push(...outcome.records.map((record) => sourceSummaryFromQuery(collection, record)));
     }
     return records;
   }
@@ -168,11 +166,11 @@ export class ConnectSourceRepository implements SourceRepository {
     if (!path) {
       return null;
     }
-    const result = outcomeValue(
-      await readWithOptions(this.client, { path, includeDocument: true }, options),
-      "read source",
+    const result = await this.client.get(
+      { path: path },
+      { ...options, include: { effective: true, body: true, document: true } },
     );
-    return resolvedSource(this.client, sourceFromDocument(collection, result), options);
+    return await resolvedSource(this.client, sourceFromDocument(collection, result), options);
   }
 
   async updateBody(input: {
@@ -182,63 +180,66 @@ export class ConnectSourceRepository implements SourceRepository {
     readonly body: string;
   }): Promise<Source> {
     const path = await this.#path(input.sourceId, "update source note");
-    const updated = outcomeValue(
-      await this.client.update({
-        path,
-        ifRevision: input.expectedRevision,
-        patch: {},
-        body: input.body,
-      }),
-      "update source note",
+    const updated = await updateRecord(
+      this.client,
+      { path: path },
+      { ifRevision: input.expectedRevision, patch: {}, body: input.body },
     );
-    return resolvedSource(this.client, sourceFromDocument(input.collectionId, updated));
+    return await resolvedSource(this.client, sourceFromDocument(input.collectionId, updated));
   }
 
   async updateReading(input: Parameters<SourceRepository["updateReading"]>[0]): Promise<Source> {
     const path = await this.#path(input.sourceId, "save reading position");
     if (input.expectedFrontmatter) {
       // The caller's revision is usually current, so try it before paying for a fresh read.
-      const outcome = await this.client.update({
-        path,
-        ifRevision: input.expectedRevision,
-        patch: { reading: readingPatch(input.expectedFrontmatter, input) },
-        includeDocument: true,
-      });
-      if (outcome.ok) {
-        return resolvedSource(this.client, sourceFromDocument(input.collectionId, outcome.value));
+      try {
+        const record = await updateRecord(
+          this.client,
+          { path },
+          {
+            ifRevision: input.expectedRevision,
+            patch: {
+              reading: readingPatch(input.expectedFrontmatter, input) as JsonObject,
+            },
+          },
+        );
+        return await resolvedSource(this.client, sourceFromDocument(input.collectionId, record));
+      } catch (error) {
+        if (!isMdbaseError(error, "conflict")) {
+          throw error;
+        }
       }
-      // Authorities report a moved-on record in more than one way, so any refusal rebases on a
-      // fresh read below; a lasting failure surfaces from that read or write instead.
     }
-    const current = outcomeValue(
-      await this.client.read({ path, includeDocument: true }),
-      "read source before saving position",
+    const current = await this.client.get(
+      { path: path },
+      { include: { effective: true, body: true, document: true } },
     );
-    const updated = outcomeValue(
-      await this.client.update({
-        path,
+    const updated = await updateRecord(
+      this.client,
+      { path: path },
+      {
         ifRevision: recordRevision(current.revision),
-        patch: { reading: readingPatch(current.frontmatter, input) },
-        includeDocument: true,
-      }),
-      "save reading position",
+        patch: {
+          reading: readingPatch(current.frontmatter, input) as JsonObject,
+        },
+      },
     );
-    return resolvedSource(this.client, sourceFromDocument(input.collectionId, updated));
+    return await resolvedSource(this.client, sourceFromDocument(input.collectionId, updated));
   }
 
   async updateReadingStatus(input: ReadingStatusChange): Promise<Source> {
     const path = await this.#path(input.sourceId, "change reading status");
-    return resolvedSource(this.client, await writeReadingStatus(this.client, path, input));
+    return await resolvedSource(this.client, await writeReadingStatus(this.client, path, input));
   }
 
   async updateFields(input: SourceFieldChange): Promise<Source> {
     const path = await this.#path(input.sourceId, "edit source fields");
-    return resolvedSource(this.client, await writeSourceFields(this.client, path, input));
+    return await resolvedSource(this.client, await writeSourceFields(this.client, path, input));
   }
 
   async updateCitation(input: Parameters<SourceRepository["updateCitation"]>[0]): Promise<Source> {
     const path = await this.#path(input.sourceId, "save citation metadata");
-    return resolvedSource(this.client, await writeSourceCitation(this.client, path, input));
+    return await resolvedSource(this.client, await writeSourceCitation(this.client, path, input));
   }
 
   async appendAnnotationEmbed(input: {
@@ -250,9 +251,9 @@ export class ConnectSourceRepository implements SourceRepository {
     readonly idempotencyKey: MutationId;
   }): Promise<ReturnType<typeof recordRevision>> {
     const path = await this.#path(input.sourceId, "append annotation");
-    const current = outcomeValue(
-      await this.client.read({ path, includeDocument: true }),
-      "read source before annotation",
+    const current = await this.client.get(
+      { path: path },
+      { include: { effective: true, body: true, document: true } },
     );
     const body = current.body ?? "";
     // The embed may already be written another way, such as by filename alone.
@@ -261,30 +262,31 @@ export class ConnectSourceRepository implements SourceRepository {
       return recordRevision(current.revision);
     }
     const separator = body.length === 0 || body.endsWith("\n") ? "" : "\n";
-    const updated = outcomeValue(
-      await this.client.update({
-        path,
+    const updated = await updateRecord(
+      this.client,
+      { path: path },
+      {
         ifRevision: input.expectedRevision,
         patch: {},
         body: `${body}${separator}\n${input.embed}\n`,
-      }),
-      "append annotation",
+      },
     );
     return recordRevision(updated.revision);
   }
 
   async preflightDelete(source: Source): Promise<SourceDeletionPlan> {
-    const result = outcomeValue(
-      await this.client.preflightDelete({ path: source.path, ifRevision: source.recordRevision }),
-      "check source removal",
+    const result = await preflightDeleteRecord(
+      this.client,
+      { path: source.path },
+      source.recordRevision,
     );
     this.#deletePreflights.set(deletionKey(source.path, source.recordRevision), result);
     return {
       sourceId: source.id,
       path: source.path,
       expectedRevision: source.recordRevision,
-      brokenLinkPaths: [...new Set(result.brokenLinks?.map(({ path }) => path) ?? [])].sort(
-        (left, right) => left.localeCompare(right),
+      brokenLinkPaths: [...new Set(result.broken.map(({ path }) => path))].sort((left, right) =>
+        left.localeCompare(right),
       ),
     };
   }
@@ -297,16 +299,7 @@ export class ConnectSourceRepository implements SourceRepository {
       throw new Error("Source removal requires a current preflight confirmation.");
     }
     try {
-      const result = outcomeValue(
-        await this.client.deleteWithProgress(
-          { path: plan.path, ifRevision: plan.expectedRevision, checkBacklinks: true },
-          { preflight },
-        ),
-        "remove source",
-      );
-      if (!result.deleted) {
-        throw new Error(`mdbase Connect did not remove source ${plan.sourceId}.`);
-      }
+      await deleteRecord(this.client, { path: plan.path }, plan.expectedRevision, preflight);
       await this.creates?.forget(plan.sourceId);
     } finally {
       this.#deletePreflights.delete(key);
@@ -331,7 +324,7 @@ export class ConnectSourceRepository implements SourceRepository {
 
   #sourceItems(
     query: Omit<SourceQuery, "cursor">,
-    records: readonly QueryRecord[],
+    records: readonly RecordView[],
   ): SourceSummary[] {
     const sources = records
       .map((record) => sourceSummaryFromQuery(query.collectionId, record))

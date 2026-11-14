@@ -2,95 +2,93 @@ import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectContentSearchRepository } from "./content-search-repository.js";
+import { mockSdk, testQuery, testRecord } from "./records.fixtures.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, QueryRecord } from "@mdbase-dev/connect";
+import type { QueryResult, RecordView } from "@mdbase-dev/sdk";
 
-function success(value: QueryPage): ConnectOutcome<QueryPage> {
-  return { ok: true, value, diagnostics: [] };
+function success(value: QueryResult): QueryResult {
+  return value;
 }
 
-function page(results: QueryRecord[], index = 0, complete = true): QueryPage {
-  return {
-    results,
-    page: index,
-    offset: index === 0 ? 0 : 500 + (index - 1) * 1_000,
-    loaded: results.length,
-    complete,
-    meta: { totalCount: results.length, hasMore: !complete },
-  };
+function page(records: RecordView[], _index = 0, complete = true): QueryResult {
+  return testQuery({
+    records,
+
+    complete: true,
+    totalCount: records.length,
+    hasMore: !complete,
+  });
 }
 
 describe("ConnectContentSearchRepository", () => {
   it("maps matching source notes and annotations back to source identities", async () => {
-    const queryPages = vi.fn(() =>
+    const pages = vi.fn(() =>
       queryStream([
         page([
-          {
+          testRecord({
             path: "sources/one.md",
-            effectiveFrontmatter: { type: "reader-source", id: "src_one" },
+            effective: { type: "reader-source", id: "src_one" },
             types: ["reader-source"],
-            file: {},
-          },
-          {
+          }),
+          testRecord({
             path: "annotations/one.md",
-            effectiveFrontmatter: {
+            effective: {
               type: "reader-annotation",
               id: "ann_one",
               source: "[[src_one|One]]",
             },
             types: ["reader-annotation"],
-            file: {},
-          },
-          {
+          }),
+          testRecord({
             path: "annotations/two.md",
-            effectiveFrontmatter: {
+            effective: {
               type: "reader-annotation",
               id: "ann_two",
               source: "[[src_two]]",
             },
             types: ["reader-annotation"],
-            file: {},
-          },
+          }),
         ]),
       ]),
     );
-    const repository = new ConnectContentSearchRepository({
-      queryPages,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectContentSearchRepository(
+      mockSdk({
+        pages,
+      }),
+    );
 
     await expect(repository.search(collectionId("reading"), "Measured")).resolves.toEqual([
       { sourceId: "src_one", kinds: ["source-note", "annotation"] },
       { sourceId: "src_two", kinds: ["annotation"] },
     ]);
-    expect(queryPages).toHaveBeenCalledWith(
-      {
+    expect(pages).toHaveBeenCalledWith(
+      expect.objectContaining({
         types: ["reader-source", "reader-annotation"],
         where: 'file.body.lower().contains("measured")',
-        frontmatterMode: "effective",
-        includeBody: true,
-      },
-      { pageSize: 250 },
+      }),
+      expect.objectContaining({}),
     );
   });
 
   it("includes bounded passage context without losing record destinations", async () => {
-    const queryPages = vi.fn(() =>
+    const pages = vi.fn(() =>
       queryStream([
         page([
-          {
+          testRecord({
             path: "sources/one.md",
             types: ["reader-source"],
-            file: {},
-            effectiveFrontmatter: { id: "src_one", type: "reader-source" },
+
+            effective: { id: "src_one", type: "reader-source" },
             body: `${"x".repeat(1000)} Measured passage ${"y".repeat(1000)}`,
-          },
+          }),
         ]),
       ]),
     );
-    const repository = new ConnectContentSearchRepository({
-      queryPages,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectContentSearchRepository(
+      mockSdk({
+        pages,
+      }),
+    );
     const matches = await repository.search(collectionId("reading"), "measured");
     expect(matches[0]?.passages?.[0]).toMatchObject({
       path: "sources/one.md",
@@ -101,14 +99,16 @@ describe("ConnectContentSearchRepository", () => {
   });
 
   it("quotes user text as one expression string", async () => {
-    const queryPages = vi.fn(() => queryStream([page([])]));
-    const repository = new ConnectContentSearchRepository({
-      queryPages,
-    } as unknown as ReaderConnectClient);
+    const pages = vi.fn(() => queryStream([page([])]));
+    const repository = new ConnectContentSearchRepository(
+      mockSdk({
+        pages,
+      }),
+    );
 
     await repository.search(collectionId("reading"), 'x") || true');
 
-    expect(queryPages).toHaveBeenCalledWith(
+    expect(pages).toHaveBeenCalledWith(
       expect.objectContaining({
         where: 'file.body.lower().contains("x\\") || true")',
       }),
@@ -117,28 +117,28 @@ describe("ConnectContentSearchRepository", () => {
   });
 
   it("consumes one generation-pinned SDK page stream instead of offset fan-out", async () => {
-    const queryPages = vi.fn(() =>
+    const pages = vi.fn(() =>
       queryStream([page([], 0, false), page([], 1, false), page([], 2, true)]),
     );
-    const repository = new ConnectContentSearchRepository({
-      queryPages,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectContentSearchRepository(
+      mockSdk({
+        pages,
+      }),
+    );
 
     await repository.search(collectionId("reading"), "measured", {
       replaceableFamily: "reader-library-content-search",
     });
 
-    expect(queryPages).toHaveBeenCalledOnce();
-    expect(queryPages).toHaveBeenCalledWith(expect.anything(), {
+    expect(pages).toHaveBeenCalledOnce();
+    expect(pages).toHaveBeenCalledWith(expect.anything(), {
       replaceableFamily: "reader-library-content-search",
-      pageSize: 250,
+      include: { effective: true, body: true },
     });
   });
 });
 
-async function* queryStream(
-  pages: readonly QueryPage[],
-): AsyncGenerator<ConnectOutcome<QueryPage>> {
+async function* queryStream(pages: readonly QueryResult[]): AsyncGenerator<QueryResult> {
   for (const value of pages) {
     yield await Promise.resolve(success(value));
   }

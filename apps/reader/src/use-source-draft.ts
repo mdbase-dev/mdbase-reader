@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 
+import { useReaderMdbase } from "./reader-collections.js";
 import { SourceDraftSession } from "./source-draft-session.js";
 
 import type { SourceDraftSnapshot } from "./source-draft-session.js";
@@ -33,8 +34,9 @@ export function useSourceDraft(
   readonly session: SourceDraftSession | null;
   readonly snapshot: SourceDraftSnapshot;
 } {
+  const mdbase = useReaderMdbase();
   const session = useMemo(() => {
-    if (!source) {
+    if (!source || !mdbase) {
       return null;
     }
     let cache = sessions.get(gateway);
@@ -45,37 +47,19 @@ export function useSourceDraft(
     const key = `${source.collectionId}:${source.id}`;
     let value = cache.get(key);
     if (!value) {
-      value = new SourceDraftSession(
-        source,
-        storage,
-        (base, body) => gateway.saveSourceBody(base, body),
-        () =>
-          gateway.refreshSource ? gateway.refreshSource(source.id) : gateway.source(source.id),
-        publish,
-        gateway.recoverSourceBody && gateway.mutationPending
-          ? {
-              recover: gateway.recoverSourceBody.bind(gateway),
-              isPending: gateway.mutationPending.bind(gateway),
-            }
-          : undefined,
-      );
+      value = new SourceDraftSession(mdbase, source, storage, publish);
       cache.set(key, value);
     }
     return value;
-  }, [gateway, source, publish]);
+  }, [mdbase, gateway, source, publish]);
   const snapshot = useSyncExternalStore(
     session?.subscribe ?? noSubscribe,
     session?.getSnapshot ?? emptySnapshot,
   );
   useEffect(() => {
-    if (source) {
-      session?.receive(source);
-    }
-  }, [session, source]);
-  useEffect(() => {
     if (snapshot.savedSource) {
       publish(snapshot.savedSource);
     }
   }, [snapshot.savedSource, publish]);
-  return { session, snapshot };
+  return { session, snapshot: !mdbase && source ? { ...snapshot, body: source.body } : snapshot };
 }

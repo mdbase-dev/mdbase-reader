@@ -1,118 +1,61 @@
-import {
-  MdbaseCollectionClient,
-  connectFailure,
-  connectProblem,
-} from "@mdbase-dev/connect/advanced";
+import { mdbaseError } from "@mdbase-dev/sdk";
 import { describe, expect, it, vi } from "vitest";
 
 import { annotationRecordsAt } from "./annotation-query.js";
-import { ConnectRepositoryError } from "./repository-client.js";
+import { mockSdk, testRecord } from "./records.fixtures.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryRecord } from "@mdbase-dev/connect";
+import type { RecordRef } from "@mdbase-dev/sdk";
 
-const record = (path: string): QueryRecord => ({
-  path,
-  types: ["reader-annotation"],
-  frontmatter: { id: path, source: "src_1" },
-  effectiveFrontmatter: { id: path, source: "src_1" },
-  body: "Note",
-  file: { path },
-});
-
-describe("annotation bodies through SDK readMany", () => {
-  it("uses SDK bounded, escaped queries without fabricating revisions or point reads", async () => {
-    const paths = Array.from({ length: 205 }, (_, index) => `annotations/${String(index)}.md`);
+const pathOf = (ref: RecordRef): string => (typeof ref === "string" ? ref : ref.path);
+describe("annotation body hydration through the SDK", () => {
+  it("uses exact path selectors, retains native revisions, omits deleted records and bounds reads", async () => {
+    const paths = Array.from({ length: 25 }, (_, index) => `annotations/${String(index)}.md`);
     paths[0] = 'annotations/A "quoted" \\ 雪.md';
-    const requests: Record<string, unknown>[] = [];
-    const sdk = new MdbaseCollectionClient({
-      async operation<Result>(operation: string, input: unknown): Promise<Result> {
-        expect(operation).toBe("query");
-        const query = input as Record<string, unknown>;
-        requests.push(query);
-        const selected = JSON.parse(
-          String(query["where"]).slice("file.path in ".length),
-        ) as string[];
-        return await Promise.resolve({
-          valid: true,
-          diagnostics: [],
-          result: {
-            results: selected
-              .filter((path) => path !== paths[1])
-              .reverse()
-              .map((path) => {
-                const row = record(path);
-                return { ...row, effective_frontmatter: row.effectiveFrontmatter };
-              }),
-            meta: { has_more: false },
-          },
-        } as Result);
-      },
+    let active = 0;
+    let maximum = 0;
+    const find = vi.fn(async (ref: RecordRef) => {
+      const path = pathOf(ref);
+      active++;
+      maximum = Math.max(maximum, active);
+      await Promise.resolve();
+      active--;
+      return path === paths[1]
+        ? null
+        : testRecord({
+            path,
+            types: ["reader-annotation"],
+            revision: `revision:${path}`,
+            frontmatter: { id: path, source: "src_1" },
+            body: "Note",
+          });
     });
-    const readMany = vi.fn(sdk.readMany.bind(sdk));
     const signal = new AbortController().signal;
-    const listed = await annotationRecordsAt(
-      { readMany } as unknown as ReaderConnectClient,
-      [...paths, paths[0]],
-      { signal, replaceableFamily: "annotation-load" },
+    const listed = await annotationRecordsAt(mockSdk({ find }), [...paths, paths[0]], { signal });
+    expect(find).toHaveBeenCalledTimes(paths.length);
+    expect(maximum).toBe(4);
+    expect(find).toHaveBeenCalledWith(
+      { path: paths[0] },
+      { include: { effective: true, body: true, document: true }, signal },
     );
-
-    expect(readMany).toHaveBeenCalledExactlyOnceWith([...paths, paths[0]], {
-      types: ["reader-annotation"],
-      frontmatterMode: "both",
-      includeBody: true,
-      signal,
-    });
-    expect(requests.map((query) => query["limit"])).toEqual([100, 100, 5]);
-    expect(requests[0]).toMatchObject({
-      types: ["reader-annotation"],
-      frontmatter_mode: "both",
-      include_body: true,
-    });
     expect([...listed.keys()]).toEqual(paths.filter((path) => path !== paths[1]));
-    expect(listed.get(paths[0])).toMatchObject({ body: "Note", frontmatter: { source: "src_1" } });
-    expect(listed.get(paths[0])).not.toHaveProperty("revision");
+    expect(listed.get(paths[0])).toMatchObject({ body: "Note", revision: `revision:${paths[0]}` });
   });
-
-  it("does no transport work for an empty path selection", async () => {
-    const operation = vi.fn();
-    const sdk = new MdbaseCollectionClient({ operation });
-    const client = { readMany: sdk.readMany.bind(sdk) } as unknown as ReaderConnectClient;
-    expect(await annotationRecordsAt(client, [], {})).toEqual(new Map());
-    expect(operation).not.toHaveBeenCalled();
+  it("does no I/O for an empty selection", async () => {
+    const find = vi.fn();
+    expect(await annotationRecordsAt(mockSdk({ find }), [], {})).toEqual(new Map());
+    expect(find).not.toHaveBeenCalled();
   });
-
-  it("rejects a partially failed result rather than treating batch errors as missing", async () => {
-    const failure = connectFailure<"timeout">(connectProblem("timeout", "Batch timed out"));
-    const readMany = vi.fn<ReaderConnectClient["readMany"]>(() =>
-      Promise.resolve({
-        ok: true,
-        value: {
-          results: [
-            { status: "found", path: "a.md", record: record("a.md") },
-            { status: "error", path: "b.md", batch: 1 },
-          ],
-          errors: [{ batch: 1, paths: ["b.md"], failure }],
-        },
-        diagnostics: [],
-      }),
+  it("rejects a failed read instead of treating it as a missing annotation", async () => {
+    const failure = mdbaseError("unavailable", "Read failed");
+    const find = vi.fn().mockRejectedValue(failure);
+    await expect(annotationRecordsAt(mockSdk({ find }), ["a.md", "b.md"], {})).rejects.toBe(
+      failure,
     );
+  });
+  it("preserves cancellation and its exact SDK error", async () => {
+    const failure = mdbaseError("cancelled", "Cancelled");
     await expect(
-      annotationRecordsAt({ readMany } as unknown as ReaderConnectClient, ["a.md", "b.md"], {}),
-    ).rejects.toMatchObject({ name: "ConnectRepositoryError", problem: failure.problem });
-  });
-
-  it("preserves the original typed outer failure for cancellation and recovery decisions", async () => {
-    const failure = connectFailure<"operation_cancelled">(
-      connectProblem("operation_cancelled", "Cancelled"),
-    );
-    const readMany = vi.fn<ReaderConnectClient["readMany"]>(() => Promise.resolve(failure));
-    try {
-      await annotationRecordsAt({ readMany } as unknown as ReaderConnectClient, ["a.md"], {});
-      expect.fail("Expected the cancelled batch to fail");
-    } catch (error) {
-      expect(error).toBeInstanceOf(ConnectRepositoryError);
-      expect((error as ConnectRepositoryError).problem).toBe(failure.problem);
-    }
+      annotationRecordsAt(mockSdk({ find: vi.fn().mockRejectedValue(failure) }), ["a.md"], {}),
+    ).rejects.toBe(failure);
   });
 });

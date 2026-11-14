@@ -8,6 +8,7 @@ import { lazy, Suspense, useContext, useMemo, useState, type JSX, type ReactNode
 import { annotationWikiCandidate, annotationWikiPath } from "./annotation-wiki-candidates.js";
 import { DraftRecoveryNotice } from "./DraftRecoveryNotice.js";
 import { CodeIcon, LinkIcon, ListIcon, QuoteIcon } from "./icons.js";
+import { useReaderMdbase } from "./reader-collections.js";
 import {
   sourceNoteCitationCandidates,
   sourceNoteWikiCandidates,
@@ -46,6 +47,7 @@ export function SourceNoteEditor({
   onOpenSourceView,
 }: SourceNoteEditorProps): JSX.Element {
   useLocale();
+  const mdbase = useReaderMdbase();
   const [insertion, setInsertion] = useState<TextInsertionRequest | null>(null);
   const [formatting, setFormatting] = useState<MarkdownCommandRequest | null>(null);
   const librarySources = useContext(SourceLibraryContext);
@@ -83,7 +85,7 @@ export function SourceNoteEditor({
       </div>
     );
   }
-  if (!workspace.draftReady) {
+  if (!workspace.draftReady && mdbase) {
     return (
       <div className="editor-loading">
         <Trans>Opening source note…</Trans>
@@ -93,21 +95,15 @@ export function SourceNoteEditor({
   const citekey = sourceRecord.value.citation?.id;
   return (
     <>
-      <div className="source-note-toolbar mdbase-settle-host">
-        <MarkdownFormatToolbar onFormat={format} />
-        <SaveStatus
-          status={workspace.saveStatus}
-          locallySaved={workspace.draftRecovery?.locallySaved ?? false}
-          conflict={Boolean(workspace.draftRecovery?.conflict)}
-        />
-        <SourceNoteInsertMenu
+      {mdbase ? (
+        <SourceNoteToolbar
+          workspace={workspace}
+          onFormat={format}
+          onInsert={insert}
           citekey={citekey}
           candidates={annotationCandidates}
-          draft={workspace.draft}
-          onInsertCitation={(key) => insert(`[@${key}]`, true)}
-          onInsertAnnotation={(path) => insert(`![[${path}]]`)}
         />
-      </div>
+      ) : null}
       <SourceDetails
         source={sourceRecord.value}
         controller={workspace.sourceFields}
@@ -126,6 +122,7 @@ export function SourceNoteEditor({
         <MarkdownEditor
           className="source-note-editor-surface"
           value={workspace.draft}
+          readOnly={!mdbase}
           {...(workspace.draftDocument ? { sharedDocument: workspace.draftDocument } : {})}
           ariaLabel={translate({ message: "Source note" })}
           onChange={workspace.setDraft}
@@ -157,6 +154,38 @@ export function SourceNoteEditor({
         </div>
       ) : null}
     </>
+  );
+}
+
+function SourceNoteToolbar({
+  workspace,
+  onFormat,
+  onInsert,
+  citekey,
+  candidates,
+}: {
+  readonly workspace: ReaderSourceWorkspaceController;
+  readonly onFormat: (name: MarkdownCommandName) => void;
+  readonly onInsert: (text: string, wordBounded?: boolean) => void;
+  readonly citekey: string | undefined;
+  readonly candidates: readonly ReturnType<typeof annotationWikiCandidate>[];
+}): JSX.Element {
+  return (
+    <div className="source-note-toolbar mdbase-settle-host">
+      <MarkdownFormatToolbar onFormat={onFormat} />
+      <SaveStatus
+        status={workspace.saveStatus}
+        locallySaved={workspace.draftRecovery?.locallySaved ?? false}
+        conflict={Boolean(workspace.draftRecovery?.conflict)}
+      />
+      <SourceNoteInsertMenu
+        citekey={citekey}
+        candidates={candidates}
+        draft={workspace.draft}
+        onInsertCitation={(key) => onInsert(`[@${key}]`, true)}
+        onInsertAnnotation={(path) => onInsert(`![[${path}]]`)}
+      />
+    </div>
   );
 }
 

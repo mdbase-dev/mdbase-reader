@@ -1,7 +1,6 @@
 import { ConnectDocumentError, type ReaderFileClient } from "./documents.js";
-import { outcomeValue } from "./repository-client.js";
+import { findFile } from "./native/native-files.js";
 
-import type { MdbaseConnection } from "@mdbase-dev/connect";
 import type {
   CollectionFileReadOptions,
   CollectionFileRepository,
@@ -78,11 +77,11 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
     options: CollectionFileReadOptions,
   ): Promise<ExportedCollectionFile> {
     const path = portableFilePath(file);
-    const descriptor = outcomeValue(await this.files.stat({ path }, options), "find export file");
+    const descriptor = await findFile(this.files, { path }, options);
     if (!descriptor) {
       throw new ConnectDocumentError("export file", "file_not_found");
     }
-    if (expectedRevision && descriptor.contentDigest !== expectedRevision) {
+    if (expectedRevision && descriptor.digest !== expectedRevision) {
       throw new ConnectDocumentError("export file", "file_revision_changed");
     }
     checkFileSize(descriptor.size, options.maxBytes);
@@ -150,10 +149,4 @@ function mediaTypeFromPath(path: string): string {
     return "image/jpeg";
   }
   return "application/octet-stream";
-}
-
-export function connectCollectionFileRepository(
-  connection: MdbaseConnection,
-): ConnectCollectionFileRepository {
-  return new ConnectCollectionFileRepository(connection.files);
 }

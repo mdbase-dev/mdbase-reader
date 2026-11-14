@@ -8,9 +8,6 @@ import manifest from "./generated/mdbase-app.json";
 import { NativeImportPage } from "./NativeImportPage.js";
 import { createRoot } from "./testing/i18n.js";
 
-vi.mock("./connect.js", () => {
-  throw new Error("Native imports must not load the legacy Reader session");
-});
 vi.mock("@mdbase-dev/ui/feedback", () => ({ FeedbackButton: () => null }));
 // Import parsing stand-ins only; SDK clients/currentness/collection scopes are real public fixtures.
 vi.mock("@mdbase-reader/migration", async (original) => {

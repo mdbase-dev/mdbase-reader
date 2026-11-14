@@ -21,6 +21,6 @@ describe("ConnectAnnotationAssetRepository", () => {
     expect(path).toBe("files/annotation-ann_01.png");
     expect(blob.type).toBe("image/png");
     expect(new Uint8Array(await blob.arrayBuffer())).toEqual(new Uint8Array([137, 80, 78, 71]));
-    expect(options).toEqual({ mediaType: "image/png", transferId: "mutation-1" });
+    expect(options).toEqual({ transferId: "mutation-1" });
   });
 });

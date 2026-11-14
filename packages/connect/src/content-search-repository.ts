@@ -7,13 +7,12 @@ import {
   type SourceTextSearchMatch,
 } from "@mdbase-reader/core";
 
-import { outcomeValue } from "./repository-client.js";
+import { completeReaderPages } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
+import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
 
 export class ConnectContentSearchRepository implements ContentSearchRepository {
-  constructor(private readonly client: ReaderConnectClient) {}
+  constructor(private readonly client: MdbaseClient) {}
 
   async search(
     _collectionId: CollectionId,
@@ -26,11 +25,11 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
       return [];
     }
     const matches = new Map<string, SourceTextSearchMatch>();
-    for await (const outcome of this.client.queryPages(searchInput(normalized), {
+    for await (const outcome of completeReaderPages(this.client, searchInput(normalized), {
       ...options,
-      pageSize: 250,
+      include: { effective: true, body: true },
     })) {
-      const records = outcomeValue(outcome, "search source and annotation text").results;
+      const records = outcome.records;
       for (const match of mergeMatches(records, normalized)) {
         const previous = matches.get(match.sourceId);
         matches.set(
@@ -56,17 +55,15 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
   }
 }
 
-function searchInput(query: string): QueryInput {
+function searchInput(query: string): Query {
   return {
     types: ["reader-source", "reader-annotation"],
     where: `file.body.lower().contains(${JSON.stringify(query)})`,
-    frontmatterMode: "effective" as const,
-    includeBody: true,
   };
 }
 
 function mergeMatches(
-  records: readonly QueryRecord[],
+  records: readonly RecordView[],
   query: string,
 ): readonly SourceTextSearchMatch[] {
   const kindsBySource = new Map<string, Set<SourceTextMatchKind>>();
@@ -101,9 +98,9 @@ function mergeMatches(
 }
 
 function recordMatch(
-  record: QueryRecord,
+  record: RecordView,
 ): { readonly id: string; readonly kind: SourceTextMatchKind } | null {
-  const frontmatter = record.effectiveFrontmatter ?? record.frontmatter ?? {};
+  const frontmatter = record.effective ?? record.frontmatter;
   const declaredType = frontmatter["type"];
   if (declaredType === "reader-source" || record.types.includes("reader-source")) {
     const id = frontmatter["id"];

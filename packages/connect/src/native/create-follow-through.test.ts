@@ -9,7 +9,7 @@ import {
   type PendingCreate,
   type PlannedSourceFileImport,
 } from "@mdbase-reader/core";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { plan } from "../source-imports.fixtures.js";
 
@@ -61,11 +61,8 @@ const pathTaken = mdbaseError(
 ).toProblem();
 
 /** The one query the follow-through makes: a record by its Reader `id`. */
-function whereId(
-  expression: string,
-  record: { readonly frontmatter: Map<string, unknown> },
-): boolean {
-  const match = /^id == (".*")$/u.exec(expression);
+function whereId(expr: string, record: { readonly frontmatter: Map<string, unknown> }): boolean {
+  const match = /^id == (".*")$/u.exec(expr);
   return match?.[1] !== undefined && record.frontmatter.get("id") === JSON.parse(match[1]);
 }
 
@@ -76,7 +73,11 @@ function open(
   connection: MdbaseApplicationConnection,
   journal: CreateJournal,
 ): NativeReaderCollection {
-  const collection = nativeReaderCollection(connection, { creates: journal, receiptWaitMs: 20 });
+  const settle = connection.records.settle.bind(connection.records);
+  vi.spyOn(connection.records, "settle").mockImplementation((write, options) =>
+    settle(write, { ...options, timeoutMs: 20 }),
+  );
+  const collection = nativeReaderCollection(connection, { creates: journal });
   cleanup.push(() => collection.dispose());
   return collection;
 }
@@ -269,7 +270,11 @@ describe("create follow-through", () => {
     const session = async (): Promise<MdbaseApplicationConnection> => {
       const client = await replica.client();
       cleanup.push(() => client.close());
-      return { ...(await memoryConnectionFor(replica)), records: client, files: client.files };
+      return {
+        ...(await memoryConnectionFor(replica)),
+        records: client,
+        files: client.files,
+      };
     };
     const before = open(await session(), journal);
     await before.sourceImports.commitFile(sourcePlan(replica.collection));
