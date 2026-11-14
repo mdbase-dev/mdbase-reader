@@ -57,7 +57,7 @@ export function LibraryRowMenu({
   const position = useMenuPosition(ref, target);
   useLayoutEffect(() => {
     ref.current?.querySelector<HTMLElement>("[role^=menuitem]")?.focus({ preventScroll: true });
-  }, []);
+  }, [target]);
   useDismiss(ref, onClose);
   const { source } = target;
   const status = source.reading?.status ?? source.readingStatus ?? "inbox";
