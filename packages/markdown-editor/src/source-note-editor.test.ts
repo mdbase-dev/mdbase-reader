@@ -47,7 +47,7 @@ it("renders source-note headings and references without crashing the syntax high
     const headingClass = highlightingFor(view.state, [tags.heading]);
     expect(headingClass).not.toBeNull();
     expect(
-      [...view.dom.querySelectorAll(`.${headingClass}`)].map((span) => span.textContent).join(""),
+      [...view.dom.querySelectorAll(`.${headingClass!}`)].map((span) => span.textContent).join(""),
     ).toBe("## Notes");
     expect(view.dom.querySelector(".cm-wikilink.is-resolved")?.textContent).toBe(
       "[[sources/example]]",
