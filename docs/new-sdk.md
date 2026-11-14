@@ -1,6 +1,6 @@
 # Reader on the mdbase SDK
 
-Reader pins `@mdbase-dev/sdk` beta.210. Application access goes through `createMdbase`
+Reader pins `@mdbase-dev/sdk` beta.212. Application access goes through `createMdbase`
 and the public `Mdbase` interface; the shared collection UI and translations come from
 `@mdbase-dev/ui` and `@mdbase-dev/i18n`. The manifest validator uses `@mdbase-dev/sdk/manifest`.
 There is no direct legacy Connect or protocol dependency.
