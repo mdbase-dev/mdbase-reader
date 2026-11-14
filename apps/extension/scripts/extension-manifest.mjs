@@ -153,8 +153,8 @@ export function extensionManifest(environment) {
     },
     // One panel per window; it follows the window's active tab.
     side_panel: { default_path: "capture.html" },
-    // Classic, with no SDK: the SDK runtime lives in the extension's pages.
-    background: { service_worker: "background.js" },
+    // The SDK requires a module URL, including in a non-hosting context.
+    background: { service_worker: "background.js", type: "module" },
     options_ui: { page: "options.html", open_in_tab: true },
     commands: {
       _execute_action: {

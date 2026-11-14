@@ -56,8 +56,8 @@ is introduced. Writer's optional file-access consent remains a later SDK capabil
 
 - Apps reach the SDK only through `@mdbase-reader/connect`. The native adapter is the
   `@mdbase-reader/connect/native` subpath. Staging and production Reader web builds retain
-  legacy Connect. The extension loads the SDK only in its offscreen document, not in its
-  service worker or page-status bundle.
+  legacy Connect. The extension creates an SDK entry in each extension page, its module service worker
+  and its offscreen document; they share the SDK session for this build.
 - `nativeReaderCollection(connection)` builds Reader's existing repositories over the
   connection's borrowed `records` client and `files`:
   - `native-client.ts` maps Reader's Connect-shaped reads, queries and writes onto native
@@ -114,20 +114,53 @@ separately from live LAB acceptance.
 Live LAB registration, Worker start and readiness have not been exercised. Old local data and
 pending writes need no cutover handoff.
 
-## Extension SDK owner
+## Extension shared session
 
-The extension runs one SDK entry in an on-demand offscreen document. The service worker
-creates that document; extension pages and the worker use a same-origin BroadcastChannel
-with explicit public application and Reader repository commands. Repository results are
-structured clones of the host's typed values. Callers never close the SDK owner.
+Each side panel, settings and welcome page, the service worker and the offscreen
+document creates its own `createMdbase`. Every bundle receives the same build ID;
+a rebuild gives it a new ID so old contexts cannot attach to a new build's Worker.
+Only the offscreen document may host the SDK Worker. Pages and the service worker
+pass `session: { build, host: false }` and call the SDK directly. Reader repositories
+borrow each context's current connection and retire when its generation changes.
+Selection belongs to each context; saved-page lookup selects the last collection
+remembered by a visible page. Closing a page closes its own SDK entry.
 
-Calls retain their original host generation. Already-aborted calls do not dispatch;
-caller disposal and host replacement settle outstanding calls without retrying mutations.
-The last SDK snapshot is retained unchanged during restart, with transport availability
-reported separately. Uncertain body writes go through SDK recovery of the original request
-and readback, never a fresh mutation. Saved-page marks and highlights work without an open
-panel. Public SDK-fixture tests are not real-Chrome, authenticated or durability acceptance;
-those checks remain pending an isolated LAB lease.
+The service worker creates the offscreen document on demand. The one lifecycle
+message from extension pages asks it to do that; it carries no SDK commands or
+record data. The SDK owns host election, reconnection and its BroadcastChannel
+transport. Offscreen and service-worker entries report background activity; pages
+follow their visibility. Reader's page and page-status fetch overrides remain.
+
+The worker is an ES module because the SDK binds its assets and declaration to
+`import.meta.url`. Chrome supports static module imports in service workers,
+[but not dynamic imports](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics#import-scripts),
+so page status is statically included instead of loaded with `importScripts`.
+Creating its SDK entry and starting it still wait for a saved-page lookup.
+
+There is no popup: the toolbar opens `capture.html` as a side panel. Content scripts
+only capture page content, observe selection/post changes and draw highlights;
+they never used the SDK RPC bridge. Those narrow `chrome.scripting` and runtime
+messages stay. The SDK's `application/tabs.ts` uses same-origin Web Locks and
+BroadcastChannel, and `application/entry.ts` binds the module and current origin to
+the declaration. A content script on a web page cannot join the extension-origin
+session: [isolated execution](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts#work_in_isolated_worlds)
+does not change the [same-origin BroadcastChannel boundary](https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API).
+
+`pnpm --filter @mdbase-reader/extension test:browser` builds two independent SDK
+bundles and opens them together in Chromium. A non-hosting context waits for the
+host, both open one local unsynced replica through one original SDK Worker, and
+writes are read in both directions. Closing the follower leaves the host usable.
+Registration is intercepted and all other external requests are refused; the
+original packaged Worker, WASM and SQLite bytes run unchanged. This is shared-session
+and local storage evidence, not authenticated Connect or log durability acceptance.
+SDK-fixture tests also exercise independent adapter generations and two clients
+of one memory replica.
+
+Capture-create follow-through now lives with the context that performed the
+capture. Closing it retires those adapters and their in-memory create journal;
+the SDK's pending replica writes remain owned by the shared Worker. Automatic
+renaming after a later path refusal therefore only follows while that context
+remains open, instead of for the offscreen document's lifetime.
 
 ## Library imports in SDK mode
 
