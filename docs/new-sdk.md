@@ -1,6 +1,6 @@
 # Reader on the mdbase SDK
 
-Reader pins `@mdbase-dev/sdk` beta.209. Application access goes through `createMdbase`
+Reader pins `@mdbase-dev/sdk` beta.210. Application access goes through `createMdbase`
 and the public `Mdbase` interface; the shared collection UI and translations come from
 `@mdbase-dev/ui` and `@mdbase-dev/i18n`. The manifest validator uses `@mdbase-dev/sdk/manifest`.
 There is no direct legacy Connect or protocol dependency.
@@ -28,8 +28,19 @@ to a shared session. The SDK owns autosave, conflicts, observation and exact mut
 recovery. Reader keeps its existing source checkpoint and older annotation draft
 recovery, retaining the SDK's actual recovery reference when needed.
 
-The sample preview has no real `Mdbase`, so source-note and annotation body editing
-are read-only there. Connected web editing uses native leases.
+The no-collection sample preview previously autosaved source-note Markdown and
+existing annotation bodies through callback-based legacy record sessions. The
+callbacks wrote to `PreviewGateway`'s own in-memory arrays, not to a legacy
+in-memory Connect client or a real collection. Reloading reset that sample data;
+the source editor separately kept its browser-local draft checkpoint.
+
+The preview has no real `Mdbase`, so source-note Markdown is now read-only and
+existing annotation cards no longer offer body editing. This does not make the
+whole demo read-only: its existing gateway still handles annotation creation,
+colour, ownership and deletion, source creation/removal, citation details,
+reading state, saved views and annotation transclusion into source notes. These
+remain sample-only mutations. Connected editors use native leases. No preview
+SDK, compatibility client or replacement editor is introduced.
 
 ## Extension shared session
 
