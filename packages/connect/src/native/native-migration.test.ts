@@ -1,3 +1,4 @@
+import { isMdbaseError, type MdbaseClient } from "@mdbase-dev/sdk";
 import { runMigration, type Fields, type MigrationPlan } from "@mdbase-reader/migration";
 import { afterEach, expect, it, vi } from "vitest";
 
@@ -6,7 +7,6 @@ import { annotationContract, sourceContract } from "../contracts.js";
 import { nativeReaderCollection, type NativeReaderCollection } from "./native-collection.js";
 import { mdbaseError, memoryConnection } from "./testing.js";
 
-import type { MdbaseClient } from "@mdbase-dev/sdk";
 import type { MockInstance } from "vitest";
 
 const cleanup: (() => void)[] = [];
@@ -155,11 +155,17 @@ it("retains a cancelled pending create and resumes it through a fresh adapter wi
   const { connection, collection, open, create, receipt, journal, replica } = await fixture();
   const controller = new AbortController();
   const running = runMigration(plan(), collection.migration, controller.signal, vi.fn());
-  const cancelled = expect(running).rejects.toThrow("Cancelled import");
+  const stopped = running.then(
+    () => null,
+    (error: unknown) => error,
+  );
   await pendingImport(journal, connection.records);
   const [key, mutationId] = [...journal][0]!;
-  controller.abort(new Error("Cancelled import"));
-  await cancelled;
+  const reason = new Error("Cancelled import");
+  controller.abort(reason);
+  // The abort lands either in the SDK's settle wait or in the adapter's own pause.
+  const error = await stopped;
+  expect(error === reason || isMdbaseError(error, "cancelled")).toBe(true);
   collection.dispose();
   const resumed = open();
   const receiptCalls = receipt.mock.calls.length;
