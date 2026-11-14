@@ -28,19 +28,29 @@ to a shared session. The SDK owns autosave, conflicts, observation and exact mut
 recovery. Reader keeps its existing source checkpoint and older annotation draft
 recovery, retaining the SDK's actual recovery reference when needed.
 
-The no-collection sample preview previously autosaved source-note Markdown and
-existing annotation bodies through callback-based legacy record sessions. The
-callbacks wrote to `PreviewGateway`'s own in-memory arrays, not to a legacy
-in-memory Connect client or a real collection. Reloading reset that sample data;
-the source editor separately kept its browser-local draft checkpoint.
+The no-collection sample preview previously let users type and format source-note
+Markdown, autosaving it through a callback-based legacy record session. Saved
+annotations with a path and revision (including newly created source comments and
+the anthology's bookmarks) could likewise be edited and deleted through their
+editor. The three seeded James annotations already lacked those identities and
+already had disabled Edit buttons. Both editors wrote to `PreviewGateway`'s own
+in-memory arrays, not to a legacy in-memory Connect client or a real collection.
+Reloading reset saved sample data; the source editor separately kept a
+browser-local checkpoint for unsaved drafts.
 
-The preview has no real `Mdbase`, so source-note Markdown is now read-only and
-existing annotation cards no longer offer body editing. This does not make the
-whole demo read-only: its existing gateway still handles annotation creation,
-colour, ownership and deletion, source creation/removal, citation details,
-reading state, saved views and annotation transclusion into source notes. These
-remain sample-only mutations. Connected editors use native leases. No preview
-SDK, compatibility client or replacement editor is introduced.
+The preview has no real `Mdbase`, so source-note Markdown is now read-only, its
+format/save/insert toolbar is absent, and every annotation card's Edit button is
+disabled. The annotation editor's body-editing and Delete annotation actions
+are therefore unavailable, even for newly created comments. Source comments can
+still be created, but cannot subsequently be edited through their cards. This
+does not make the whole demo read-only: the existing gateway still handles
+annotation creation, colour and ownership, source creation/removal, source and
+citation details, reading state, saved views and annotation transclusion into
+source notes. Deletion used by highlight release/undo also remains separate
+from the unavailable editor. These are sample-only mutations; even the read-only
+source-note body can still change through annotation transclusion. Connected
+editors use native leases. No preview SDK, compatibility client or replacement
+editor is introduced.
 
 ## Extension shared session
 
