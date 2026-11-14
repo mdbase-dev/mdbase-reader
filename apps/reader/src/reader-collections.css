@@ -43,16 +43,6 @@
   overflow: auto;
   padding: 16px;
 }
-@media (max-width: 680px) {
-  .reader-save-status.reader-menu.is-end > .reader-menu-panel {
-    position: fixed;
-    top: 64px;
-    left: 16px;
-    right: 16px;
-    width: auto;
-    max-width: none;
-  }
-}
 .reader-save-details ul {
   list-style: none;
   margin: 12px 0;

@@ -9,7 +9,7 @@ import { readerDeployments } from "./deployment-environment.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const vendor = "packages/connect/vendor/";
-const pins = {
+export const readerSdkPins = {
   lab: ["@mdbase-dev/sdk-lab", "sdk-lab-beta188.json"],
   staging: ["@mdbase-dev/sdk-staging", "sdk-staging-beta188.json"],
   production: ["@mdbase-dev/sdk", "sdk-production-beta210.json"],
@@ -23,7 +23,7 @@ export function readerSdkTarget(environment) {
     environment.MDBASE_READER_DEPLOY_TARGET,
   ].filter((value) => value !== undefined);
   const target = selectors[0] ?? "production";
-  assert.ok(Object.hasOwn(pins, target), "Unsupported Reader SDK environment: " + target);
+  assert.ok(Object.hasOwn(readerSdkPins, target), "Unsupported Reader SDK environment: " + target);
   assert.ok(
     selectors.every((value) => value === target),
     "Conflicting Reader SDK environments",
@@ -40,8 +40,8 @@ export function readerSdkTarget(environment) {
  * originals side by side. The App CD publisher independently authenticates the
  * SDK producer and target trust before execution. */
 export async function verifiedReaderSdk(target, repoRoot = root, app = "apps/reader") {
-  assert.ok(Object.hasOwn(pins, target), "Unsupported Reader SDK environment: " + target);
-  let [name, manifest] = pins[target];
+  assert.ok(Object.hasOwn(readerSdkPins, target), "Unsupported Reader SDK environment: " + target);
+  let [name, manifest] = readerSdkPins[target];
   let pin = JSON.parse(await readFile(join(repoRoot, vendor, manifest), "utf8"));
   let archive = join(repoRoot, vendor, pin.artifact);
   // App CD has authenticated this immutable plan before install/build. Normal

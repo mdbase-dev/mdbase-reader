@@ -364,7 +364,7 @@ it("keeps chapter reading quiet until the reader leaves, then offers a slim dism
   expect(hint()).toBeNull();
   expect(chip.textContent).toBe("Ch. Chapter 1· 0%");
   expect(chip.getAttribute("aria-label")).toBe("Chapter: Chapter 1, 0% read");
-  const menuLinks = [...host.querySelectorAll(".chapter-reading-chip a")];
+  const menuLinks = [...document.querySelectorAll(".chapter-reading-chip a")];
   expect(menuLinks.map((link) => link.textContent)).toEqual([
     "Continue in the book: An anthology of attention",
     "Next part: Chapter 2",
@@ -419,9 +419,9 @@ it("keeps chapter reading quiet until the reader leaves, then offers a slim dism
   await act(async () => {
     await surface.goTo({ kind: "pdf", pageIndex: 5 });
   });
-  const start = [...host.querySelectorAll<HTMLButtonElement>(".chapter-reading-chip button")].find(
-    (button) => button.textContent === "Go to chapter start",
-  )!;
+  const start = [
+    ...document.querySelectorAll<HTMLButtonElement>(".chapter-reading-chip button"),
+  ].find((button) => button.textContent === "Go to chapter start")!;
   await act(async () => {
     start.click();
     await Promise.resolve();

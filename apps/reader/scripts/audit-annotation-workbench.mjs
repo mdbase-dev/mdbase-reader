@@ -18,12 +18,12 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
     .filter({ has: page.locator(".dv-default-tab-content", { hasText: "Annotations —" }) });
   const panelId = await tab.getAttribute("data-panel-id");
   const workbench = page.locator(`[data-session-id="${panelId}"]`);
-  // Promotion deliberately closes the native sidebar and releases its editor lease.
-  // The memory-only buffer survives; there is no mounted writer to transfer from yet.
+  // Promotion hides the retained sidebar. Explicitly transfer its editor lease
+  // to the workbench; the same unsaved buffer must survive that transfer.
   await expect(tools).toHaveCount(0);
   await workbench
     .locator(`[data-annotation-id="${annotationId}"]`)
-    .getByRole("button", { name: "Resume edits", exact: true })
+    .getByRole("button", { name: "Edit here", exact: true })
     .click();
   const otherEditor = workbench.getByRole("textbox", { name: "Comment" });
   await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
@@ -48,8 +48,12 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
   await tab.click();
   if (!(await tools.isVisible()))
     await page.getByRole("button", { name: "Toggle Notes panel" }).click();
-  // Reopening the sidebar remounts its locally selected editor. Establish the workbench's
-  // ownership explicitly before testing transfer back, rather than assuming a hidden lease.
+  // Reopening the retained sidebar does not steal the workbench's lease.
+  await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
+  await tools
+    .locator(`[data-annotation-id="${annotationId}"]`)
+    .getByRole("button", { name: "Edit here", exact: true })
+    .click();
   await expect(editor).toHaveValue(/Dock-safe annotation draft/u);
   await expect(otherEditor).toHaveCount(0);
   await workbench
@@ -99,7 +103,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
   await page.reload();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   return [
-    "Annotation promotion resumes an uncommitted buffer after the sidebar closes; Edit here transfers the single editor back after docking",
+    "Annotation promotion preserves an uncommitted buffer while the sidebar is hidden; Edit here transfers the single editor after docking",
     "Linked note insertion, deletion warning, cancellation, and deletion persistence work",
   ];
 }

@@ -1,260 +1,239 @@
 # Developing mdbase Reader
 
-For using Reader, start with the [README](../README.md). This guide covers local development,
-packaging, deployment, and implementation boundaries.
+Start with the [README](../README.md) for using Reader. This guide covers the
+workspace, local development, SDK pins, checks and environment builds.
 
-## Getting started
+## Install and develop
 
-Use Node.js 22.12 or newer within the Node 22 release line and pnpm 10.7.0.
-From the repository root:
-
-```sh
-pnpm install
-pnpm check
-pnpm build
-pnpm dev
-```
-
-The web build is emitted by `apps/reader`. Add `?preview=1` to open the explicitly labelled,
-in-memory interface preview without creating collection records or files.
-
-### Reader interface qualification
-
-Start Vite on an unused loopback port, then pass that origin explicitly to the browser gates:
-
-```sh
-READER_AUDIT_ORIGIN=http://127.0.0.1:5329 pnpm --filter @mdbase-reader/app test:polish
-READER_AUDIT_ORIGIN=http://127.0.0.1:5329 pnpm --filter @mdbase-reader/app test:a11y
-READER_AUDIT_ORIGIN=http://127.0.0.1:5329 pnpm --filter @mdbase-reader/app test:browser
-```
-
-`test:polish` runs Chromium at 1440×900 and 390×844, with light/dark themes and normal/reduced
-motion. It writes screenshots and JSON traces under its reported temporary evidence directory.
-The checks cover preview identity, registry-derived shortcuts and active results, real keyboard
-navigation and focus return, dialog contrast, modal/menu/pane geometry and interrupted transitions,
-HTML margin markers after pane resizing, nondefault pane widths across the mobile breakpoint,
-180px citation editing, phone library and PDF toolbar targets, PDF sheet names/focus/Escape,
-and PDF text/page input/keyboard highlighting. Root and PDF shadow-root motion use
-`document.getAnimations()` plus requestAnimationFrame samples. Chromium does not expose the native
-`::details-content` transitions through that API; those traces use computed transition durations
-and requestAnimationFrame opacity samples instead. Reduced motion must have no intermediate opacity.
-For production timings, run `pnpm build:production`, serve its output with `pnpm --filter
-@mdbase-reader/app exec vite preview --host 127.0.0.1 --port 5329 --strictPort`, and point the
-gate at that origin. The production gate also requires Add source to open within 50ms. These
-are disposable preview-fixture checks, not real-account, input-to-photon, or assistive-technology
-certification.
-
-For feedback qualification, start Vite with a loopback `VITE_MDBASE_FEEDBACK_URL` ending in
-`/v1/feedback`, then run `READER_FEEDBACK_TEST_ORIGIN=http://127.0.0.1:5330 pnpm --filter
-@mdbase-reader/app test:feedback` against that server. The gate intercepts every feedback POST;
-it does not deliver mail. It checks the same eight viewport/theme/motion combinations, records
-WAAPI/rAF traces in `/tmp/reader-feedback-motion.json`, preserves a draft across interrupted
-closure, and verifies the dialog is already hidden when screenshot capture starts.
-
-Reader currently pins the shared UI package from npm. Its local palette replaces the shared palette
-presentation, not its matching or shortcut algorithms, and removes the separate sidebar source search.
-After a shared UI release provides one accessible combobox/listbox, retained modal exit/interruption,
-selected-result contrast, and the corresponding reduced-motion styles, repin and delete Reader's
-replacement presentation and local ownership of those styles. Feedback uses Reader CSS on the
-existing persistent native dialog, including immediate hiding while its screenshot capture makes
-the application inert; Reader does not duplicate the shared controller. Move those styles upstream
-and delete the local selectors when a shared UI release owns the same motion contract.
-PDF text extraction and shadow-root adaptation belong to Reader's renderer, not the shared UI package.
-
-## Test a local collection
-
-An application served over HTTP from localhost cannot use the managed
-`https://connect.mdbase.dev` service. Use Connect's isolated local environment, which explicitly
-accepts loopback application manifests.
-
-From the sibling `mdbase-connect` checkout, start the local control plane:
-
-```sh
-cd ../mdbase-connect
-# First use only: cp .env.example .env
-pnpm dev:environment:up
-```
-
-In another terminal, launch Connect with an isolated development profile:
-
-```sh
-cd ../mdbase-connect
-pnpm dev:desktop:fresh
-```
-
-Enter `http://127.0.0.1:8787` in the pairing screen, approve the computer in the local portal, then
-use **Add existing** to register a disposable test collection with that local environment.
-Collections registered with the managed service do not automatically appear in this isolated profile.
-
-Start Reader from its own checkout:
-
-```sh
-pnpm dev
-```
-
-Open Reader with the local Connect server selected:
-
-```text
-http://127.0.0.1:5173/?server=http://127.0.0.1:8787
-```
-
-Reader preserves that server selection through the authorization callback. Loopback manifests are
-never used outside explicit localhost development. If the collection has no Reader contracts yet,
-Connect shows the exact type-pack changes and installs them only after approval.
-
-`mdbase-connect-dev validate-manifest … --allow-local` only permits loopback URLs during static
-manifest validation. The desktop application does not expose an `--allow-local` option. To test
-against the managed service instead, deploy Reader at an HTTPS origin declared by its production
-manifest.
-
-## Deploy the development site
-
-Publish a production build to the stable Cloudflare Pages development origin:
-
-```sh
-pnpm deploy:dev                         # lab (experimental default)
-MDBASE_ENV=staging pnpm deploy:dev      # staging release rehearsal
-```
-
-This builds Reader with an HTTPS manifest for <https://lab.mdbase-reader.pages.dev>, validates the
-manifest, restores the repository's generated manifest files, and uploads `apps/reader/dist` to the
-`lab` branch of the `mdbase-reader` Pages project. The deployed app uses the lab Connect service and
-the isolated lab connector at `http://127.0.0.1:28487`. Maintainers start that profile from the
-private mdbase-cloud-ops checkout with `bin/mdbase-env lab desktop`, then sign in with a lab account. Staging remains an
-explicit release-rehearsal target and production remains on its protected deployment command.
-
-### Environment-specific SDK originals
-
-Install once from the committed lockfile, then deploy LAB without editing any dependency pins:
+Use Node.js 22.12 or newer **within Node 22**, and pnpm 10.7.0, as declared in
+`package.json`. From the repository root:
 
 ```sh
 pnpm install --frozen-lockfile
-MDBASE_ENV=lab node apps/reader/scripts/deploy-pages.mjs
+pnpm dev
 ```
 
-For a build without an upload, use `pnpm --filter @mdbase-reader/app build:lab`. The deploy script
-sets both the Reader manifest origin and Vite environment; setting only `MDBASE_ENV` on an arbitrary
-`vite build` is not a substitute for the complete deployment environment.
+`dev` generates and validates the app manifest, packages the Zotero download,
+then starts Vite at `http://127.0.0.1:5173`. It selects the committed LAB SDK and
+a loopback Reader manifest. Add `?preview=1` for the labelled in-memory interface
+preview, which does not create collection records or files.
 
-Reader installs three SDK originals side by side: canonical `@mdbase-dev/sdk` (the published
-production beta149 SDK, built at Connect 4443fd15 with beta141 trust), and the eaa4e697
-`@mdbase-dev/sdk-lab` and `@mdbase-dev/sdk-staging`. Vite aliases every public
-canonical SDK export to the selected original, including imports originating in Connect and UI;
-the separate legacy SDK alias is untouched. The offline-shell adapter comes from that same original.
-The browser extension installs the same three originals and selects and verifies one the same way
-for its `MDBASE_ENV` (LAB by default), since each original accepts only its own environment's
-packaged trust; other shells are unaffected. Web publication now follows
-[App CD](app-continuous-deployment.md), replacing native branch publication.
+For connected development, use an isolated LAB connector and test account;
+localhost does not turn the production service into a development environment.
+The LAB control plane and connector URLs live in
+`apps/reader/scripts/deployment-environment.mjs`. Use the current environment
+harness from the private mdbase-cloud-ops checkout to start that isolated profile.
+Do not use a personal collection for browser fixtures. Reader preserves an
+explicit `?server=` selection through authorization, but changing that URL does
+not replace the SDK's packaged environment trust.
 
-Each current target pin in `packages/connect/vendor/` records its exact SDK
-archive, producer and trust. Before build hooks execute, App CD authenticates npm
-provenance and the producer's staging attestation, verifies frozen SDK/UI archives
-and all installed originals, and binds the selected SDK's packaged target to the
-protected raw trust hash. Its ephemeral staging install is mechanically derived
-from the authenticated producer; committed manifests, locks, aliases, trust roots
-and signing identities are unchanged. Python 3 is required for safe archive inventory.
-The local deploy helper supports LAB only; dirty-tree overrides cannot publish
-to staging or production.
-
-## Production deployment
-
-The production site is <https://reader.mdbase.dev>, connected to
-<https://connect.mdbase.dev>. Ops `bin/release app-cd` selects exact green main,
-stages and smokes, then publishes and smokes production. See
-[App CD](app-continuous-deployment.md) for artifact custody, compatibility,
-recovery and the bounded manual rollback drill. There is no local production
-publisher or per-deployment web approval. Existing `reader-staging` and
-`reader-production` secrets stay scoped to their protected upload/recovery jobs.
-The extension/store train below remains independent.
-
-## Build the browser extension
-
-Build the unpacked Manifest V3 extension for one mdbase environment:
+Manifest generation writes tracked files under `apps/reader/public/.well-known`
+and `apps/reader/src/generated`. Before committing, restore the production
+manifest with the default generator and inspect the diff:
 
 ```sh
-pnpm --filter @mdbase-reader/extension build                          # lab (default)
-MDBASE_ENV=staging pnpm --filter @mdbase-reader/extension build       # staging
-MDBASE_ENV=production pnpm --filter @mdbase-reader/extension build    # production
+pnpm --filter @mdbase-reader/app manifest
 ```
 
-Load `apps/extension/dist` as an unpacked extension in Chrome 123 or newer; reload it after
-rebuilding. The build's Connect service, loopback connector, Reader origin and name suffix come
-from Reader's deployment table. For LAB, maintainers start the isolated desktop profile
-with `bin/mdbase-env lab desktop` from the private mdbase-cloud-ops checkout. Reload the unpacked extension and
-reauthorize it after switching environments.
+## Checks
 
-Package a production extension ZIP with:
+The root scripts define the normal validation path:
 
 ```sh
+pnpm lint
+pnpm typecheck
+pnpm test:workspaces
+pnpm test:publisher
+pnpm i18n:check
+pnpm build
 MDBASE_ENV=production pnpm --filter @mdbase-reader/extension package
 ```
 
-Its host permissions are that environment's Connect API (SDK record and binary-file traffic)
-and `https://*/*`: the window's side panel follows the active tab and reads each page, and the
-service worker marks saved pages. Where site access is limited, or on plain HTTP, the toolbar
-button grants `activeTab` for that page. One Connect session serves the panel across tabs. Extension fetches explicitly omit portal cookies; the
-SDK's signed grants remain the authorization mechanism. Connect grants live in
-`chrome.storage.local`, shared by the panel and service worker. Unsaved capture drafts use
-`chrome.storage.session` per tab and page.
+`lint` includes ESLint, `format:check` and `check:architecture`. `pnpm test`
+also runs architecture tests, publisher tests and workspace tests; `pnpm check`
+combines lint, typechecking, tests and i18n validation. Publisher tests include
+public provenance and original-archive authentication, so they need network
+access and the npm Sigstore verifier. They do not deploy. Python 3 is required
+for safe SDK archive inventory. On machines with `rpnpm`, use it for finite
+checks and builds; keep dev servers and browser suites local.
 
-The independent `reader-extension-chrome` app-CD target builds exact green main sources and
-submits production ZIPs for automatic Chrome Web Store review and release. Version tags reserve
-numbers; they no longer trigger an alternate publisher. See [release setup and recovery](extension-releases.md)
-and [extension capture improvements and validation](extension-capture-improvements.md).
+The CI Chromium suites start their own loopback Vite server:
 
-## Build the Zotero exporter
+```sh
+pnpm --filter @mdbase-reader/app test:html-svg
+pnpm --filter @mdbase-reader/app test:pdf-touch
+```
+
+The full Reader audit uses an existing loopback server. In one terminal:
+
+```sh
+pnpm --filter @mdbase-reader/app exec vite --host 127.0.0.1 --port 5193 --strictPort
+```
+
+In another:
+
+```sh
+READER_AUDIT_ORIGIN=http://127.0.0.1:5193 pnpm --filter @mdbase-reader/app test:browser
+READER_AUDIT_ORIGIN=http://127.0.0.1:5193 pnpm --filter @mdbase-reader/app test:a11y
+READER_AUDIT_ORIGIN=http://127.0.0.1:5193 pnpm --filter @mdbase-reader/app test:polish
+```
+
+The full audit covers the virtualized library, persisted column layout,
+source-note drafts and conflicts, document formats, annotations and docking.
+The polish gates exercise desktop and phone layouts, themes, keyboard/focus
+behavior and reduced motion. These use disposable fixtures; they do not prove
+real-account or assistive-technology acceptance. Audits report their screenshot
+and trace directories. Set `TMPDIR` to a workspace scratch directory to keep
+those artifacts inside the checkout.
+
+Feedback acceptance needs a build with its intercepted loopback endpoint, then
+an existing preview server (the same setup used by CI):
+
+```sh
+pnpm --filter @mdbase-reader/app build:feedback-test
+pnpm --filter @mdbase-reader/app exec vite preview --host 127.0.0.1 --port 8891 --strictPort
+```
+
+In another terminal:
+
+```sh
+READER_FEEDBACK_TEST_ORIGIN=http://127.0.0.1:8891 pnpm --filter @mdbase-reader/app test:feedback
+```
+
+Every feedback POST is intercepted; the gate does not deliver mail. It checks
+viewport/theme/motion combinations, draft preservation and hiding the dialog
+before screenshot capture.
+
+## SDK pins and refreshes
+
+Production uses an **exact npm version** of `@mdbase-dev/sdk`. The consuming
+workspace manifests and `pnpm-lock.yaml` are the dependency pins. Its original
+archive and `sdk-production-*.json` intake record live in
+`packages/connect/vendor`; the intake records version, producer, digest and
+packaged trust. `scripts/publisher/originals.mjs` selects the unique production
+record matching the app's exact npm pin.
+
+The production pin moves through cloud-ops' SDK repin automation, which opens or
+updates `automation/sdk-repin`. It updates the scoped manifests, lockfile,
+production archive/metadata and configured references. Reader's references
+include `apps/reader/scripts/reader-sdk.mjs` and its test. Normal Reader CI and PR
+review/merge policy still apply; a repin does not deploy. See
+[SDK repins](sdk-repins.md) and the current app configuration and instructions in
+mdbase-cloud-ops for automation ownership.
+
+LAB and staging are separate, manually refreshed originals. Reader and the
+extension install `@mdbase-dev/sdk-lab` and `@mdbase-dev/sdk-staging` through
+`file:` dependencies alongside the production npm dependency. Their archive
+paths are in `apps/reader/package.json` and `apps/extension/package.json`; their
+intake metadata filenames are in `readerSdkPins` in
+`apps/reader/scripts/reader-sdk.mjs`. The tests read that table rather than
+hardcoding release filenames.
+
+To refresh either original in a dedicated PR:
+
+1. Obtain the unmodified target archive and its Sigstore bundle from the intended
+   SDK producer's release. Authenticate its source, target and trust against the
+   current publication policy; a successful build alone is not qualification.
+2. Commit the archive, bundle and target intake JSON in `packages/connect/vendor`.
+   Update both app manifests and the target metadata reference in `readerSdkPins`.
+   Do not rewrite production pins or substitute another environment's trust.
+3. Run `pnpm install` with the pinned pnpm version to update the lockfile. Inspect
+   the diff and keep only changes required by the new originals.
+4. Remove replaced files once no current pin, check or fixture uses them. Run the
+   checks above and build the affected web and extension environments.
+
+Vite verifies original archive hashes, installed members and packaged target
+trust before importing SDK build code. It aliases the canonical public SDK
+exports to the selected original, including transitive imports, and uses its
+offline-shell build module. Unknown or conflicting selectors fail. Keep only
+current dependencies and required fixtures in vendor directories; historical
+originals are recoverable from git. The remaining legacy SDK alias is a separate
+consumer and is not an environment fallback.
+
+App CD independently authenticates the current production npm original and
+fetches a matching staging original from that producer for its ephemeral
+staging install. This does not refresh the committed LAB/staging aliases or
+change trust roots. See [App CD](app-continuous-deployment.md).
+
+## Build each environment
+
+Root `pnpm build` checks i18n and builds the workspaces. With no environment
+selector, SDK verification selects production. For explicit full builds:
+
+```sh
+MDBASE_ENV=production VITE_MDBASE_ENV=production pnpm build
+MDBASE_ENV=lab VITE_MDBASE_ENV=lab MDBASE_READER_ORIGIN=https://lab.mdbase-reader.pages.dev pnpm build
+MDBASE_ENV=staging VITE_MDBASE_ENV=staging MDBASE_READER_ORIGIN=https://staging.mdbase-reader.pages.dev pnpm build
+```
+
+`pnpm build:production` sets `MDBASE_ENV=production`; also set
+`VITE_MDBASE_ENV=production` for a connected web build. The browser entry
+requires that explicit Vite environment, even though archive selection defaults
+to production. For only the LAB web
+app, `pnpm --filter @mdbase-reader/app build:lab` supplies the SDK selector and
+manifest origin. Web output is `apps/reader/dist`. Other targeted web builds:
+
+```sh
+MDBASE_ENV=production VITE_MDBASE_ENV=production pnpm --filter @mdbase-reader/app build
+MDBASE_ENV=staging VITE_MDBASE_ENV=staging MDBASE_READER_ORIGIN=https://staging.mdbase-reader.pages.dev pnpm --filter @mdbase-reader/app build
+```
+
+Always pair the environment with its declared manifest origin. Setting only
+`MDBASE_ENV` on a staging web build leaves the manifest's default production
+origin. Environment builds regenerate tracked manifests; finish with production
+manifest generation and inspect generated-file changes before committing.
+
+## Deployments
+
+`pnpm deploy:dev` invokes the **LAB-only** local Pages helper. It selects LAB's
+manifest origin, SDK, Connect URLs and build revision, validates the output,
+restores generated source manifests and uploads to the LAB Pages branch. It
+requires Cloudflare credentials. An explicit staging or production target is
+refused by that helper, including through the retained `deploy:prod` script.
+
+Production web publication uses ops App CD: exact green main, authenticated
+originals, staging smoke, production compatibility checks, then production
+publication and smoke. See [App CD](app-continuous-deployment.md) for artifact
+custody and recovery. Building locally does not publish.
+
+## Browser extension and other shells
+
+Build the unpacked Manifest V3 extension for one environment:
+
+```sh
+pnpm --filter @mdbase-reader/extension build
+MDBASE_ENV=staging pnpm --filter @mdbase-reader/extension build
+MDBASE_ENV=production pnpm --filter @mdbase-reader/extension build
+MDBASE_ENV=production pnpm --filter @mdbase-reader/extension package
+```
+
+Extension `build` defaults to LAB; `package` defaults to production and emits a
+ZIP under `apps/extension/release`. Load `apps/extension/dist` in Chrome 123 or
+newer. Reload and reauthorize after changing environments. Environment URLs come
+from Reader's deployment table. The independent extension App CD target and
+Chrome Web Store review/release flow are described in
+[extension releases](extension-releases.md).
+
+Build and test the Zotero exporter with:
 
 ```sh
 pnpm --filter @mdbase-reader/zotero-exporter build
 pnpm --filter @mdbase-reader/zotero-exporter test
 ```
 
-Install `apps/zotero-exporter/dist/mdbase-reader-exporter-0.1.0.xpi` through
-Zotero's **Tools → Plugins → Install Plugin From File…**, then choose
-**Tools → Export for mdbase Reader…**. It exports a private migration bundle with
-original files, native annotations, notes, CSL and collection membership. It does not
-modify Zotero or create an mdbase collection.
-See [the plugin documentation](../apps/zotero-exporter/README.md) for scope, verification,
-known omissions and release status.
+See its [README](../apps/zotero-exporter/README.md) for installation and export
+scope. `apps/electron` contains the sandboxed main process and isolated preload;
+`apps/capacitor` contains the native configuration and platform adapter.
 
-## Native shells
+## Architecture
 
-`apps/electron` contains a sandboxed Electron main process and isolated preload bridge;
-set `MDBASE_READER_DEV_URL=http://127.0.0.1:5173` when running it against Vite.
-`apps/capacitor` contains the shared Capacitor configuration and native platform adapter.
-Generate the platform projects with `pnpm --filter @mdbase-reader/capacitor exec cap add android`
-or `cap add ios` on a machine with the corresponding native SDK.
+Dependencies point inward toward the framework-free `core`. Renderers and
+platform shells adapt its ports; collection access belongs in `connect`.
+`reading-surface` defines renderer-neutral locations and capabilities.
+`apps/reader` composes these packages into the source workspace. Run
+`check:architecture` for the enforced dependency and source-size boundaries.
 
-## Architecture and validation
-
-The repository is a pnpm workspace. Its architecture keeps the canonical source and annotation
-model independent of React, mdbase Connect, document renderers, and native shells.
-Dependencies point inward: platform shells and renderers adapt the framework-free core. The core
-must never import React, Connect, EmbedPDF, Readium, CodeMirror, Electron, or Capacitor.
-
-- `core` owns identities, validation, use cases, and ports.
-- `connect` is the only package that imports the mdbase Connect SDK.
-- `reading-surface` defines renderer-neutral locations, selections, and capabilities.
-- `renderer-pdf` adapts EmbedPDF capture and scroll plugins.
-- `renderer-epub` adapts Readium locators and text selections.
-- `markdown-editor`, `platform`, and `ui` are narrow adapters shared by the app shells.
-- `apps/reader` composes those boundaries into the mdbase-styled source workspace.
-
-Documents, library views, source tools, and sidebars share one Dockview workspace. Layouts are
-saved per collection and old two-pane layouts migrate automatically. Moving panels preserves
-document/editor identity; dirty closes require confirmation. Mobile shows one maximized group
-while retaining the desktop arrangement. Reader limits resident document renderers to four.
-
-Further implementation and validation notes:
-
-- [Native SDK preparation](new-sdk.md): the separate read-only source/annotation
-  foundation, artifact pin, and blocked shared session/setup/files integration.
-
-- [Source workspace architecture](architecture/source-workspace.md): session, persistence, and
-  renderer-lifetime boundaries.
-- [Interface shell](interface-shell.md): header, menus, command palette, and stylesheet ownership.
-- [Reader improvement audit](reader-improvement-audit.md): SDK compatibility, remaining work, and
-  the repeatable `test:browser` scenario. Browser testing uses disposable fixtures; it does not
-  authorize or mutate real Connect collections.
-- [Shared editing](shared-editing.md): local versus deployed behaviour, validation, and remaining
-  acceptance gaps.
+See [source workspace architecture](architecture/source-workspace.md),
+[interface shell](interface-shell.md), and [shared editing](shared-editing.md)
+for the relevant ownership and persistence contracts. [New SDK notes](new-sdk.md)
+record historical migration evidence; they are not the current pin instructions.

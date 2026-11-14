@@ -43,6 +43,7 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
     );
   };
   const drag = async (target, point) => {
+    await expect(target).toBeVisible();
     const rect = await target.boundingBox();
     if (!rect) throw new Error("Drag source is not visible");
     await page.mouse.move(rect.x + Math.min(rect.width / 2, 65), rect.y + rect.height / 2);
@@ -75,9 +76,9 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   const secondId = await tab("[test] Research 0002").last().getAttribute("data-panel-id");
   await expect.poll(async () => panelGroup(await state(), secondId)).not.toBeNull();
   const originalGroup = panelGroup(await state(), secondId);
-  // The original central group still contains the Library tab. Drop on its tab strip.
-  const library = tab("Library").filter({
-    has: page.locator(".dv-default-tab-content", { hasText: /^Library$/ }),
+  // The original central group still contains the All sources tab. Drop on its tab strip.
+  const library = tab("All sources").filter({
+    has: page.locator(".dv-default-tab-content", { hasText: /^All sources$/ }),
   });
   const destinationTab =
     panelGroup(await state(), firstId) === originalGroup ? library : tab("[test] Research 0001");
@@ -187,8 +188,19 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
     "Unstored note survives docking and cancelled close; local recovery resumes after storage returns",
   );
 
-  const navigationLayout = JSON.stringify((await state()).layout.grid.root);
   const noteBounds = await page.locator(`[data-session-id="${noteId}"]`).boundingBox();
+  const navigatorActions = page
+    .locator(".dv-groupview")
+    .filter({ has: sideTab("reader:navigator") })
+    .getByRole("button", { name: "Pane actions", exact: true });
+  await navigatorActions.focus();
+  await page.keyboard.press("Enter");
+  await page
+    .getByRole("group", { name: "Pane actions" })
+    .getByRole("button", { name: "Merge into another reading pane", exact: true })
+    .click();
+  await expect(sideTab("reader:navigator")).toBeVisible();
+  const navigationLayout = JSON.stringify((await state()).layout.grid.root);
   await drag(sideTab("reader:navigator"), {
     x: noteBounds.x + noteBounds.width / 2,
     y: noteBounds.y + noteBounds.height - 20,
@@ -203,8 +215,10 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   completed.push("Sources sidebar also docks to document edges");
 
   // Native touch input exercises Dockview's pointer strategy, not DOM-dispatched fake drags.
+  await menu(noteTab, "Move to Sources");
+  await expect(sideTab("reader:navigator")).toBeVisible();
   const touchSource = await sideTab("reader:navigator").boundingBox();
-  const touchTarget = await page.locator(`[data-panel-id="${noteId}"]`).boundingBox();
+  const touchTarget = await page.locator(`[data-panel-id="${firstId}"]`).boundingBox();
   const touchStart = { x: touchSource.x + 55, y: touchSource.y + touchSource.height / 2 };
   const touchEnd = { x: touchTarget.x + 70, y: touchTarget.y + touchTarget.height / 2 };
   const beforeTouchGroup = panelGroup(await state(), "reader:navigator");
