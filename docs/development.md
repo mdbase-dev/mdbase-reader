@@ -192,9 +192,8 @@ MDBASE_ENV=production pnpm --filter @mdbase-reader/extension package
 Its host permissions are that environment's Connect API (SDK record and binary-file traffic)
 and `https://*/*`: the window's side panel follows the active tab and reads each page, and the
 service worker marks saved pages. Where site access is limited, or on plain HTTP, the toolbar
-button grants `activeTab` for that page. One Connect session serves the panel across tabs. Extension fetches explicitly omit portal cookies; the
-SDK's signed grants remain the authorization mechanism. Connect grants live in
-`chrome.storage.local`, shared by the panel and service worker. Unsaved capture drafts use
+button grants `activeTab` for that page. One SDK session serves all extension contexts in a build. Extension fetches explicitly omit portal cookies; the
+SDK's signed grants remain the authorization mechanism. The SDK owns shared sign-in and replica storage; each context owns its collection selection. Unsaved capture drafts use
 `chrome.storage.session` per tab and page.
 
 The independent `reader-extension-chrome` app-CD target builds exact green main sources and

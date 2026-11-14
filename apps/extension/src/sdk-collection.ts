@@ -7,16 +7,7 @@ import {
 } from "@mdbase-reader/connect/native";
 import { MemoryStorage, StorageCreateJournal } from "@mdbase-reader/platform";
 
-import type { SdkHostSource } from "./sdk-host.js";
-
-/**
- * Captures' record creates, followed through while this host runs: one refused because
- * another device took its name is saved again at the next name. The extension keeps
- * nothing between sessions and shows no "needs your attention" notice: it has no place
- * to show one, and its storage is not the web app's. A capture that runs out of names,
- * or is refused for another reason after it was reported saved, is not kept.
- */
-const createStorage = new MemoryStorage();
+import type { ReaderConnectedCollection } from "@mdbase-reader/connect";
 
 function readyEvidence(snapshot: MdbaseSnapshot): boolean {
   const { readiness } = snapshot;
@@ -31,7 +22,7 @@ function readyEvidence(snapshot: MdbaseSnapshot): boolean {
 }
 
 /** The SDK's current READY connection for the selected collection, or null. */
-export function readyConnection(
+function readyConnection(
   sdk: Mdbase,
   snapshot: MdbaseSnapshot,
 ): MdbaseApplicationConnection | null {
@@ -43,18 +34,24 @@ export function readyConnection(
   return connection?.id === selected && connection.isCurrent() ? connection : null;
 }
 
-/**
- * The host's application and Reader's adapters over its READY connection. The adapters are
- * keyed by connection scope: a later snapshot may hand back a new facade for the same
- * connection, which must not retire them.
- */
-export function sdkHostSource(sdk: Mdbase, hostId: string): SdkHostSource {
+/** Reader's adapters belong to this context's selection and connection generation. */
+export function extensionCollection(sdk: Mdbase): {
+  connectedCollection(): ReaderConnectedCollection | null;
+  dispose(): void;
+} {
+  /**
+   * Captures' record creates, followed through while this context runs: one refused because
+   * another device took its name is saved again at the next name. The extension keeps
+   * nothing between sessions and shows no "needs your attention" notice: it has no place
+   * to show one, and its storage is not the web app's. A capture that runs out of names,
+   * or is refused for another reason after it was reported saved, is not kept.
+   */
+  const createStorage = new MemoryStorage();
   let opened: { readonly key: string; readonly collection: NativeReaderCollection } | null = null;
   return {
-    application: sdk,
-    currentCollection() {
+    connectedCollection() {
       const connection = readyConnection(sdk, sdk.getSnapshot());
-      const key = connection ? `${hostId}:${connection.id}:${connection.generation}` : null;
+      const key = connection ? `${connection.id}:${connection.generation}` : null;
       if (opened?.key !== key) {
         opened?.collection.dispose();
         opened =
@@ -67,7 +64,11 @@ export function sdkHostSource(sdk: Mdbase, hostId: string): SdkHostSource {
               }
             : null;
       }
-      return opened;
+      return opened?.collection ?? null;
+    },
+    dispose() {
+      opened?.collection.dispose();
+      opened = null;
     },
   };
 }
