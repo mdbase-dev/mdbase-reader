@@ -214,6 +214,16 @@ from Reader's deployment table. The independent extension App CD target and
 Chrome Web Store review/release flow are described in
 [extension releases](extension-releases.md).
 
+Its host permissions are that environment's Connect API (SDK record and
+binary-file traffic) and `https://*/*`: the window's side panel follows the
+active tab and reads each page, and the service worker marks saved pages. Where
+site access is limited, or on plain HTTP, the toolbar button grants `activeTab`
+for that page. One SDK session serves all extension contexts in a build; the SDK
+owns shared sign-in and replica storage, and each context owns its collection
+selection. Extension fetches explicitly omit portal cookies; the SDK's signed
+grants remain the authorization mechanism. Unsaved capture drafts use
+`chrome.storage.session` per tab and page.
+
 Build and test the Zotero exporter with:
 
 ```sh

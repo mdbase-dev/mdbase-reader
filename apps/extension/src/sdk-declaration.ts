@@ -7,10 +7,13 @@ import {
 import { environment } from "./environment.js";
 import manifest from "./generated/mdbase-app.json";
 
+declare const __READER_EXTENSION_SESSION_BUILD__: string;
+
+/** Identical in every bundle of this package, different after a rebuild. */
+export const sessionBuild = __READER_EXTENSION_SESSION_BUILD__;
+
 /**
- * This build's environment as the SDK names it: the exact build environment,
- * never mapped to another. The pinned SDK's types predate mdbase-next PR #941;
- * `sdkApplicationEnvironment` is the one adapter (see packages/connect).
+ * This build's exact SDK environment, shared with Reader's native entry.
  */
 export function sdkEnvironment(
   target: SdkApplicationEnvironment = environment.target,

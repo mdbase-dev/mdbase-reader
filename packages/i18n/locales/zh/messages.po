@@ -5012,10 +5012,6 @@ msgstr "最大化文档"
 msgid "Maximize document · {0}"
 msgstr "最大化文档 · {0}"
 
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase answered the readiness check with something else."
-msgstr "mdbase 对就绪检查返回了意外内容。"
-
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect did not accept Reader’s app registration, so it cannot open collections here."
 msgstr "mdbase Connect 未接受 Reader 的应用注册，因此无法在此处打开集合。"
@@ -5023,14 +5019,6 @@ msgstr "mdbase Connect 未接受 Reader 的应用注册，因此无法在此处�
 #: apps/reader/src/connection-recovery.ts
 msgid "mdbase Connect took too long to answer. Try again in a moment."
 msgstr "mdbase Connect 响应时间过长。请稍后重试。"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase could not start in the background. Reload the extension."
-msgstr "mdbase 无法在后台启动。请重新加载扩展。"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase has not started yet."
-msgstr "mdbase 尚未启动。"
 
 #: apps/extension/src/connection-view.ts
 msgid "mdbase is still getting ready. Try again in a moment."
@@ -5067,10 +5055,6 @@ msgstr "mdbase Reader 已安装"
 #: apps/extension/src/shell-messages.ts
 msgid "mdbase Reader settings"
 msgstr "mdbase Reader 设置"
-
-#: apps/extension/src/sdk-client.ts
-msgid "mdbase restarted in the background. Check whether your last change was saved, then try again."
-msgstr "mdbase 已在后台重新启动。请检查你上次的更改是否已保存，然后重试。"
 
 #: apps/reader/src/HighlightColorSettings.tsx
 msgid "meanings"
@@ -8743,10 +8727,6 @@ msgstr "citekey @{0} 不唯一。"
 #: apps/reader/src/SourceNoteEditor.tsx
 msgid "The collection changed while you were editing. Review the conflict to continue."
 msgstr "你编辑期间集合发生了更改。请审阅冲突以继续。"
-
-#: apps/extension/src/sdk-host.ts
-msgid "The collection connection changed. Try again."
-msgstr "集合连接已更改。请重试。"
 
 #: apps/reader/src/ReaderSaveStatus.tsx
 msgid "The collection refused some changes. Other changes are still pending on this device. Review them before signing out."

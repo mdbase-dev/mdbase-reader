@@ -76,7 +76,7 @@ export function useConnect(lock: ActionLock): ConnectLink {
     currentSession.current = extension;
     const publish = (): void => {
       const usable = extension.connectedCollection() !== null;
-      const view = connectionView(application.getSnapshot(), usable, extension.hostAvailable());
+      const view = connectionView(application.getSnapshot(), usable);
       if (view.status === "ready" && view.collectionId) {
         rememberCollection(view.collectionId);
       }
