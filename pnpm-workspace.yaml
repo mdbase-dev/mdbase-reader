@@ -6,3 +6,7 @@ packages:
 onlyBuiltDependencies:
   - electron
   - esbuild
+
+# Lezer's parser and highlighter share NodeProp identities; duplicate runtimes collide.
+overrides:
+  "@lezer/common": 1.5.4
