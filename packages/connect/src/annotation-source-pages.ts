@@ -1,20 +1,18 @@
-import { isMdbaseError } from "@mdbase-dev/sdk";
-
 import {
-  annotationSourceAt,
-  annotationSourceFromResult,
+  annotationSourceValue,
+  resolveAnnotationSources,
   stringField,
-  withResolvedSource,
 } from "./annotation-source.js";
-import {
-  completeReaderPages,
-  mapConcurrent,
-  readerConnectBulkConcurrency,
-} from "./repository-client.js";
+import { completeReaderPages } from "./repository-client.js";
 
 import type { MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 import type { AnnotationListOptions, SourceId } from "@mdbase-reader/core";
 
+/**
+ * Every annotation with its resolved source, a page at a time. Annotations are listed with a
+ * query that follows no link, then each page's `source` links go to the link resolver: a
+ * link-following query is bounded by collection size and refuses past 1000 records.
+ */
 export async function* annotationSourcePages(
   client: MdbaseClient,
   options: AnnotationListOptions,
@@ -24,69 +22,34 @@ export async function* annotationSourcePages(
   if (options.paths?.size === 0) {
     return;
   }
+  // Source IDs by record path, shared by every page's link resolution.
+  const ids = new Map<string, string | undefined>();
+  const signal = options.signal ? { signal: options.signal } : {};
   for (const scope of annotationQueryScopes(options.paths)) {
     const selected = scope ? new Set(scope) : null;
     options.signal?.throwIfAborted();
-    const input = {
+    const query = {
       types: ["reader-annotation"],
-
       ...(scope
         ? { where: scope.map((path) => `file.path == ${JSON.stringify(path)}`).join(" || ") }
         : {}),
     };
-    const paging = {
-      ...(options.signal ? { signal: options.signal } : {}),
-    };
-    let published = false;
-    try {
-      const pages = completeReaderPages(
+    for await (const page of completeReaderPages(client, query, {
+      ...signal,
+      include: { effective: true },
+    })) {
+      const records = page.records.filter((record) => !selected || selected.has(record.path));
+      const sources = await resolveAnnotationSources(
         client,
-        withResolvedSource({ ...input, select: ["id", "source"], limit: 500 }),
-        { ...paging, include: { effective: true } },
+        records.map((record) => ({ path: record.path, reference: annotationSourceValue(record) })),
+        signal,
+        ids,
       );
-      for await (const outcome of pages) {
-        const records = outcome.records;
-        published = true;
-        yield records
-          .filter((record) => !selected || selected.has(record.path))
-          .flatMap((record) =>
-            annotationSourceEntry(record, annotationSourceFromResult(record), options.sourceIds),
-          );
-      }
-      continue;
-    } catch (error) {
-      if (published || !(isMdbaseError(error) && error.reason === "query_budget_exceeded")) {
-        throw error;
-      }
+      options.signal?.throwIfAborted();
+      yield records.flatMap((record) =>
+        annotationSourceEntry(record, sources.get(record.path), options.sourceIds),
+      );
     }
-    const pages = completeReaderPages(client, input, { ...paging, include: { effective: true } });
-    for await (const outcome of pages) {
-      const records = outcome.records.filter((record) => !selected || selected.has(record.path));
-      yield* discoverAnnotationSources(client, records, options);
-    }
-  }
-}
-
-async function* discoverAnnotationSources(
-  client: MdbaseClient,
-  records: readonly RecordView[],
-  options: AnnotationListOptions,
-): AsyncGenerator<{ path: string; source: SourceId; reference: unknown }[]> {
-  for (let offset = 0; offset < records.length;) {
-    const batchSize = offset === 0 ? 16 : 64;
-    const resolved = await mapConcurrent(
-      records.slice(offset, offset + batchSize),
-      readerConnectBulkConcurrency,
-      async (record) => {
-        options.signal?.throwIfAborted();
-        const source = await annotationSourceAt(client, record.path, {
-          ...(options.signal ? { signal: options.signal } : {}),
-        });
-        return annotationSourceEntry(record, source, options.sourceIds);
-      },
-    );
-    yield resolved.flat();
-    offset += batchSize;
   }
 }
 

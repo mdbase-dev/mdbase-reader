@@ -361,7 +361,11 @@ function resolveRelations(frontmatter, sourceIds) {
     const targetId = sourceIds.get(target);
     if (!targetId || seen.has(targetId)) continue;
     seen.add(targetId);
-    relations.push({ relation: "is_part_of", target: `[[${targetId}|${target}]]` });
+    // A path link, as Reader's sourceLink writes: the collection has no id_field.
+    relations.push({
+      relation: "is_part_of",
+      target: `[[sources/${safeFilename(target)}|${target}]]`,
+    });
   }
   return relations;
 }
@@ -554,7 +558,6 @@ settings:
   record_extensions:
     - md
   validation: warn
-  id_field: id
 name: mdbase Reader literature fixture
 description: Generated Reader sources and independently copied literature media.
 `;

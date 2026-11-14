@@ -212,17 +212,30 @@ describe("ConnectAnnotationRepository", () => {
 });
 
 describe("Connect annotation reads", () => {
-  it("filters annotation references and reads only matching bodies as whole records", async () => {
+  it("finds legacy bare-ID annotations by plain text and reads them whole", async () => {
     const pages = vi.fn(() =>
       queryStream([
         testRecord({
           path: "annotations/matching.md",
-          effective: { id: "ann_01", source: "src_01" },
+          revision: "rev-1",
+          effective: {
+            id: "ann_01",
+            source: "src_01",
+            annotation_type: "note",
+            created_at: "2026-08-09T00:00:00.000Z",
+          },
           types: ["reader-annotation"],
+          body: "A useful note.",
         }),
         testRecord({
           path: "annotations/other.md",
-          effective: { id: "ann_02", source: "src_02" },
+          revision: "rev-1",
+          effective: {
+            id: "ann_02",
+            source: "src_02",
+            annotation_type: "note",
+            created_at: "2026-08-09T00:00:00.000Z",
+          },
           types: ["reader-annotation"],
         }),
       ]),
@@ -264,17 +277,12 @@ describe("Connect annotation reads", () => {
     expect(pages).toHaveBeenCalledWith(
       expect.objectContaining({
         types: ["reader-annotation"],
-        where:
-          'has(record.source) && source != null && source.asFile() == null && source.contains("src_01")',
+        where: 'has(record.source) && source != null && source.contains("src_01")',
       }),
-      expect.objectContaining({}),
+      expect.objectContaining({ include: { effective: true, body: true, document: true } }),
     );
-    // Revisionless bodies are batched by the SDK; missing query rows still require a read.
-    expect(read).toHaveBeenCalledOnce();
-    expect(read).toHaveBeenCalledWith(
-      { path: "annotations/matching.md" },
-      { include: { effective: true, body: true, document: true } },
-    );
+    // The query returns each legacy annotation whole: no read per record.
+    expect(read).not.toHaveBeenCalled();
     expect(annotations).toHaveLength(1);
     expect(annotations[0]?.body).toBe("A useful note.");
     await expect(repository.sourceIdsWithAnnotations(collectionId("reading"))).resolves.toEqual([

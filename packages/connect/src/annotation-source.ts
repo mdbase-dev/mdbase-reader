@@ -1,42 +1,25 @@
 import { sourceId, type ReaderRequestOptions, type SourceId } from "@mdbase-reader/core";
 
-import { completeReaderPages } from "./repository-client.js";
+import {
+  mapConcurrent,
+  readerConnectBulkConcurrency,
+  resolveLinksFrom,
+} from "./repository-client.js";
 
-import type { PlainValue, MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
+import type { MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 
 /**
  * mdbase resolves an annotation's `source` link, so Reader never guesses a link's target from its
- * text: a link can name a path, a shortened filename, or (where the collection configures an ID
- * field) an ID, and mdbase alone knows which record it reaches.
+ * text: a link can name a path or a shortened filename, and mdbase alone knows which record it
+ * reaches. Links go to the replica's link resolver rather than a link-following query, whose
+ * budget refuses once a collection holds over 1000 records.
  */
-const resolvedSource = "reader_source_id";
 
-/** Adds each annotation's resolved source ID to a query's result values. */
-export function withResolvedSource(input: Query): Query {
-  return {
-    ...input,
-    projections: {
-      ...(input["projections"] as Record<string, PlainValue> | undefined),
-      [resolvedSource]: {
-        expr: "has(record.source) && source != null && source.asFile() != null ? source.asFile().?id.orValue(null) : null",
-      },
-    },
-    select: [...(Array.isArray(input.select) ? input.select : []), `projection.${resolvedSource}`],
-  };
-}
-
-/**
- * The source an annotation belongs to: the record its link resolves to, or for a legacy bare
- * reference that resolves to no record, the ID it was written as. Undefined for a broken link.
- */
-export function annotationSourceFromResult(
-  record: Pick<RecordView, "effective" | "frontmatter" | "values"> | RecordView,
-): SourceId | undefined {
-  const resolved = stringField(record.values?.[resolvedSource]);
-  if (resolved) {
-    return sourceId(resolved);
-  }
-  return legacySourceId((record.effective ?? record.frontmatter)["source"]);
+/** The `source` value as written. */
+export function annotationSourceValue(
+  record: Pick<RecordView, "effective" | "frontmatter">,
+): unknown {
+  return (record.effective ?? record.frontmatter)["source"];
 }
 
 /** Resolves one annotation's source through mdbase. */
@@ -57,20 +40,98 @@ export async function annotationSourceAt(
   path: string,
   options: ReaderRequestOptions = {},
 ): Promise<SourceId | undefined> {
-  const input = withResolvedSource({
-    types: ["reader-annotation"],
-    where: `file.path == ${JSON.stringify(path)}`,
-    select: ["source"],
-  });
-  const pages = completeReaderPages(client, input, { ...options, include: { effective: true } });
-  for await (const outcome of pages) {
-    const record = outcome.records.find((candidate) => candidate.path === path);
-    const source = record ? annotationSourceFromResult(record) : undefined;
-    if (source) {
-      return source;
+  const record = await client.find(
+    { path },
+    { include: { effective: true }, ...(options.signal ? { signal: options.signal } : {}) },
+  );
+  if (!record?.types.includes("reader-annotation")) {
+    return undefined;
+  }
+  const reference = annotationSourceValue(record);
+  return (await resolveAnnotationSources(client, [{ path, reference }], options)).get(path);
+}
+
+/**
+ * Annotations' sources, by annotation path: each `source` link is resolved where it is written
+ * and the record it reaches gives the source ID; a link that reaches no record is taken as a
+ * legacy bare ID. `ids` caches source IDs by record path across calls.
+ */
+export async function resolveAnnotationSources(
+  client: MdbaseClient,
+  annotations: readonly { readonly path: string; readonly reference: unknown }[],
+  options: ReaderRequestOptions = {},
+  ids = new Map<string, string | undefined>(),
+): Promise<Map<string, SourceId | undefined>> {
+  const targets = await sourceLinkTargets(client, annotations, options);
+  await readSourceIds(client, [...new Set(targets.values())], ids, options);
+  return new Map(
+    annotations.map(({ path, reference }) => {
+      const target = targets.get(path);
+      const id = target ? ids.get(target) : undefined;
+      return [path, id ? sourceId(id) : legacySourceId(reference)];
+    }),
+  );
+}
+
+/** The record path each annotation's `source` link reaches, by annotation path. */
+async function sourceLinkTargets(
+  client: MdbaseClient,
+  annotations: readonly { readonly path: string; readonly reference: unknown }[],
+  options: ReaderRequestOptions,
+): Promise<Map<string, string>> {
+  // A link resolves against its note's folder alone (spec 08), so one request serves a folder.
+  const folders = new Map<string, { from: string; paths: string[]; links: string[] }>();
+  for (const { path, reference } of annotations) {
+    const link = linkOccurrence(reference);
+    if (!link) {
+      continue;
+    }
+    const folder = path.slice(0, Math.max(0, path.lastIndexOf("/")));
+    const group = folders.get(folder) ?? { from: path, paths: [], links: [] };
+    group.paths.push(path);
+    group.links.push(link);
+    folders.set(folder, group);
+  }
+  const targets = new Map<string, string>();
+  for (const { from, paths, links } of folders.values()) {
+    const resolved = await resolveLinksFrom(client, from, links, options);
+    for (const [index, path] of paths.entries()) {
+      const target = resolved[index];
+      if (target?.kind === "record" && target.path) {
+        targets.set(path, target.path);
+      }
     }
   }
-  return undefined;
+  return targets;
+}
+
+/** Adds the stable ID of each record at `paths` not yet in `ids`. */
+async function readSourceIds(
+  client: MdbaseClient,
+  paths: readonly string[],
+  ids: Map<string, string | undefined>,
+  options: ReaderRequestOptions,
+): Promise<void> {
+  const unknown = paths.filter((path) => !ids.has(path));
+  const records = await mapConcurrent(unknown, readerConnectBulkConcurrency, (path) =>
+    client.find(
+      { path },
+      { include: { effective: true }, ...(options.signal ? { signal: options.signal } : {}) },
+    ),
+  );
+  for (const [index, path] of unknown.entries()) {
+    const record = records[index];
+    ids.set(path, record ? stringField((record.effective ?? record.frontmatter)["id"]) : undefined);
+  }
+}
+
+/** A frontmatter link as the resolver takes it; a bare value is read as a wikilink target. */
+function linkOccurrence(value: unknown): string | undefined {
+  const raw = stringField(value);
+  if (!raw) {
+    return undefined;
+  }
+  return /^!?\[\[[^\]]+\]\]$|^!?\[[^\]]*\]\([^)]+\)$/u.test(raw) ? raw : `[[${raw}]]`;
 }
 
 /**

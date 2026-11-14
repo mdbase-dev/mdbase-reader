@@ -3,15 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { annotationFromDocument } from "./annotation-mapping.js";
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
-import { mockSdk, testWrite, testRecord, testQuery } from "./records.fixtures.js";
+import { linkIndex, mockSdk, testWrite, testRecord, testQuery } from "./records.fixtures.js";
 
 import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
-
-const legacyAuthorityFeatures = {
-  supportsAuthorityFeature: vi.fn(() =>
-    Promise.resolve({ ok: true as const, value: false, diagnostics: [] }),
-  ),
-};
 
 const collection = collectionId("reading");
 const ok = <T>(value: T): T => value;
@@ -38,29 +32,20 @@ function annotation(name: string, source: string): RecordView {
 
 /**
  * Stands in for mdbase: `resolve` is how the collection resolves each source link (null when it
- * reaches no record). Answers only the query shapes Reader sends, so a new shape fails loudly.
+ * reaches no record). Answers only the query shapes Reader sends, so a new shape fails loudly,
+ * and any query that follows a link is one.
  */
 function collectionOf(
   records: readonly RecordView[],
   resolve: (link: string) => string | null,
-): { client: MdbaseClient; queries: Query[] } {
+): { client: MdbaseClient; queries: Query[]; links: ReturnType<typeof linkIndex> } {
   const annotations = records.filter((record) => record.path.startsWith("annotations/"));
   const byPath = new Map(records.map((record) => [record.path, record]));
-  const target = (record: RecordView): RecordView | undefined => {
-    const path = resolve((record.effective ?? record.frontmatter)["source"] as string);
-    return path === null ? undefined : byPath.get(path);
-  };
   const queries: Query[] = [];
+  const links = linkIndex(records, resolve);
   const client = mockSdk({
-    ...legacyAuthorityFeatures,
+    ...links,
     get: ({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!)),
-    readMany: (paths: readonly string[]) =>
-      Promise.resolve(
-        ok({
-          records: paths.map((path) => ({ status: "found", path, record: byPath.get(path)! })),
-          errors: [],
-        }),
-      ),
     create: vi.fn(({ path }: { path: string }) =>
       Promise.resolve(testWrite(ok(byPath.get(path)!))),
     ),
@@ -75,43 +60,29 @@ function collectionOf(
         return match === undefined ? undefined : (JSON.parse(match) as string);
       };
       const id = quoted(/^id == ("[^"]*")$/u);
-      const linkedTo = quoted(/source\.asFile\(\)\.file\.path == ("[^"]*")$/u);
-      const unresolved = quoted(/source\.asFile\(\) == null && source\.contains\(("[^"]*")\)$/u);
-      const onePath = quoted(/^file\.path == ("[^"]*")$/u);
+      const contains = quoted(
+        /^has\(record\.source\) && source != null && source\.contains\(("[^"]*")\)$/u,
+      );
       let selected: RecordView[];
-      if (id !== undefined) {
+      if (input["projections"] || input.select) {
+        throw new Error(`Unexpected query: ${JSON.stringify(input)}`);
+      } else if (id !== undefined) {
         selected = records.filter(
           (record) => (record.effective ?? record.frontmatter)["id"] === id,
         );
-      } else if (linkedTo !== undefined) {
-        selected = annotations.filter((record) => target(record)?.path === linkedTo);
-      } else if (unresolved !== undefined) {
-        selected = annotations.filter(
-          (record) =>
-            !target(record) &&
-            ((record.effective ?? record.frontmatter)["source"] as string).includes(unresolved),
+      } else if (contains !== undefined) {
+        selected = annotations.filter((record) =>
+          ((record.effective ?? record.frontmatter)["source"] as string).includes(contains),
         );
-      } else if (onePath !== undefined || !where) {
-        selected = annotations.filter((record) => onePath === undefined || record.path === onePath);
+      } else if (!where) {
+        selected = annotations;
       } else {
         throw new Error(`Unexpected query: ${JSON.stringify(input)}`);
       }
-      yield await Promise.resolve(
-        ok(
-          testQuery({
-            records: selected.map((record) => ({
-              ...record,
-              ...(input["projections"]
-                ? { values: { reader_source_id: target(record)?.frontmatter["id"] ?? null } }
-                : {}),
-            })),
-            complete: true,
-          }),
-        ),
-      );
+      yield await Promise.resolve(ok(testQuery({ records: selected, complete: true })));
     },
   });
-  return { client, queries };
+  return { client, queries, links };
 }
 
 describe("annotation source links", () => {
@@ -122,7 +93,7 @@ describe("annotation source links", () => {
     ["an aliased filename", "[[renamed|Example]]"],
   ])("follows the record mdbase resolves %s to, everywhere", async (_case, reference) => {
     const source = document("sources/renamed.md", { id: "src_stable" });
-    const { client, queries } = collectionOf([source, annotation("ann_1", reference)], (link) =>
+    const { client, links } = collectionOf([source, annotation("ann_1", reference)], (link) =>
       link === reference ? source.path : null,
     );
     const repo = new ConnectAnnotationRepository(client);
@@ -145,11 +116,14 @@ describe("annotation source links", () => {
       ).sourceId,
     ).toBe("src_stable");
     // Each read asks mdbase again rather than keeping a resolution that a rename could make stale.
+    const resolved = vi.mocked(links.resolveLinks).mock.calls.length;
     await repo.get(collection, annotationId("ann_1"));
-    // readMany fetched the bodies; the individual reads above each resolved the source again.
-    expect(
-      queries.filter((query) => query.where === 'file.path == "annotations/ann_1.md"'),
-    ).toHaveLength(2);
+    expect(links.resolveLinks).toHaveBeenCalledTimes(resolved + 1);
+    expect(links.resolveLinks).toHaveBeenLastCalledWith(
+      "annotations/ann_1.md",
+      [reference],
+      expect.anything(),
+    );
     expect(() => annotationFromDocument(collection, source)).toThrow();
   });
 
