@@ -1,67 +1,26 @@
-import {
-  MdbaseConnectError,
-  type CollectionFileDescriptor,
-  type MdbaseFileListOptions,
-  type MdbaseFileUploadOptions,
-} from "@mdbase-dev/connect";
-
+import type { FileView, UploadOptions, MdbaseClient } from "@mdbase-dev/sdk";
 import type { PlannedSourceRepresentation } from "@mdbase-reader/core";
 
-export interface ReaderSourceFileListOptions extends MdbaseFileListOptions {
-  readonly contentDigests?: readonly string[];
-}
-
+export type ReaderSourceFileListOptions = NonNullable<
+  Parameters<MdbaseClient["files"]["list"]>[0]
+> & { readonly contentDigests?: readonly string[] };
 export interface ReaderSourceFileClient {
-  list?(options?: ReaderSourceFileListOptions): AsyncIterable<CollectionFileDescriptor>;
-  upload(
-    path: string,
-    source: Blob,
-    options?: MdbaseFileUploadOptions,
-  ): Promise<CollectionFileDescriptor>;
+  list?(options?: ReaderSourceFileListOptions): AsyncIterable<FileView>;
+  upload(path: string, source: Blob, options?: UploadOptions): Promise<FileView>;
 }
 
-/** Uploads one planned file, resuming the same transfer if its first outcome is unknown. */
-export async function uploadWithRecovery(
-  files: ReaderSourceFileClient,
-  representation: PlannedSourceRepresentation,
-  options: Omit<MdbaseFileUploadOptions, "mediaType" | "transferId">,
-): Promise<CollectionFileDescriptor> {
-  const upload = (): Promise<CollectionFileDescriptor> =>
-    files.upload(
-      representation.filePath,
-      new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
-      {
-        ...options,
-        mediaType: representation.mediaType,
-        transferId: representation.transferId,
-      },
-    );
-  try {
-    return await upload();
-  } catch (error) {
-    if (!(error instanceof MdbaseConnectError) || !error.outcomeUnknown) {
-      throw error;
-    }
-    // File control has its own durable transfer journal rather than the
-    // connection's generic pending-mutation store. Reopening the exact same
-    // transfer with a fresh SDK deadline resumes it or replays its receipt.
-    return upload();
-  }
-}
-
-/** One `documents` entry for an uploaded representation. */
 export function documentEntry(
   representation: PlannedSourceRepresentation,
-  descriptor: CollectionFileDescriptor,
+  file: FileView,
   extra: Readonly<Record<string, unknown>> = {},
 ): Readonly<Record<string, unknown>> {
   return {
-    file_id: descriptor.fileId,
-    file: `[[${descriptor.path}]]`,
+    file_id: file.id,
+    file: `[[${file.path}]]`,
     role: representation.role,
     format: representation.format,
     media_type: representation.mediaType,
-    revision: descriptor.contentDigest,
+    revision: file.digest,
     label: representation.originalName,
     ...extra,
   };

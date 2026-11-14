@@ -1,17 +1,16 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
 
+import { mockSdk, testWrite } from "../records.fixtures.js";
 import { digest, plan, recordDocument, success } from "../source-imports.fixtures.js";
 import { ConnectSourceImportRepository } from "../source-imports.js";
 
 import { nativeReaderFiles, type NativeReaderFileClient } from "./native-files.js";
 
-import type { ReaderConnectClient } from "../repository-client.js";
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
 import type { MdbaseClient, FileView } from "@mdbase-dev/sdk";
 
 function fixture(state = "confirmed"): {
   files: { grant: null; upload: Mock; get: Mock; list: () => AsyncGenerator<FileView> };
-  awaitReceipt: Mock;
+  settle: Mock;
   stateOf: Mock;
   adapter: NativeReaderFileClient;
 } {
@@ -23,25 +22,41 @@ function fixture(state = "confirmed"): {
       path: "reading.html",
       digest: "sha256:abc",
       size: 12,
-      media: "document",
+      media: "other",
+      state: "materialized",
+      confirmedSeq: 1,
     }),
     list: async function* () {
       yield await files.get();
     },
   };
-  const awaitReceipt = vi.fn().mockResolvedValue({ state });
+  const settle = vi.fn().mockResolvedValue(
+    state === "rejected"
+      ? {
+          outcome: "rejected",
+          problem: {
+            code: "conflict",
+            recovery: "resolve_conflict",
+            message: "The collection refused this file",
+          },
+        }
+      : { outcome: state === "confirmed" ? "confirmed" : "saved_on_device" },
+  );
   const stateOf = vi.fn().mockReturnValue("saved");
-  const client = { files, awaitReceipt, ledger: { stateOf } } as unknown as MdbaseClient;
-  return { files, awaitReceipt, stateOf, adapter: nativeReaderFiles(client) };
+  const client = { files, settle, ledger: { stateOf } } as unknown as MdbaseClient;
+  return { files, settle, stateOf, adapter: nativeReaderFiles(client) };
 }
 
 describe("native file confirmation", () => {
   it("reads the file only after the collection confirms it", async () => {
-    const { adapter, files, awaitReceipt } = fixture();
+    const { adapter, files, settle } = fixture();
     await expect(adapter.upload("reading.html", new Blob(["reading"]))).resolves.toMatchObject({
-      fileId: "file",
+      id: "file",
     });
-    expect(awaitReceipt).toHaveBeenCalledWith("mutation", { timeoutMs: 30_000 });
+    expect(settle).toHaveBeenCalledWith(
+      { mutationId: "mutation", fileId: "file" },
+      { timeoutMs: 30_000 },
+    );
     expect(files.get).toHaveBeenCalledOnce();
   });
 
@@ -64,9 +79,9 @@ describe("native file confirmation", () => {
   });
 
   it("settles cancellation while confirmation is held", async () => {
-    const { adapter, awaitReceipt, files } = fixture();
+    const { adapter, settle, files } = fixture();
     const controller = new AbortController();
-    awaitReceipt.mockImplementation(
+    settle.mockImplementation(
       (_id, { signal }: { signal: AbortSignal }) =>
         new Promise((_resolve, reject) => {
           signal.addEventListener("abort", () => reject(signal.reason as Error), { once: true });
@@ -75,7 +90,7 @@ describe("native file confirmation", () => {
     const adding = adapter.upload("reading.html", new Blob(["reading"]), {
       signal: controller.signal,
     });
-    await vi.waitFor(() => expect(awaitReceipt).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(settle).toHaveBeenCalledOnce());
     controller.abort();
     await expect(adding).rejects.toMatchObject({ name: "AbortError" });
     expect(files.get).not.toHaveBeenCalled();
@@ -85,7 +100,7 @@ describe("native file confirmation", () => {
   it("does not mistake an optimistic file for a recoverable durable upload", async () => {
     const { adapter, stateOf, files } = fixture();
     stateOf.mockReturnValue("saving");
-    const collect = async (): Promise<CollectionFileDescriptor[]> => {
+    const collect = async (): Promise<FileView[]> => {
       const entries = [];
       for await (const entry of adapter.list()) {
         entries.push(entry);
@@ -104,11 +119,8 @@ describe("native file confirmation", () => {
       yield { ...view, digest };
     };
     stateOf.mockImplementation((id: string) => (id === "pending-file" ? "saving" : "saved"));
-    const create = vi.fn().mockResolvedValue(success(recordDocument()));
-    const repository = new ConnectSourceImportRepository(
-      { create } as unknown as ReaderConnectClient,
-      adapter,
-    );
+    const create = vi.fn().mockResolvedValue(testWrite(success(recordDocument())));
+    const repository = new ConnectSourceImportRepository(mockSdk({ create }), adapter);
     await expect(
       repository.commitFile(plan(), { recoverExistingFiles: true }),
     ).resolves.toMatchObject({
@@ -129,10 +141,7 @@ describe("native file confirmation", () => {
       };
       stateOf.mockReturnValue(state);
       const create = vi.fn();
-      const repository = new ConnectSourceImportRepository(
-        { create } as unknown as ReaderConnectClient,
-        adapter,
-      );
+      const repository = new ConnectSourceImportRepository(mockSdk({ create }), adapter);
       await expect(repository.commitFile(plan(), { recoverExistingFiles: true })).rejects.toThrow(
         "still waiting for confirmation",
       );

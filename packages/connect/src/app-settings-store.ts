@@ -1,9 +1,4 @@
-/**
- * One app's collection-scope settings record (`docs/design/app-settings.md`): read by path,
- * defaults when it is missing, created on the first save, then patched field by field against
- * the revision that was read. Nothing here creates the record on read or rewrites it to repair
- * a field: an unusable field takes its default with a warning until someone saves it.
- */
+import { isMdbaseError, describeError } from "@mdbase-dev/sdk";
 import {
   appSettingsPatch,
   appSettingsPath,
@@ -16,11 +11,16 @@ import {
   type ResolvedAppSettings,
 } from "@mdbase-reader/core";
 
-import { isPathTaken } from "./validation-issues.js";
+import { frontmatterChanges, requireSaved, updateRecord } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, ConnectProblem, RecordDocument } from "@mdbase-dev/connect";
+import type { JsonObject, MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 
+/**
+ * One app's collection-scope settings record (`docs/design/app-settings.md`): read by path,
+ * defaults when it is missing, created on the first save, then patched field by field against
+ * the revision that was read. Nothing here creates the record on read or rewrites it to repair
+ * a field: an unusable field takes its default with a warning until someone saves it.
+ */
 export interface AppSettingsSnapshot<Values extends object> {
   /** `loading` until the first read, `failed` when it could not be read: defaults apply. */
   readonly status: "loading" | "ready" | "failed";
@@ -61,7 +61,7 @@ export interface AppSettingsStoreOptions<Values extends object> {
 
 export class AppSettingsStore<Values extends object> {
   readonly path: string;
-  readonly #client: ReaderConnectClient;
+  readonly #client: MdbaseClient;
   readonly #definition: AppSettingsDefinition<Values>;
   readonly #options: AppSettingsStoreOptions<Values>;
   readonly #listeners = new Set<() => void>();
@@ -82,7 +82,7 @@ export class AppSettingsStore<Values extends object> {
     { readonly mutationId: string; readonly changes: AppSettingsChanges<Values> } | undefined;
 
   public constructor(
-    client: ReaderConnectClient,
+    client: MdbaseClient,
     definition: AppSettingsDefinition<Values>,
     options: AppSettingsStoreOptions<Values> = {},
   ) {
@@ -146,8 +146,8 @@ export class AppSettingsStore<Values extends object> {
    */
   async #replayRefusedCreate(): Promise<void> {
     const pending = this.#pendingCreate;
-    const tracking = this.#client.createTracking;
-    if (!pending || !tracking) {
+    const tracking = this.#client;
+    if (!pending) {
       return;
     }
     const receipt = await tracking.receipt(pending.mutationId);
@@ -156,7 +156,7 @@ export class AppSettingsStore<Values extends object> {
     }
     this.#pendingCreate = undefined;
     if (receipt.state === "rejected") {
-      await tracking.acknowledge(pending.mutationId);
+      await tracking.ledger.acknowledge(pending.mutationId);
       await this.save(pending.changes, { status: "ready", settings: this.#snapshot.settings });
     }
   }
@@ -221,50 +221,43 @@ export class AppSettingsStore<Values extends object> {
     changes: AppSettingsChanges<Values>,
   ): Promise<AppSettingsSaveResult<Values> | { readonly raced: string }> {
     const generation = ++this.#generation;
-    const outcome = latest.frontmatter
-      ? await this.#patch(latest.frontmatter, latest.revision, changes)
-      : await this.#create(changes);
-    if (outcome === "unchanged") {
-      return { ok: true, snapshot: latest };
-    }
-    if (outcome.ok) {
-      this.#publishNewer(generation, await this.#resolve(outcome.value));
+    try {
+      const record = latest.frontmatter
+        ? await this.#patch(latest.frontmatter, latest.revision, changes)
+        : await this.#create(changes);
+      if (record === "unchanged") {
+        return { ok: true, snapshot: latest };
+      }
+      this.#publishNewer(generation, await this.#resolve(record));
       return { ok: true, snapshot: this.#snapshot };
+    } catch (error) {
+      if (isMdbaseError(error, "forbidden")) {
+        this.#refused = "This connection cannot change the collection's settings.";
+        this.#publish({ ...this.#snapshot });
+        return this.#refusal("read_only", this.#refused);
+      }
+      const message = describeError(error)?.message ?? "The settings could not be saved.";
+      return isMdbaseError(error, "conflict")
+        ? { raced: message }
+        : this.#refusal("failed", message);
     }
-    const { problem } = outcome;
-    if (problem.code === "not_authorized" || problem.code === "access_denied") {
-      this.#refused = "This connection cannot change the collection's settings.";
-      this.#publish({ ...this.#snapshot });
-      return this.#refusal("read_only", this.#refused);
-    }
-    return problem.code === "concurrent_modification" || isPathTaken(problem)
-      ? { raced: problemMessage(problem) }
-      : this.#refusal("failed", problemMessage(problem));
   }
 
   async #read(): Promise<AppSettingsSnapshot<Values>> {
-    let outcome: ConnectOutcome<RecordDocument>;
     try {
-      outcome = await this.#client.read({ path: this.path });
+      const record = await this.#client.find({ path: this.path });
+      return record
+        ? await this.#resolve(record)
+        : this.#withRefusal({
+            status: "ready",
+            settings: await this.#refine(defaultAppSettings(this.#definition)),
+          });
     } catch (error) {
-      return this.#failed(
-        error instanceof Error ? error.message : "The settings could not be read.",
-      );
+      return this.#failed(describeError(error)?.message ?? "The settings could not be read.");
     }
-    if (outcome.ok) {
-      return this.#resolve(outcome.value);
-    }
-    if (outcome.problem.code === "file_not_found") {
-      // No record: the defaults. It is created by the first save, never by a read.
-      return this.#withRefusal({
-        status: "ready",
-        settings: await this.#refine(defaultAppSettings(this.#definition)),
-      });
-    }
-    return this.#failed(problemMessage(outcome.problem));
   }
 
-  async #resolve(document: RecordDocument): Promise<AppSettingsSnapshot<Values>> {
+  async #resolve(document: RecordView): Promise<AppSettingsSnapshot<Values>> {
     const frontmatter = document.frontmatter;
     return this.#withRefusal({
       status: "ready",
@@ -292,35 +285,43 @@ export class AppSettingsStore<Values extends object> {
       : snapshot;
   }
 
-  async #create(changes: AppSettingsChanges<Values>): Promise<ConnectOutcome<RecordDocument>> {
-    return this.#client.create(
-      {
+  async #create(changes: AppSettingsChanges<Values>): Promise<RecordView> {
+    const settled = await this.#client.settle(
+      this.#client.create({
         path: this.path,
         type: this.#definition.type,
-        frontmatter: newAppSettingsFrontmatter(this.#definition, changes),
-      },
-      {
-        onReceipt: ({ mutationId, state }) => {
-          this.#pendingCreate = state === "pending" ? { mutationId, changes } : undefined;
-        },
-      },
+        frontmatter: newAppSettingsFrontmatter(this.#definition, changes) as JsonObject,
+      }),
+      { read: { record: { path: this.path } } },
     );
+    this.#pendingCreate =
+      settled.outcome === "saved_on_device"
+        ? { mutationId: settled.mutationId, changes }
+        : undefined;
+    requireSaved(settled);
+    if (!settled.record) {
+      throw new Error("The settings record no longer exists.");
+    }
+    return settled.record;
   }
 
   async #patch(
     frontmatter: Readonly<Record<string, unknown>>,
     revision: string | undefined,
     changes: AppSettingsChanges<Values>,
-  ): Promise<ConnectOutcome<RecordDocument> | "unchanged"> {
+  ): Promise<RecordView | "unchanged"> {
     const patch = appSettingsPatch(this.#definition, frontmatter, changes);
     if (Object.keys(patch).length === 0) {
       return "unchanged";
     }
-    return this.#client.update({
-      path: this.path,
-      ...(revision ? { ifRevision: revision } : {}),
-      patch: patch,
-    });
+    return updateRecord(
+      this.#client,
+      { path: this.path },
+      {
+        ...(revision ? { ifRevision: revision } : {}),
+        ...frontmatterChanges(patch),
+      },
+    );
   }
 
   #refusal(
@@ -350,8 +351,4 @@ export class AppSettingsStore<Values extends object> {
       listener();
     }
   }
-}
-
-function problemMessage(problem: ConnectProblem): string {
-  return problem.message || "The settings could not be saved.";
 }

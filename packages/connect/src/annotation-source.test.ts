@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { annotationFromDocument } from "./annotation-mapping.js";
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
+import { mockSdk, testWrite, testRecord, testQuery } from "./records.fixtures.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryInput, RecordDocument } from "@mdbase-dev/connect";
+import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
 
 const legacyAuthorityFeatures = {
   supportsAuthorityFeature: vi.fn(() =>
@@ -14,21 +14,20 @@ const legacyAuthorityFeatures = {
 };
 
 const collection = collectionId("reading");
-const ok = <T>(value: T): ConnectOutcome<T> => ({ ok: true, value, diagnostics: [] });
+const ok = <T>(value: T): T => value;
 
-function document(path: string, fields: Record<string, string>): RecordDocument {
-  return {
+function document(path: string, fields: Record<string, string>): RecordView {
+  return testRecord({
     path,
     revision: "r1",
     frontmatter: fields,
-    effectiveFrontmatter: fields,
+    effective: fields,
     body: "A highlight",
-    types: [],
-    file: {},
-  };
+    types: path.startsWith("annotations/") ? ["reader-annotation"] : ["reader-source"],
+  });
 }
 
-function annotation(name: string, source: string): RecordDocument {
+function annotation(name: string, source: string): RecordView {
   return document(`annotations/${name}.md`, {
     id: name,
     source,
@@ -42,29 +41,33 @@ function annotation(name: string, source: string): RecordDocument {
  * reaches no record). Answers only the query shapes Reader sends, so a new shape fails loudly.
  */
 function collectionOf(
-  records: readonly RecordDocument[],
+  records: readonly RecordView[],
   resolve: (link: string) => string | null,
-): { client: ReaderConnectClient; queries: QueryInput[] } {
+): { client: MdbaseClient; queries: Query[] } {
   const annotations = records.filter((record) => record.path.startsWith("annotations/"));
   const byPath = new Map(records.map((record) => [record.path, record]));
-  const target = (record: RecordDocument): RecordDocument | undefined => {
-    const path = resolve(String(record.effectiveFrontmatter["source"]));
+  const target = (record: RecordView): RecordView | undefined => {
+    const path = resolve((record.effective ?? record.frontmatter)["source"] as string);
     return path === null ? undefined : byPath.get(path);
   };
-  const queries: QueryInput[] = [];
-  const client = {
+  const queries: Query[] = [];
+  const client = mockSdk({
     ...legacyAuthorityFeatures,
-    read: ({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!)),
+    get: ({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!)),
     readMany: (paths: readonly string[]) =>
       Promise.resolve(
         ok({
-          results: paths.map((path) => ({ status: "found", path, record: byPath.get(path)! })),
+          records: paths.map((path) => ({ status: "found", path, record: byPath.get(path)! })),
           errors: [],
         }),
       ),
-    create: vi.fn(({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!))),
-    update: vi.fn(({ path }: { path: string }) => Promise.resolve(ok(byPath.get(path)!))),
-    queryPages: async function* (input: QueryInput) {
+    create: vi.fn(({ path }: { path: string }) =>
+      Promise.resolve(testWrite(ok(byPath.get(path)!))),
+    ),
+    update: vi.fn(({ path }: { path: string }) =>
+      Promise.resolve(testWrite(ok(byPath.get(path)!))),
+    ),
+    pages: async function* (input: Query) {
       queries.push(input);
       const where = input.where ?? "";
       const quoted = (pattern: RegExp): string | undefined => {
@@ -72,37 +75,42 @@ function collectionOf(
         return match === undefined ? undefined : (JSON.parse(match) as string);
       };
       const id = quoted(/^id == ("[^"]*")$/u);
-      const linkedTo = quoted(/record\["source"\]\.asFile\(\)\.file\.path == ("[^"]*")$/u);
+      const linkedTo = quoted(/source\.asFile\(\)\.file\.path == ("[^"]*")$/u);
       const unresolved = quoted(/source\.asFile\(\) == null && source\.contains\(("[^"]*")\)$/u);
       const onePath = quoted(/^file\.path == ("[^"]*")$/u);
-      let results: RecordDocument[];
+      let selected: RecordView[];
       if (id !== undefined) {
-        results = records.filter((record) => record.effectiveFrontmatter["id"] === id);
+        selected = records.filter(
+          (record) => (record.effective ?? record.frontmatter)["id"] === id,
+        );
       } else if (linkedTo !== undefined) {
-        results = annotations.filter((record) => target(record)?.path === linkedTo);
+        selected = annotations.filter((record) => target(record)?.path === linkedTo);
       } else if (unresolved !== undefined) {
-        results = annotations.filter(
+        selected = annotations.filter(
           (record) =>
-            !target(record) && String(record.effectiveFrontmatter["source"]).includes(unresolved),
+            !target(record) &&
+            ((record.effective ?? record.frontmatter)["source"] as string).includes(unresolved),
         );
       } else if (onePath !== undefined || !where) {
-        results = annotations.filter((record) => onePath === undefined || record.path === onePath);
+        selected = annotations.filter((record) => onePath === undefined || record.path === onePath);
       } else {
         throw new Error(`Unexpected query: ${JSON.stringify(input)}`);
       }
       yield await Promise.resolve(
-        ok({
-          results: results.map((record) => ({
-            ...record,
-            ...(input.projections
-              ? { values: { reader_source_id: target(record)?.effectiveFrontmatter["id"] ?? null } }
-              : {}),
-          })),
-          complete: true,
-        }),
+        ok(
+          testQuery({
+            records: selected.map((record) => ({
+              ...record,
+              ...(input["projections"]
+                ? { values: { reader_source_id: target(record)?.frontmatter["id"] ?? null } }
+                : {}),
+            })),
+            complete: true,
+          }),
+        ),
       );
     },
-  } as unknown as ReaderConnectClient;
+  });
   return { client, queries };
 }
 

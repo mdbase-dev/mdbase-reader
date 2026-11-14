@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 import "fake-indexeddb/auto";
-import { collectionId, sourceId, recordRevision, type Source } from "@mdbase-reader/core";
 import { afterEach, expect, it, vi } from "vitest";
 
 import {
@@ -8,27 +7,20 @@ import {
   loadAnnotationDraft,
   saveAnnotationDraft,
 } from "./annotation-drafts.js";
+import { editorFixture } from "./editor.fixtures.js";
 import { LocalDraftCheckpoint, flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
 import { SourceDraftSession } from "./source-draft-session.js";
 import { trackUnstoredSourceChanges } from "./unsaved-source-drafts.js";
 
-const source: Source = {
-  collectionId: collectionId("lifecycle"),
-  id: sourceId("note"),
-  path: "note.md",
-  title: "Note",
-  creators: [],
-  tags: [],
-  documents: [],
-  frontmatter: {},
-  body: "Original",
-  recordRevision: recordRevision("1"),
-};
-afterEach(() => {
+const cleanup: (() => void | Promise<void>)[] = [];
+afterEach(async () => {
   flushLocalDraftCheckpoints();
   vi.clearAllTimers();
   vi.useRealTimers();
   vi.restoreAllMocks();
+  for (const close of cleanup.splice(0)) {
+    await close();
+  }
 });
 
 it("flushes on hide/pagehide and never replays a cancelled checkpoint", () => {
@@ -48,10 +40,13 @@ it("flushes on hide/pagehide and never replays a cancelled checkpoint", () => {
   expect(write).toHaveBeenCalledTimes(2);
 });
 
-it("flushes synchronous note storage before deciding whether unload is safe", () => {
-  vi.useFakeTimers();
+it("flushes synchronous note storage before deciding whether unload is safe", async () => {
+  const { app, source, close } = await editorFixture();
+  cleanup.push(close);
   const storage = { getItem: vi.fn(() => null), setItem: vi.fn(), removeItem: vi.fn() };
-  const session = new SourceDraftSession(source, storage, vi.fn(), vi.fn(), vi.fn());
+  const session = new SourceDraftSession(app.mdbase, source, storage, vi.fn());
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
   session.edit("Pending text");
   expect(storage.setItem).not.toHaveBeenCalled();
   const event = new Event("beforeunload", { cancelable: true });
@@ -61,8 +56,9 @@ it("flushes synchronous note storage before deciding whether unload is safe", ()
   expect(event.defaultPrevented).toBe(false);
 });
 
-it("still warns on unload if the checkpoint cannot be written", () => {
-  vi.useFakeTimers();
+it("still warns on unload if the checkpoint cannot be written", async () => {
+  const { app, source, close } = await editorFixture();
+  cleanup.push(close);
   const storage = {
     getItem: vi.fn(() => null),
     removeItem: vi.fn(),
@@ -70,7 +66,9 @@ it("still warns on unload if the checkpoint cannot be written", () => {
       throw new Error("Storage unavailable");
     }),
   };
-  const session = new SourceDraftSession(source, storage, vi.fn(), vi.fn(), vi.fn());
+  const session = new SourceDraftSession(app.mdbase, source, storage, vi.fn());
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
   session.edit("Keep this window open");
   const event = new Event("beforeunload", { cancelable: true });
   window.dispatchEvent(event);

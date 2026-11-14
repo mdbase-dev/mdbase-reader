@@ -35,29 +35,13 @@ import { HighlightSwatches } from "./HighlightSwatches.js";
 import { FocusIcon, MoreIcon } from "./icons.js";
 import { Menu } from "./Menu.js";
 import { annotationLocationLabel } from "./passage-labels.js";
+import { useReaderMdbase } from "./reader-collections.js";
 import { useAnnotationSession } from "./use-annotation-session.js";
 
 import type { AnnotationTransclusionController } from "./use-annotation-transclusion.js";
 const annotationDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });
 
-export function AnnotationCard({
-  annotation,
-  editing,
-  active,
-  transclusion,
-  onEdit,
-  onCancel,
-  onSave,
-  onPlanDelete,
-  onDelete,
-  onOpen,
-  readFile,
-  owners,
-  onMoveOwner,
-  onRecolor,
-  showLocation = true,
-  showSource = false,
-}: {
+interface AnnotationCardProps {
   readonly annotation: Annotation;
   readonly owners?: readonly SourceSummary[] | undefined;
   readonly onMoveOwner?:
@@ -79,19 +63,73 @@ export function AnnotationCard({
   readonly showLocation?: boolean;
   /** True when the annotation belongs to a source other than the open one. */
   readonly showSource?: boolean;
-}): JSX.Element {
-  useLocale();
-  // The list reveals explicit selection once; remounting a windowed selected card must not jump.
-  const cardRef = useScrollToEditing(editing);
-  const session = useAnnotationSession(annotation, onSave);
+}
+
+export function AnnotationCard(props: AnnotationCardProps): JSX.Element {
+  const mdbase = useReaderMdbase();
+  return mdbase ? (
+    <NativeAnnotationCard {...props} />
+  ) : (
+    <AnnotationCardView
+      {...props}
+      editing={false}
+      onEdit={null}
+      needsAttention={false}
+      conflict={false}
+      editingElsewhere={false}
+    />
+  );
+}
+
+function NativeAnnotationCard(props: AnnotationCardProps): JSX.Element {
+  const session = useAnnotationSession(props.annotation);
   const snapshot = useSyncExternalStore(
     session.subscribe,
     session.getSnapshot,
     session.getSnapshot,
   );
+  return (
+    <AnnotationCardView
+      {...props}
+      needsAttention={
+        snapshot.status === "unsaved" || Boolean(snapshot.problem ?? snapshot.conflict)
+      }
+      conflict={Boolean(snapshot.conflict)}
+      editingElsewhere={snapshot.editing}
+    />
+  );
+}
+
+function AnnotationCardView({
+  annotation,
+  editing,
+  active,
+  transclusion,
+  onEdit,
+  onCancel,
+  onSave,
+  onPlanDelete,
+  onDelete,
+  onOpen,
+  readFile,
+  owners,
+  onMoveOwner,
+  onRecolor,
+  showLocation = true,
+  showSource = false,
+  needsAttention,
+  conflict,
+  editingElsewhere,
+}: Omit<AnnotationCardProps, "onEdit"> & {
+  readonly onEdit: (() => void) | null;
+  readonly needsAttention: boolean;
+  readonly conflict: boolean;
+  readonly editingElsewhere: boolean;
+}): JSX.Element {
+  useLocale();
+  // The list reveals explicit selection once; remounting a windowed selected card must not jump.
+  const cardRef = useScrollToEditing(editing);
   const move = useAnnotationMove(annotation, onMoveOwner);
-  const needsAttention =
-    snapshot.status === "unsaved" || Boolean(snapshot.problem ?? snapshot.conflict);
   const linked = hasPassageAnchor(annotation.target);
   return (
     // Pointer shortcut; keyboard users have explicit Edit and Show in document buttons.
@@ -134,7 +172,7 @@ export function AnnotationCard({
             showLocation={showLocation}
             // Without group headings, a card outside its chapter's pages says so itself.
             outsideChapter={showLocation && annotationOutsideChapter(annotation, owners ?? [])}
-            draft={needsAttention ? draftLabel(Boolean(snapshot.conflict)) : null}
+            draft={needsAttention ? draftLabel(conflict) : null}
           />
           <AnnotationCardActions
             annotation={annotation}
@@ -142,10 +180,10 @@ export function AnnotationCard({
             onEdit={onEdit}
             onOpen={onOpen}
             resume={needsAttention}
-            editingElsewhere={snapshot.editing}
+            editingElsewhere={editingElsewhere}
             owners={owners}
             move={onMoveOwner ? move : null}
-            moveDisabled={cannotMoveOwner(editing, needsAttention, snapshot.editing)}
+            moveDisabled={cannotMoveOwner(editing, needsAttention, editingElsewhere)}
             recolor={onRecolor && annotation.annotationType === "highlight" ? onRecolor : null}
           />
         </footer>
@@ -357,7 +395,7 @@ function AnnotationCardActions({
 }: {
   readonly annotation: Annotation;
   readonly transclusion: AnnotationTransclusionController;
-  readonly onEdit: () => void;
+  readonly onEdit: (() => void) | null;
   readonly onOpen: () => void;
   readonly resume: boolean;
   readonly editingElsewhere: boolean;
@@ -371,7 +409,7 @@ function AnnotationCardActions({
     <div className="annotation-card-actions">
       <button
         type="button"
-        disabled={!annotation.path || !annotation.recordRevision}
+        disabled={!onEdit || !annotation.path || !annotation.recordRevision}
         title={
           !annotation.path || !annotation.recordRevision
             ? t({ message: "Editing requires a saved annotation" })
@@ -379,7 +417,7 @@ function AnnotationCardActions({
         }
         onClick={(event) => {
           event.stopPropagation();
-          onEdit();
+          onEdit?.();
         }}
       >
         {editingElsewhere

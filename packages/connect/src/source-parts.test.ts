@@ -1,4 +1,4 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
+import { mdbaseError } from "@mdbase-dev/sdk";
 import {
   collectionId,
   fileId,
@@ -10,18 +10,19 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 import { sourceFromDocument, sourceSummaryFromQuery } from "./mapping.js";
+import { mockSdk, testWrite, testRecord, testQuery } from "./records.fixtures.js";
 import { documentRangePatch, sourcePartOfPatch } from "./source-frontmatter.js";
 import { withResolvedSourceParts } from "./source-part-links.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type {
-  ConnectOutcome,
-  QueryInput,
-  QueryPage,
-  RecordDocument,
+  RecordRef,
+  MdbaseClient,
+  Query,
+  QueryResult,
+  RecordView,
   UpdateInput,
-} from "@mdbase-dev/connect";
+} from "@mdbase-dev/sdk";
 import type { Mock } from "vitest";
 
 const collection = collectionId("parts");
@@ -42,27 +43,27 @@ const base = {
   sourceId: child,
   expectedRevision: recordRevision("rev-1"),
 };
-function success<T>(value: T): ConnectOutcome<T> {
-  return { ok: true, value, diagnostics: [] };
+function success<T>(value: T): T {
+  return value;
 }
-function record(id: string, fields: Record<string, unknown> = {}): RecordDocument {
+function record(id: string, fields: Record<string, unknown> = {}): RecordView {
   const frontmatter = { id, title: id, ...fields };
-  return {
+  return testRecord({
     path: `sources/${id}.md`,
     revision: "rev-1",
     frontmatter,
-    effectiveFrontmatter: frontmatter,
+    effective: frontmatter,
     body: "Untouched notes",
     types: ["reader-source"],
-    file: {},
-  };
+  });
 }
 function fixture(): {
   repository: ConnectSourceRepository;
-  records: Map<SourceId, RecordDocument>;
-  queryPages: Mock<(input: QueryInput) => AsyncIterable<ConnectOutcome<QueryPage>>>;
-  read: Mock<ReaderConnectClient["read"]>;
-  update: Mock<ReaderConnectClient["update"]>;
+  records: Map<SourceId, RecordView>;
+  queryContract: ReturnType<typeof vi.fn>;
+  pages: Mock<(input: Query) => AsyncIterable<QueryResult>>;
+  read: Mock<(ref: { path: string }) => Promise<RecordView>>;
+  update: Mock<MdbaseClient["update"]>;
 } {
   const records = new Map([
     [
@@ -83,8 +84,8 @@ function fixture(): {
       ? parent
       : [...records.keys()].find((id) => target?.startsWith(`[[sources/${id}|`));
   };
-  const queryPages = vi.fn((input: QueryInput) =>
-    (async function* (): AsyncIterable<ConnectOutcome<QueryPage>> {
+  const pages = vi.fn((input: Query) =>
+    (async function* (): AsyncIterable<QueryResult> {
       await Promise.resolve();
       const recordsToReturn = [...records.values()].filter((item) => {
         if (input.where?.startsWith("id == ")) {
@@ -101,54 +102,78 @@ function fixture(): {
         }
         return true;
       });
-      yield success({
-        page: 1,
-        offset: 0,
-        loaded: recordsToReturn.length,
-        complete: true,
-        results: recordsToReturn.map((item) => ({
-          ...item,
-          values: {
-            reader_part_of_ids: input.projections
-              ? ((item.frontmatter["relations"] as { relation: string }[] | undefined)
-                  ?.filter((entry) => entry.relation === "part-of")
-                  .map((entry) => targetId(entry) ?? null) ?? [])
-              : [],
-          },
-        })),
-      });
+      yield success(
+        testQuery({
+          complete: true,
+          records: recordsToReturn.map((item) => ({
+            ...item,
+            values: {
+              reader_part_of_ids: input["projections"]
+                ? ((item.frontmatter["relations"] as { relation: string }[] | undefined)
+                    ?.filter((entry) => entry.relation === "part-of")
+                    .map((entry) => targetId(entry) ?? null) ?? [])
+                : [],
+            },
+          })),
+        }),
+      );
     })(),
   );
   const read = vi.fn(({ path }: { path: string }) =>
     Promise.resolve(success([...records.values()].find((item) => item.path === path)!)),
   );
-  const update = vi.fn((input: UpdateInput) => {
-    const current = [...records.values()].find((item) => item.path === input.path)!;
+  const update = vi.fn((record: RecordRef, input: UpdateInput) => {
+    const current = [...records.values()].find(
+      (item) => item.path === (typeof record === "string" ? record : record.path),
+    )!;
     if (input.ifRevision !== current.revision) {
-      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Moved on")));
+      return Promise.reject(mdbaseError("conflict", "Moved on"));
     }
-    const frontmatter = { ...current.frontmatter, ...input.patch };
+    const frontmatter = {
+      ...current.frontmatter,
+      ...(input.patch instanceof Map ? Object.fromEntries(input.patch) : input.patch),
+    };
+    for (const key of input.unset ?? []) {
+      Reflect.deleteProperty(frontmatter, key);
+    }
     for (const [key, value] of Object.entries(frontmatter)) {
       if (value === null) {
         Reflect.deleteProperty(frontmatter, key);
       }
     }
-    const updated = {
+    const updated = testRecord({
       ...current,
       frontmatter,
-      effectiveFrontmatter: frontmatter,
+      effective: frontmatter,
       revision: "rev-2",
-    };
-    records.set(sourceId(String(current.frontmatter["id"])), updated);
-    return Promise.resolve(success(updated));
+    });
+    records.set(sourceId(current.frontmatter["id"] as string), updated);
+    return Promise.resolve(testWrite(success(updated)));
   });
-  const client = {
-    queryPages,
-    read,
+  const queryContract = vi.fn(() =>
+    Promise.resolve({
+      page: testQuery({ records: [...records.values()] }),
+      records: [...records.values()].map((record) => ({
+        id: record.id,
+        implementations: [{ typeName: "reader-source", fields: record.frontmatter }],
+      })),
+    }),
+  );
+  const client = mockSdk({
+    queryContract,
+    pages,
+    get: read,
     update,
     supportsAuthorityFeature: vi.fn(() => Promise.resolve(success(false))),
-  } as unknown as ReaderConnectClient;
-  return { repository: new ConnectSourceRepository(client), records, queryPages, read, update };
+  });
+  return {
+    repository: new ConnectSourceRepository(client),
+    records,
+    pages,
+    queryContract,
+    read,
+    update,
+  };
 }
 
 describe("source part frontmatter round trips", () => {
@@ -221,6 +246,7 @@ describe("Connect source part repository", () => {
     const saved = await repository.setSourcePartOf({ ...base, parentId: parent });
     expect(saved.partOf).toBe(parent);
     expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: "sources/chapter.md" }),
       expect.objectContaining({
         ifRevision: "rev-1",
         patch: {
@@ -230,6 +256,7 @@ describe("Connect source part repository", () => {
           ],
         },
       }),
+      expect.anything(),
     );
     expect(saved.frontmatter["unrelated"]).toEqual({ keep: true });
     expect(saved.body).toBe("Untouched notes");
@@ -274,7 +301,7 @@ describe("Connect source part repository", () => {
     const { repository, records, update } = fixture();
     update.mockImplementationOnce(() => {
       records.set(child, { ...records.get(child)!, revision: "rev-raced" });
-      return Promise.resolve(connectFailure(connectProblem("concurrent_modification", "Moved on")));
+      return Promise.reject(mdbaseError("conflict", "Moved on"));
     });
     await expect(repository.setSourcePartOf({ ...base, parentId: parent })).rejects.toThrow(
       /Moved on/u,
@@ -343,27 +370,26 @@ describe("Connect source part traversal", () => {
     expect(await repository.validatePartOf(collection, child)).toEqual({ ancestors: [] });
   });
   it("keeps semantic contract queries projection-free and batch-resolves library parent links", async () => {
-    const { repository, records, queryPages } = fixture();
+    const { repository, records, pages, queryContract } = fixture();
     records.set(
       child,
       record(child, {
         relations: [{ relation: "part-of", target: "[[short-name|Renamed book]]" }],
       }),
     );
-    const pages = [];
+    const listedPages: Awaited<ReturnType<typeof repository.list>>[] = [];
     for await (const page of repository.listPages({ collectionId: collection, limit: 100 })) {
-      pages.push(page);
+      listedPages.push(page);
     }
-    expect(pages[0]?.items.find((source) => source.id === child)?.partOf).toBe(parent);
-    expect(queryPages).toHaveBeenCalledTimes(2);
-    expect(queryPages.mock.calls[0]?.[0]).not.toHaveProperty("projections");
-    expect(queryPages.mock.calls[0]?.[0]).toHaveProperty("contract");
-    expect(queryPages.mock.calls[1]?.[0]).not.toHaveProperty("contract");
-    expect(queryPages.mock.calls[1]?.[0].where).toBe('file.path in ["sources/chapter.md"]');
+    expect(listedPages[0]?.items.find((source) => source.id === child)?.partOf).toBe(parent);
+    expect(queryContract).toHaveBeenCalledOnce();
+    expect(pages).toHaveBeenCalledOnce();
+    expect(pages.mock.calls[0]?.[0]).not.toHaveProperty("contract");
+    expect(pages.mock.calls[0]?.[0].where).toBe('file.path in ["sources/chapter.md"]');
   });
 
   it("lists parts with one paginated authority query, resolving aliases instead of comparing link text", async () => {
-    const { repository, records, queryPages, read } = fixture();
+    const { repository, records, pages, read } = fixture();
     records.set(
       child,
       record(child, {
@@ -374,8 +400,8 @@ describe("Connect source part traversal", () => {
     const parts = await repository.sourceParts(collection, parent);
     expect(parts.map((source) => source.id)).toEqual([child]);
     expect(parts[0]?.partOf).toBe(parent);
-    expect(queryPages).toHaveBeenCalledOnce();
-    expect(queryPages.mock.calls[0]?.[0].where).toContain(
+    expect(pages).toHaveBeenCalledOnce();
+    expect(pages.mock.calls[0]?.[0].where).toContain(
       'r.target.asFile().?id.orValue(null) == "book"',
     );
     expect(read).not.toHaveBeenCalled();

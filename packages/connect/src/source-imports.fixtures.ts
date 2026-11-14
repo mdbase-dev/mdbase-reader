@@ -1,11 +1,8 @@
 import { collectionId, dateTime, mutationId, sourceId } from "@mdbase-reader/core";
 
-import type {
-  CollectionFileDescriptor,
-  ConnectOutcome,
-  QueryResult,
-  RecordDocument,
-} from "@mdbase-dev/connect";
+import { testRecord } from "./records.fixtures.js";
+
+import type { FileView, RecordView, QueryResult } from "@mdbase-dev/sdk";
 import type { PlannedSourceFileImport } from "@mdbase-reader/core";
 
 export const digest = `sha256:${"a".repeat(64)}` as const;
@@ -34,28 +31,27 @@ export function plan(): PlannedSourceFileImport {
   };
 }
 
-export function fileDescriptor(
-  overrides: Partial<CollectionFileDescriptor> = {},
-): CollectionFileDescriptor {
+export function fileDescriptor(overrides: Partial<FileView> = {}): FileView {
   return {
-    fileId: "file-import",
+    id: "file-import",
+    state: "materialized",
+    confirmedSeq: 1,
     path: "files/reader/src_import/manuscript.pdf",
-    revision: "file-r1",
-    contentDigest: digest,
+    digest,
     size: 3,
     mediaType: "application/pdf",
-    mediaClass: "pdf",
-    modifiedAt: "2026-08-10T12:00:00.000Z",
+    media: "pdf",
+    mtime: Date.parse("2026-08-10T12:00:00.000Z"),
     ...overrides,
   };
 }
 
-export function queryRecord(id: string, revision: string): QueryResult["results"][number] {
-  return {
+export function queryRecord(id: string, revision: string): QueryResult["records"][number] {
+  return testRecord({
     path: `sources/${id}.md`,
     types: ["reader-source"],
     frontmatter: {},
-    effectiveFrontmatter: {
+    effective: {
       id,
       title: id,
       documents: [
@@ -68,11 +64,10 @@ export function queryRecord(id: string, revision: string): QueryResult["results"
         },
       ],
     },
-    file: {},
-  };
+  });
 }
 
-export function recordDocument(): RecordDocument {
+export function recordDocument(): RecordView {
   const frontmatter = {
     type: "reader-source",
     id: "src_import",
@@ -91,17 +86,16 @@ export function recordDocument(): RecordDocument {
     ],
     reading: { status: "inbox" },
   };
-  return {
+  return testRecord({
     path: "sources/src_import.md",
     revision: "record-r1",
     types: ["reader-source"],
     frontmatter,
-    effectiveFrontmatter: frontmatter,
+    effective: frontmatter,
     body: "# Manuscript\n",
-    file: {},
-  };
+  });
 }
 
-export function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+export function success<Value>(value: Value): Value {
+  return value;
 }

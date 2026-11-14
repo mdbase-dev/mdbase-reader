@@ -1,208 +1,104 @@
-import { readerDiagnostics } from "./diagnostics.js";
-import {
-  validationIssueSummary,
-  type ConnectValidationIssue,
-  type ReaderConnectProblem,
-} from "./validation-issues.js";
+import { describeError, isMdbaseError, MdbaseError } from "@mdbase-dev/sdk";
+
+import { validationIssueSummary, type ConnectValidationIssue } from "./validation-issues.js";
 
 import type {
-  ConnectOutcome,
-  ConnectRequestOptions,
-  CreateInput,
-  DeleteInput,
-  DeletePreflightResult,
-  DeleteProgressOptions,
-  DeleteResult,
-  ConnectProblem,
-  MdbaseConnection,
-  QueryInput,
-  QueryMetadataInput,
-  QueryMetadataPage,
-  QueryPage,
+  wire,
+  JsonObject,
+  Query,
+  RecordReadOptions,
+  PagesOptions,
   QueryResult,
-  ReadInput,
-  ReadManyOptions,
-  ReadManyResult,
-  RecordDocument,
+  MdbaseClient,
+  Problem,
+  RecordRef,
+  RecordView,
+  Settlement,
   UpdateInput,
-} from "@mdbase-dev/connect";
+  Write,
+} from "@mdbase-dev/sdk";
 import type { ReaderRequestOptions } from "@mdbase-reader/core";
 
 export const readerConnectBulkConcurrency = 4;
 
-/** How far a create had got when the client returned it. */
-export interface ReaderCreateReceipt {
-  readonly mutationId: string;
-  /**
-   * `confirmed`: at a log position. `pending`: kept on this device and not yet confirmed;
-   * the log can still refuse it (SDK `client.d.ts` `Write`, `replica-client-api.md` §6).
-   */
-  readonly state: "confirmed" | "pending";
-  /**
-   * The replica's ID for the created record: the caller's `replicaId`, or else the
-   * receipt's optimistic `records`, which a `pending` receipt may leave out.
-   */
-  readonly record?: string;
-}
-
-export interface ReaderCreateOptions {
-  readonly signal?: AbortSignal;
-  readonly onMutation?: (mutationId: string) => void;
-  /**
-   * A stable name for this one save, such as its client-minted mutation ID. A retry with the
-   * same intent lands once natively; the legacy Connect client ignores it.
-   */
-  readonly intent?: string;
-  /**
-   * The record ID to create under natively, minted by the caller (SDK `client.d.ts`
-   * `CreateInput.id`). Keep it with `intent` and send it again on a retry: it is how the
-   * caller knows the record before any receipt names it, since a replica's `pending`
-   * receipt need not list the records it touched. The legacy Connect client ignores it.
-   */
-  readonly replicaId?: string;
-  /**
-   * Called before a native create resolves. The legacy Connect client never calls it: its
-   * creates are decided by the server before they return.
-   */
-  readonly onReceipt?: (receipt: ReaderCreateReceipt) => void;
-}
-
-/**
- * A mutation's receipt (`replica-client-api.md` §6): `pending` until the log decides,
- * then `confirmed` or `rejected` (with the problem), or `unknown` when it was possibly
- * sent before the receipts horizon. `missing` is a receipt the replica no longer has, or
- * never had: it keeps them for at least 24 hours after they leave `pending`.
- */
-export type ReaderMutationState =
-  | { readonly state: "pending" | "confirmed" | "unknown" | "missing" }
-  | { readonly state: "rejected"; readonly problem: ReaderConnectProblem };
-
-/** The record at a path in the local view, as far as a create needs to know. */
-export interface ReaderCreatedRecord {
-  /** Its Reader `id` field. */
-  readonly id: unknown;
-  /** True once a log position has changed it, so its create is confirmed. */
-  readonly confirmed: boolean;
-}
-
-/** A record as this device sees it now, pending writes included. */
-export interface ReaderLocalRecord extends ReaderCreatedRecord {
-  readonly path: string;
-  readonly frontmatter: Readonly<Record<string, unknown>>;
-  readonly body?: string;
-}
-
-/** What a client that settles creates later offers to follow them through. Native only. */
-export interface ReaderCreateTracking {
-  receipt(mutationId: string, options?: ReaderRequestOptions): Promise<ReaderMutationState>;
-  recordAt(path: string, options?: ReaderRequestOptions): Promise<ReaderCreatedRecord | null>;
-  /** The record with this replica ID in the local view, or null when it is not there. */
-  local(replicaId: string, options?: ReaderRequestOptions): Promise<ReaderLocalRecord | null>;
-  /**
-   * Whether the local view can be trusted to show what the log holds: the ledger has
-   * reconciled the writes from before this session (`WriteLedgerSnapshot.restored`), and
-   * the replica has caught up with head (`SyncStatus.confirmedThrough >= headKnown`).
-   * Until then, a record missing here may simply not have arrived yet.
-   */
-  caughtUp(): boolean;
-  /** Forget a refused write once Reader has dealt with it (SDK `ledger.acknowledge`). */
-  acknowledge(mutationId: string): Promise<void>;
-}
-
-export interface ReaderQueryPagesOptions extends ReaderRequestOptions {
-  readonly firstPageSize?: number;
-  readonly pageSize?: number;
-}
-
-export interface ReaderConnectClient {
-  supportsAuthorityFeature(
-    id: string,
-    options?: ReaderRequestOptions,
-  ): Promise<ConnectOutcome<boolean>>;
-  read(input: ReadInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<RecordDocument>>;
-  readMany(
-    paths: readonly string[],
-    options?: ReadManyOptions,
-  ): Promise<ConnectOutcome<ReadManyResult>>;
-  query(input: QueryInput, options?: ReaderRequestOptions): Promise<ConnectOutcome<QueryResult>>;
-  queryPages(
-    input: QueryMetadataInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryMetadataPage>>;
-  queryPages(
-    input: QueryInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryPage>>;
-  create(
-    input: CreateInput,
-    options?: ReaderCreateOptions,
-  ): Promise<ConnectOutcome<RecordDocument>>;
-  update(input: UpdateInput): Promise<ConnectOutcome<RecordDocument>>;
-  preflightDelete(input: DeleteInput): Promise<ConnectOutcome<DeletePreflightResult>>;
-  deleteWithProgress(
-    input: DeleteInput,
-    options?: DeleteProgressOptions,
-  ): Promise<ConnectOutcome<DeleteResult>>;
-  /** Present when a create can return before the log has decided it. */
-  readonly createTracking?: ReaderCreateTracking;
-}
+/** Reader borrows the SDK client; its application owns that client's lifetime. */
 
 export class ConnectRepositoryError extends Error {
-  readonly code: string;
-
   constructor(
-    operation: string,
-    code: string,
+    readonly operation: string,
+    readonly code: string,
     detail?: string,
-    /** The SDK problem, when the failure came from a Connect outcome. */
-    readonly problem?: ConnectProblem,
+    readonly problem?: Problem,
     readonly issues: readonly ConnectValidationIssue[] = [],
   ) {
+    const description = problem ? describeError(new MdbaseError(problem)) : null;
     const summary = validationIssueSummary(issues);
-    const budgetExceeded =
-      code === "query_budget_exceeded" ||
-      (problem as ReaderConnectProblem | undefined)?.native?.reason === "query_budget_exceeded";
-    super(
-      budgetExceeded
-        ? "This annotation query is too large. Try again. If it still fails, contact support."
-        : `mdbase Connect could not ${operation}: ${detail ?? code}${summary ? `: ${summary}` : ""}`,
-    );
+    super(`${description?.message ?? detail ?? code}${summary ? `: ${summary}` : ""}`);
     this.name = "ConnectRepositoryError";
-    this.code = budgetExceeded
-      ? "query_budget_exceeded"
-      : (problem as ReaderConnectProblem | undefined)?.native?.reason === "query_incomplete"
-        ? "query_incomplete"
-        : code;
   }
 }
 
-export function outcomeValue<Value>(outcome: ConnectOutcome<Value>, operation: string): Value {
-  if (outcome.ok) {
-    return outcome.value;
+/** A settled write is read through the SDK; an uncertain result retains its original identity. */
+export async function settledRecord(
+  client: MdbaseClient,
+  write: Write | Promise<Write> | string,
+  record?: RecordRef,
+  signal?: AbortSignal,
+): Promise<RecordView> {
+  const settled = await client.settle(write, {
+    read: {
+      ...(record ? { record } : {}),
+      include: { effective: true, body: true, document: true },
+    },
+    ...(signal ? { signal } : {}),
+  });
+  requireSaved(settled);
+  if (!settled.record) {
+    throw new Error("The saved record no longer exists.");
   }
-  throw new ConnectRepositoryError(
-    operation,
-    outcome.problem.code,
-    outcome.problem.message,
-    outcome.problem,
-    (outcome.problem as ReaderConnectProblem).issues,
+  return settled.record;
+}
+
+export function requireSaved(
+  settled: Settlement,
+): asserts settled is Extract<Settlement, { outcome: "confirmed" | "saved_on_device" }> {
+  if (settled.outcome === "rejected" || settled.outcome === "unknown") {
+    throw new MdbaseError(
+      settled.problem,
+      settled.mutationId ? { mutationId: settled.mutationId } : {},
+    );
+  }
+  if (settled.outcome === "conflicted") {
+    throw new MdbaseError(
+      {
+        code: "conflict",
+        recovery: "resolve_conflict",
+        message: "This change conflicts with another edit. Resolve it before continuing.",
+      },
+      { mutationId: settled.mutationId },
+    );
+  }
+}
+
+/** Edits use the genuine native view and its revision, including the SDK's field observations. */
+export async function updateRecord(
+  client: MdbaseClient,
+  ref: RecordRef,
+  changes: UpdateInput,
+  signal?: AbortSignal,
+): Promise<RecordView> {
+  const options = {
+    include: { effective: true, body: true, document: true },
+    ...(signal ? { signal } : {}),
+  };
+  const base =
+    typeof ref === "object" && "frontmatter" in ref ? ref : await client.get(ref, options);
+  return settledRecord(
+    client,
+    client.update(base, changes, signal ? { signal } : {}),
+    base,
+    signal,
   );
-}
-
-export function queryWithOptions(
-  client: ReaderConnectClient,
-  input: QueryInput,
-  options: ReaderRequestOptions,
-): Promise<ConnectOutcome<QueryResult>> {
-  return hasRequestOptions(options) ? client.query(input, options) : client.query(input);
-}
-
-export function readWithOptions(
-  client: ReaderConnectClient,
-  input: ReadInput,
-  options: ReaderRequestOptions,
-): Promise<ConnectOutcome<RecordDocument>> {
-  return hasRequestOptions(options) ? client.read(input, options) : client.read(input);
 }
 
 export async function mapConcurrent<Input, Output>(
@@ -219,8 +115,7 @@ export async function mapConcurrent<Input, Output>(
   await Promise.all(
     Array.from({ length: Math.min(concurrency, values.length) }, async () => {
       while (!stopped && nextIndex < values.length) {
-        const index = nextIndex;
-        nextIndex += 1;
+        const index = nextIndex++;
         try {
           results[index] = await operation(values[index] as Input, index);
         } catch (error) {
@@ -233,112 +128,122 @@ export async function mapConcurrent<Input, Output>(
   return results;
 }
 
-/** Reader records persist their stable ID as a raw field, so resolve paths at the authority. */
 export async function recordPathById(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   id: string,
   options: ReaderRequestOptions = {},
 ): Promise<string | null> {
-  const input: QueryInput = {
-    where: `id == ${JSON.stringify(id)}`,
-    frontmatterMode: "effective",
-  };
-  const metadata = outcomeValue(
-    await client.supportsAuthorityFeature("query-metadata-v1", options),
-    "discover metadata queries",
-  );
-  const pages = metadata
-    ? client.queryPages(
-        { ...input, output: "metadata", includeBody: false, select: ["id"] },
-        options,
-      )
-    : client.queryPages(input, { ...options, firstPageSize: 50, pageSize: 50 });
-  for await (const outcome of pages) {
-    const page = outcomeValue<QueryPage | QueryMetadataPage>(outcome, "query records");
-    let match: string | null = null;
-    for (const record of page.results) {
-      const candidate =
-        "file" in record
-          ? (record.effectiveFrontmatter ?? record.frontmatter)?.["id"]
-          : record.values["id"];
-      match ??= candidate === id ? record.path : null;
-    }
-    if (match) {
-      return match;
+  for await (const page of client.pages(
+    { where: `id == ${JSON.stringify(id)}`, limit: 50 },
+    { include: { effective: true }, ...(options.signal ? { signal: options.signal } : {}) },
+  )) {
+    for (const record of page.records) {
+      if ((record.effective ?? record.frontmatter)["id"] === id) {
+        return record.path;
+      }
     }
   }
   return null;
 }
 
-/**
- * Keep Reader's domain repositories independent of SDK types while leaving
- * admission, retry, mutation ordering, and request budgets with the SDK.
- */
-export function connectClient(connection: MdbaseConnection): ReaderConnectClient {
-  const route = (): string => connection.route;
-  function queryPages(
-    input: QueryMetadataInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryMetadataPage>>;
-  function queryPages(
-    input: QueryInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryPage>>;
-  function queryPages(
-    input: QueryInput | QueryMetadataInput,
-    options?: ReaderQueryPagesOptions,
-  ): AsyncIterable<ConnectOutcome<QueryPage | QueryMetadataPage>> {
-    const paging = {
-      ...(options?.firstPageSize === undefined ? {} : { firstPageSize: options.firstPageSize }),
-      ...(options?.pageSize === undefined ? {} : { pageSize: options.pageSize }),
-      ...connectOptions(options),
-    };
-    return readerDiagnostics.pages<QueryPage | QueryMetadataPage>(
-      route,
-      input.output === "metadata"
-        ? connection.queryPages(input, paging)
-        : connection.queryPages(input, paging),
-    );
+export async function findRecord(
+  client: MdbaseClient,
+  ref: RecordRef,
+  options: ReaderRequestOptions = {},
+): Promise<RecordView | null> {
+  try {
+    return await client.get(ref, {
+      include: { effective: true, body: true, document: true },
+      ...(options.signal ? { signal: options.signal } : {}),
+    });
+  } catch (error) {
+    if (isMdbaseError(error, "not_found")) {
+      return null;
+    }
+    throw error;
   }
+}
+
+export async function preflightDeleteRecord(
+  client: MdbaseClient,
+  ref: RecordRef,
+  revision: string,
+): Promise<wire.Preflight> {
+  const record = await recordForRevision(client, ref, revision);
+  return client.preflightDelete(record);
+}
+
+export async function deleteRecord(
+  client: MdbaseClient,
+  ref: RecordRef,
+  revision: string,
+  shown: wire.Preflight,
+): Promise<void> {
+  const record = await recordForRevision(client, ref, revision);
+  const fresh = await client.preflightDelete(record);
+  const confirmed = new Set(shown.broken.map(({ path }) => path));
+  if (fresh.broken.some(({ path }) => !confirmed.has(path))) {
+    throw new MdbaseError({
+      code: "conflict",
+      reason: "preflight_changed",
+      recovery: "refresh",
+      message: "More links would break than were confirmed. Review the deletion again.",
+    });
+  }
+  requireSaved(await client.settle(client.delete(record, { ifRevision: revision })));
+}
+
+async function recordForRevision(
+  client: MdbaseClient,
+  ref: RecordRef,
+  revision: string,
+): Promise<RecordView> {
+  const record = await client.get(ref);
+  if (record.revision !== revision) {
+    throw new MdbaseError({
+      code: "conflict",
+      reason: "revision_mismatch",
+      recovery: "refresh",
+      message: "This record changed after it was read.",
+    });
+  }
+  return record;
+}
+
+/** Reader field editors use null for a reset; the native API names removals in unset. */
+export function frontmatterChanges(
+  fields: Readonly<Record<string, unknown>>,
+): Pick<UpdateInput, "patch" | "unset"> {
+  const entries = Object.entries(fields).filter(([, value]) => value !== undefined);
+  const unset = entries.filter(([, value]) => value === null).map(([key]) => key);
   return {
-    supportsAuthorityFeature: (id, options) =>
-      connection.supportsAuthorityFeature(id, connectOptions(options)),
-    read: (input, options) =>
-      readerDiagnostics.measure("read", route, () =>
-        connection.read(input, connectOptions(options)),
-      ),
-    readMany: (paths, options) =>
-      readerDiagnostics.measure("read-many", route, () => connection.readMany(paths, options)),
-    query: (input, options) =>
-      readerDiagnostics.measure("query", route, () =>
-        connection.query(input, connectOptions(options)),
-      ),
-    queryPages,
-    create: (input) => readerDiagnostics.measure("create", route, () => connection.create(input)),
-    update: (input) => readerDiagnostics.measure("update", route, () => connection.update(input)),
-    preflightDelete: (input) =>
-      readerDiagnostics.measure("delete-preflight", route, () => connection.preflightDelete(input)),
-    deleteWithProgress: (input, options) =>
-      readerDiagnostics.measure("delete", route, () =>
-        connection.deleteWithProgress(input, options),
-      ),
+    patch: Object.fromEntries(entries.filter(([, value]) => value !== null)) as JsonObject,
+    ...(unset.length ? { unset } : {}),
   };
 }
 
-export function connectOptions(options: ReaderRequestOptions | undefined): ConnectRequestOptions {
-  return {
-    ...(options?.signal ? { signal: options.signal } : {}),
-    ...(options?.replaceableFamily
-      ? {
-          coordination: {
-            family: options.replaceableFamily,
-            latestWins: true,
-          },
-        }
-      : {}),
-  };
+/** A partial evaluator result cannot become Reader's complete library or annotation index. */
+export async function* completeReaderPages(
+  client: MdbaseClient,
+  query: Query,
+  options: RecordReadOptions & PagesOptions = {},
+): AsyncGenerator<QueryResult> {
+  for await (const page of client.pages(query, {
+    ...options,
+    include: { effective: true, ...options.include },
+  })) {
+    requireCompleteQuery(page);
+    yield page;
+  }
 }
 
-function hasRequestOptions(options: ReaderRequestOptions): boolean {
-  return options.signal !== undefined || options.replaceableFamily !== undefined;
+export function requireCompleteQuery(page: QueryResult): void {
+  if (!page.complete) {
+    throw new MdbaseError({
+      code: "unavailable",
+      reason: "query_incomplete",
+      recovery: "retry",
+      message: "The collection did not provide a complete query.",
+    });
+  }
 }

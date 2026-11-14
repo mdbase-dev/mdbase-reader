@@ -1,8 +1,7 @@
-import { MdbaseError, type Issue } from "@mdbase-dev/sdk";
+import { MdbaseError, type Issue, describeError } from "@mdbase-dev/sdk";
 import { describe, expect, it } from "vitest";
 
-import { failure } from "./native/native-mapping.js";
-import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
+import { requireSaved } from "./repository-client.js";
 import { validationIssueSummary } from "./validation-issues.js";
 
 function required(field: string): Issue {
@@ -24,28 +23,15 @@ function rejection(issues?: Issue[]): MdbaseError {
 }
 
 describe("record validation rejections", () => {
-  it.each([
-    "create source",
-    "update source",
-    "create chapter source",
-    "create annotation",
-    "update annotation",
-    "save citation metadata",
-  ])("retains typed issues and explains failures to %s", (operation) => {
+  it("retains native issues while the SDK describes the problem safely", () => {
     const issues = [required("saved_at")];
-    const outcome = failure(rejection(issues));
     try {
-      outcomeValue(outcome, operation);
-      expect.fail("The invalid record must be rejected");
+      requireSaved({ outcome: "rejected", problem: rejection(issues).toProblem() });
+      expect.fail("Expected rejection");
     } catch (error) {
-      expect(error).toBeInstanceOf(ConnectRepositoryError);
-      const repositoryError = error as ConnectRepositoryError;
-      expect(repositoryError.issues).toBe(issues);
-      expect(repositoryError.issues[0]?.details).toEqual({ schema_location: "/required" });
-      expect(repositoryError.problem).toBe(outcome.ok ? null : outcome.problem);
-      expect(repositoryError.message).toBe(
-        `mdbase Connect could not ${operation}: \`sources/parts/chapter.md\` would not be valid: Saved date is required`,
-      );
+      expect(error).toBeInstanceOf(MdbaseError);
+      expect((error as MdbaseError).issues).toBe(issues);
+      expect(describeError(error)?.message).not.toContain("sources/parts/chapter.md");
     }
   });
 
@@ -100,15 +86,6 @@ describe("record validation rejections", () => {
     );
   });
 
-  it.each([undefined, [], [{ ...required("saved_at"), severity: "warning" as const }]])(
-    "preserves the existing message without error-severity issues (%j)",
-    (issues) => {
-      expect(() => outcomeValue(failure(rejection(issues)), "create chapter source")).toThrow(
-        "mdbase Connect could not create chapter source: `sources/parts/chapter.md` would not be valid",
-      );
-    },
-  );
-
   it("treats inherited object names as unknown field keys and issue codes", () => {
     expect(
       validationIssueSummary([
@@ -116,12 +93,5 @@ describe("record validation rejections", () => {
         { code: "__proto__", severity: "error", message: "private content" },
       ]),
     ).toBe("constructor is required; A field does not meet its validation rules");
-  });
-
-  it("preserves unrelated errors and successful values", () => {
-    expect(() => outcomeValue(failure(new Error("Connection failed")), "update source")).toThrow(
-      "mdbase Connect could not update source: Connection failed",
-    );
-    expect(outcomeValue({ ok: true, value: 42, diagnostics: [] }, "create source")).toBe(42);
   });
 });

@@ -6,42 +6,47 @@ import {
 } from "@mdbase-reader/core";
 
 import { sourceFromDocument } from "./mapping.js";
-import { ConnectRepositoryError, outcomeValue } from "./repository-client.js";
-import { documentEntry, uploadWithRecovery, type ReaderSourceFileClient } from "./source-files.js";
+import { frontmatterChanges, updateRecord, ConnectRepositoryError } from "./repository-client.js";
+import { documentEntry, type ReaderSourceFileClient } from "./source-files.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
+import type { MdbaseClient } from "@mdbase-dev/sdk";
 
 /**
  * Uploads a file, then appends it to the source's `documents` at the revision just read, so a
  * concurrent edit to the record fails rather than being overwritten.
  */
 export async function attachRepresentation(
-  records: ReaderConnectClient,
+  records: MdbaseClient,
   files: ReaderSourceFileClient,
   plan: PlannedSourceAttachment,
   options: SourceImportOptions = {},
 ): Promise<Source> {
   const { representation } = plan;
   const totalBytes = representation.bytes.byteLength;
-  const descriptor = await uploadWithRecovery(files, representation, {
-    ...(options.signal ? { signal: options.signal } : {}),
-    ...(options.onProgress
-      ? {
-          onProgress: (progress) => {
-            if (progress.phase === "uploading") {
-              options.onProgress?.({
-                phase: "uploading",
-                completedBytes: progress.transferredBytes,
-                totalBytes,
-                fileIndex: 1,
-                fileCount: 1,
-              });
-            }
-          },
-        }
-      : {}),
-  });
-  if (descriptor.contentDigest !== representation.contentDigest) {
+  const descriptor = await files.upload(
+    representation.filePath,
+    new Blob([representation.bytes.slice().buffer], { type: representation.mediaType }),
+    {
+      transferId: representation.transferId,
+      ...(options.signal ? { signal: options.signal } : {}),
+      ...(options.onProgress
+        ? {
+            onProgress: (progress) => {
+              {
+                options.onProgress?.({
+                  phase: "uploading",
+                  completedBytes: progress.done,
+                  totalBytes,
+                  fileIndex: 1,
+                  fileCount: 1,
+                });
+              }
+            },
+          }
+        : {}),
+    },
+  );
+  if (descriptor.digest !== representation.contentDigest) {
     throw new ConnectRepositoryError(
       "verify attached file",
       "content_digest_mismatch",
@@ -55,9 +60,9 @@ export async function attachRepresentation(
     fileIndex: 1,
     fileCount: 1,
   });
-  const current = outcomeValue(
-    await records.read({ path: plan.recordPath, includeDocument: true }),
-    "read source before attaching a file",
+  const current = await records.get(
+    { path: plan.recordPath },
+    { include: { effective: true, body: true, document: true } },
   );
   if (current.frontmatter["id"] !== plan.sourceId) {
     throw new ConnectRepositoryError(
@@ -73,14 +78,13 @@ export async function attachRepresentation(
     ...(plan.originUrl ? { origin_url: plan.originUrl } : {}),
     ...(plan.originUrl ? { retrieved_at: plan.retrievedAt } : {}),
   });
-  const updated = outcomeValue(
-    await records.update({
-      path: plan.recordPath,
+  const updated = await updateRecord(
+    records,
+    { path: plan.recordPath },
+    {
       ifRevision: recordRevision(current.revision),
-      patch: { documents: [...existing, entry] },
-      includeDocument: true,
-    }),
-    "attach file to source",
+      ...frontmatterChanges({ documents: [...existing, entry] }),
+    },
   );
   return sourceFromDocument(plan.collectionId, updated);
 }

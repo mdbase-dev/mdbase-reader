@@ -1,9 +1,9 @@
-import { annotationContract, sourceContract } from "../contracts.js";
-import { ConnectRepositoryError, outcomeValue } from "../repository-client.js";
+import { MdbaseError, uuidv7, type MdbaseClient, type FileView } from "@mdbase-dev/sdk";
 
-import type { NativeReaderClient } from "./native-client.js";
+import { annotationContract, sourceContract } from "../contracts.js";
+import { completeReaderPages, requireCompleteQuery } from "../repository-client.js";
+
 import type { NativeReaderFileClient } from "./native-files.js";
-import type { RecordDocument } from "@mdbase-dev/connect";
 import type {
   Fields,
   ImportedFile,
@@ -19,7 +19,7 @@ import type {
 export class NativeMigrationTarget implements MigrationTarget {
   constructor(
     public readonly collectionId: string,
-    private readonly records: NativeReaderClient,
+    private readonly records: MdbaseClient,
     private readonly fileClient: NativeReaderFileClient,
   ) {}
 
@@ -27,45 +27,61 @@ export class NativeMigrationTarget implements MigrationTarget {
     const result = new Map<string, Fields>();
     const identitiesByPath = new Map<string, string>();
     const importedPaths = new Map<string, string>();
-    for (const contract of [sourceContract, annotationContract]) {
-      for await (const page of this.records.queryPages(
-        { contract, frontmatterMode: "effective" },
-        { signal, pageSize: 128 },
-      )) {
-        for (const row of outcomeValue(page, "inspect import identities").results) {
-          const fields = row.effectiveFrontmatter ?? row.frontmatter;
-          const id = fields?.["id"];
-          if (typeof id !== "string") {
-            continue;
-          }
-          if (result.has(id)) {
-            throw new Error("The destination has duplicate record IDs. Import was stopped.");
-          }
-          result.set(id, fields as Fields);
-          identitiesByPath.set(row.path, id);
-        }
-      }
-    }
+    await this.readIdentities(result, identitiesByPath, signal);
     // Contract projections omit extension fields; join native provenance by path.
-    for await (const page of this.records.queryPages(
-      { frontmatterMode: "persisted" },
-      { signal, pageSize: 1000 },
-    )) {
-      for (const row of outcomeValue(page, "inspect native import provenance").results) {
+    for await (const page of completeReaderPages(this.records, {}, { signal })) {
+      for (const row of page.records) {
         const id = identitiesByPath.get(row.path);
         if (id) {
-          if (row.frontmatter?.["import"]) {
+          if (row.frontmatter["import"]) {
             importedPaths.set(row.path, id);
           }
           result.set(id, {
             ...result.get(id),
-            import: (row.frontmatter?.["import"] ?? null) as Fields["import"],
+            import: row.frontmatter["import"] ?? null,
           });
         }
       }
     }
     await this.confirmExisting(importedPaths, signal);
     return result;
+  }
+
+  private async readIdentities(
+    result: Map<string, Fields>,
+    identitiesByPath: Map<string, string>,
+    signal: AbortSignal,
+  ): Promise<void> {
+    for (const contract of [sourceContract, annotationContract]) {
+      let cursor: string | undefined;
+      do {
+        const resultPage = await this.records.queryContract(contract, {
+          signal,
+          pageSize: 128,
+          ...(cursor ? { cursor } : {}),
+        });
+        requireCompleteQuery(resultPage.page);
+        for (const row of resultPage.records) {
+          const implementation =
+            row.implementations.length === 1 ? row.implementations[0] : undefined;
+          const view = resultPage.page.records.find((record) => record.id === row.id);
+          if (!implementation || !view) {
+            throw new Error("The destination has an ambiguous contract implementation.");
+          }
+          const fields = implementation.fields;
+          const id = fields["id"];
+          if (typeof id !== "string") {
+            continue;
+          }
+          if (result.has(id)) {
+            throw new Error("The destination has duplicate record IDs. Import was stopped.");
+          }
+          result.set(id, fields);
+          identitiesByPath.set(view.path, id);
+        }
+        cursor = resultPage.page.cursor;
+      } while (cursor);
+    }
   }
 
   private async confirmExisting(paths: Map<string, string>, signal: AbortSignal): Promise<void> {
@@ -85,10 +101,10 @@ export class NativeMigrationTarget implements MigrationTarget {
     const result = new Map<string, ImportedFile>();
     for await (const file of this.fileClient.list({
       folder: "files/reader/imports",
-      pageSize: 500,
+
       signal,
     })) {
-      result.set(file.path, file);
+      result.set(file.path, importedFile(file));
     }
     return result;
   }
@@ -101,12 +117,9 @@ export class NativeMigrationTarget implements MigrationTarget {
     signal: AbortSignal,
     progress: (bytes: number) => void,
   ): Promise<ImportedFile> {
-    return this.fileClient.upload(path, blob, {
-      signal,
-      mediaType,
-      transferId,
-      onProgress: (p) => progress(p.transferredBytes),
-    });
+    return this.fileClient
+      .upload(path, blob, { signal, transferId, onProgress: (p) => progress(p.done) })
+      .then(importedFile);
   }
 
   async create(
@@ -123,38 +136,18 @@ export class NativeMigrationTarget implements MigrationTarget {
       await this.confirm(record, pendingId, journalKey, storage, signal);
       return;
     }
-    let mutationId: string | undefined;
-    const outcome = await this.records.create(
-      {
-        path: record.path,
-        type,
-        frontmatter: fields,
-        body: record.body,
-        includeDocument: true,
-      },
-      {
-        signal,
-        onMutation: (id) => {
-          mutationId = id;
-          storage?.setItem(journalKey, mutationId);
-        },
-      },
+    const mutationId = uuidv7();
+    storage?.setItem(journalKey, mutationId);
+    const settled = await this.records.settle(
+      this.records.create(
+        { path: record.path, type, frontmatter: fields, body: record.body },
+        { mutationId, signal },
+      ),
+      { signal },
     );
-    if (!outcome.ok && outcome.problem.code === "operation_outcome_unknown") {
-      const requestId = (outcome.problem.details as { request_id?: unknown } | undefined)
-        ?.request_id;
-      if (typeof requestId === "string") {
-        mutationId = requestId;
-        storage?.setItem(journalKey, requestId);
-      }
-    } else {
-      if (!outcome.ok) {
-        storage?.removeItem(journalKey);
-      }
-      verify(record, outcomeValue(outcome, "create imported record"));
-    }
-    if (!mutationId) {
-      throw new ConnectRepositoryError("confirm imported record", "pending_mutation_unresolved");
+    if (settled.outcome === "rejected") {
+      storage?.removeItem(journalKey);
+      throw new MdbaseError(settled.problem, { mutationId });
     }
     await this.confirm(record, mutationId, journalKey, storage, signal);
   }
@@ -176,25 +169,15 @@ export class NativeMigrationTarget implements MigrationTarget {
   ): Promise<void> {
     for (;;) {
       signal.throwIfAborted();
-      const receipt = await this.records.createTracking.receipt(mutationId, { signal });
-      if (receipt.state === "rejected") {
+      const settled = await this.records.settle(mutationId, { signal });
+      if (settled.outcome === "rejected" && settled.problem.code !== "not_found") {
         storage?.removeItem(key);
-        throw new ConnectRepositoryError(
-          "confirm imported record",
-          receipt.problem.code,
-          receipt.problem.message,
-          receipt.problem,
-          receipt.problem.issues,
-        );
+        throw new MdbaseError(settled.problem, { mutationId });
       }
-      if (receipt.state === "confirmed") {
+      if (settled.outcome === "confirmed") {
         break;
       }
-      if (receipt.state !== "pending") {
-        const local = await this.records.createTracking.recordAt(record.path, { signal });
-        if (local?.id === record.id && local.confirmed) {
-          break;
-        }
+      if (settled.outcome !== "saved_on_device") {
         throw new Error(
           "A previous import mutation needs recovery. Its original request will not be repeated as a new write.",
         );
@@ -211,11 +194,14 @@ export class NativeMigrationTarget implements MigrationTarget {
   ): Promise<void> {
     for (;;) {
       signal.throwIfAborted();
-      const local = await this.records.createTracking.recordAt(record.path, { signal });
-      if (local?.id !== record.id) {
+      const local = await this.records.find(
+        { path: record.path },
+        { include: { effective: true }, signal },
+      );
+      if (!local || (local.effective ?? local.frontmatter)["id"] !== record.id) {
         throw new Error("Import verification failed: a record is missing or changed identity.");
       }
-      if (local.confirmed) {
+      if (local.state.state === "confirmed" || local.state.confirmedSeq > 0) {
         break;
       }
       await pause(signal);
@@ -223,10 +209,8 @@ export class NativeMigrationTarget implements MigrationTarget {
   }
 }
 
-function verify(record: Pick<MigrationRecord, "id">, document: RecordDocument): void {
-  if (document.effectiveFrontmatter["id"] !== record.id) {
-    throw new Error("Imported record identity mismatch.");
-  }
+function importedFile(file: FileView): ImportedFile {
+  return { fileId: file.id, path: file.path, contentDigest: file.digest };
 }
 
 function pause(signal: AbortSignal): Promise<void> {

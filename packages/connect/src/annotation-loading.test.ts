@@ -2,9 +2,9 @@ import { collectionId, type Annotation } from "@mdbase-reader/core";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
+import { mockSdk, testRecord, testQuery } from "./records.fixtures.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryInput, QueryPage, RecordDocument } from "@mdbase-dev/connect";
+import type { MdbaseClient, Query, QueryResult, RecordView } from "@mdbase-dev/sdk";
 
 const legacyAuthorityFeatures = {
   supportsAuthorityFeature: vi.fn(() =>
@@ -13,77 +13,79 @@ const legacyAuthorityFeatures = {
 };
 
 const collection = collectionId("reading");
-function document(index: number): RecordDocument {
+function document(index: number): RecordView {
   const fields = {
     id: `ann_${String(index)}`,
     source: "src_1",
     annotation_type: "note",
     created_at: "2026-08-09T00:00:00Z",
   };
-  return {
+  return testRecord({
     path: `annotations/${String(index)}.md`,
     revision: "rev-1",
     types: ["reader-annotation"],
     frontmatter: fields,
-    effectiveFrontmatter: fields,
-    file: {},
+    effective: fields,
+
     body: `Note ${String(index)}`,
-  };
+  });
 }
-function ok<T>(value: T): ConnectOutcome<T> {
-  return { ok: true, value, diagnostics: [] };
+function ok<T>(value: T): T {
+  return value;
 }
-function page(documents: RecordDocument[]): ConnectOutcome<QueryPage> {
-  return ok({ results: documents, complete: true, page: 1, offset: 0, loaded: documents.length });
+function page(documents: RecordView[]): QueryResult {
+  return ok(testQuery({ records: documents, complete: true }));
 }
 
-function repository(documents: RecordDocument[]): {
-  read: Mock<ReaderConnectClient["read"]>;
-  queryPages: Mock<(input: QueryInput) => AsyncGenerator<ConnectOutcome<QueryPage>>>;
+function repository(documents: RecordView[]): {
+  read: Mock<MdbaseClient["get"]>;
+  pages: Mock<(input: Query) => AsyncGenerator<QueryResult>>;
   repo: ConnectAnnotationRepository;
 } {
-  const read = vi.fn<ReaderConnectClient["read"]>(({ path }) =>
-    Promise.resolve(ok(documents.find((entry) => entry.path === path)!)),
+  const read = vi.fn<MdbaseClient["get"]>((ref) =>
+    Promise.resolve(
+      ok(documents.find((entry) => entry.path === (typeof ref === "string" ? ref : ref.path))!),
+    ),
   );
-  const queryPages = vi.fn<(input: QueryInput) => AsyncGenerator<ConnectOutcome<QueryPage>>>(
-    async function* () {
-      yield await Promise.resolve(page(documents));
-    },
-  );
+  const pages = vi.fn<(input: Query) => AsyncGenerator<QueryResult>>(async function* () {
+    yield await Promise.resolve(page(documents));
+  });
   return {
     read,
-    queryPages,
-    repo: new ConnectAnnotationRepository({
-      ...legacyAuthorityFeatures,
-      read,
-      queryPages,
-    } as unknown as ReaderConnectClient),
+    pages,
+    repo: new ConnectAnnotationRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        get: read,
+        pages,
+      }),
+    ),
   };
 }
 
 describe("progressive scoped annotation loading", () => {
   it("queries and reads only selected records, even if an adapter returns extra rows", async () => {
     const documents = [document(1), document(2), document(3)];
-    const { repo, read, queryPages } = repository(documents);
+    const { repo, read, pages } = repository(documents);
     const result = await repo.listAll(collection, { paths: new Set([documents[1]!.path]) });
     expect(result.map((annotation) => annotation.id)).toEqual(["ann_2"]);
-    expect(queryPages.mock.calls[0]?.[0].where).toBe('file.path == "annotations/2.md"');
+    expect(pages.mock.calls[0]?.[0].where).toBe('file.path == "annotations/2.md"');
     expect(read).toHaveBeenCalledOnce();
-    expect(read.mock.calls[0]?.[0].path).toBe(documents[1]!.path);
+    expect((read.mock.calls[0]?.[0] as { path: string }).path).toBe(documents[1]!.path);
   });
 
   it("does no work for an empty selection", async () => {
-    const { repo, read, queryPages } = repository([document(1)]);
+    const { repo, read, pages } = repository([document(1)]);
     await expect(repo.listAll(collection, { paths: new Set() })).resolves.toEqual([]);
-    expect(queryPages).not.toHaveBeenCalled();
+    expect(pages).not.toHaveBeenCalled();
     expect(read).not.toHaveBeenCalled();
   });
 
   it("publishes cumulative batches before the next query page is requested", async () => {
     const documents = Array.from({ length: 18 }, (_, index) => document(index));
-    const { repo, read, queryPages } = repository(documents);
+    const { repo, read, pages } = repository(documents);
     const snapshots: (readonly Annotation[])[] = [];
-    queryPages.mockImplementation(async function* () {
+    pages.mockImplementation(async function* () {
       yield await Promise.resolve(page(documents.slice(0, 17)));
       expect(snapshots.map((snapshot) => snapshot.length)).toEqual([16, 17]);
       expect(read).toHaveBeenCalledTimes(17);
@@ -104,14 +106,14 @@ describe("progressive scoped annotation loading", () => {
     expect(lengths).toEqual([16, 80, 144, 150]);
   });
 
-  it("reuses records across different saved views and revalidates on retry", async () => {
+  it("reads current views across different saved views and on retry", async () => {
     const documents = [document(1), document(2)];
     const { repo, read } = repository(documents);
     await repo.listAll(collection, { paths: new Set([documents[0]!.path]) });
     await repo.listAll(collection);
-    expect(read).toHaveBeenCalledTimes(2);
+    expect(read).toHaveBeenCalledTimes(3);
     await repo.listAll(collection, { refresh: true });
-    expect(read).toHaveBeenCalledTimes(4);
+    expect(read).toHaveBeenCalledTimes(5);
   });
 
   it("stops between batches when cancelled", async () => {
@@ -143,9 +145,9 @@ describe("progressive scoped annotation loading", () => {
 
   it("bounds scoped query size", async () => {
     const documents = Array.from({ length: 205 }, (_, index) => document(index));
-    const { repo, queryPages } = repository(documents);
+    const { repo, pages } = repository(documents);
     await repo.listAll(collection, { paths: new Set(documents.map((entry) => entry.path)) });
-    const discovery = queryPages.mock.calls;
+    const discovery = pages.mock.calls;
     expect(discovery).toHaveLength(3);
     expect(discovery.map(([input]) => input.where?.split(" || ").length)).toEqual([100, 100, 5]);
   });

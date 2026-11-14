@@ -1,31 +1,24 @@
 import { t } from "@lingui/core/macro";
 import {
-  MdbaseRecordSession,
-  recordFailure,
-  recordOutcome,
-  recordSuccess,
-  type MdbaseRecordSessionState,
+  annotationFromDocument,
+  openReaderRecord,
+  type Mdbase,
+  type RecordLease,
+  type RecordSessionState,
 } from "@mdbase-reader/connect";
+import { describeError } from "@mdbase-reader/connect/native";
 
 import { clearLegacyEdits, readLegacyEdits } from "./annotation-edit-recovery.js";
-import { readerErrorMessage } from "./errors.js";
+import { recordEditStatus } from "./record-edit-status.js";
 import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
 
-import type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edit-types.js";
+import type { LegacyAnnotationEdits } from "./annotation-edit-recovery.js";
+import type { AnnotationEditSnapshot } from "./annotation-edit-types.js";
 import type { Annotation } from "@mdbase-reader/core";
 
 export type { AnnotationEditSnapshot, PersistAnnotation } from "./annotation-edit-types.js";
 
-/** Exact recovery of an interrupted write, where the gateway offers it. */
-export interface AnnotationRecovery {
-  recover(requestId: string): Promise<Annotation>;
-  isPending(requestId: string): boolean;
-}
-
-/**
- * Reader's single-owner editor lease and deletion lock around the SDK record
- * session, which owns the writer, acknowledgements and conflict classification.
- */
+/** Reader owns editor focus and deletion UI; the SDK lease owns the native draft and writer. */
 export class AnnotationEditSession {
   readonly key: string;
   private snapshot: AnnotationEditSnapshot = {
@@ -36,68 +29,76 @@ export class AnnotationEditSession {
     editing: false,
     textVersion: 0,
   };
-  private readonly record: MdbaseRecordSession<Annotation>;
+  private lease: RecordLease | null = null;
+  private opened: Promise<void> | null = null;
+  private stopLease: (() => void) | undefined;
+  private detached = false;
+  private current: Annotation;
   private text: string;
-  private listeners = new Set<() => void>();
-  private started = false;
+  private readonly listeners = new Set<() => void>();
   private legacy = false;
+  private restoredConflict: Annotation | null = null;
   private removed = false;
   private lockOwner: object | undefined;
-  private releaseLock: (() => void) | undefined;
   private editorOwner: object | undefined;
   constructor(
+    private readonly mdbase: Mdbase,
     base: Annotation,
-    persist: PersistAnnotation,
-    refresh?: (annotation: Annotation) => Promise<Annotation | null>,
-    recovery?: AnnotationRecovery,
+    private readonly publish: (annotation: Annotation) => void = () => undefined,
   ) {
     this.key = JSON.stringify([base.collectionId, base.sourceId, base.id]);
+    this.current = base;
     this.text = base.body;
-    this.record = new MdbaseRecordSession<Annotation>(
-      base,
-      {
-        revision: (annotation) => annotation.recordRevision ?? "",
-        body: (annotation) => annotation.body,
-        write: async (expected, change) => {
-          try {
-            return recordSuccess(await persist(expected, change.body ?? expected.body));
-          } catch (error) {
-            return recordFailure(error);
-          }
-        },
-        ...(refresh
-          ? { read: (annotation: Annotation) => recordOutcome(() => refresh(annotation)) }
-          : {}),
-        ...(recovery
-          ? {
-              recover: (requestId: string) => recordOutcome(() => recovery.recover(requestId)),
-              isPending: (requestId: string) => recovery.isPending(requestId),
-            }
-          : {}),
-      },
-      { autosave: { idleMs: 1000 } },
-    );
-    this.record.subscribe(() => this.sync());
   }
   start(): void {
-    if (this.started) {
+    if (this.opened) {
       return;
     }
-    this.started = true;
-    readLegacyEdits(this.key, (value) => {
-      this.legacy = value !== null;
-      if (value) {
-        this.record.restore(value);
+    this.update({ status: "loading" });
+    const base = this.current;
+    this.opened = (async () => {
+      if (!base.path) {
+        throw new Error("An annotation path is required for editing.");
       }
+      const [lease, draft] = await Promise.all([
+        openReaderRecord(this.mdbase, base.collectionId, base.path, { autosave: { idleMs: 1000 } }),
+        new Promise<LegacyAnnotationEdits | null>((ready) => readLegacyEdits(this.key, ready)),
+      ]);
+      this.lease = lease;
+      const record = lease.session.getSnapshot();
+      this.current = annotationFromDocument(base.collectionId, record.record, base.sourceId);
+      this.legacy = draft !== null;
+      if (draft && draft.body !== this.current.body) {
+        this.text = draft.body;
+        if (draft.baseBody !== this.current.body) {
+          this.restoredConflict = this.current;
+        } else {
+          lease.session.setBody(draft.body);
+        }
+      }
+      this.stopLease = lease.session.subscribe(() => this.sync());
       this.sync(true);
-    });
+    })().catch((error: unknown) =>
+      this.update({
+        status: "error",
+        problem: describeError(error)?.message ?? t`Could not save. Keep Reader open and retry.`,
+      }),
+    );
   }
   getSnapshot = (): AnnotationEditSnapshot => this.snapshot;
   getText = (): string => this.text;
-  getAnnotation = (): Annotation => this.record.snapshot.record;
+  getAnnotation = (): Annotation => this.current;
   subscribe = (listener: () => void): (() => void) => {
+    this.detached = false;
     this.listeners.add(listener);
-    return () => void this.listeners.delete(listener);
+    this.start();
+    return () => {
+      this.listeners.delete(listener);
+      if (!this.listeners.size) {
+        this.detached = true;
+        this.releaseSaved();
+      }
+    };
   };
   ownsEditor = (owner: object): boolean => this.editorOwner === owner;
   claimEditor(owner: object, transfer = false): boolean {
@@ -112,133 +113,163 @@ export class AnnotationEditSession {
     return true;
   }
   releaseEditor(owner: object): void {
-    if (!this.ownsEditor(owner)) {
-      return;
+    if (this.ownsEditor(owner)) {
+      this.editorOwner = undefined;
+      this.update({ editing: false });
     }
-    this.editorOwner = undefined;
-    this.update({ editing: false });
-  }
-  receive(annotation: Annotation): void {
-    this.record.receive(annotation);
   }
   edit = (body: string): void => {
-    if (this.snapshot.locked || this.snapshot.status === "loading" || body === this.text) {
+    if (this.snapshot.locked || !this.lease || body === this.text) {
       return;
     }
     this.text = body;
-    this.record.setBody(body);
-  };
-  save = (): Promise<void> => {
-    if (this.snapshot.locked || this.snapshot.status === "loading") {
-      return Promise.resolve();
+    if (!this.restoredConflict) {
+      this.lease.session.setBody(body);
+      this.lease.session.patchFrontmatter({ modified_at: new Date().toISOString() });
     }
-    return this.record.save().then(() => undefined);
+    this.update({ status: "unsaved" });
+  };
+  save = async (): Promise<void> => {
+    if (this.snapshot.locked) {
+      return;
+    }
+    await this.opened;
+    if (!this.lease || this.restoredConflict) {
+      return;
+    }
+    await this.lease.session.flush();
+    this.sync();
   };
   resolve = (choice: "local" | "remote"): void => {
-    if (!this.snapshot.conflict || this.snapshot.status === "saving" || this.snapshot.locked) {
+    if (
+      !this.lease ||
+      !this.snapshot.conflict ||
+      this.snapshot.status === "saving" ||
+      this.snapshot.locked
+    ) {
       return;
     }
-    this.record.resolve({ keep: choice === "local" ? "mine" : "theirs" });
+    if (this.restoredConflict) {
+      this.restoredConflict = null;
+      this.lease.session.setBody(choice === "local" ? this.text : this.current.body);
+    } else {
+      this.lease.session.resolve({ keep: choice === "local" ? "mine" : "theirs" });
+    }
+    this.sync();
   };
   discard = (): void => {
-    if (this.snapshot.status === "saving" || this.snapshot.locked) {
+    if (!this.lease || this.snapshot.status === "saving" || this.snapshot.locked) {
       return;
     }
-    this.record.discard();
+    this.restoredConflict = null;
+    if (this.lease.session.getSnapshot().remote) {
+      this.lease.session.resolve({ keep: "theirs" });
+    }
+    const base = this.lease.session.getSnapshot().record;
+    this.lease.session.setBody(base.body ?? "");
+    this.lease.session.patchFrontmatter({ modified_at: base.frontmatter["modified_at"] });
+    this.sync();
   };
-  /** Holds the record's write queue, so no autosave can start during a deletion check. */
+  /** Disable edits first, then flush the SDK writer before a deletion preview begins. */
   lock = async (owner: object = this): Promise<boolean> => {
-    if (this.lockOwner) {
+    if (this.lockOwner || !this.lease || this.restoredConflict) {
       return false;
     }
     this.lockOwner = owner;
     this.update({ locked: true });
-    const held = new Promise<void>((release) => {
-      this.releaseLock = release;
-    });
-    await new Promise<void>((drained) => {
-      void this.record.run(() => {
-        drained();
-        return held;
-      });
-    });
-    const { state } = this.record.snapshot;
-    if (state === "error" || state === "conflict") {
+    const result = await this.lease.session.flush();
+    this.sync();
+    if (!result.ok) {
       this.unlock(owner);
       return false;
     }
     return true;
   };
   unlock = (owner: object = this): void => {
-    if (this.lockOwner !== owner) {
-      return;
+    if (this.lockOwner === owner) {
+      this.lockOwner = undefined;
+      this.update({ locked: false });
     }
-    this.lockOwner = undefined;
-    this.releaseLock?.();
-    this.releaseLock = undefined;
-    this.update({ locked: false });
   };
   deleted = (): void => {
     this.removed = true;
-    this.record.discard();
-    this.record.markDeleted();
-    this.update({ locked: true });
+    this.stopLease?.();
+    this.lease?.release();
+    this.update({ status: "saved", locked: true });
   };
   private sync(loaded = false): void {
-    if (!this.started) {
+    if (!this.lease || this.removed) {
       return;
     }
-    const record = this.record.snapshot;
-    const clean = !record.dirty && !record.remote;
-    // A clean session shows the committed text, including serializer normalization.
-    const text = clean ? record.record.body : record.body;
-    if (clean && this.legacy && !loaded && this.snapshot.status !== "saved") {
-      clearLegacyEdits(this.key);
-      this.legacy = false;
-    }
-    const status = this.removed ? "saved" : annotationStatus(record.state);
+    const record = this.lease.session.getSnapshot();
+    const next = annotationFromDocument(
+      this.current.collectionId,
+      record.record,
+      this.current.sourceId,
+    );
+    const published = next.recordRevision !== this.current.recordRevision;
+    this.current = next;
+    const text = this.restoredConflict ? this.text : record.body;
     const changed = text !== this.text;
     this.text = text;
+    this.clearRecoveredDraft(record.state);
+    const status = this.restoredConflict ? "unsaved" : recordEditStatus(record.state);
     this.update({
       status,
-      conflict: record.remote,
+      conflict:
+        this.restoredConflict ??
+        (record.remote
+          ? annotationFromDocument(next.collectionId, record.remote, next.sourceId)
+          : null),
       problem:
         status === "error"
-          ? readerErrorMessage(
-              record.problem?.message,
-              t({ message: "Could not save. Keep Reader open and retry." }),
-            )
+          ? (describeError(record.problem)?.message ??
+            t`Could not save. Keep Reader open and retry.`)
           : null,
       ...(changed || loaded ? { textVersion: this.snapshot.textVersion + 1 } : {}),
     });
+    if (published) {
+      this.publish(next);
+    }
+    this.releaseSaved();
   }
-  private update(value: Partial<AnnotationEditSnapshot>): void {
-    const next = { ...this.snapshot, ...value };
-    const record = this.record.snapshot;
-    trackAnnotationEdits(
-      this,
-      record.record,
-      !this.removed && (record.dirty || Boolean(record.remote)),
-    );
-    const keys = Object.keys(value) as (keyof AnnotationEditSnapshot)[];
-    if (keys.every((key) => this.snapshot[key] === value[key])) {
+  private clearRecoveredDraft(state: RecordSessionState): void {
+    if (state === "saved" && this.legacy && !this.restoredConflict) {
+      clearLegacyEdits(this.key);
+      this.legacy = false;
+    }
+  }
+
+  private releaseSaved(): void {
+    const record = this.lease?.session.getSnapshot();
+    if (!this.detached || record?.state !== "saved" || record.dirty || record.recovery) {
       return;
     }
-    this.snapshot = next;
-    this.listeners.forEach((listener) => listener());
+    this.stopLease?.();
+    this.stopLease = undefined;
+    this.lease?.release();
+    this.lease = null;
+    this.opened = null;
   }
-}
-
-function annotationStatus(state: MdbaseRecordSessionState): AnnotationEditSnapshot["status"] {
-  switch (state) {
-    case "saved":
-      return "saved";
-    case "saving":
-      return "saving";
-    case "unsaved":
-    case "conflict":
-      return "unsaved";
-    default:
-      return "error";
+  private update(value: Partial<AnnotationEditSnapshot>): void {
+    trackAnnotationEdits(
+      this,
+      this.current,
+      !this.removed &&
+        (this.text !== this.current.body ||
+          Boolean(this.restoredConflict) ||
+          Boolean(this.lease?.session.getSnapshot().dirty)),
+    );
+    if (
+      Object.keys(value).every(
+        (key) =>
+          this.snapshot[key as keyof AnnotationEditSnapshot] ===
+          value[key as keyof AnnotationEditSnapshot],
+      )
+    ) {
+      return;
+    }
+    this.snapshot = { ...this.snapshot, ...value };
+    this.listeners.forEach((listener) => listener());
   }
 }

@@ -19,7 +19,7 @@ import {
 import { annotationSourceId } from "./annotation-source.js";
 import { positionFrontmatter, readingPositionFromFrontmatter } from "./reading-position.js";
 
-import type { JsonObject, RecordDocument } from "@mdbase-dev/connect";
+import type { RecordView, JsonObject } from "@mdbase-dev/sdk";
 
 function object(value: unknown): Readonly<Record<string, unknown>> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -139,13 +139,10 @@ function annotationTarget(value: unknown): AnnotationTarget | undefined {
 
 export function annotationFromDocument(
   collection: CollectionId,
-  record: Pick<RecordDocument, "path" | "frontmatter" | "effectiveFrontmatter" | "body"> & {
-    /** Absent for query results, which carry no revision; such annotations are read-only. */
-    readonly revision?: string;
-  },
+  record: RecordView,
   resolvedSourceId?: SourceId,
 ): Annotation {
-  const fields = record.effectiveFrontmatter;
+  const fields = record.effective ?? record.frontmatter;
   const id = text(fields["id"]);
   const source = annotationSourceId(fields["source"], resolvedSourceId);
   const annotationType = text(fields["annotation_type"]);
@@ -156,39 +153,43 @@ export function annotationFromDocument(
   const target = annotationTarget(fields["target"]);
   const document = documentTarget(fields["document"]);
   const locator = text(object(fields["locator"])?.["label"]);
-  const modifiedAt = text(fields["modified_at"]);
-  const createdBy = text(fields["created_by"]);
-  const motivation = text(fields["motivation"]);
-  const color = text(fields["color"]);
   return {
     collectionId: collection,
     id: annotationId(id),
     path: record.path,
     frontmatter: record.frontmatter,
-    ...revisionField(record.revision),
+    recordRevision: recordRevision(record.revision),
     sourceId: source,
     source: text(fields["source"]) ?? source,
     annotationType,
     tags: textArray(fields["tags"]),
     body: record.body ?? "",
     createdAt: dateTime(createdAt),
-    ...(modifiedAt ? { modifiedAt: dateTime(modifiedAt) } : {}),
-    ...(createdBy ? { createdBy } : {}),
-    ...(motivation ? { motivation } : {}),
-    ...(color ? { color } : {}),
+    ...annotationMetadata(fields),
     ...(document ? { document } : {}),
     ...(locator ? { locator: { label: locator } } : {}),
     ...(target ? { target } : {}),
   };
 }
 
-function revisionField(revision: string | undefined): Pick<Annotation, "recordRevision"> {
-  return revision ? { recordRevision: recordRevision(revision) } : {};
+function annotationMetadata(
+  fields: JsonObject,
+): Pick<Annotation, "modifiedAt" | "createdBy" | "motivation" | "color"> {
+  const modifiedAt = text(fields["modified_at"]);
+  const createdBy = text(fields["created_by"]);
+  const motivation = text(fields["motivation"]);
+  const color = text(fields["color"]);
+  return {
+    ...(modifiedAt ? { modifiedAt: dateTime(modifiedAt) } : {}),
+    ...(createdBy ? { createdBy } : {}),
+    ...(motivation ? { motivation } : {}),
+    ...(color ? { color } : {}),
+  };
 }
 
 function targetFrontmatter(value: AnnotationTarget): JsonObject {
   return {
-    ...(value.quote ? { quote: value.quote } : {}),
+    ...(value.quote ? { quote: { ...value.quote } } : {}),
     ...(value.textPosition
       ? {
           text_position: {
@@ -203,13 +204,13 @@ function targetFrontmatter(value: AnnotationTarget): JsonObject {
       ? {
           pdf: {
             page_index: value.pdf.pageIndex,
-            coordinate_space: value.pdf.coordinateSpace,
+            coordinate_space: { ...value.pdf.coordinateSpace },
             quad_points: value.pdf.quadPoints.map((quad) => [...quad]),
           },
         }
       : {}),
-    ...(value.epub ? { epub: value.epub } : {}),
-    ...(value.html ? { html: value.html } : {}),
+    ...(value.epub ? { epub: { ...value.epub } } : {}),
+    ...(value.html ? { html: { ...value.html } } : {}),
     ...(value.position ? { position: positionFrontmatter(value.position) } : {}),
   };
 }
@@ -231,7 +232,7 @@ export function annotationFrontmatter(annotation: Annotation): JsonObject {
           },
         }
       : {}),
-    ...(annotation.locator ? { locator: annotation.locator } : {}),
+    ...(annotation.locator ? { locator: { ...annotation.locator } } : {}),
     ...(annotation.modifiedAt ? { modified_at: annotation.modifiedAt } : {}),
     ...(annotation.createdBy ? { created_by: annotation.createdBy } : {}),
     ...(annotation.motivation ? { motivation: annotation.motivation } : {}),

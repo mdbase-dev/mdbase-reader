@@ -1,252 +1,211 @@
-import {
-  annotationId,
-  dateTime,
-  collectionId,
-  sourceId,
-  recordRevision,
-  type Annotation,
-  type Source,
-} from "@mdbase-reader/core";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { mdbaseError } from "@mdbase-reader/connect/testing";
+import { afterEach, expect, it, vi } from "vitest";
 
-import { insertAnnotationInDraft } from "./insert-annotation-in-draft.js";
-import { flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
+import { draftStorage, editorFixture } from "./editor.fixtures.js";
 import { SourceDraftSession } from "./source-draft-session.js";
-import {
-  readSourceDraft,
-  sourceDraftKey,
-  writeSourceDraft,
-  type DraftStorage,
-} from "./source-draft-storage.js";
+import { readSourceDraft, sourceDraftKey, writeSourceDraft } from "./source-draft-storage.js";
+import { trackUnstoredSourceChanges } from "./unsaved-source-drafts.js";
 
-const source: Source = {
-  collectionId: collectionId("test"),
-  id: sourceId("note"),
-  path: "note.md",
-  title: "Test",
-  creators: [],
-  tags: [],
-  documents: [],
-  frontmatter: {},
-  body: "Original",
-  recordRevision: recordRevision("1"),
-};
-function memory(): DraftStorage {
-  const values = new Map<string, string>();
-  return {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => {
-      values.set(key, value);
-    },
-    removeItem: (key) => {
-      values.delete(key);
+const cleanup: (() => void | Promise<void>)[] = [];
+afterEach(async () => {
+  for (const close of cleanup.splice(0)) {
+    await close();
+  }
+  vi.restoreAllMocks();
+});
+async function fixture(): Promise<
+  Awaited<ReturnType<typeof editorFixture>> & {
+    session: SourceDraftSession;
+    storage: ReturnType<typeof draftStorage>;
+    publish: ReturnType<typeof vi.fn>;
+  }
+> {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const storage = draftStorage();
+  const publish = vi.fn();
+  const session = new SourceDraftSession(native.app.mdbase, native.source, storage, publish);
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
+  return { ...native, storage, publish, session };
+}
+
+it("keeps a shared native writer and publishes its genuine acknowledged revision", async () => {
+  const { session, app, publish, source } = await fixture();
+  const update = vi.spyOn(app.client(), "update");
+  session.edit("Saved source");
+  await session.save();
+  expect(session.getSnapshot()).toMatchObject({ status: "saved", body: "Saved source" });
+  const saved = await app.client().get({ path: source.path }, { include: { body: true } });
+  expect(saved.body).toBe("Saved source");
+  expect(publish).toHaveBeenLastCalledWith(
+    expect.objectContaining({ body: saved.body, recordRevision: saved.revision }),
+  );
+  expect(update).toHaveBeenCalledOnce();
+  expect(session.getText()).toBe("Saved source");
+});
+it("notifies every editing view synchronously", async () => {
+  const { session } = await fixture();
+  const first = vi.fn();
+  const second = vi.fn();
+  const stop = session.subscribe(first);
+  session.subscribe(second);
+  session.edit("New text");
+  expect(first).toHaveBeenCalled();
+  expect(second).toHaveBeenCalled();
+  stop();
+  await session.save();
+  expect(session.getSnapshot().status).toBe("saved");
+});
+it("keeps a newer edit typed during a held write", async () => {
+  const { session, app, storage, source } = await fixture();
+  const update = app.client().update.bind(app.client());
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  vi.spyOn(app.client(), "update").mockImplementationOnce(async (...args) => {
+    const write = await update(...args);
+    await held;
+    return write;
+  });
+  session.edit("First edit");
+  const saving = session.save();
+  await vi.waitFor(() => expect(session.getSnapshot().status).toBe("saving"));
+  session.edit("Newer edit");
+  release();
+  await saving;
+  if (session.getSnapshot().status !== "saved") {
+    expect(readSourceDraft(storage, source)?.body).toBe("Newer edit");
+  }
+  await session.save();
+  expect(session.getText()).toBe("Newer edit");
+  expect((await app.client().get({ path: source.path }, { include: { body: true } })).body).toBe(
+    "Newer edit",
+  );
+});
+it("retains pending device writes until the SDK confirms them", async () => {
+  const { session, app, storage, source } = await fixture();
+  app.replica().setOnline(false);
+  session.edit("Offline text");
+  await session.save();
+  expect(app.client().ledger.getSnapshot().pending).toHaveLength(1);
+  expect(readSourceDraft(storage, source)?.body).toBe("Offline text");
+  app.replica().setOnline(true);
+  await vi.waitFor(() => expect(app.client().ledger.getSnapshot().pending).toHaveLength(0));
+  await vi.waitFor(() => expect(storage.getItem(sourceDraftKey(source))).toBeNull());
+});
+it("offers a recovered body conflict before sending any new write", async () => {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const storage = draftStorage();
+  writeSourceDraft(storage, native.source, "Recovered local text");
+  native.app.replica().editElsewhere(native.source.path, { body: "Other device text" });
+  const update = vi.spyOn(native.app.client(), "update");
+  const session = new SourceDraftSession(native.app.mdbase, native.source, storage, vi.fn());
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
+  expect(session.getSnapshot()).toMatchObject({
+    body: "Recovered local text",
+    status: "unsaved",
+    conflict: { body: "Other device text" },
+  });
+  expect(update).not.toHaveBeenCalled();
+  session.resolve("remote");
+  expect(session.getText()).toBe("Other device text");
+  expect(update).not.toHaveBeenCalled();
+});
+it("rebases recovered text after an explicit local choice", async () => {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const storage = draftStorage();
+  writeSourceDraft(storage, native.source, "Keep mine");
+  native.app.replica().editElsewhere(native.source.path, { body: "Other device" });
+  const session = new SourceDraftSession(native.app.mdbase, native.source, storage, vi.fn());
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
+  session.resolve("local");
+  await session.save();
+  expect(session.getSnapshot()).toMatchObject({
+    status: "saved",
+    body: "Keep mine",
+    conflict: null,
+  });
+});
+it("does not turn a metadata-only revision change into a body conflict", async () => {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const storage = draftStorage();
+  writeSourceDraft(storage, native.source, "Recovered text");
+  native.app.replica().editElsewhere(native.source.path, { frontmatter: { tags: ["new"] } });
+  const session = new SourceDraftSession(native.app.mdbase, native.source, storage, vi.fn());
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
+  expect(session.getSnapshot()).toMatchObject({
+    status: "saved",
+    body: "Recovered text",
+    conflict: null,
+  });
+  expect((await native.app.client().get({ path: native.source.path })).frontmatter["tags"]).toEqual(
+    ["new"],
+  );
+});
+it("keeps the exact SDK recovery reference when confirmation succeeds but readback fails", async () => {
+  const { session, app, storage, source } = await fixture();
+  const update = app.client().update.bind(app.client());
+  let readbackUnavailable = false;
+  const get = app.client().get.bind(app.client());
+  vi.spyOn(app.client(), "get").mockImplementation((...args) =>
+    readbackUnavailable
+      ? Promise.reject(mdbaseError("unavailable", "Readback held"))
+      : get(...args),
+  );
+  const writes = vi.spyOn(app.client(), "update").mockImplementationOnce(async (...args) => {
+    const write = await update(...args);
+    readbackUnavailable = true;
+    return write;
+  });
+  session.edit("Ambiguous readback");
+  await session.save();
+  const draft = readSourceDraft(storage, source);
+  expect(draft?.recovery).toMatchObject({
+    mutationId: expect.any(String),
+    recordId: expect.any(String),
+    baseRevision: source.recordRevision,
+  });
+  readbackUnavailable = false;
+  await session.save();
+  expect(writes).toHaveBeenCalledOnce();
+  expect(session.getSnapshot()).toMatchObject({ status: "saved", body: "Ambiguous readback" });
+});
+it("reports unavailable checkpoint storage instead of claiming a local save", async () => {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const storage = {
+    getItem: () => null,
+    removeItem: vi.fn(),
+    setItem: () => {
+      throw new Error("Storage unavailable");
     },
   };
-}
-// Fixture return type retains the mock implementation signatures for deferred-save tests.
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-function fixture(storage = memory()) {
-  let remote = source;
-  const persist = vi.fn((_base: Source, body: string) => {
-    remote = { ...remote, body, recordRevision: recordRevision(`${remote.recordRevision}+1`) };
-    return Promise.resolve(remote);
-  });
-  const refresh = vi.fn(() => Promise.resolve(remote));
-  const session = new SourceDraftSession(source, storage, persist, refresh, vi.fn());
-  return {
-    session,
-    storage,
-    persist,
-    refresh,
-    changeRemote: (value: Source) => {
-      remote = value;
-    },
-  };
-}
-afterEach(() => {
-  flushLocalDraftCheckpoints();
-  vi.clearAllTimers();
-  vi.useRealTimers();
-});
-describe("durable source drafts", () => {
-  it("ignores stale values from other views after saving a newer revision", async () => {
-    vi.useFakeTimers();
-    const { session } = fixture();
-    session.edit("New revision");
-    await session.save();
-    session.receive(source);
-    expect(session.getText()).toBe("New revision");
-  });
-  it("serializes annotation insertion with typing and an already pending source save", async () => {
-    vi.useFakeTimers();
-    const { session, persist, changeRemote } = fixture();
-    let finish!: (value: Source) => void;
-    persist.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          finish = resolve;
-        }),
-    );
-    session.edit("First");
-    const saving = session.save();
-    await Promise.resolve();
-    const annotation: Annotation = {
-      id: annotationId("a"),
-      collectionId: source.collectionId,
-      sourceId: source.id,
-      source: "[[note]]",
-      path: "annotations/a.md",
-      annotationType: "note",
-      tags: [],
-      body: "Comment",
-      createdAt: dateTime("2026-08-01T00:00:00Z"),
-    };
-    const inserting = insertAnnotationInDraft(session, source, annotation);
-    session.edit(`${session.getText()}After the embed`);
-    expect(persist).toHaveBeenCalledOnce();
-    const first = { ...source, body: "First", recordRevision: recordRevision("2") };
-    changeRemote(first);
-    finish(first);
-    await saving;
-    const saved = await inserting;
-    expect(saved.body).toBe("First\n\n![[annotations/a]]\nAfter the embed");
-    expect(persist).toHaveBeenCalledTimes(2);
-    await insertAnnotationInDraft(session, saved, annotation);
-    expect(persist).toHaveBeenCalledTimes(2);
-  });
-  it("resumes safe recovery on mount and saves even after the last view closes", async () => {
-    vi.useFakeTimers();
-    const storage = memory();
-    writeSourceDraft(storage, source, "Recovered");
-    const { session, persist } = fixture(storage);
-    const detach = session.subscribe(vi.fn());
-    detach();
-    await vi.advanceTimersByTimeAsync(999);
-    expect(persist).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1);
-    expect(persist).toHaveBeenCalledOnce();
-    expect(session.getSnapshot()).toMatchObject({ body: "Recovered", status: "saved" });
-  });
-  it("notifies every editing view synchronously and never cancels their shared save", async () => {
-    vi.useFakeTimers();
-    const { session, persist } = fixture();
-    let otherView = "Original";
-    const detach = session.subscribe(() => {
-      otherView = session.getText();
-    });
-    session.edit("First editor");
-    expect(otherView).toBe("First editor");
-    session.edit(`${otherView} plus second editor`);
-    detach();
-    await vi.advanceTimersByTimeAsync(1000);
-    expect(persist).toHaveBeenCalledExactlyOnceWith(source, "First editor plus second editor");
+  const session = new SourceDraftSession(native.app.mdbase, native.source, storage, vi.fn());
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
+  session.edit("Keep this tab");
+  session.subscribe(() => undefined)();
+  expect(session.getSnapshot()).toMatchObject({
+    locallySaved: false,
+    localProblem: expect.any(String),
   });
 });
-describe("revision-checked source drafts", () => {
-  it("persists before the debounce and recovers without writing to the collection", async () => {
-    vi.useFakeTimers();
-    const { session, storage, persist } = fixture();
-    session.edit("Recovered text");
-    expect(readSourceDraft(storage, source)).toBeNull();
-    await vi.advanceTimersByTimeAsync(500);
-    expect(readSourceDraft(storage, source)?.body).toBe("Recovered text");
-    const recovered = fixture(storage);
-    expect(recovered.session.getSnapshot()).toMatchObject({
-      body: "Recovered text",
-      recovered: true,
-      locallySaved: true,
-    });
-    expect(recovered.persist).not.toHaveBeenCalled();
-    await session.save();
-    expect(persist).toHaveBeenCalledOnce();
-    expect(readSourceDraft(storage, source)).toBeNull();
-  });
-  it("isolates identical source IDs in different collections", () => {
-    expect(sourceDraftKey(source)).not.toBe(
-      sourceDraftKey({ ...source, collectionId: collectionId("other") }),
-    );
-  });
-  it("retains the draft when offline and retries successfully", async () => {
-    vi.useFakeTimers();
-    const { session, storage, refresh } = fixture();
-    session.edit("Offline text");
-    refresh.mockRejectedValueOnce(new Error("Offline")).mockRejectedValueOnce(new Error("Offline"));
-    await session.save();
-    expect(session.getSnapshot()).toMatchObject({
-      status: "error",
-      locallySaved: true,
-      body: "Offline text",
-    });
-    expect(readSourceDraft(storage, source)?.body).toBe("Offline text");
-    await session.save();
-    expect(session.getSnapshot().status).toBe("saved");
-  });
-  it("requires a choice when the remote body changed, then uses the current revision", async () => {
-    vi.useFakeTimers();
-    const { session, persist, changeRemote } = fixture();
-    session.edit("My changes");
-    const remote = { ...source, body: "Other changes", recordRevision: recordRevision("2") };
-    changeRemote(remote);
-    await session.save();
-    expect(session.getSnapshot().conflict).toEqual(remote);
-    expect(persist).not.toHaveBeenCalled();
-    session.resolve("local");
-    await vi.waitFor(() => expect(persist).toHaveBeenCalledWith(remote, "My changes"));
-  });
-  it("allows choosing the collection version without overwriting it", async () => {
-    vi.useFakeTimers();
-    const { session, storage, persist, changeRemote } = fixture();
-    session.edit("My changes");
-    changeRemote({ ...source, body: "Remote", recordRevision: recordRevision("2") });
-    await session.save();
-    session.resolve("remote");
-    expect(session.getSnapshot()).toMatchObject({
-      body: "Remote",
-      status: "saved",
-      conflict: null,
-    });
-    expect(readSourceDraft(storage, source)).toBeNull();
-    expect(persist).not.toHaveBeenCalled();
-  });
-  it("never clears an edit typed during an in-flight save", async () => {
-    vi.useFakeTimers();
-    const { session, storage, persist } = fixture();
-    let finish!: (value: Source) => void;
-    persist.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          finish = resolve;
-        }),
-    );
-    session.edit("First");
-    const saving = session.save();
-    await Promise.resolve();
-    session.edit("Second");
-    finish({ ...source, body: "First", recordRevision: recordRevision("2") });
-    await saving;
-    expect(session.getSnapshot()).toMatchObject({ body: "Second", status: "unsaved" });
-    expect(readSourceDraft(storage, source)?.body).toBe("Second");
-  });
-  it("detects conflicting recovery but permits metadata-only revision changes", () => {
-    const storage = memory();
-    writeSourceDraft(storage, source, "Local");
-    const metadata = { ...source, recordRevision: recordRevision("2") };
-    const first = new SourceDraftSession(metadata, storage, vi.fn(), vi.fn(), vi.fn());
-    expect(first.getSnapshot().conflict).toBeNull();
-    const other = { ...metadata, body: "Remote" };
-    const second = new SourceDraftSession(other, storage, vi.fn(), vi.fn(), vi.fn());
-    expect(second.getSnapshot().conflict).toBe(other);
-  });
-  it("reports storage failure instead of claiming the draft is saved locally", async () => {
-    vi.useFakeTimers();
-    const storage = memory();
-    storage.setItem = () => {
-      throw new Error("Quota");
-    };
-    const { session } = fixture(storage);
-    session.edit("Important");
-    await vi.advanceTimersByTimeAsync(500);
-    expect(session.getSnapshot().locallySaved).toBe(false);
-    expect(session.getSnapshot().localProblem).toContain("could not be saved locally");
-  });
+
+it("reopens a native source lease after its last saved view closes", async () => {
+  const { session } = await fixture();
+  const detach = session.subscribe(vi.fn());
+  detach();
+  const stop = session.subscribe(vi.fn());
+  session.edit("After returning");
+  await session.save();
+  expect(session.getSnapshot()).toMatchObject({ status: "saved", body: "After returning" });
+  stop();
 });

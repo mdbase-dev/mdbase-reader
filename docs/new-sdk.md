@@ -1,122 +1,57 @@
-# Reader on the new mdbase SDK
+# Reader on the mdbase SDK
 
-These are historical migration notes. Superseded vendor archives and intake
-records mentioned below are available in git history; current pins and refresh
-instructions are in [development](development.md#sdk-pins-and-refreshes).
+Reader uses the exact `@mdbase-dev/sdk` pin described in
+[development](development.md#sdk-pins-and-refreshes). Application access goes through
+`createMdbase` and the public `Mdbase` interface; the shared collection UI and translations come from
+`@mdbase-dev/ui` and `@mdbase-dev/i18n`. The manifest validator uses `@mdbase-dev/sdk/manifest`.
+There is no direct legacy Connect or protocol dependency.
 
-## Current declared Private setup SDK intake — 2026-10-15
+## Collections and repositories
 
-SDK `9a033b252860ec8624da0abb5ffdecbac56332d2` replaces the prior
-`d3559aaa` intake. Native at this source compacts the shared lock from Reader's
-two declared packs into one atomic write with the original CAS guard; no
-manifest or permission changes. The SDK preserves actionable setup-conflict
-messages in every consuming app. Original archive SHA256:
-`90ef67523dfa11cb36efe0d996475f1a1c82ac71074e4cd4e95c6fbe02c18be9`.
-Native owns bounded declaration-bound setup and atomic starter publication;
-the SDK retains only the protected original MID for uncertain-result reconciliation.
-No unsigned administration, widened manifest or Hosted fallback is introduced.
-The packaged runtime is source `a4331ad466a0d16e87ab3bedeb0963a1e0d1867e`,
-SHA256 `3c803e83f81a05855f6e30ca79036d6b19383048a6b11ba5c9a0b5ebf3a1bbe2`.
-The ordinary Sign in / Add chooser owns one popup and the original Native
-preparation, callback and custody ACK. The callback page delivers only; the
-original SDK closes after completion. No app-side alternate protocol, scope,
-key transfer or grant-store migration is introduced. Application declaration and
-storage identities remain unchanged. Tests and LAB builds do not prove Native
-admission, READ/edit/reload or production release qualification.
+Every web build enters `SdkReaderRoot` from `main.tsx`. The SDK owns sign-in,
+selection, setup and connection lifetime. `nativeReaderCollection(connection)`
+borrows that connection for Reader's domain repositories and never closes its client.
+Repository values are native `RecordView`, `QueryResult` and plain JSON. Reads use
+options objects; writes retain native record witnesses and settle through `settle`.
+The old application sessions, Connect-shaped native adapter and revisionless
+annotation cache have been removed.
 
-## Prior intake notes (superseded SDK pin)
+Reader still owns its domain mapping, complete-list requirement, deletion confirmation,
+and the create naming/relink journal. The SDK owns mutation identity, receipts,
+optimistic state and record observation. Reader's connection and pending-write UI
+uses `snapshot.sync.state` and `pendingFor`.
 
-Reader is being ported from prod Connect (`@mdbase-dev/connect`) to the public application
-entry of the new SDK (`@mdbase-dev/sdk`, `MdbaseConnect`).
+## Editors
 
-## Pin
+Source notes and annotation editors open SDK native record leases through `Mdbase`.
+They use the same interface whether the application was created directly or belongs
+to a shared session. The SDK owns autosave, conflicts, observation and exact mutation
+recovery. Reader keeps its existing source checkpoint and older annotation draft
+recovery, retaining the SDK's actual recovery reference when needed.
 
-`packages/connect/vendor/mdbase-dev-sdk-dev-3f417b6d.tgz` is the original
-`sdk-dev-3f417b6d` cut from SDK source
-`3f417b6d941a42444f17568d7489071d23fcb141`, SHA256
-`0c5f04c6adad67d747055ebe12963403e374aefde0999861d759f35e4e118ba6` (4346749 bytes).
-Its source, SRI, native pins and original bundled protocol are recorded in
-`packages/connect/vendor/mdbase-next-sdk.json`. The SDK bundles beta129
-`c280cd194ffd`; the direct legacy protocol dependency remains `d765e675c3da` unchanged.
+The no-collection sample preview previously let users type and format source-note
+Markdown, autosaving it through a callback-based legacy record session. Saved
+annotations with a path and revision (including newly created source comments and
+the anthology's bookmarks) could likewise be edited and deleted through their
+editor. The three seeded James annotations already lacked those identities and
+already had disabled Edit buttons. Both editors wrote to `PreviewGateway`'s own
+in-memory arrays, not to a legacy in-memory Connect client or a real collection.
+Reloading reset saved sample data; the source editor separately kept a
+browser-local checkpoint for unsaved drafts.
 
-This is a **DEV/LAB development intake, not release-qualified**. It includes the
-public error/status helpers and portable/native-origin sign-in APIs in one pin.
-The SDK owns registration, authorization, selection, readiness, Worker, runtime
-and recovery. The original 3555291-byte native runtime matches the committed
-`9f90af73e1591cafe9c35bdd42f18ae49d5a91a0186e78695e841fecabcd833a` pin,
-including the public setup-assessment ABI and owner-binding fixes.
-This cut delivers registration-refusal guidance, Private-collection availability
-reasons and collection deletion APIs. The earlier unused-protocol exception is
-not carried forward; this archive has no vendor warnings. Packaged integrity and
-ordinary/frozen installation do not establish live LAB acceptance.
-
-The current cut adds SDK-owned lazy Worker startup and pairing only from a
-sign-in gesture, native-return opening, and refused/expired sign-in recovery.
-Refusal copy and the enabled Sign in action come from the SDK; clicking invokes
-`approve()`, including while authorizing. No app-side pairing or renewal engine
-is introduced. Writer's optional file-access consent remains a later SDK capability.
-
-## Design
-
-- Apps reach the SDK only through `@mdbase-reader/connect`. The native adapter is the
-  `@mdbase-reader/connect/native` subpath. Staging and production Reader web builds retain
-  legacy Connect. The extension creates an SDK entry in each extension page, its module service worker
-  and its offscreen document; they share the SDK session for this build.
-- `nativeReaderCollection(connection)` builds Reader's existing repositories over the
-  connection's borrowed `records` client and `files`:
-  - `native-client.ts` maps Reader's Connect-shaped reads, queries and writes onto native
-    `get`/`find`/`query`/`pages`/`queryContract` and `create`/`update`/`replaceDocument`/`delete`.
-  - Contract-scoped reads and writes use `getContract` and the contract options of
-    `create`/`update`/`delete`. As in prod Connect, a contract view carries contract fields and
-    no body. A contract write is read back through the same contract view.
-  - File descriptors take their media type from the replica (`FileView.mediaType`).
-  - Writes keep one mutation ID. A write the replica captured is saved: confirmed, or saved on
-    this device when the log hasn't confirmed it within 3 s. The SDK's write ledger keeps and
-    settles those across reloads, so Reader keeps no pending-write list of its own. Only a
-    refused write fails. An unknown outcome surfaces `operation_outcome_unknown` with the
-    original `request_id`, which can be recovered.
-  - `native-files.ts` resumes uploads with the same transfer and mutation IDs and checks
-    digests on download.
-  - Every await is fenced by `connection.isCurrent()`.
-- Unsupported features are refused (`unsupported_operation`), never emulated. See the gap list
-  in the coordinator's `reader-sdk-gaps.md`.
-- `SdkReaderRoot` renders the shared `CollectionGate` from `@mdbase-dev/ui/collections`
-  (`@mdbase-dev/ui@0.1.0-beta.147` from npm; this is strict-complete multilingual
-  integration, not native publisher/release qualification. The prior dev-intake
-  original and `vendor/mdbase-ui-dev.json` remain untouched):
-  - The gate owns sign-in, choosing, approval, setup review, problems and sign-out
-    (`signOut()`, never `close()`). Reader supplies only its name and mark.
-  - It starts the entry once (StrictMode-safe); the entry follows page visibility.
-  - It renders the reading workspace only for the connection the gate hands over in
-    phase `ready`, and disposes its adapters, never the borrowed client.
-  - The header shows the shared `CollectionSwitcher`; unsaved edits are confirmed
-    before switching. The unused legacy connection screen has been removed; the
-    shared gate owns the live connection flow.
-  - `apps/reader` depends on the same SDK cut as `packages/connect`, so app-ui's SDK
-    peer resolves to it. The legacy native sign-in imports the release SDK819 archive
-    under the alias `@mdbase-dev/sdk-legacy-729b5391`.
-
-## Live hookup
-
-- `src/sdk-application.ts`: `readerSdk()` is the page's single `createMdbase` entry. It uses the
-  bundled canonical manifest unchanged: logical ID `dev.mdbase.reader`, name, and homepage
-  origin. The SDK registers it and rebinds to the actual registered ID before any storage.
-  Construction does no IO.
-- `src/main.tsx`: every build (`VITE_MDBASE_ENV` = `lab`, `staging` or `production`, set from
-  the deploy target) lazily loads `SdkReaderRoot` over that entry. There is no legacy
-  fallback: an unknown or missing environment refuses to start, and a manifest bundled for
-  another environment's origin refuses in `readerSdk()`. The pinned SDK's packaged trust is
-  still LAB, so staging and production builds fail closed inside the SDK until their
-  per-environment SDK archives are pinned (mdbase-next PR #941).
-- `vite.config.ts` excludes `@mdbase-dev/sdk` from dev pre-bundling, emits ES-module workers,
-  and gives worker bundles the same build-tagged file names, so the SDK Worker,
-  `runtime-lab.wasm`, `sqlite3.wasm` and `sqlite3.js` are each emitted once. The SDK stays out of
-  the eager entry chunks.
-
-The previous production build passed at `38001079`; n1 checks are recorded
-separately from live LAB acceptance.
-Live LAB registration, Worker start and readiness have not been exercised. Old local data and
-pending writes need no cutover handoff.
+The preview has no real `Mdbase`, so source-note Markdown is now read-only, its
+format/save/insert toolbar is absent, and every annotation card's Edit button is
+disabled. The annotation editor's body-editing and Delete annotation actions
+are therefore unavailable, even for newly created comments. Source comments can
+still be created, but cannot subsequently be edited through their cards. This
+does not make the whole demo read-only: the existing gateway still handles
+annotation creation, colour and ownership, source creation/removal, source and
+citation details, reading state, saved views and annotation transclusion into
+source notes. Deletion used by highlight release/undo also remains separate
+from the unavailable editor. These are sample-only mutations; even the read-only
+source-note body can still change through annotation transclusion. Connected
+editors use native leases. No preview SDK, compatibility client or replacement
+editor is introduced.
 
 ## Extension shared session
 
@@ -166,44 +101,14 @@ the SDK's pending replica writes remain owned by the shared Worker. Automatic
 renaming after a later path refusal therefore only follows while that context
 remains open, instead of for the offscreen document's lifetime.
 
-## Library imports in SDK mode
+## Imports and validation
 
-LAB `/import`, `/import/zotero` and `/import/readwise` use the same public SDK
-entry and original native collection as the reading workspace. The import home
-shows the existing tiles without starting sign-in. Service pages keep the existing
-inputs, preview, confirmation and progress UI, with embedded SDK destination
-actions instead of loading the legacy `readerSession`. Staging and production
-retain their existing import session and UI.
+All environments use the SDK import destination and native migration target. A
+started import stays bound to its confirmed collection; a retired scope cannot
+publish completion for its replacement. Import settlement uses original mutation
+identities and confirmed readback.
 
-The app import controller retains the parsed input while the SDK chooses a
-destination. Its narrow domain provider returns only the actual collection whose
-original connection and aggregate SDK readiness are current. The existing native
-migration target owns record/file operations through the public SDK, with original
-identities, receipt recovery and confirmed readback unchanged. A destination check
-is still required before import, and a started import stays bound to its confirmed
-collection. Retired scopes stop the job; late checks, progress and completions
-cannot become confirmation for a replacement scope. No SDK session, storage,
-setup or recovery engine is supplied by this UI.
-
-## Launch-branch integration
-
-`next/new-sdk` brings together the public-entry/import line and the shared collection
-screens. Setup review, problems and live notices (migration, update requirements,
-account suspension) come from `@mdbase-dev/ui/collections` over the SDK's phase and
-`describeError` copy, without raw or developer-only diagnostics.
-
-The older next-branch record-read foundation, provider rechecks and optional
-native sign-in/owned-popup controls are preserved, not substituted for the LAB
-public entry. Historical SDK819 artifacts are not the active dependency.
-
-The source-qualified Chrome Store identity is
-`chrome-extension://kimdfjefhbfgfecconmaiaaindjccidp`, documented in
-`docs/extension-releases.md` at `7ea5dded5b8d196763d4565224502c9840b2ced3`.
-This is distinct from unpacked development installs; it does not prove SDK
-extension acceptance or effective CORS configuration.
-
-## Checks
-
-The adapter, recovery and lifecycle tests run over the SDK's `MemoryReplica` and application
-fixture (`@mdbase-reader/connect/testing`). They do not qualify native runtime, registration or
-end-to-end LAB operation.
+Unit tests use the public SDK `MemoryReplica` and application fixtures through
+`@mdbase-reader/connect/testing`. They establish in-process behavior, not live LAB,
+native-runtime, authentication or durability qualification. Historical vendored
+archives and publisher custody metadata are maintained separately.

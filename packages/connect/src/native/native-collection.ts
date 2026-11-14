@@ -12,28 +12,20 @@ import {
   ConnectContentSearchRepository,
   ConnectSourceRepository,
 } from "../repositories.js";
-import { outcomeValue } from "../repository-client.js";
+import { settledRecord } from "../repository-client.js";
 import { ConnectSourceImportRepository } from "../source-imports.js";
 
-import { nativeReaderClient } from "./native-client.js";
+import { borrowedRecords } from "./borrowed-records.js";
 import { nativeReaderFiles } from "./native-files.js";
-import { recordDocument } from "./native-mapping.js";
 import { NativeMigrationTarget } from "./native-migration.js";
 
-import type { ReaderConnectedCollection } from "../application-session.js";
+import type { ReaderConnectedCollection } from "../connected-collection.js";
 import type { LibraryViewRepository } from "../library-views.js";
-import type { NativeReaderClient } from "./native-client.js";
 import type {
-  ExecuteViewInput,
   JsonObject,
-  SavedViewExecution,
-  SavedViewPresentation,
-} from "@mdbase-dev/connect";
-import type {
   Change,
   MdbaseApplicationConnection,
   MdbaseClient,
-  QueryResult,
 } from "@mdbase-dev/sdk";
 import type { CreateJournal } from "@mdbase-reader/core";
 
@@ -55,17 +47,12 @@ export function nativeReaderCollection(
      * create the log refuses after it returned is lost from this device.
      */
     readonly creates?: CreateJournal;
-    /** How long a write waits for the log before it counts as saved on this device. */
-    readonly receiptWaitMs?: number;
   } = {},
 ): NativeReaderCollection {
   let disposed = false;
   const current = (): boolean => !disposed && connection.isCurrent();
-  const client = nativeReaderClient(
-    connection.records,
-    current,
-    options.receiptWaitMs === undefined ? {} : { receiptWaitMs: options.receiptWaitMs },
-  );
+  const lifetime = new AbortController();
+  const client = borrowedRecords(connection.records, current, lifetime.signal);
   const files = nativeReaderFiles(connection.records, current);
   const creates = new CreateFollowThrough(client, {
     ...(options.creates ? { journal: options.creates } : {}),
@@ -94,7 +81,7 @@ export function nativeReaderCollection(
     documents: new ConnectDocumentRepository(files),
     contentSearch: new ConnectContentSearchRepository(client),
     files: new ConnectCollectionFileRepository(files),
-    libraryViews: nativeLibraryViews(connection.records, client, current),
+    libraryViews: nativeLibraryViews(client, current),
     bodyRecovery: new ConnectBodyUpdateRecovery(client),
     ...(options.creates ? { createFollowThrough: creates } : {}),
     subscribeSourceChanges: (listener) => {
@@ -109,9 +96,9 @@ export function nativeReaderCollection(
     },
     dispose: () => {
       disposed = true;
+      lifetime.abort();
       stopFollowing();
       settings.dispose();
-      client.dispose();
     },
   };
 }
@@ -173,12 +160,8 @@ function mayBeSource(change: Change): boolean {
   return change.entity !== "file" && (change.types?.includes("reader-source") ?? true);
 }
 
-function nativeLibraryViews(
-  sdk: MdbaseClient,
-  records: NativeReaderClient,
-  isCurrent: () => boolean,
-): LibraryViewRepository {
-  const check = (signal?: AbortSignal): void => {
+function nativeLibraryViews(sdk: MdbaseClient, isCurrent: () => boolean): LibraryViewRepository {
+  const check = (): void => {
     if (!isCurrent()) {
       throw new MdbaseError({
         code: "cancelled",
@@ -186,96 +169,34 @@ function nativeLibraryViews(
         message: "This collection is no longer open in mdbase Reader.",
       });
     }
-    signal?.throwIfAborted();
   };
   return {
-    async list(options = {}) {
-      check(options.signal);
-      const listed = await sdk.views.list(options);
-      check(options.signal);
-      return {
-        views: listed.sources.map((source) => ({
-          id: source.id,
-          name: source.name,
-          source: { ...source.source },
-          views: source.views.map((view) => ({
-            id: view.id,
-            name: view.name,
-            properties: view.properties.map((property) => ({ ...property })),
-            ...(view.presentation === undefined
-              ? {}
-              : { presentation: view.presentation as SavedViewPresentation }),
-          })),
-        })),
-        meta: { totalCount: listed.sources.length },
-      };
+    async list(options) {
+      check();
+      const result = await sdk.views.list(options);
+      check();
+      return result;
     },
-    async execute(input, options = {}) {
-      check(options.signal);
-      if (input.cursor !== undefined) {
-        throw new MdbaseError({
-          code: "invalid_request",
-          recovery: "fix_request",
-          reason: "unsupported",
-          message: "Saved view cursors are not available natively.",
-        });
-      }
-      const result = await sdk.views.execute({ path: input.path }, input.view, {
-        include: { effective: true },
-        ...(input.context ? { context: { path: input.context.path } } : {}),
-        ...(input.limit === undefined ? {} : { limit: input.limit }),
-        ...(input.offset === undefined ? {} : { offset: input.offset }),
-        ...(input.timezone === undefined ? {} : { timezone: input.timezone }),
-        ...(options.signal ? { signal: options.signal } : {}),
-      });
-      check(options.signal);
-      return viewExecution(result, input);
+    async execute(ref, view, options) {
+      check();
+      const result = await sdk.views.execute(ref, view, options);
+      check();
+      return result;
     },
     async save({ path, frontmatter, replace }) {
+      check();
+      const ref = { path };
       const saved = replace
-        ? outcomeValue(
-            await records.update({
-              path,
-              // A view is replaced whole, so fields the new definition drops are removed.
-              document: await viewDocument(frontmatter),
+        ? await settledRecord(
+            sdk,
+            sdk.replaceDocument(await sdk.get(ref), await viewDocument(frontmatter), {
               ...(replace.revision ? { ifRevision: replace.revision } : {}),
             }),
-            "save library view",
+            ref,
           )
-        : outcomeValue(await records.create({ path, frontmatter }), "create library view");
+        : await settledRecord(sdk, sdk.create({ path, frontmatter }), ref);
+      check();
       return { path: saved.path, revision: saved.revision };
-    },
-  };
-}
-
-function viewExecution(result: QueryResult, input: ExecuteViewInput): SavedViewExecution {
-  return {
-    results: result.records.map((record) => {
-      const document = recordDocument(record);
-      return {
-        path: document.path,
-        revision: document.revision,
-        types: document.types,
-        frontmatter: document.frontmatter,
-        effectiveFrontmatter: document.effectiveFrontmatter,
-        file: document.file,
-        ...(record.values ? { values: record.values } : {}),
-      };
-    }),
-    meta: {
-      totalCount: result.totalCount ?? result.records.length,
-      hasMore: result.hasMore ?? result.cursor !== undefined,
-      view: { path: result.view?.path ?? input.path, id: result.view?.view ?? input.view },
-      ...(input.context ? { context: { path: input.context.path } } : {}),
-      ...(result.groups
-        ? {
-            groups: result.groups.map((group) => ({
-              values: group.values,
-              count: group.count,
-              summaries: group.summaries ?? {},
-            })),
-          }
-        : {}),
     },
   };
 }

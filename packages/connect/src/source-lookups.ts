@@ -6,11 +6,10 @@ import {
   type SourceSummary,
 } from "@mdbase-reader/core";
 
-import { outcomeValue } from "./repository-client.js";
+import { completeReaderPages } from "./repository-client.js";
 import { withResolvedSourceParts } from "./source-part-links.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { QueryInput, QueryRecord } from "@mdbase-dev/connect";
+import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
 
 /**
  * Contract views cannot be filtered in the store, but Reader-created records always persist
@@ -22,21 +21,19 @@ const readerSourceType = "reader-source";
 export type SourceWhere = (where: string) => Promise<SourceSummary[]>;
 
 export async function queryReaderSources(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   where: string,
   options: ReaderRequestOptions,
-): Promise<QueryRecord[]> {
-  const input: QueryInput = withResolvedSourceParts({
+): Promise<RecordView[]> {
+  const input: Query = withResolvedSourceParts({
     types: [readerSourceType],
     where,
-    frontmatterMode: "effective",
   });
-  const records: QueryRecord[] = [];
-  for await (const outcome of client.queryPages(input, {
+  const records: RecordView[] = [];
+  for await (const outcome of completeReaderPages(client, input, {
     ...options,
-    pageSize: 250,
   })) {
-    records.push(...outcomeValue(outcome, "find sources").results);
+    records.push(...outcome.records);
   }
   return records;
 }

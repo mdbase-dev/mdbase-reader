@@ -14,7 +14,6 @@ import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } fr
 import { ReaderCollectionSwitcher, useReaderMdbase } from "./reader-collections.js";
 import { ReaderSaveStatus } from "./ReaderSaveStatus.js";
 
-import type { ReaderDirectAccessState } from "./use-direct-access.js";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { ReadingTypography } from "@mdbase-reader/reading-surface";
 import type { JSX, ReactNode } from "react";
@@ -42,7 +41,6 @@ interface ReaderHeaderProps {
   readonly collectionName: string;
   readonly beforeCollectionSwitch?: () => boolean | Promise<boolean>;
   readonly connectionState: ReaderConnectionState;
-  readonly directAccess: ReaderDirectAccessState;
   readonly theme: ThemePreference;
   readonly onChangeTheme: (theme: ThemePreference) => void;
   readonly onOpenCommands: () => void;
@@ -105,7 +103,6 @@ function LibraryHeader({
   collectionName,
   beforeCollectionSwitch,
   connectionState,
-  directAccess,
   onOpenCommands,
   onToggleLibrary,
   libraryOpen,
@@ -146,7 +143,7 @@ function LibraryHeader({
             {...(beforeCollectionSwitch ? { beforeSwitch: beforeCollectionSwitch } : {})}
           />
         )}
-        <ConnectionState state={connectionState} directAccess={directAccess} />
+        <ConnectionState state={connectionState} />
         <ReaderSaveStatus mdbase={mdbase} online={navigator.onLine} />
       </div>
       <div className="reader-header-actions">
@@ -261,76 +258,9 @@ function SourceBarHeader({
   );
 }
 
-function ConnectionState({
-  state,
-  directAccess,
-}: {
-  readonly state: ReaderConnectionState;
-  readonly directAccess: ReaderDirectAccessState;
-}): JSX.Element | null {
-  const { t } = useLingui();
-  const { snapshot, working, problem, request } = directAccess;
-  const descriptionId = useId();
+function ConnectionState({ state }: { readonly state: ReaderConnectionState }): JSX.Element | null {
   useMdbaseMarkBusy(state === "syncing" && "stream");
-  if (state === null) {
-    return null;
-  }
-  if (snapshot?.authority !== "connector" || state !== "connected") {
-    return <PlainConnectionState state={state} />;
-  }
-  if (snapshot.route === "direct") {
-    return (
-      <span
-        className="connection-state is-connected is-direct"
-        title={t({ message: "Connected directly to this computer" })}
-      >
-        <span className="sr-only">
-          <Trans>Direct connection</Trans>
-        </span>
-      </span>
-    );
-  }
-  if (working || snapshot.status === "checking") {
-    return (
-      <span className="connection-state is-connected is-checking" aria-live="polite">
-        <Trans>Connecting…</Trans>
-      </span>
-    );
-  }
-  if (snapshot.status === "disabled") {
-    return <PlainConnectionState state={state} />;
-  }
-  const denied = snapshot.status === "denied";
-  const title =
-    problem ??
-    (denied
-      ? translate({
-          message:
-            "Local network access is blocked. Allow it in your browser’s site settings, then retry.",
-        })
-      : translate({
-          message:
-            "Request local network access and connect directly to the mdbase relay on this computer.",
-        }));
-  // The visible words name the button; the explanation is its description.
-  return (
-    <>
-      <button
-        className={`connection-state connection-direct-action${problem ? " has-problem" : ""}`}
-        type="button"
-        title={title}
-        aria-describedby={descriptionId}
-        onClick={request}
-      >
-        {denied
-          ? t({ message: "Retry local access" })
-          : t({ message: "Connect directly", context: "ReaderHeader interface" })}
-      </button>
-      <span id={descriptionId} className="sr-only">
-        {title}
-      </span>
-    </>
-  );
+  return state === null ? null : <PlainConnectionState state={state} />;
 }
 
 /** saved_on_device: the SDK keeps changes on this device until it can sync them. */

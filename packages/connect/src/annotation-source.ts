@@ -1,15 +1,8 @@
 import { sourceId, type ReaderRequestOptions, type SourceId } from "@mdbase-reader/core";
 
-import { outcomeValue } from "./repository-client.js";
+import { completeReaderPages } from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type {
-  QueryInput,
-  QueryRecord,
-  QueryMetadataRecord,
-  QueryPage,
-  QueryMetadataPage,
-} from "@mdbase-dev/connect";
+import type { PlainValue, MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
 
 /**
  * mdbase resolves an annotation's `source` link, so Reader never guesses a link's target from its
@@ -19,17 +12,16 @@ import type {
 const resolvedSource = "reader_source_id";
 
 /** Adds each annotation's resolved source ID to a query's result values. */
-export function withResolvedSource(input: QueryInput): QueryInput {
+export function withResolvedSource(input: Query): Query {
   return {
     ...input,
     projections: {
-      ...input.projections,
+      ...(input["projections"] as Record<string, PlainValue> | undefined),
       [resolvedSource]: {
-        expression:
-          "has(record.source) && source != null && source.asFile() != null ? source.asFile().?id.orValue(null) : null",
+        expr: "has(record.source) && source != null && source.asFile() != null ? source.asFile().?id.orValue(null) : null",
       },
     },
-    select: [...(input.select ?? []), `projection.${resolvedSource}`],
+    select: [...(Array.isArray(input.select) ? input.select : []), `projection.${resolvedSource}`],
   };
 }
 
@@ -38,23 +30,18 @@ export function withResolvedSource(input: QueryInput): QueryInput {
  * reference that resolves to no record, the ID it was written as. Undefined for a broken link.
  */
 export function annotationSourceFromResult(
-  record:
-    Pick<QueryRecord, "effectiveFrontmatter" | "frontmatter" | "values"> | QueryMetadataRecord,
+  record: Pick<RecordView, "effective" | "frontmatter" | "values"> | RecordView,
 ): SourceId | undefined {
   const resolved = stringField(record.values?.[resolvedSource]);
   if (resolved) {
     return sourceId(resolved);
   }
-  return legacySourceId(
-    "frontmatter" in record || "effectiveFrontmatter" in record
-      ? (record.effectiveFrontmatter ?? record.frontmatter)?.["source"]
-      : record.values?.["source"],
-  );
+  return legacySourceId((record.effective ?? record.frontmatter)["source"]);
 }
 
 /** Resolves one annotation's source through mdbase. */
 export async function resolveAnnotationSource(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   path: string,
   options: ReaderRequestOptions = {},
 ): Promise<SourceId> {
@@ -66,7 +53,7 @@ export async function resolveAnnotationSource(
 }
 
 export async function annotationSourceAt(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   path: string,
   options: ReaderRequestOptions = {},
 ): Promise<SourceId | undefined> {
@@ -74,21 +61,10 @@ export async function annotationSourceAt(
     types: ["reader-annotation"],
     where: `file.path == ${JSON.stringify(path)}`,
     select: ["source"],
-    frontmatterMode: "effective",
   });
-  const metadata = outcomeValue(
-    await client.supportsAuthorityFeature("query-metadata-v1", options),
-    "discover metadata queries",
-  );
-  const paging = { ...options, firstPageSize: 1, pageSize: 1 };
-  const pages = metadata
-    ? client.queryPages({ ...input, output: "metadata", includeBody: false }, paging)
-    : client.queryPages(input, paging);
+  const pages = completeReaderPages(client, input, { ...options, include: { effective: true } });
   for await (const outcome of pages) {
-    const record = outcomeValue<QueryPage | QueryMetadataPage>(
-      outcome,
-      "resolve annotation source",
-    ).results.find((candidate) => candidate.path === path);
+    const record = outcome.records.find((candidate) => candidate.path === path);
     const source = record ? annotationSourceFromResult(record) : undefined;
     if (source) {
       return source;

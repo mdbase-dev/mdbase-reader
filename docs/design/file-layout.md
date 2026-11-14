@@ -71,17 +71,13 @@ atomic entry.** It is safe to build Tidy on this. Reader does not expose it yet.
   the rename rewrites it.
 - Limits: one entry is at most 1 MiB sealed (`log-entry.md:618`). A rename whose
   rewrites do not fit is rejected as `too_large` (`open-questions.md` Q12).
-- Reader today: `ReaderConnectClient` has no `rename` or file `move`
-  (`packages/connect/src/repository-client.ts:218-241`), and neither does the native
-  adapter (`packages/connect/src/native/*`). The legacy `@mdbase-dev/connect`
-  beta.125 client has `rename({ updateRefs })` and `preflightRename`, but its
-  `files.move` takes **no** `updateRefs` (`dist/files.d.ts:49-53`).
+- Reader repositories borrow the SDK's `MdbaseClient`, which provides native
+  rename and preflight APIs. Reader has no Tidy flow yet.
 
 **What Tidy would still have to handle itself:**
 
-1. Add `rename`, `preflightRename` and `moveFile` (with `updateRefs`) to the native
-   adapter. Offer Tidy only on native connections. On legacy, file moves would break
-   `documents[].file`.
+1. Use the SDK's native rename, preflight and file move APIs, preserving their
+   reference-update options and confirmation requirements.
 2. Keep each entry under the size limit. Batch renames per source, and split a batch in
    half when it comes back `too_large`.
 3. Links the engine does not rewrite:

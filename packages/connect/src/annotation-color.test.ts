@@ -9,8 +9,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
-
-import type { ReaderConnectClient } from "./repository-client.js";
+import { testWrite, testRecord, mockSdk } from "./records.fixtures.js";
 
 const annotation: Annotation = {
   id: annotationId("ann"),
@@ -39,27 +38,31 @@ describe("guarded annotation colour writes", () => {
       tags: annotation.tags,
       created_at: annotation.createdAt,
     };
-    const update = vi.fn().mockResolvedValue({
-      ok: true,
-      diagnostics: [],
-      value: {
-        path: annotation.path,
-        revision: "ann-new",
-        frontmatter: fields,
-        effectiveFrontmatter: fields,
-        body: annotation.body,
-      },
-    });
-    const repository = new ConnectAnnotationRepository({
-      update,
-    } as unknown as ReaderConnectClient);
+    const update = vi.fn().mockResolvedValue(
+      testWrite(
+        testRecord({
+          path: annotation.path!,
+          revision: "ann-new",
+          frontmatter: fields,
+          effective: fields,
+          body: annotation.body,
+        }),
+      ),
+    );
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        update,
+      }),
+    );
     const recoloured = await repository.updateColor({ annotation, color: "green", modifiedAt });
-    expect(update).toHaveBeenCalledExactlyOnceWith({
-      path: annotation.path,
-      ifRevision: annotation.recordRevision,
-      patch: { color: "green", modified_at: modifiedAt },
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ path: annotation.path }),
+      expect.objectContaining({
+        ifRevision: annotation.recordRevision,
+        patch: { color: "green", modified_at: modifiedAt },
+      }),
+      expect.anything(),
+    );
     expect(recoloured).toMatchObject({
       id: annotation.id,
       color: "green",
@@ -71,9 +74,11 @@ describe("guarded annotation colour writes", () => {
 
   it("refuses an annotation without a path and revision before writing", async () => {
     const update = vi.fn();
-    const repository = new ConnectAnnotationRepository({
-      update,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        update,
+      }),
+    );
     await expect(
       repository.updateColor({
         annotation: { ...annotation, recordRevision: undefined } as unknown as Annotation,

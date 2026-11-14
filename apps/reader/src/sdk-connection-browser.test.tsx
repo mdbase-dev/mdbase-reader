@@ -8,12 +8,16 @@ import { createRoot } from "./testing/i18n.js";
 import type { Mdbase } from "@mdbase-reader/connect/native";
 import type { JSX } from "react";
 
-it("reports browser offline immediately and recovers without an SDK write", () => {
+it("follows SDK connectivity changes without waiting for a record write", () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+  let snapshot = { sync: { state: "saved" } };
+  let changed: () => void = () => undefined;
   const mdbase = {
-    subscribe: () => () => undefined,
-    getSnapshot: () => null,
+    subscribe: (listener: () => undefined) => {
+      changed = listener;
+      return () => undefined;
+    },
+    getSnapshot: () => snapshot,
   } as unknown as Mdbase;
   function Status(): JSX.Element {
     return <output>{useSdkConnectionState(mdbase, "connected")}</output>;
@@ -23,14 +27,14 @@ it("reports browser offline immediately and recovers without an SDK write", () =
   try {
     act(() => root.render(<Status />));
     expect(host.textContent).toBe("connected");
-    online.mockReturnValue(false);
+    snapshot = { sync: { state: "offline" } };
     act(() => {
-      window.dispatchEvent(new Event("offline"));
+      changed();
     });
     expect(host.textContent).toBe("offline");
-    online.mockReturnValue(true);
+    snapshot = { sync: { state: "saved" } };
     act(() => {
-      window.dispatchEvent(new Event("online"));
+      changed();
     });
     expect(host.textContent).toBe("connected");
   } finally {

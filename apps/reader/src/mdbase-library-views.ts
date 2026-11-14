@@ -116,11 +116,9 @@ export function parseLibraryViewKey(
   return separator > 0 ? { path: key.slice(0, separator), viewId: key.slice(separator + 2) } : null;
 }
 
-export function libraryViewConfiguration(
-  presentation: Readonly<Record<string, unknown>> | undefined,
-): LibraryViewConfiguration {
-  const type = presentation?.["type"];
-  const options = objectValue(presentation?.["options"]);
+export function libraryViewConfiguration(presentation: unknown): LibraryViewConfiguration {
+  const type = objectValue(presentation)["type"];
+  const options = objectValue(objectValue(presentation)["options"]);
   const columns = Array.isArray(options["columns"])
     ? options["columns"].filter(isLibraryColumn)
     : defaultLibraryViewConfiguration.columns;
@@ -181,14 +179,17 @@ export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
           },
           options: {
             readerViewVersion: 1,
-            columns: configuration.columns,
-            columnWidths: configuration.columnWidths,
+            columns: [...configuration.columns],
+            columnWidths: { ...configuration.columnWidths },
             sortField: configuration.sortField,
             sortDirection: configuration.sortDirection,
             // Search is retained as presentation state because canonical view
             // queries are deliberately case-sensitive and Reader search spans
             // normalized source, note, annotation, and document indexes.
-            filter: configuration.filter,
+            filter: {
+              ...configuration.filter,
+              conditions: configuration.filter.conditions.map((condition) => ({ ...condition })),
+            },
           },
         },
       },

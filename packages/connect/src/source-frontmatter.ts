@@ -12,9 +12,9 @@ import {
 import { ConnectRepositoryError } from "./repository-client.js";
 import { documentEntry } from "./source-files.js";
 
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
+import type { FileView } from "@mdbase-dev/sdk";
 
-type Descriptors = ReadonlyMap<PlannedSourceRepresentation["role"], CollectionFileDescriptor>;
+type Descriptors = ReadonlyMap<PlannedSourceRepresentation["role"], FileView>;
 
 function object(value: unknown): Readonly<Record<string, unknown>> | undefined {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -175,7 +175,7 @@ function documentEntries(
       ? descriptors.get(representation.derivedFromRole)
       : undefined;
     return documentEntry(representation, descriptor, {
-      ...(derivedFrom ? { derived_from_file_id: derivedFrom.fileId } : {}),
+      ...(derivedFrom ? { derived_from_file_id: derivedFrom.id } : {}),
       ...(capture && representation.role === "archive"
         ? { origin_url: capture.canonicalUrl, retrieved_at: capture.retrievedAt }
         : {}),

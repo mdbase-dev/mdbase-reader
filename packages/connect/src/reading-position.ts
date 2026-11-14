@@ -1,4 +1,4 @@
-import type { JsonObject } from "@mdbase-dev/connect";
+import type { JsonObject } from "@mdbase-dev/sdk";
 import type { ReadingPosition } from "@mdbase-reader/core";
 
 function object(value: unknown): Readonly<Record<string, unknown>> | null {

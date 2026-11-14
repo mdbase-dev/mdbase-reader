@@ -12,7 +12,7 @@ import { defaultLibraryView, defaultLibraryViewConfiguration } from "./mdbase-li
 import type { LibraryViewRepository } from "@mdbase-reader/connect";
 
 type ViewList = Awaited<ReturnType<LibraryViewRepository["list"]>>;
-type ViewDocument = ViewList["views"][number];
+type ViewDocument = ViewList["sources"][number];
 type NamedView = ViewDocument["views"][number];
 
 function namedView(id: string, presentation?: NamedView["presentation"]): NamedView {
@@ -20,6 +20,7 @@ function namedView(id: string, presentation?: NamedView["presentation"]): NamedV
 }
 function document(id: string, views: NamedView[]): ViewDocument {
   return {
+    record: "00000000-0000-4000-8000-000000000001",
     id,
     name: id,
     source: {
@@ -49,7 +50,7 @@ function repository(views: ViewDocument[]): LibraryViewRepository {
   return {
     list: vi
       .fn()
-      .mockResolvedValue({ views, meta: { totalCount: views.length } } satisfies ViewList),
+      .mockResolvedValue({ sources: views, diagnostics: [], complete: true } satisfies ViewList),
     execute: vi.fn(),
     save: vi.fn(),
   };

@@ -251,50 +251,6 @@ button {
   background: var(--connected);
 }
 
-.connection-direct-action {
-  padding: 4px 7px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  color: var(--muted);
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-}
-
-.connection-direct-action::before {
-  background: var(--connected);
-}
-
-.connection-direct-action:hover {
-  border-color: var(--line-strong);
-  color: var(--ink);
-  background: var(--hover);
-}
-
-.connection-direct-action:focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--focus-ring);
-}
-
-.connection-direct-action.has-problem {
-  border-color: color-mix(in oklch, var(--danger) 45%, var(--line));
-}
-
-.connection-state.is-direct::before {
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--connected) 16%, transparent);
-}
-
-.connection-state.is-checking::before {
-  animation: connection-pulse 900ms ease-in-out infinite alternate;
-}
-
-@keyframes connection-pulse {
-  to {
-    opacity: 0.35;
-  }
-}
-
 .icon-button {
   width: 32px;
   height: 32px;
@@ -1701,13 +1657,6 @@ button {
 .connection-state {
   gap: 8px;
   font-size: var(--text-xs);
-}
-
-.connection-state.is-direct {
-  width: 13px;
-  height: 18px;
-  justify-content: center;
-  gap: 0;
 }
 
 .icon-button {

@@ -49,7 +49,6 @@ export function ReaderWorkspace({
         gateway={gateway}
         initialSourceId={requestedSourceId(location.href, opened.collectionId)}
         initialAnnotation={requestedAnnotation(location.href, opened.collectionId)}
-        {...(opened.directAccess ? { directAccess: opened.directAccess } : {})}
         saveFile={(name, blob) => readerPlatform.saveFile(name, blob)}
         pickSourceFile={() =>
           readerPlatform.pickFile([

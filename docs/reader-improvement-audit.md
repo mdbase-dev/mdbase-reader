@@ -43,7 +43,7 @@
   column, plus explicit previous/next controls usable with pointer and keyboard.
   EPUB fetching now observes cancellation. HTML respects reduced-motion and
   forced-colour preferences.
-- **SDK.** `@mdbase-dev/connect` is pinned to `0.1.0-beta.100` (the `next` release at
+- **SDK.** The legacy client was pinned to `0.1.0-beta.100` (the `next` release at
   implementation time), up from beta.91. Developer tooling remains at beta.91:
   beta.100's default authoring validator accepts canonical v2 declarations, while
   Reader deliberately retains its existing legacy v1 permissions. This change

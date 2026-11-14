@@ -2,9 +2,9 @@ import { collectionId, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
+import { mockSdk, testRecord, testQuery } from "./records.fixtures.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
+import type { QueryResult, RecordView } from "@mdbase-dev/sdk";
 
 const legacyAuthorityFeatures = {
   supportsAuthorityFeature: vi.fn(() =>
@@ -12,11 +12,11 @@ const legacyAuthorityFeatures = {
   ),
 };
 
-function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+function success<Value>(value: Value): Value {
+  return value;
 }
 
-function annotationDocument(path: string): RecordDocument {
+function annotationDocument(path: string): RecordView {
   const id = path.replace(/^annotations\/(.*)\.md$/u, "$1");
   const frontmatter = {
     id,
@@ -24,37 +24,38 @@ function annotationDocument(path: string): RecordDocument {
     annotation_type: "note",
     created_at: "2026-08-09T00:00:00.000Z",
   };
-  return {
+  return testRecord({
     path,
     revision: `rev-${id}`,
     types: ["reader-annotation"],
     frontmatter,
-    effectiveFrontmatter: frontmatter,
+    effective: frontmatter,
     body: id,
-    file: {},
-  };
+  });
 }
 
 describe("Connect annotation concurrency", () => {
   it("bounds concurrent annotation body reads and retains index order", async () => {
     const ids = Array.from({ length: 12 }, (_value, index) => `ann_${String(index)}`);
     const paths = ids.map((id) => `annotations/${id}.md`);
-    const queryPages = vi.fn(() => annotationPages());
-    async function* annotationPages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
+    const pages = vi.fn(() => annotationPages());
+    async function* annotationPages(): AsyncGenerator<QueryResult> {
       yield await Promise.resolve(
-        success({
-          results: paths.map((path, index) => ({
-            path,
-            effectiveFrontmatter: { id: ids[index], source: "src_01" },
-            types: ["reader-annotation"],
-            file: {},
-          })),
-          meta: { totalCount: paths.length, hasMore: false },
-          page: 0,
-          offset: 0,
-          loaded: paths.length,
-          complete: true,
-        }),
+        success(
+          testQuery({
+            records: paths.map((path, index) =>
+              testRecord({
+                path,
+                effective: { id: ids[index], source: "src_01" },
+                types: ["reader-annotation"],
+              }),
+            ),
+            totalCount: paths.length,
+            hasMore: false,
+
+            complete: true,
+          }),
+        ),
       );
     }
     let active = 0;
@@ -66,11 +67,13 @@ describe("Connect annotation concurrency", () => {
       active -= 1;
       return success(annotationDocument(input.path));
     });
-    const repository = new ConnectAnnotationRepository({
-      ...legacyAuthorityFeatures,
-      queryPages,
-      read,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        pages,
+        get: read,
+      }),
+    );
 
     const annotations = await repository.listForSource(collectionId("reading"), sourceId("src_01"));
 
@@ -82,44 +85,46 @@ describe("Connect annotation concurrency", () => {
 describe("Connect annotation listing", () => {
   it("lists every annotation with a query Connect accepts, then reads each record", async () => {
     const paths = ["annotations/ann_1.md", "annotations/broken.md", "annotations/ann_2.md"];
-    const queryPages = vi.fn(async function* (): AsyncGenerator<ConnectOutcome<QueryPage>> {
+    const pages = vi.fn(async function* (): AsyncGenerator<QueryResult> {
       yield await Promise.resolve(
-        success({
-          results: paths.map((path) => ({
-            path,
-            effectiveFrontmatter: {
-              id: annotationDocument(path).frontmatter["id"],
-              source: "src_01",
-            },
-            types: ["reader-annotation"],
-            file: {},
-          })),
-          meta: { totalCount: paths.length, hasMore: false },
-          page: 0,
-          offset: 0,
-          loaded: paths.length,
-          complete: true,
-        }),
+        success(
+          testQuery({
+            records: paths.map((path) =>
+              testRecord({
+                path,
+                effective: {
+                  id: annotationDocument(path).frontmatter["id"],
+                  source: "src_01",
+                },
+                types: ["reader-annotation"],
+              }),
+            ),
+            totalCount: paths.length,
+            hasMore: false,
+
+            complete: true,
+          }),
+        ),
       );
     });
     const read = vi.fn((input: { readonly path: string }) => {
       const document = annotationDocument(input.path);
       return Promise.resolve(
-        success(
-          input.path.includes("broken") ? { ...document, effectiveFrontmatter: {} } : document,
-        ),
+        success(input.path.includes("broken") ? { ...document, effective: {} } : document),
       );
     });
-    const repository = new ConnectAnnotationRepository({
-      ...legacyAuthorityFeatures,
-      queryPages,
-      read,
-    } as unknown as ReaderConnectClient);
+    const repository = new ConnectAnnotationRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        pages,
+        get: read,
+      }),
+    );
 
     const annotations = await repository.listAll(collectionId("reading"));
 
     // Semantic contract views accept only types, timezone, pagination, frontmatterMode and contract.
-    const inputs = (queryPages.mock.calls as unknown as [Record<string, unknown>][]).map(
+    const inputs = (pages.mock.calls as unknown as [Record<string, unknown>][]).map(
       ([input]) => input,
     );
     for (const input of inputs) {

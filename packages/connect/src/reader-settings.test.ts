@@ -3,11 +3,9 @@ import { MemoryReplica } from "@mdbase-dev/sdk/testing";
 import { annotationId, dateTime, mutationId, sourceId } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { nativeReaderClient, type NativeReaderClient } from "./native/native-client.js";
 import { nativeReaderCollection } from "./native/native-collection.js";
 import { memoryConnection } from "./native/testing.js";
 import { ReaderSettingsStore } from "./reader-settings.js";
-import { outcomeValue, type ReaderConnectClient } from "./repository-client.js";
 import { plan as plannedImport } from "./source-imports.fixtures.js";
 
 const path = "_settings/dev.mdbase.reader.md";
@@ -25,15 +23,15 @@ afterEach(() => {
   }
 });
 
-async function native(): Promise<{ replica: MemoryReplica; client: NativeReaderClient }> {
+async function native(): Promise<{ replica: MemoryReplica; client: MdbaseClient }> {
   const replica = new MemoryReplica({ confirmDelayMs: 0 });
   const sdk: MdbaseClient = await replica.client();
   closers.push(() => sdk.close());
-  return { replica, client: nativeReaderClient(sdk, () => true) };
+  return { replica, client: sdk };
 }
 
-async function stored(client: ReaderConnectClient): Promise<Record<string, unknown>> {
-  return outcomeValue(await client.read({ path }), "read settings").frontmatter;
+async function stored(client: MdbaseClient): Promise<Record<string, unknown>> {
+  return (await client.get({ path })).frontmatter;
 }
 
 describe("ReaderSettingsStore reads", () => {
@@ -195,7 +193,7 @@ describe("ReaderSettingsStore saves", () => {
     const saved = await store.save({ annotation_name_template: "{{ words }}" });
 
     expect(saved.ok).toBe(true);
-    const document = outcomeValue(await client.read({ path }), "read settings");
+    const document = await client.get({ path });
     expect(document.types).toEqual(["reader-settings"]);
     expect(document.frontmatter).toEqual({
       app: "dev.mdbase.reader",
@@ -219,7 +217,9 @@ describe("ReaderSettingsStore saves", () => {
 
     expect((await store.save({ source_name_template: "{{ title }}" })).ok).toBe(true);
     expect(update).toHaveBeenCalledWith(
+      expect.anything(),
       expect.objectContaining({ patch: { source_name_template: "{{ title }}" } }),
+      expect.anything(),
     );
     expect(await stored(client)).toEqual({
       ...record,
@@ -282,10 +282,7 @@ describe("ReaderSettingsStore saves", () => {
 
   it("is read-only once the collection refuses a save for lack of access", async () => {
     const { client } = await native();
-    vi.spyOn(client, "create").mockResolvedValue({
-      ok: false,
-      problem: { code: "not_authorized", message: "Read-only grant", recovery: "none" },
-    } as never);
+    vi.spyOn(client, "create").mockRejectedValue(mdbaseError("forbidden", "Read-only grant"));
     const store = new ReaderSettingsStore(client);
     const saved = await store.save({ source_name_template: "{{ title }}" });
     expect(saved).toMatchObject({ ok: false, reason: "read_only" });
@@ -404,18 +401,18 @@ describe("ReaderSettingsStore follows the change feed", () => {
     const replica = new MemoryReplica({ confirmDelayMs: null });
     const sdk = await replica.client();
     closers.push(() => sdk.close());
-    const client = nativeReaderClient(sdk, () => true, { receiptWaitMs: 20 });
+    const client = sdk;
     let mutation = "";
     const create = client.create.bind(client);
-    vi.spyOn(client, "create").mockImplementation((input, options) =>
-      create(input, {
-        ...options,
-        onReceipt: (receipt) => {
-          mutation = receipt.mutationId;
-          options?.onReceipt?.(receipt);
-        },
-      }),
+    const settle = client.settle.bind(client);
+    vi.spyOn(client, "settle").mockImplementation((write, options) =>
+      settle(write, { ...options, timeoutMs: 20 }),
     );
+    vi.spyOn(client, "create").mockImplementation(async (input, options) => {
+      const write = await create(input, options);
+      mutation = write.mutationId;
+      return write;
+    });
     const store = new ReaderSettingsStore(client, {
       watch: (watched, onChange) =>
         sdk.watchChanges((batch) => {

@@ -59,7 +59,7 @@ function lookupFailedNotice(): string {
 
 // The controller coordinates one panel's explicit actions; I/O lives in the composed hooks
 // and CaptureWriter.
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function, complexity -- Shared-session integration only changes the editor input here.
 export function useExtensionCapture(
   tabId: number,
   link: PanelConnection,
@@ -629,7 +629,12 @@ export function useExtensionCapture(
     () => extension?.connectedCollection() ?? null,
     [extension],
   );
-  const note = useSourceNote(connectedCollection, source, setSource);
+  const note = useSourceNote(
+    extension?.application ?? null,
+    connectedCollection,
+    source,
+    setSource,
+  );
 
   useQuickSave({
     invocation: page.invocation,

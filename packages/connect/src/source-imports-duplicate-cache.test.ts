@@ -7,6 +7,7 @@ import {
 } from "@mdbase-reader/core";
 import { expect, it, vi } from "vitest";
 
+import { mockSdk, testWrite, testQuery } from "./records.fixtures.js";
 import {
   digest,
   fileDescriptor,
@@ -16,17 +17,13 @@ import {
 } from "./source-imports.fixtures.js";
 import { ConnectSourceImportRepository } from "./source-imports.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage } from "@mdbase-dev/connect";
+import type { QueryResult } from "@mdbase-dev/sdk";
 
 it("rejects a later-page authority match before any commit effects", async () => {
-  const queryPages = vi.fn(() => duplicatePages());
+  const pages = vi.fn(() => duplicatePages());
   const upload = vi.fn(() => Promise.resolve(fileDescriptor()));
-  const create = vi.fn(() => Promise.resolve(success(recordDocument())));
-  const repository = new ConnectSourceImportRepository(
-    { queryPages, create } as unknown as ReaderConnectClient,
-    { upload },
-  );
+  const create = vi.fn(() => Promise.resolve(testWrite(success(recordDocument()))));
+  const repository = new ConnectSourceImportRepository(mockSdk({ pages, create }), { upload });
   const commitFile = vi.spyOn(repository, "commitFile");
 
   await expect(
@@ -51,32 +48,34 @@ it("rejects a later-page authority match before any commit effects", async () =>
     ),
   ).rejects.toThrow("already stored in");
 
-  expect(queryPages).toHaveBeenCalledOnce();
+  expect(pages).toHaveBeenCalledOnce();
   expect(commitFile).not.toHaveBeenCalled();
   expect(upload).not.toHaveBeenCalled();
   expect(create).not.toHaveBeenCalled();
 });
 
-async function* duplicatePages(): AsyncGenerator<ConnectOutcome<QueryPage>> {
+async function* duplicatePages(): AsyncGenerator<QueryResult> {
   yield await Promise.resolve(
-    success<QueryPage>({
-      results: [queryRecord("src_other", `sha256:${"b".repeat(64)}`)],
-      meta: { totalCount: 2, hasMore: true, cursor: "next" },
-      page: 0,
-      offset: 0,
-      loaded: 1,
-      complete: false,
-      cursor: "next",
-    }),
+    success<QueryResult>(
+      testQuery({
+        records: [queryRecord("src_other", `sha256:${"b".repeat(64)}`)],
+        totalCount: 2,
+        hasMore: true,
+        cursor: "next",
+
+        complete: true,
+      }),
+    ),
   );
   yield await Promise.resolve(
-    success<QueryPage>({
-      results: [queryRecord("src_import", digest)],
-      meta: { totalCount: 2, hasMore: false },
-      page: 1,
-      offset: 1,
-      loaded: 2,
-      complete: true,
-    }),
+    success<QueryResult>(
+      testQuery({
+        records: [queryRecord("src_import", digest)],
+        totalCount: 2,
+        hasMore: false,
+
+        complete: true,
+      }),
+    ),
   );
 }

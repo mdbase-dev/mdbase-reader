@@ -1,3 +1,4 @@
+import type { RecordRecoveryRef } from "@mdbase-reader/connect";
 import type { Source } from "@mdbase-reader/core";
 
 export interface StoredSourceDraft {
@@ -5,6 +6,7 @@ export interface StoredSourceDraft {
   readonly baseRevision: string;
   readonly baseBody: string;
   readonly body: string;
+  readonly recovery?: RecordRecoveryRef;
 }
 
 export type DraftStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -34,12 +36,26 @@ export function readSourceDraft(storage: DraftStorage, source: Source): StoredSo
   return draft as StoredSourceDraft;
 }
 
-export function writeSourceDraft(storage: DraftStorage, source: Source, body: string): void {
+export function writeSourceDraft(
+  storage: DraftStorage,
+  source: Source,
+  body: string,
+  recovery?: RecordRecoveryRef,
+): void {
   const value: StoredSourceDraft = {
     version: 1,
     baseRevision: source.recordRevision,
     baseBody: source.body,
     body,
+    ...(recovery
+      ? {
+          recovery: {
+            mutationId: recovery.mutationId,
+            recordId: recovery.recordId,
+            baseRevision: recovery.baseRevision,
+          },
+        }
+      : {}),
   };
   storage.setItem(sourceDraftKey(source), JSON.stringify(value));
 }

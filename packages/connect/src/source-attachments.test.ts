@@ -1,6 +1,7 @@
 import { collectionId, dateTime, mutationId, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { mockSdk, testWrite } from "./records.fixtures.js";
 import {
   digest,
   fileDescriptor,
@@ -10,7 +11,6 @@ import {
 } from "./source-imports.fixtures.js";
 import { ConnectSourceImportRepository } from "./source-imports.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type { PlannedSourceAttachment } from "@mdbase-reader/core";
 
 const legacyAuthorityFeatures = {
@@ -22,12 +22,12 @@ const legacyAuthorityFeatures = {
 describe("sources without documents", () => {
   it("creates the record with its kind and web address and no documents", async () => {
     const upload = vi.fn();
-    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+    const create = vi.fn(() => Promise.resolve(testWrite(success(recordDocument()))));
     const repository = new ConnectSourceImportRepository(
-      {
+      mockSdk({
         ...legacyAuthorityFeatures,
         create,
-      } as unknown as ReaderConnectClient,
+      }),
       { upload },
     );
 
@@ -40,7 +40,7 @@ describe("sources without documents", () => {
 
     expect(upload).not.toHaveBeenCalled();
     expect(create).toHaveBeenCalledWith(
-      {
+      expect.objectContaining({
         path: "sources/src_import.md",
         type: "reader-source",
         frontmatter: {
@@ -52,8 +52,7 @@ describe("sources without documents", () => {
           reading: { status: "inbox" },
         },
         body: "# Manuscript\n",
-        includeDocument: true,
-      },
+      }),
       expect.anything(),
     );
   });
@@ -63,18 +62,18 @@ describe("attaching a file to an existing source", () => {
   it("uploads, then appends the document at the revision it read", async () => {
     const upload = vi.fn(() =>
       Promise.resolve(
-        fileDescriptor({ fileId: "file-new", path: "files/reader/src_import/dostoevsky.pdf" }),
+        fileDescriptor({ id: "file-new", path: "files/reader/src_import/dostoevsky.pdf" }),
       ),
     );
     const existing = recordDocument();
     const read = vi.fn(() => Promise.resolve(success(existing)));
-    const update = vi.fn(() => Promise.resolve(success(existing)));
+    const update = vi.fn(() => Promise.resolve(testWrite(success(existing))));
     const repository = new ConnectSourceImportRepository(
-      {
+      mockSdk({
         ...legacyAuthorityFeatures,
-        read,
+        get: read,
         update,
-      } as unknown as ReaderConnectClient,
+      }),
       { upload },
     );
 
@@ -84,52 +83,53 @@ describe("attaching a file to an existing source", () => {
       "files/reader/src_import/dostoevsky.pdf",
       expect.any(Blob),
       {
-        mediaType: "application/pdf",
         transferId: "83dd2f80-c7da-44d7-9844-6ea755a05f40",
       },
     );
-    expect(update).toHaveBeenCalledWith({
-      path: "sources/src_import.md",
-      ifRevision: "record-r1",
-      patch: {
-        documents: [
-          ...(existing.frontmatter["documents"] as unknown[]),
-          {
-            file_id: "file-new",
-            file: "[[files/reader/src_import/dostoevsky.pdf]]",
-            role: "alternative",
-            format: "pdf",
-            media_type: "application/pdf",
-            revision: digest,
-            label: "dostoevsky.pdf",
-            origin_url: "https://example.org/dostoevsky.pdf",
-            retrieved_at: "2026-09-25T00:00:00.000Z",
-          },
-        ],
-      },
-      includeDocument: true,
-    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: "sources/src_import.md" }),
+      expect.objectContaining({
+        ifRevision: "record-r1",
+        patch: {
+          documents: [
+            ...(existing.frontmatter["documents"] as unknown[]),
+            {
+              file_id: "file-new",
+              file: "[[files/reader/src_import/dostoevsky.pdf]]",
+              role: "alternative",
+              format: "pdf",
+              media_type: "application/pdf",
+              revision: digest,
+              label: "dostoevsky.pdf",
+              origin_url: "https://example.org/dostoevsky.pdf",
+              retrieved_at: "2026-09-25T00:00:00.000Z",
+            },
+          ],
+        },
+      }),
+      expect.anything(),
+    );
   });
 
   it("refuses when the stored bytes differ or the record path now holds another source", async () => {
     const mismatched = new ConnectSourceImportRepository(
-      {
+      mockSdk({
         ...legacyAuthorityFeatures,
-        read: vi.fn(),
+        get: vi.fn(),
         update: vi.fn(),
-      } as unknown as ReaderConnectClient,
-      { upload: vi.fn(() => Promise.resolve(fileDescriptor({ contentDigest: "sha256:other" }))) },
+      }),
+      { upload: vi.fn(() => Promise.resolve(fileDescriptor({ digest: "sha256:other" }))) },
     );
     await expect(mismatched.attachFile(attachment())).rejects.toThrow("did not match");
 
     const moved = { ...recordDocument(), frontmatter: { id: "src_other" } };
     const update = vi.fn();
     const elsewhere = new ConnectSourceImportRepository(
-      {
+      mockSdk({
         ...legacyAuthorityFeatures,
-        read: vi.fn(() => Promise.resolve(success(moved))),
+        get: vi.fn(() => Promise.resolve(success(moved))),
         update,
-      } as unknown as ReaderConnectClient,
+      }),
       { upload: vi.fn(() => Promise.resolve(fileDescriptor())) },
     );
     await expect(elsewhere.attachFile(attachment())).rejects.toThrow("changed location");

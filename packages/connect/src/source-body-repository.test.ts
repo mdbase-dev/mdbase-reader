@@ -1,10 +1,10 @@
 import { collectionId, recordRevision, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { mockSdk, testWrite, testRecord, testQuery } from "./records.fixtures.js";
 import { ConnectSourceRepository } from "./source-repository.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type { ConnectOutcome, QueryPage, RecordDocument } from "@mdbase-dev/connect";
+import type { RecordRef, QueryResult, RecordView } from "@mdbase-dev/sdk";
 
 const legacyAuthorityFeatures = {
   supportsAuthorityFeature: vi.fn(() =>
@@ -12,60 +12,66 @@ const legacyAuthorityFeatures = {
   ),
 };
 
-function success<Value>(value: Value): ConnectOutcome<Value> {
-  return { ok: true, value, diagnostics: [] };
+function success<Value>(value: Value): Value {
+  return value;
 }
 
-const document = {
+const document = testRecord({
   path: "sources/crime.md",
   revision: "rev-1",
   types: ["reader-source"],
   frontmatter: { id: "src_01", title: "Crime and Punishment" },
-  effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
+  effective: { id: "src_01", title: "Crime and Punishment" },
   body: "Notes",
-  file: {},
-} satisfies RecordDocument;
+}) satisfies RecordView;
 
 function repositoryFixture(): {
   readonly repository: ConnectSourceRepository;
   readonly read: ReturnType<typeof vi.fn>;
   readonly update: ReturnType<typeof vi.fn>;
 } {
-  const queryPages = vi.fn(() =>
-    singleQueryPage({
-      path: document.path,
-      effectiveFrontmatter: document.frontmatter,
-      types: document.types,
-      file: {},
-    }),
+  const pages = vi.fn(() =>
+    singleQueryPage(
+      testRecord({
+        path: document.path,
+        effective: document.frontmatter,
+        types: document.types,
+      }),
+    ),
   );
   const read = vi.fn(() => Promise.resolve(success(document)));
-  const update = vi.fn((input: { readonly body?: string }) =>
-    Promise.resolve(success({ ...document, revision: "rev-2", body: input.body ?? document.body })),
+  const update = vi.fn((_record: RecordRef, input: { readonly body?: string }) =>
+    Promise.resolve(
+      testWrite(
+        success({ ...document, revision: "rev-2", body: input.body ?? document.body ?? "" }),
+      ),
+    ),
   );
   return {
-    repository: new ConnectSourceRepository({
-      ...legacyAuthorityFeatures,
-      queryPages,
-      read,
-      update,
-    } as unknown as ReaderConnectClient),
+    repository: new ConnectSourceRepository(
+      mockSdk({
+        ...legacyAuthorityFeatures,
+        pages,
+        get: read,
+        update,
+      }),
+    ),
     read,
     update,
   };
 }
 
 async function* singleQueryPage(
-  record: QueryPage["results"][number],
-): AsyncGenerator<ConnectOutcome<QueryPage>> {
+  record: QueryResult["records"][number],
+): AsyncGenerator<QueryResult> {
   yield await Promise.resolve(
-    success({
-      results: [record],
-      page: 0,
-      offset: 0,
-      loaded: 1,
-      complete: true,
-    }),
+    success(
+      testQuery({
+        records: [record],
+
+        complete: true,
+      }),
+    ),
   );
 }
 
@@ -76,10 +82,12 @@ describe("Connect source Markdown bodies", () => {
     const source = await repository.get(collectionId("reading"), sourceId("src_01"));
 
     expect(source?.body).toBe("Notes");
-    expect(read).toHaveBeenCalledWith({
-      path: document.path,
-      includeDocument: true,
-    });
+    expect(read).toHaveBeenCalledWith(
+      {
+        path: document.path,
+      },
+      expect.objectContaining({ include: { effective: true, body: true, document: true } }),
+    );
     expect(read).not.toHaveBeenCalledWith(expect.objectContaining({ contract: expect.anything() }));
   });
 
@@ -93,12 +101,11 @@ describe("Connect source Markdown bodies", () => {
       body: "Updated notes",
     });
 
-    expect(update).toHaveBeenCalledWith({
-      path: document.path,
-      ifRevision: "rev-1",
-      patch: {},
-      body: "Updated notes",
-    });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: document.path }),
+      expect.objectContaining({ ifRevision: "rev-1", patch: {}, body: "Updated notes" }),
+      expect.anything(),
+    );
   });
 
   it("appends materialised annotations through the same whole-record path", async () => {
@@ -114,10 +121,11 @@ describe("Connect source Markdown bodies", () => {
     });
 
     expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ path: document.path }),
       expect.objectContaining({
-        path: document.path,
         body: "Notes\n\n![[annotations/ann_01]]\n",
       }),
+      expect.anything(),
     );
     expect(update).not.toHaveBeenCalledWith(
       expect.objectContaining({ contract: expect.anything() }),

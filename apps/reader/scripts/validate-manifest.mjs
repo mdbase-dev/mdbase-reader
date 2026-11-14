@@ -1,14 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import {
-  formatManifestValidationIssues,
-  validateAppManifest,
-} from "@mdbase-dev/connect-protocol/manifest";
+import { formatManifestValidationIssues, validateAppManifest } from "@mdbase-dev/sdk/manifest";
 
-/** The SAME canonical schema and semantic origin checks for web and extension.
- * TODO: restore connect-dev CLI usage once a published devkit carries this
- * canonical installation_origins support. Never strip or hand-validate fields. */
+/** The SDK canonical schema and semantic origin checks for web and extension. */
 export function assertValidReaderManifest(manifest, { allowLocal = false } = {}) {
   const validation = validateAppManifest(manifest, { allowLocal });
   if (!validation.valid) {

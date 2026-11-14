@@ -1,23 +1,20 @@
-import { linksTo } from "@mdbase-dev/connect";
+import { isMdbaseError } from "@mdbase-dev/sdk";
 
 import { annotationSourcePages } from "./annotation-source-pages.js";
 import { annotationSourceReference } from "./annotation-source.js";
-import { ConnectRepositoryError, outcomeValue, recordPathById } from "./repository-client.js";
+import {
+  completeReaderPages,
+  mapConcurrent,
+  readerConnectBulkConcurrency,
+  recordPathById,
+} from "./repository-client.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
-import type {
-  QueryInput,
-  QueryRecord,
-  QueryMetadataRecord,
-  QueryPage,
-  QueryMetadataPage,
-  ReadManyRecord,
-} from "@mdbase-dev/connect";
+import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
 import type { ReaderRequestOptions, SourceId } from "@mdbase-reader/core";
 
 /** Filter Reader's persisted source references before transferring annotation metadata. */
 export async function annotationPathsForSource(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   source: SourceId,
   options: ReaderRequestOptions,
 ): Promise<string[]> {
@@ -25,14 +22,20 @@ export async function annotationPathsForSource(
 }
 
 export async function annotationCandidatesForSource(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   source: SourceId,
   options: ReaderRequestOptions,
 ): Promise<Map<string, unknown>> {
   try {
     const path = await recordPathById(client, source, options);
     const [linked, legacy] = await Promise.all([
-      path ? sourceAnnotationRecords(client, linksTo("source", path), options) : [],
+      path
+        ? sourceAnnotationRecords(
+            client,
+            `has(record.source) && source != null && source.asFile() != null && source.asFile().file.path == ${JSON.stringify(path)}`,
+            options,
+          )
+        : [],
       sourceAnnotationRecords(
         client,
         `has(record.source) && source != null && source.asFile() == null && source.contains(${JSON.stringify(source)})`,
@@ -46,7 +49,7 @@ export async function annotationCandidatesForSource(
       ].map((record) => [record.path, sourceValue(record)]),
     );
   } catch (error) {
-    if (!(error instanceof ConnectRepositoryError) || error.code !== "query_budget_exceeded") {
+    if (!(isMdbaseError(error) && error.reason === "query_budget_exceeded")) {
       throw error;
     }
   }
@@ -64,39 +67,29 @@ export async function annotationCandidatesForSource(
 }
 
 async function sourceAnnotationRecords(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   where: string,
   options: ReaderRequestOptions,
-): Promise<(QueryRecord | QueryMetadataRecord)[]> {
-  const input: QueryInput = {
+): Promise<RecordView[]> {
+  const input: Query = {
     types: ["reader-annotation"],
     where,
-    frontmatterMode: "effective",
   };
-  const paging = { ...options, firstPageSize: 100, pageSize: 100 };
-  const metadata = outcomeValue(
-    await client.supportsAuthorityFeature("query-metadata-v1", options),
-    "discover metadata queries",
+
+  const pages = completeReaderPages(
+    client,
+    { ...input, select: ["source"] },
+    { ...options, include: { effective: true } },
   );
-  const pages = metadata
-    ? client.queryPages(
-        { ...input, output: "metadata", includeBody: false, select: ["source"] },
-        paging,
-      )
-    : client.queryPages(input, paging);
-  const records: (QueryRecord | QueryMetadataRecord)[] = [];
+  const records: RecordView[] = [];
   for await (const outcome of pages) {
-    records.push(
-      ...outcomeValue<QueryPage | QueryMetadataPage>(outcome, "find source annotations").results,
-    );
+    records.push(...outcome.records);
   }
   return records;
 }
 
-function sourceValue(record: QueryRecord | QueryMetadataRecord): unknown {
-  return "file" in record
-    ? (record.effectiveFrontmatter ?? record.frontmatter)?.["source"]
-    : record.values["source"];
+function sourceValue(record: RecordView): unknown {
+  return (record.effective ?? record.frontmatter)["source"];
 }
 
 /**
@@ -105,27 +98,22 @@ function sourceValue(record: QueryRecord | QueryMetadataRecord): unknown {
  * output for them, so bodies are fetched here by path, with a filter that follows no links.
  */
 export async function annotationRecordsAt(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   paths: readonly string[],
   options: ReaderRequestOptions,
-): Promise<Map<string, ReadManyRecord>> {
-  const result = outcomeValue(
-    await client.readMany(paths, {
-      types: ["reader-annotation"],
-      frontmatterMode: "both",
-      includeBody: true,
-      // Sibling batches must not supersede one another; cancellation owns this load's lifetime.
-      ...(options.signal ? { signal: options.signal } : {}),
-    }),
-    "read annotation bodies",
+): Promise<Map<string, RecordView>> {
+  const records = await mapConcurrent([...new Set(paths)], readerConnectBulkConcurrency, (path) =>
+    client.find(
+      { path },
+      {
+        include: { effective: true, body: true, document: true },
+        ...(options.signal ? { signal: options.signal } : {}),
+      },
+    ),
   );
-  // Preserve the all-or-nothing cache check: a failed batch falls back to revisioned reads.
-  for (const error of result.errors) {
-    outcomeValue(error.failure, "read annotation bodies");
-  }
   return new Map(
-    result.results.flatMap((entry) =>
-      entry.status === "found" ? [[entry.path, entry.record] as const] : [],
+    records.flatMap((record) =>
+      record?.types.includes("reader-annotation") ? [[record.path, record] as const] : [],
     ),
   );
 }

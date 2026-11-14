@@ -1,23 +1,20 @@
 import { dateTime } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
+import { mockSdk, testWrite } from "./records.fixtures.js";
 import { fileDescriptor, plan, recordDocument, success } from "./source-imports.fixtures.js";
 import { ConnectSourceImportRepository } from "./source-imports.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
 import type { PlannedSourceFileImport } from "@mdbase-reader/core";
 
 describe("ConnectSourceImportRepository web capture provenance", () => {
   it("persists post identity and thread shape, leaving text and media to the body", async () => {
-    const create = vi.fn(() => Promise.resolve(success(recordDocument())));
-    const repository = new ConnectSourceImportRepository(
-      { create } as unknown as ReaderConnectClient,
-      {
-        upload: vi.fn((path: string) =>
-          Promise.resolve(fileDescriptor({ path, mediaType: "text/html" })),
-        ),
-      },
-    );
+    const create = vi.fn(() => Promise.resolve(testWrite(success(recordDocument()))));
+    const repository = new ConnectSourceImportRepository(mockSdk({ create }), {
+      upload: vi.fn((path: string) =>
+        Promise.resolve(fileDescriptor({ path, mediaType: "text/html" })),
+      ),
+    });
     const part = {
       platform: "x" as const,
       id: "100",
@@ -59,20 +56,17 @@ describe("ConnectSourceImportRepository web capture provenance", () => {
   it.each([undefined, "defuddle@0.19.5", "mozilla-readability@0.6.0"])(
     "preserves raw and readable web representations with extractor %s",
     async (extractor) => {
-      const create = vi.fn(() => Promise.resolve(success(recordDocument())));
+      const create = vi.fn(() => Promise.resolve(testWrite(success(recordDocument()))));
       const upload = vi.fn((path: string) =>
         Promise.resolve(
           fileDescriptor({
-            fileId: path.includes("archive") ? "file-archive" : "file-readable",
+            id: path.includes("archive") ? "file-archive" : "file-readable",
             path,
             mediaType: "text/html",
           }),
         ),
       );
-      const repository = new ConnectSourceImportRepository(
-        { create } as unknown as ReaderConnectClient,
-        { upload },
-      );
+      const repository = new ConnectSourceImportRepository(mockSdk({ create }), { upload });
 
       await repository.commitFile(webCapturePlan(extractor));
 

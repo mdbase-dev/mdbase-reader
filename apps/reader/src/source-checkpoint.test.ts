@@ -1,129 +1,88 @@
-import { collectionId, sourceId, recordRevision, type Source } from "@mdbase-reader/core";
 import { afterEach, expect, it, vi } from "vitest";
 
+import { draftStorage, editorFixture } from "./editor.fixtures.js";
 import { flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
 import { SourceDraftSession } from "./source-draft-session.js";
-import { readSourceDraft, writeSourceDraft, type DraftStorage } from "./source-draft-storage.js";
+import { readSourceDraft, writeSourceDraft } from "./source-draft-storage.js";
+import { trackUnstoredSourceChanges } from "./unsaved-source-drafts.js";
 
-const source: Source = {
-  collectionId: collectionId("test"),
-  id: sourceId("note"),
-  path: "note.md",
-  title: "Test",
-  creators: [],
-  tags: [],
-  documents: [],
-  frontmatter: {},
-  body: "Original",
-  recordRevision: recordRevision("1"),
-};
-function fixture(): {
-  session: SourceDraftSession;
-  storage: DraftStorage;
-  persist: ReturnType<typeof vi.fn>;
-} {
-  const values = new Map<string, string>();
-  const storage: DraftStorage = {
-    getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => {
-      values.set(key, value);
-    },
-    removeItem: (key) => {
-      values.delete(key);
-    },
-  };
-  const persist = vi.fn((_base: Source, body: string) =>
-    Promise.resolve({ ...source, body, recordRevision: recordRevision("2") }),
-  );
-  return {
-    storage,
-    persist,
-    session: new SourceDraftSession(
-      source,
-      storage,
-      persist,
-      () => Promise.resolve(source),
-      vi.fn(),
-    ),
-  };
-}
-afterEach(() => {
+const cleanup: (() => void | Promise<void>)[] = [];
+afterEach(async () => {
   flushLocalDraftCheckpoints();
-  vi.clearAllTimers();
   vi.useRealTimers();
+  for (const close of cleanup.splice(0)) {
+    await close();
+  }
+  vi.restoreAllMocks();
 });
-
-it("shares large edits immediately but checkpoints only the latest text after idle", async () => {
+async function fixture(): Promise<
+  Awaited<ReturnType<typeof editorFixture>> & {
+    session: SourceDraftSession;
+    storage: ReturnType<typeof draftStorage>;
+    update: ReturnType<typeof vi.spyOn>;
+  }
+> {
+  const native = await editorFixture();
+  cleanup.push(native.close);
+  const storage = draftStorage();
+  const session = new SourceDraftSession(native.app.mdbase, native.source, storage, vi.fn());
+  cleanup.push(() => trackUnstoredSourceChanges(session, false));
+  await session.save();
+  return { ...native, session, storage, update: vi.spyOn(native.app.client(), "update") };
+}
+it("shares large edits immediately and checkpoints only the latest text after idle", async () => {
+  const { session, storage, source, update } = await fixture();
   vi.useFakeTimers();
-  const { session, storage, persist } = fixture();
   const write = vi.spyOn(storage, "setItem");
-  const notify = vi.fn();
-  session.subscribe(notify);
   const body = "Large note. ".repeat(10_000);
-  for (let i = 0; i < 20; i += 1) {
+  for (let i = 0; i < 20; i++) {
     session.edit(`${body}${String(i)}`);
     expect(session.getText()).toBe(`${body}${String(i)}`);
     await vi.advanceTimersByTimeAsync(50);
   }
   expect(write).not.toHaveBeenCalled();
-  expect(notify).toHaveBeenCalledTimes(20);
-  expect(session.getSnapshot().locallySaved).toBe(false);
   await vi.advanceTimersByTimeAsync(450);
   expect(write).toHaveBeenCalledOnce();
   expect(readSourceDraft(storage, source)?.body).toBe(`${body}19`);
-  expect(session.getSnapshot().locallySaved).toBe(true);
-  expect(persist).not.toHaveBeenCalled();
-  session.edit(`${body}new`);
-  expect(session.getSnapshot().locallySaved).toBe(false);
-  expect(write).toHaveBeenCalledOnce();
+  expect(update).not.toHaveBeenCalled();
 });
-it("checkpoints every three seconds even when typing never pauses", async () => {
+it("checkpoints every three seconds while typing continues", async () => {
+  const { session, storage, source, update } = await fixture();
   vi.useFakeTimers();
-  const { session, storage, persist } = fixture();
   const write = vi.spyOn(storage, "setItem");
-  for (let i = 0; i < 60; i += 1) {
+  for (let i = 0; i < 60; i++) {
     session.edit(`Continuous ${String(i)}`);
     await vi.advanceTimersByTimeAsync(100);
   }
   expect(write).toHaveBeenCalledTimes(2);
   expect(readSourceDraft(storage, source)?.body).toBe("Continuous 59");
-  expect(persist).not.toHaveBeenCalled();
+  expect(update).not.toHaveBeenCalled();
 });
-it("flushes on last-view close and keeps the independent collection autosave", async () => {
-  vi.useFakeTimers();
-  const { session, storage, persist } = fixture();
+it("flushes on last-view close and retains the independent native autosave", async () => {
+  const { session, storage, source, update } = await fixture();
   const detach = session.subscribe(vi.fn());
   session.edit("Closing immediately");
   detach();
   expect(readSourceDraft(storage, source)?.body).toBe("Closing immediately");
-  await vi.advanceTimersByTimeAsync(1000);
-  expect(persist).toHaveBeenCalledOnce();
-  expect(readSourceDraft(storage, source)).toBeNull();
-  await vi.advanceTimersByTimeAsync(3000);
-  expect(readSourceDraft(storage, source)).toBeNull();
+  await vi.waitFor(() => expect(update).toHaveBeenCalledOnce(), { timeout: 2000 });
+  await vi.waitFor(() => expect(readSourceDraft(storage, source)).toBeNull());
 });
-it("does not erase another window's recovery copy when choosing the remote version", async () => {
-  vi.useFakeTimers();
-  const { session, storage } = fixture();
-  session.edit("Our checkpoint");
-  await vi.advanceTimersByTimeAsync(500);
-  session.edit("Our newer pending text");
-  writeSourceDraft(storage, source, "Other window's draft");
-  session.receive({ ...source, body: "Remote", recordRevision: recordRevision("2") });
-  session.resolve("remote");
-  await vi.advanceTimersByTimeAsync(4000);
-  expect(readSourceDraft(storage, source)?.body).toBe("Other window's draft");
-});
-it("cancels pending local text when choosing the remote conflict version", async () => {
-  vi.useFakeTimers();
-  const { session, storage } = fixture();
-  session.edit("Checkpointed local text");
-  await vi.advanceTimersByTimeAsync(500);
-  expect(readSourceDraft(storage, source)?.body).toBe("Checkpointed local text");
-  session.edit("More recent pending text");
-  session.receive({ ...source, body: "Remote", recordRevision: recordRevision("2") });
-  session.resolve("remote");
-  await vi.advanceTimersByTimeAsync(4000);
-  expect(readSourceDraft(storage, source)).toBeNull();
-  expect(session.getText()).toBe("Remote");
-});
+it.each([false, true])(
+  "choosing remote preserves a newer other-window checkpoint: %s",
+  async (otherWindow) => {
+    const { session, storage, source, app } = await fixture();
+    session.edit("Our checkpoint");
+    flushLocalDraftCheckpoints();
+    session.edit("Pending newer text");
+    if (otherWindow) {
+      writeSourceDraft(storage, source, "Other window's draft");
+    }
+    app.replica().editElsewhere(source.path, { body: "Remote" });
+    await vi.waitFor(() => expect(session.getSnapshot().conflict).not.toBeNull());
+    session.resolve("remote");
+    expect(session.getText()).toBe("Remote");
+    expect(readSourceDraft(storage, source)?.body ?? null).toBe(
+      otherWindow ? "Other window's draft" : null,
+    );
+  },
+);

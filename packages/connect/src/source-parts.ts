@@ -11,11 +11,11 @@ import {
 } from "@mdbase-reader/core";
 
 import { sourceFromDocument } from "./mapping.js";
-import { outcomeValue } from "./repository-client.js";
+import { frontmatterChanges, updateRecord } from "./repository-client.js";
 import { documentRangePatch, sourcePartOfPatch } from "./source-frontmatter.js";
 import { resolveSourcePartOf } from "./source-part-links.js";
 
-import type { ReaderConnectClient } from "./repository-client.js";
+import type { MdbaseClient } from "@mdbase-dev/sdk";
 
 export async function checkSourcePartChain(
   repository: Pick<SourceRepository, "get">,
@@ -54,7 +54,7 @@ export async function checkSourcePartChain(
 }
 
 export async function writeSourcePartOf(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   repository: Pick<SourceRepository, "get">,
   input: Parameters<NonNullable<SourceRepository["setSourcePartOf"]>>[0],
 ): Promise<Source> {
@@ -78,20 +78,21 @@ export async function writeSourcePartOf(
   if (input.parentId && !parent) {
     throw new Error("Parent source not found.");
   }
-  const updated = outcomeValue(
-    await client.update({
-      path: current.path,
+  const updated = await updateRecord(
+    client,
+    { path: current.path },
+    {
       ifRevision: input.expectedRevision,
-      patch: sourcePartOfPatch(current.frontmatter, parent ? sourceLink(parent) : null),
-      includeDocument: true,
-    }),
-    "set source parent",
+      ...frontmatterChanges(
+        sourcePartOfPatch(current.frontmatter, parent ? sourceLink(parent) : null),
+      ),
+    },
   );
   return sourceFromDocument(input.collectionId, updated, parent?.id);
 }
 
 export async function writeDocumentRange(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   repository: Pick<SourceRepository, "get">,
   input: Parameters<NonNullable<SourceRepository["setDocumentRange"]>>[0],
 ): Promise<Source> {
@@ -102,26 +103,27 @@ export async function writeDocumentRange(
   if (current.recordRevision !== input.expectedRevision) {
     throw new Error("Source revision changed.");
   }
-  const updated = outcomeValue(
-    await client.update({
-      path: current.path,
+  const updated = await updateRecord(
+    client,
+    { path: current.path },
+    {
       ifRevision: input.expectedRevision,
-      patch: documentRangePatch(
-        current.frontmatter,
-        input.documentFileId,
-        input.expectedDocumentRevision,
-        input.range,
+      ...frontmatterChanges(
+        documentRangePatch(
+          current.frontmatter,
+          input.documentFileId,
+          input.expectedDocumentRevision,
+          input.range,
+        ),
       ),
-      includeDocument: true,
-    }),
-    "set document range",
+    },
   );
   return sourceFromDocument(input.collectionId, updated, current.partOf);
 }
 
 /** Avoid a resolution query for the overwhelmingly common source with no parent. */
 export async function resolvedSource(
-  client: ReaderConnectClient,
+  client: MdbaseClient,
   source: Source,
   options: ReaderRequestOptions = {},
 ): Promise<Source> {

@@ -8,15 +8,11 @@ import {
   type DocumentTarget,
 } from "@mdbase-reader/core";
 
-import { outcomeValue } from "./repository-client.js";
+import { findFile, type NativeReaderFileClient } from "./native/native-files.js";
 
-import type { CollectionFileDescriptor, MdbaseConnection } from "@mdbase-dev/connect";
+import type { FileView } from "@mdbase-dev/sdk";
 
-export interface ReaderFileClient {
-  // The SDK owns files-stat-v1 discovery and the legacy paginated-list fallback.
-  stat: MdbaseConnection["files"]["stat"];
-  download(file: CollectionFileDescriptor, options?: DocumentOpenOptions): Promise<Blob>;
-}
+export type ReaderFileClient = Pick<NativeReaderFileClient, "get" | "download">;
 
 export interface ObjectUrlFactory {
   create(blob: Blob): string;
@@ -60,8 +56,8 @@ export class ConnectDocumentRepository implements DocumentRepository {
     this.#trimCache();
     let closed = false;
     return {
-      fileId: toFileId(descriptor.fileId),
-      revision: toFileRevision(descriptor.contentDigest),
+      fileId: toFileId(descriptor.id),
+      revision: toFileRevision(descriptor.digest),
       mediaType: cached.mediaType,
       url: cached.url,
       close: () => {
@@ -82,10 +78,7 @@ export class ConnectDocumentRepository implements DocumentRepository {
     this.#documents.clear();
   }
 
-  async #load(
-    descriptor: CollectionFileDescriptor,
-    options: DocumentOpenOptions,
-  ): Promise<CachedDocument> {
+  async #load(descriptor: FileView, options: DocumentOpenOptions): Promise<CachedDocument> {
     const key = documentCacheKey(descriptor);
     const cached = this.#documents.get(key);
     if (cached) {
@@ -124,25 +117,16 @@ export class ConnectDocumentRepository implements DocumentRepository {
     }
   }
 
-  async #find(
-    target: DocumentTarget,
-    options: DocumentOpenOptions,
-  ): Promise<CollectionFileDescriptor | null> {
+  async #find(target: DocumentTarget, options: DocumentOpenOptions): Promise<FileView | null> {
     // Look up current metadata on every open: a previously discovered descriptor may
     // describe bytes that have since been replaced at the same file ID.
-    const current = outcomeValue(
-      await this.files.stat({ fileId: target.fileId }, options),
-      "find document",
-    );
+    const current = await findFile(this.files, target.fileId, options);
     if (current) {
       return current;
     }
-    const migrated = outcomeValue(
-      await this.files.stat({ path: portableFilePath(target.file) }, options),
-      "find migrated document",
-    );
+    const migrated = await findFile(this.files, { path: portableFilePath(target.file) }, options);
     // A path alone is not enough to assume a new file ID is the same document.
-    return migrated?.contentDigest === target.revision ? migrated : null;
+    return migrated?.digest === target.revision ? migrated : null;
   }
 }
 
@@ -153,8 +137,8 @@ interface CachedDocument {
   lastAccess: number;
 }
 
-function documentCacheKey(descriptor: CollectionFileDescriptor): string {
-  return `${descriptor.fileId}:${descriptor.contentDigest}`;
+function documentCacheKey(descriptor: FileView): string {
+  return `${descriptor.id}:${descriptor.digest}`;
 }
 
 function portableFilePath(link: string): string {
@@ -174,8 +158,4 @@ function mediaTypeFromPath(path: string): string {
     return "text/html";
   }
   return "application/octet-stream";
-}
-
-export function connectDocumentRepository(connection: MdbaseConnection): ConnectDocumentRepository {
-  return new ConnectDocumentRepository(connection.files);
 }

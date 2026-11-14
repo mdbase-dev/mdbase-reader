@@ -1,43 +1,40 @@
-import { connectFailure, connectProblem } from "@mdbase-dev/connect/advanced";
+import { mdbaseError } from "@mdbase-dev/sdk";
 import { collectionId, fileId, fileRevision, type DocumentTarget } from "@mdbase-reader/core";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 import { ConnectDocumentRepository } from "./documents.js";
 
 import type { ReaderFileClient } from "./documents.js";
-import type { CollectionFileDescriptor } from "@mdbase-dev/connect";
+import type { FileView } from "@mdbase-dev/sdk";
 
-const descriptor: CollectionFileDescriptor = {
-  fileId: "file-01",
+const descriptor: FileView = {
+  id: "file-01",
+  state: "materialized",
+  confirmedSeq: 1,
   path: "files/example.pdf",
-  revision: "file-revision-2",
-  contentDigest: `sha256:${"a".repeat(64)}`,
+  digest: `sha256:${"a".repeat(64)}`,
   size: 3,
   mediaType: "application/pdf",
-  mediaClass: "pdf",
-  modifiedAt: "2026-08-09T12:00:00Z",
+  media: "pdf",
+  mtime: Date.parse("2026-08-09T12:00:00Z"),
 };
 const target: DocumentTarget = {
   fileId: fileId("file-01"),
   file: "[[files/example.pdf]]",
-  revision: fileRevision(descriptor.contentDigest),
+  revision: fileRevision(descriptor.digest),
 };
 const collection = collectionId("reading");
-function files(items: readonly CollectionFileDescriptor[]): {
-  stat: Mock<ReaderFileClient["stat"]>;
+function files(items: readonly FileView[]): {
+  get: Mock<ReaderFileClient["get"]>;
   download: Mock<ReaderFileClient["download"]>;
 } {
   return {
-    stat: vi.fn<ReaderFileClient["stat"]>((target) =>
-      Promise.resolve({
-        ok: true,
-        diagnostics: [],
-        value:
-          items.find((item) =>
-            "fileId" in target ? item.fileId === target.fileId : item.path === target.path,
-          ) ?? null,
-      }),
-    ),
+    get: vi.fn<ReaderFileClient["get"]>((target) => {
+      const found = items.find((item) =>
+        typeof target === "string" ? item.id === target : item.path === target.path,
+      );
+      return found ? Promise.resolve(found) : Promise.reject(mdbaseError("not_found", "Missing"));
+    }),
     download: vi.fn().mockResolvedValue(new Blob(["pdf"], { type: "application/pdf" })),
   };
 }
@@ -54,15 +51,15 @@ describe("ConnectDocumentRepository", () => {
     const first = await repository.open(collection, target);
     expect(first).toMatchObject({
       fileId: "file-01",
-      revision: descriptor.contentDigest,
+      revision: descriptor.digest,
       mediaType: "application/pdf",
     });
     await first.close();
     await first.close();
     const next = await repository.open(collection, target);
     expect(next.url).toBe(first.url);
-    expect(client.stat).toHaveBeenCalledTimes(2);
-    expect(client.stat).toHaveBeenCalledWith({ fileId: target.fileId }, {});
+    expect(client.get).toHaveBeenCalledTimes(2);
+    expect(client.get).toHaveBeenCalledWith(target.fileId, {});
     expect(client.download).toHaveBeenCalledExactlyOnceWith(descriptor);
     expect(objectUrls.revoke).not.toHaveBeenCalled();
     await next.close();
@@ -78,23 +75,23 @@ describe("ConnectDocumentRepository", () => {
     const changed = {
       ...descriptor,
       path: "elsewhere/moved.pdf",
-      contentDigest: `sha256:${"b".repeat(64)}` as const,
+      digest: `sha256:${"b".repeat(64)}` as const,
     };
-    client.stat.mockImplementation(files([changed]).stat);
+    client.get.mockImplementation(files([changed]).get);
     const next = await repository.open(collection, target);
-    expect(next.revision).toBe(changed.contentDigest);
+    expect(next.revision).toBe(changed.digest);
     expect(client.download).toHaveBeenLastCalledWith(changed);
     expect(client.download).toHaveBeenCalledTimes(2);
     await next.close();
   });
 
   it("recovers a migrated ID by exact path and digest only", async () => {
-    const migrated = { ...descriptor, fileId: "file-02" };
+    const migrated = { ...descriptor, id: "file-02" };
     const client = files([migrated]);
     const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target);
     expect(handle.fileId).toBe("file-02");
-    expect(client.stat.mock.calls.map(([target]) => target)).toEqual([
-      { fileId: "file-01" },
+    expect(client.get.mock.calls.map(([target]) => target)).toEqual([
+      "file-01",
       { path: descriptor.path },
     ]);
     expect(client.download).toHaveBeenCalledWith(migrated);
@@ -102,9 +99,7 @@ describe("ConnectDocumentRepository", () => {
   });
 
   it("rejects a migrated path when the referenced digest is stale", async () => {
-    const client = files([
-      { ...descriptor, fileId: "file-02", contentDigest: `sha256:${"b".repeat(64)}` },
-    ]);
+    const client = files([{ ...descriptor, id: "file-02", digest: `sha256:${"b".repeat(64)}` }]);
     await expect(new ConnectDocumentRepository(client).open(collection, target)).rejects.toThrow(
       "file_not_found",
     );
@@ -117,23 +112,23 @@ describe("ConnectDocumentRepository", () => {
     );
   });
 
-  it("does not downgrade stat failures to path lookup or download", async () => {
+  it("does not downgrade get failures to path lookup or download", async () => {
     const client = files([descriptor]);
-    client.stat.mockResolvedValue(connectFailure(connectProblem("access_denied", "Denied")));
+    client.get.mockRejectedValue(mdbaseError("forbidden", "Denied"));
     await expect(new ConnectDocumentRepository(client).open(collection, target)).rejects.toThrow(
       "Denied",
     );
-    expect(client.stat).toHaveBeenCalledOnce();
+    expect(client.get).toHaveBeenCalledOnce();
     expect(client.download).not.toHaveBeenCalled();
   });
 
-  it("forwards cancellation through stat and download", async () => {
+  it("forwards cancellation through get and download", async () => {
     const signal = new AbortController().signal;
     const client = files([descriptor]);
     const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target, {
       signal,
     });
-    expect(client.stat).toHaveBeenCalledWith({ fileId: target.fileId }, { signal });
+    expect(client.get).toHaveBeenCalledWith(target.fileId, { signal });
     expect(client.download).toHaveBeenCalledWith(descriptor, { signal });
     await handle.close();
   });
@@ -141,17 +136,17 @@ describe("ConnectDocumentRepository", () => {
   it("evicts closed URLs but never an open handle", async () => {
     const second = {
       ...descriptor,
-      fileId: "file-02",
+      id: "file-02",
       path: "files/second.pdf",
-      contentDigest: `sha256:${"b".repeat(64)}` as const,
+      digest: `sha256:${"b".repeat(64)}` as const,
     };
     const objectUrls = urls();
     const repository = new ConnectDocumentRepository(files([descriptor, second]), objectUrls, 1);
     const first = await repository.open(collection, target);
     const next = await repository.open(collection, {
-      fileId: fileId(second.fileId),
+      fileId: fileId(second.id),
       file: second.path,
-      revision: fileRevision(second.contentDigest),
+      revision: fileRevision(second.digest),
     });
     expect(objectUrls.revoke).not.toHaveBeenCalled();
     await next.close();

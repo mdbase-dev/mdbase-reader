@@ -2,69 +2,60 @@ import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectBodyUpdateRecovery } from "./body-update-recovery.js";
-import { ConnectRepositoryError } from "./repository-client.js";
+import { mockSdk, testRecord } from "./records.fixtures.js";
 
-import type { ConnectOutcome, RecordDocument } from "@mdbase-dev/connect";
+import type { RecordView } from "@mdbase-dev/sdk";
 
-const recovered = {
+const recovered = testRecord({
   path: "sources/crime.md",
   revision: "rev-2",
   types: ["reader-source"],
   frontmatter: { id: "src_01", title: "Crime and Punishment" },
-  effectiveFrontmatter: { id: "src_01", title: "Crime and Punishment" },
+  effective: { id: "src_01", title: "Crime and Punishment" },
   body: "Recovered notes",
-  file: {},
-} satisfies RecordDocument;
-
-function connection(outcome: ConnectOutcome<RecordDocument>): {
-  readonly recovery: ConnectBodyUpdateRecovery;
-  readonly recover: ReturnType<typeof vi.fn>;
-} {
-  const recover = vi.fn(() => Promise.resolve(outcome));
-  const pendingMutation = vi.fn((requestId: string) =>
-    requestId === "lost" ? { requestId, operation: "update", recover } : null,
-  );
-  return {
-    recovery: new ConnectBodyUpdateRecovery({ pendingMutation }),
-    recover,
-  };
-}
+}) satisfies RecordView;
 
 describe("ConnectBodyUpdateRecovery", () => {
-  it("continues the interrupted write through its durable handle", async () => {
-    const { recovery, recover } = connection({ ok: true, value: recovered, diagnostics: [] });
+  it("settles the original SDK mutation and reads back its record", async () => {
+    const settle = vi.fn().mockResolvedValue({
+      outcome: "confirmed",
+      mutationId: "lost",
+      receipt: { mutation: "lost", state: "confirmed" },
+      record: recovered,
+    });
+    const client = mockSdk({
+      settle,
+      ledger: { getSnapshot: () => ({ pending: [{ mutationId: "lost" }] }) },
+    });
+    const recovery = new ConnectBodyUpdateRecovery(client);
     expect(recovery.pending("lost")).toBe(true);
-    const source = await recovery.recoverSource({
-      collectionId: collectionId("c"),
-      requestId: "lost",
-    });
-    expect(source).toMatchObject({ body: "Recovered notes", recordRevision: "rev-2" });
-    expect(recover).toHaveBeenCalledOnce();
+    expect(
+      await recovery.recoverSource({ collectionId: collectionId("c"), requestId: "lost" }),
+    ).toMatchObject({ body: "Recovered notes", recordRevision: "rev-2" });
+    expect(settle).toHaveBeenCalledWith(
+      "lost",
+      expect.objectContaining({ read: expect.anything() }),
+    );
   });
-
-  it("keeps the Connect problem when recovery fails", async () => {
-    const problem = {
-      code: "operation_outcome_unknown",
-      message: "Still unknown",
-      category: "conflict",
-      recovery: "resolve_outcome",
-      operation_outcome: "unknown",
-      details: { request_id: "lost" },
-    } as const;
-    const { recovery } = connection({ ok: false, problem } as never);
-    const failure = recovery.recoverAnnotation({
-      collectionId: collectionId("c"),
-      requestId: "lost",
+  it("keeps an unknown mutation identity and never submits another write", async () => {
+    const create = vi.fn();
+    const update = vi.fn();
+    const settle = vi.fn().mockResolvedValue({
+      outcome: "unknown",
+      mutationId: "lost",
+      problem: { code: "outcome_unknown", recovery: "resolve_outcome", message: "Still unknown" },
     });
-    await expect(failure).rejects.toBeInstanceOf(ConnectRepositoryError);
-    await expect(failure).rejects.toMatchObject({ problem: { code: "operation_outcome_unknown" } });
-  });
-
-  it("never writes when the handle is gone", async () => {
-    const { recovery } = connection({ ok: true, value: recovered, diagnostics: [] });
-    expect(recovery.pending("other")).toBe(false);
+    const recovery = new ConnectBodyUpdateRecovery(mockSdk({ settle, create, update }));
     await expect(
-      recovery.recoverSource({ collectionId: collectionId("c"), requestId: "other" }),
-    ).rejects.toThrow("No new write was attempted");
+      recovery.recoverSource({ collectionId: collectionId("c"), requestId: "lost" }),
+    ).rejects.toMatchObject({ code: "outcome_unknown", mutationId: "lost" });
+    expect(create).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  });
+  it("does not report a missing mutation as pending", () => {
+    const recovery = new ConnectBodyUpdateRecovery(
+      mockSdk({ ledger: { getSnapshot: () => ({ pending: [] }) } }),
+    );
+    expect(recovery.pending("gone")).toBe(false);
   });
 });
