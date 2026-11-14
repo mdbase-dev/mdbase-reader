@@ -7,9 +7,8 @@ dist/
 coverage/
 apps/capacitor/android/
 apps/capacitor/ios/
-# Exact reviewed shared helper and canonical original custody; NEVER rewrite bytes.
+# Exact reviewed shared helper; NEVER rewrite bytes.
 scripts/lib/native-publish-bytes.mjs
-packages/connect/vendor/native-release/
 artifacts/
 # Raw signed trust assets: exact hashes are protected environment inputs.
 config/next-trust/

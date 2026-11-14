@@ -1,5 +1,9 @@
 # Reader on the new mdbase SDK
 
+These are historical migration notes. Superseded vendor archives and intake
+records mentioned below are available in git history; current pins and refresh
+instructions are in [development](development.md#sdk-pins-and-refreshes).
+
 ## Current declared Private setup SDK intake — 2026-10-15
 
 SDK `9a033b252860ec8624da0abb5ffdecbac56332d2` replaces the prior
