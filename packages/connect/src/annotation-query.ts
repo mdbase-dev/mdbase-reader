@@ -1,95 +1,72 @@
-import { isMdbaseError } from "@mdbase-dev/sdk";
-
-import { annotationSourcePages } from "./annotation-source-pages.js";
-import { annotationSourceReference } from "./annotation-source.js";
+import { annotationSourceValue, legacySourceId } from "./annotation-source.js";
 import {
+  backlinksTo,
   completeReaderPages,
   mapConcurrent,
   readerConnectBulkConcurrency,
   recordPathById,
 } from "./repository-client.js";
 
-import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
+import type { MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 import type { ReaderRequestOptions, SourceId } from "@mdbase-reader/core";
 
-/** Filter Reader's persisted source references before transferring annotation metadata. */
-export async function annotationPathsForSource(
+const wholeAnnotation = { effective: true, body: true, document: true } as const;
+
+/**
+ * One source's annotations, read whole and keyed by path: the records whose `source` link
+ * resolves to the source, from the replica's link index, and older ones naming it by bare ID.
+ * A link-following query is bounded by collection size and refuses past 1000 records; the
+ * link index answers in proportion to the links it finds.
+ */
+export async function sourceAnnotations(
   client: MdbaseClient,
   source: SourceId,
   options: ReaderRequestOptions,
-): Promise<string[]> {
-  return [...(await annotationCandidatesForSource(client, source, options)).keys()];
-}
-
-export async function annotationCandidatesForSource(
-  client: MdbaseClient,
-  source: SourceId,
-  options: ReaderRequestOptions,
-): Promise<Map<string, unknown>> {
-  try {
-    const path = await recordPathById(client, source, options);
-    const [linked, legacy] = await Promise.all([
-      path
-        ? sourceAnnotationRecords(
-            client,
-            `has(record.source) && source != null && source.asFile() != null && source.asFile().file.path == ${JSON.stringify(path)}`,
-            options,
-          )
-        : [],
-      sourceAnnotationRecords(
-        client,
-        `has(record.source) && source != null && source.asFile() == null && source.contains(${JSON.stringify(source)})`,
-        options,
-      ),
-    ]);
-    return new Map(
-      [
-        ...linked,
-        ...legacy.filter((record) => annotationSourceReference(sourceValue(record)) === source),
-      ].map((record) => [record.path, sourceValue(record)]),
-    );
-  } catch (error) {
-    if (!(isMdbaseError(error) && error.reason === "query_budget_exceeded")) {
-      throw error;
+): Promise<Map<string, RecordView>> {
+  const signal = options.signal ? { signal: options.signal } : {};
+  const path = await recordPathById(client, source, options);
+  const [linked, legacy] = await Promise.all([
+    path ? backlinksTo(client, path, { ...signal, include: wholeAnnotation }) : [],
+    legacySourceAnnotations(client, source, options),
+  ]);
+  const records = new Map<string, RecordView>();
+  for (const { record, links } of linked) {
+    if (
+      record.types.includes("reader-annotation") &&
+      links.some(({ field }) => field === "source")
+    ) {
+      records.set(record.path, record);
     }
   }
-  // Single-source Notes compatibility: delete this discovery fallback when the runtime serves backlinks.
-  const candidates = new Map<string, unknown>();
-  for await (const page of annotationSourcePages(client, {
-    ...options,
-    sourceIds: new Set([source]),
-  })) {
-    for (const entry of page) {
-      candidates.set(entry.path, entry.reference);
+  // A bare reference is taken as the ID it was written as (`legacySourceId`); the link
+  // index holds only links that resolve, so these are never among the backlinks.
+  for (const record of legacy) {
+    if (!records.has(record.path) && legacySourceId(annotationSourceValue(record)) === source) {
+      records.set(record.path, record);
     }
-  }
-  return candidates;
-}
-
-async function sourceAnnotationRecords(
-  client: MdbaseClient,
-  where: string,
-  options: ReaderRequestOptions,
-): Promise<RecordView[]> {
-  const input: Query = {
-    types: ["reader-annotation"],
-    where,
-  };
-
-  const pages = completeReaderPages(
-    client,
-    { ...input, select: ["source"] },
-    { ...options, include: { effective: true } },
-  );
-  const records: RecordView[] = [];
-  for await (const outcome of pages) {
-    records.push(...outcome.records);
   }
   return records;
 }
 
-function sourceValue(record: RecordView): unknown {
-  return (record.effective ?? record.frontmatter)["source"];
+/** Plain text filtering follows no links, so the query stays within its budget. */
+async function legacySourceAnnotations(
+  client: MdbaseClient,
+  source: SourceId,
+  options: ReaderRequestOptions,
+): Promise<RecordView[]> {
+  const records: RecordView[] = [];
+  for await (const page of completeReaderPages(
+    client,
+    {
+      types: ["reader-annotation"],
+      where: `has(record.source) && source != null && source.contains(${JSON.stringify(source)})`,
+      limit: 100,
+    },
+    { include: wholeAnnotation, ...(options.signal ? { signal: options.signal } : {}) },
+  )) {
+    records.push(...page.records);
+  }
+  return records;
 }
 
 /**

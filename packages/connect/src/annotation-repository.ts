@@ -1,7 +1,7 @@
 import { isMdbaseError } from "@mdbase-dev/sdk";
 import { sourceLink } from "@mdbase-reader/core";
 
-import { annotationCandidatesForSource, annotationRecordsAt } from "./annotation-query.js";
+import { annotationRecordsAt, sourceAnnotations } from "./annotation-query.js";
 import { annotationSourcePages } from "./annotation-source-pages.js";
 import * as sources from "./annotation-source.js";
 import { CreateFollowThrough } from "./create-follow-through.js";
@@ -147,32 +147,16 @@ export class ConnectAnnotationRepository implements AnnotationRepository {
     source: SourceId,
     options: ReaderRequestOptions = {},
   ): Promise<readonly Annotation[]> {
-    const candidates = await annotationCandidatesForSource(this.client, source, options);
-    const paths = [...candidates.keys()];
+    const records = await sourceAnnotations(this.client, source, options);
     options.signal?.throwIfAborted();
-    if (paths.length === 0) {
-      return [];
-    }
-    const matches = await annotationRecordsAt(this.client, paths, options);
-    const annotations = await mapConcurrent(paths, readerConnectBulkConcurrency, async (path) => {
-      const document = matches.get(path);
-      if (!document) {
-        return null;
-      }
-      // Discovery and hydration are separate reads: re-resolve a changed source reference.
-      return this.#map(
-        collection,
-        document,
-        (document.effective ?? document.frontmatter)["source"] === candidates.get(path)
-          ? source
-          : undefined,
-      );
-    });
-    options.signal?.throwIfAborted();
-    return annotations.filter(
-      (annotation): annotation is Annotation =>
-        annotation !== null && annotation.sourceId === source,
+    const annotations = await mapConcurrent(
+      [...records.values()],
+      readerConnectBulkConcurrency,
+      // Found by the link to this source, or by its bare ID: either way the source is known.
+      (document) => this.#map(collection, document, source),
     );
+    options.signal?.throwIfAborted();
+    return annotations;
   }
 
   async create(annotation: Annotation, idempotencyKey: MutationId): Promise<Annotation> {

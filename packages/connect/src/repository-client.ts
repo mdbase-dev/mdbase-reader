@@ -4,6 +4,7 @@ import { validationIssueSummary, type ConnectValidationIssue } from "./validatio
 
 import type {
   wire,
+  BacklinksResult,
   JsonObject,
   Query,
   RecordReadOptions,
@@ -237,7 +238,75 @@ export async function* completeReaderPages(
   }
 }
 
-export function requireCompleteQuery(page: QueryResult): void {
+type LinkResolution = Awaited<ReturnType<MdbaseClient["resolveLinks"]>>["resolutions"][number];
+
+/** The replica's largest backlinks page; its 1 MiB hydration budget may end one sooner. */
+const backlinkPage = 1000;
+/** Each attempt restarts a list that a local change made stale between its pages. */
+const backlinkAttempts = 3;
+/** The most links one `resolveLinks` request takes (§4.3). */
+const resolveLinksBatch = 512;
+
+/**
+ * Every record whose links resolve to the record at `path`, from the replica's link index:
+ * found in proportion to the links, not by scanning the collection, so no query budget applies.
+ */
+export async function backlinksTo(
+  client: MdbaseClient,
+  path: string,
+  options: Pick<NonNullable<Parameters<MdbaseClient["backlinks"]>[1]>, "include" | "signal"> = {},
+): Promise<BacklinksResult["backlinks"]> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      const found: BacklinksResult["backlinks"] = [];
+      let cursor: string | undefined;
+      do {
+        const page = await client.backlinks(
+          { path },
+          { ...options, limit: backlinkPage, ...(cursor ? { cursor } : {}) },
+        );
+        requireCompleteQuery(page);
+        found.push(...page.backlinks);
+        cursor = page.cursor;
+      } while (cursor);
+      return found;
+    } catch (error) {
+      // Pages bind the local view: a change between two refuses the next with
+      // `cursor_stale`, and the list restarts from its first page (§4.2).
+      const stale = isMdbaseError(error, "invalid_request") && error.reason === "cursor_stale";
+      if (!stale || attempt === backlinkAttempts) {
+        throw error;
+      }
+    }
+  }
+}
+
+/**
+ * Resolves link occurrences (`[[target]]`, `[text](path)`) written in the note at `from`, as
+ * the replica resolves them for backlinks: one resolution per link, in order. No query follows
+ * a link, so the answer is not bounded by collection size.
+ */
+export async function resolveLinksFrom(
+  client: MdbaseClient,
+  from: string,
+  links: readonly string[],
+  options: ReaderRequestOptions = {},
+): Promise<LinkResolution[]> {
+  const resolved: LinkResolution[] = [];
+  for (let offset = 0; offset < links.length; offset += resolveLinksBatch) {
+    const result = await client.resolveLinks(
+      from,
+      links.slice(offset, offset + resolveLinksBatch),
+      options.signal ? { signal: options.signal } : {},
+    );
+    requireCompleteQuery(result);
+    resolved.push(...result.resolutions);
+  }
+  return resolved;
+}
+
+/** Refuses an answer given while a snapshot install is still in progress. */
+export function requireCompleteQuery(page: { readonly complete: boolean }): void {
   if (!page.complete) {
     throw new MdbaseError({
       code: "unavailable",

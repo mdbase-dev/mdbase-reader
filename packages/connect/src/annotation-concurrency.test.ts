@@ -1,4 +1,4 @@
-import { collectionId, sourceId } from "@mdbase-reader/core";
+import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectAnnotationRepository } from "./annotation-repository.js";
@@ -75,7 +75,8 @@ describe("Connect annotation concurrency", () => {
       }),
     );
 
-    const annotations = await repository.listForSource(collectionId("reading"), sourceId("src_01"));
+    // The overview reads each record; one source's annotations arrive whole from the link index.
+    const annotations = await repository.listAll(collectionId("reading"));
 
     expect(maximum).toBe(4);
     expect(annotations.map(({ id }) => id)).toEqual(ids);

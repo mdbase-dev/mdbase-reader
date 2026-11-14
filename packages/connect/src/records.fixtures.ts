@@ -54,11 +54,62 @@ export function testWrite(record: RecordView): Write {
   });
 }
 
+/**
+ * Stands in for the replica's link methods over `records`: `resolve(link, from)` is the record
+ * path mdbase resolves a link written in the note at `from` to, or null when it reaches none.
+ * Backlinks are the records with a frontmatter field whose link resolves to the target.
+ */
+export function linkIndex(
+  records: readonly RecordView[] | (() => readonly RecordView[]),
+  resolve: (link: string, from: string) => string | null,
+): Pick<MdbaseClient, "backlinks" | "resolveLinks"> {
+  const all = (): readonly RecordView[] => (typeof records === "function" ? records() : records);
+  const occurrence = (value: string): string =>
+    /^!?\[\[.+\]\]$|^!?\[.*\]\(.+\)$/u.test(value) ? value : `[[${value}]]`;
+  return {
+    resolveLinks: vi.fn<MdbaseClient["resolveLinks"]>((from, links) =>
+      Promise.resolve({
+        resolutions: links.map((link) => {
+          const path = resolve(link, from);
+          return path ? { kind: "record", path } : { kind: "not_found" };
+        }),
+        complete: true,
+        asOf: 1,
+      }),
+    ),
+    backlinks: vi.fn<MdbaseClient["backlinks"]>((target) => {
+      const path = (target as { readonly path: string }).path;
+      return Promise.resolve({
+        backlinks: all().flatMap((record) => {
+          const links = Object.entries(record.effective ?? record.frontmatter).flatMap(
+            ([field, value]) =>
+              typeof value === "string" && resolve(occurrence(value), record.path) === path
+                ? [
+                    {
+                      raw: value,
+                      embed: false,
+                      resolution: { kind: "record" as const, path },
+                      field,
+                    },
+                  ]
+                : [],
+          );
+          return links.length > 0 ? [{ record, links }] : [];
+        }),
+        complete: true,
+        asOf: 1,
+      });
+    }),
+  };
+}
+
 export function mockSdk(overrides: Record<string, unknown> = {}): MdbaseClient {
   const client = {
     get: vi.fn((ref: RecordRef) =>
       Promise.resolve(testRecord({ path: typeof ref === "string" ? ref : ref.path })),
     ),
+    // No link resolves unless a test says how (`linkIndex`).
+    ...linkIndex([], () => null),
     ...overrides,
   } as unknown as MdbaseClient;
   if (!("find" in overrides)) {
