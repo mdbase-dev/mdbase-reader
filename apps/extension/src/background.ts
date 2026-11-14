@@ -5,15 +5,8 @@ import { backgroundLocaleReady } from "./background-i18n.js";
 import { updatePageStatus } from "./background-page-status.js";
 import { intentKey, type CaptureIntent, type InvokeMessage } from "./messages.js";
 import { ensureHostMessage, ensureOffscreenDocument } from "./offscreen-document.js";
-import { loadPageStatusConnect, preloadPageStatusConnect } from "./page-status-loader.js";
+import { pageStatusConnect } from "./page-status-worker.js";
 import { forgetTab } from "./tab-cleanup.js";
-
-/*
- * The service worker wakes for every page load and toolbar click, so this bundle stays
- * small: the Connect SDK lives in page-status.js, loaded only when a page may be saved
- * (see page-status-loader.ts). Connect's credentialless fetch is installed there.
- */
-self.addEventListener("install", preloadPageStatusConnect);
 
 /**
  * Opens Reader's side panel in the tab's window; the panel follows the window's active
@@ -98,7 +91,9 @@ chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) =>
 
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if (change.status === "complete") {
-    void backgroundLocaleReady.then(() => updatePageStatus(tabId, tab.url, loadPageStatusConnect));
+    void backgroundLocaleReady.then(() =>
+      updatePageStatus(tabId, tab.url, () => pageStatusConnect),
+    );
   }
 });
 const postUpdates = new Map<number, { dirty: boolean }>();
@@ -135,7 +130,7 @@ async function refreshPosts(tabId: number, state: { dirty: boolean }): Promise<v
   do {
     state.dirty = false;
     const tab = await chrome.tabs.get(tabId);
-    await updatePageStatus(tabId, tab.url, loadPageStatusConnect);
+    await updatePageStatus(tabId, tab.url, () => pageStatusConnect);
   } while (postUpdates.get(tabId)?.dirty);
 }
 

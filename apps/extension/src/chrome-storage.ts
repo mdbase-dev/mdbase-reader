@@ -1,11 +1,7 @@
 /**
- * The Connect SDK needs a synchronous Web Storage, but the service worker has no
- * localStorage and must see the same grants as the side panel. This mirror loads
- * `chrome.storage.local` once, answers synchronously, writes through, and follows
- * changes made by other extension contexts.
- *
- * There is one mirror per storage area and context: every Connect session in it (a
- * Retry creates a new one) shares it, so only one `storage.onChanged` listener exists.
+ * Reader's capture journal needs synchronous key/value access shared by extension pages.
+ * This mirror loads chrome.storage.local, writes through and follows other contexts.
+ * SDK session state and grants remain in the SDK's own storage.
  */
 const prefix = "connect:";
 
