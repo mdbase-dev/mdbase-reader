@@ -194,7 +194,7 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
 
 /** The library's annotations view lists annotations across sources and opens one in place. */
 async function auditAnnotationOverview(page, screenshot) {
-  await page.getByRole("tab", { name: "Library" }).click();
+  await page.getByRole("tab", { name: "All sources" }).click();
   await page.getByRole("button", { name: "Annotations", exact: true }).click();
   const grid = page.getByRole("grid", { name: "Annotations" });
   const rows = grid.locator(".library-table-body .library-table-row");

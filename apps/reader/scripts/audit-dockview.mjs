@@ -75,9 +75,9 @@ export async function auditDockview(page, { screenshot, blockWrites }) {
   const secondId = await tab("[test] Research 0002").last().getAttribute("data-panel-id");
   await expect.poll(async () => panelGroup(await state(), secondId)).not.toBeNull();
   const originalGroup = panelGroup(await state(), secondId);
-  // The original central group still contains the Library tab. Drop on its tab strip.
-  const library = tab("Library").filter({
-    has: page.locator(".dv-default-tab-content", { hasText: /^Library$/ }),
+  // The original central group still contains the All sources tab. Drop on its tab strip.
+  const library = tab("All sources").filter({
+    has: page.locator(".dv-default-tab-content", { hasText: /^All sources$/ }),
   });
   const destinationTab =
     panelGroup(await state(), firstId) === originalGroup ? library : tab("[test] Research 0001");

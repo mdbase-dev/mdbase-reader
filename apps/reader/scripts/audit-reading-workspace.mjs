@@ -18,9 +18,9 @@ export async function auditReadingWorkspace(page, { screenshot }) {
   const frame = page.frameLocator("iframe.html-viewer:visible");
   await expect(frame.locator("#p0")).toBeVisible({ timeout: 30000 });
   await expect(navigator).toBeHidden();
-  await page.getByRole("tab", { name: "Library" }).click();
+  await page.getByRole("tab", { name: "All sources" }).click();
   await expect(navigator).toBeVisible();
-  await page.getByRole("tab", { name: /Research 0001/u }).click();
+  await page.getByRole("tab", { name: "[test] Research 0001", exact: true }).click();
   await expect(navigator).toBeHidden();
   completed.push("Sources sidebar hides while reading and returns with the library");
 
@@ -72,7 +72,7 @@ export async function auditReadingWorkspace(page, { screenshot }) {
   await screenshot("margin-marker");
   completed.push("A new highlight gets a margin marker that selects its card");
 
-  await page.getByRole("tab", { name: "Library" }).click();
+  await page.getByRole("tab", { name: "All sources" }).click();
   await expect(page.getByRole("columnheader", { name: "Annotations" })).toBeVisible();
   completed.push("The library counts annotations per source");
   return completed;
