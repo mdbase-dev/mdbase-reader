@@ -5,6 +5,7 @@ import {
   appSettingsPath,
   conflictingAppSettings,
   defaultAppSettings,
+  legacyAppSettingsPath,
   newAppSettingsFrontmatter,
   resolveAppSettings,
   type AppSettingsDefinition,
@@ -41,8 +42,9 @@ const record = {
 };
 
 describe("resolveAppSettings", () => {
-  it("lives at _settings/<app>.md", () => {
-    expect(appSettingsPath("dev.mdbase.reader")).toBe("_settings/dev.mdbase.reader.md");
+  it("lives at _mdbase/settings/<app>.md", () => {
+    expect(appSettingsPath("dev.mdbase.reader")).toBe("_mdbase/settings/dev.mdbase.reader.md");
+    expect(legacyAppSettingsPath("dev.mdbase.reader")).toBe("_settings/dev.mdbase.reader.md");
   });
 
   it("uses every default without a record", () => {

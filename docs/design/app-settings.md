@@ -7,7 +7,10 @@ Reader does and where it departs from the spec.
 
 ## Record, type and contracts
 
-The record lives at `_settings/dev.mdbase.reader.md`:
+The record lives at `_mdbase/settings/dev.mdbase.reader.md`. If it is absent, Reader
+reads `_settings/dev.mdbase.reader.md`. Saves patch the record that was read; new
+records use `_mdbase/settings/`. Reader never moves records, and the new path wins
+when both exist.
 
 ```yaml
 ---
@@ -28,24 +31,32 @@ The app id is Reader's manifest id, `dev.mdbase.reader`, which is also its contr
 namespace. A field that is absent takes Reader's default, and resetting a setting in
 the UI removes its field.
 
-Reader's type pack (`apps/reader/mdbase/`, version 1.0.0-beta.7) ships the following,
+Reader's type pack (`apps/reader/mdbase/`, version 1.0.0-beta.8) ships the following,
 laid out as in mdbase-contracts so it can be lifted unchanged:
 
 | Resource                                                             | Mode    |
 | -------------------------------------------------------------------- | ------- |
 | `contracts/mdbase.app-settings/1.0.0.md` + schema                    | managed |
 | `contracts/dev.mdbase.reader.settings/1.1.0.md` + schema             | managed |
+| `contracts/mdbase.app-settings/2.0.0.md`, inline schema              | managed |
+| `contracts/dev.mdbase.reader.settings/1.2.0.md`, inline schema       | managed |
 | `types/reader-settings.md`, installed as `_types/reader-settings.md` | seed    |
 
 - **Reserved fields.** The generic contract fixes `app`, `scope` and
   `settings_version`. `user` is defined for `scope: user` but is not used yet.
-- **The type.** `reader-settings` has `schema.ref` pointing at the managed Reader
-  schema, and carries no inline copy of it. It declares
+- **The type.** `reader-settings` carries the same inline schema as the Reader
+  contract. It declares
   `collection.unique: [{field: app, scope: type}]` and implements both contracts.
 - **Contract digests.** The pack's contract digests resolve the schema ref before
   hashing, as mdbase-contracts does.
 
 ### Versions
+
+- **beta.8** adds `mdbase.app-settings` 2.0.0 and Reader settings 1.2.0 with inline
+  schemas, and version 3 of the settings starter. The fields do not change. The
+  beta.6 and beta.7 starters are upgrade baselines. The beta.7 contracts and schemas
+  remain unchanged in the pack for existing types, but Reader requires the new
+  contract versions. Records stay where they were read.
 
 - **beta.6** added the settings: `dev.mdbase.reader.settings` 1.0.0, with the two
   templates, and version 1 of the `reader-settings` starter.

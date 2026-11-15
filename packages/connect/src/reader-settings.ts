@@ -1,8 +1,8 @@
 /**
  * Reader's collection-wide settings: the `reader-settings` record at
- * `_settings/dev.mdbase.reader.md` (`docs/design/app-settings.md`): the two name templates, and
+ * `_mdbase/settings/dev.mdbase.reader.md` (or its legacy `_settings/` path) (`docs/design/app-settings.md`): the two name templates, and
  * which highlight colours Reader offers and what each means. The definition mirrors the managed
- * schema `dev.mdbase.reader.settings/1.1.0.schema.json` in Reader's type pack.
+ * inline schema in `dev.mdbase.reader.settings` 1.2.0 in Reader's type pack.
  */
 import {
   highlightColorKeys,

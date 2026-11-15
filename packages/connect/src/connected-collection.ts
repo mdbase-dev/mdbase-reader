@@ -32,7 +32,7 @@ export interface ReaderConnectedCollection {
   readonly files: CollectionFileRepository;
   readonly libraryViews: LibraryViewRepository;
   /**
-   * Reader's collection-wide settings record, `_settings/dev.mdbase.reader.md`, whose name
+   * Reader's collection-wide settings record, `_mdbase/settings/dev.mdbase.reader.md` (or its legacy `_settings/` path), whose name
    * templates this collection's creates use. Absent in test doubles.
    */
   readonly settings?: ReaderSettingsStore;
