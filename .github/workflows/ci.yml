@@ -52,6 +52,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Tests build against the production-pinned SDK unless an environment is selected.
       - run: pnpm check
+      - run: node --test scripts/performance-report.test.mjs
       - name: Install Chromium for PDF touch regression tests
         run: pnpm --filter @mdbase-reader/app exec playwright install --with-deps chromium
       - name: Verify extension shared-session writes across separate bundles
@@ -84,6 +85,32 @@ jobs:
       - run: pnpm build
         env:
           MDBASE_ENV: production
+      - name: Record production bundle sizes
+        id: performance_sizes
+        continue-on-error: true
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: node scripts/performance-report.mjs apps/reader/dist "$RUNNER_TEMP/reader-sizes.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.performance_sizes.outcome == 'success'
+        continue-on-error: true
+        with:
+          name: performance-reader-sizes
+          path: ${{ runner.temp }}/reader-sizes.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Publish size history
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.performance_sizes.outcome == 'success'
+        continue-on-error: true
+        env:
+          OPS_BENCHMARK_TOKEN: ${{ secrets.OPS_BENCHMARK_TOKEN }}
+        run: |
+          if [ -z "$OPS_BENCHMARK_TOKEN" ]; then
+            echo '::warning::Performance upload skipped: OPS_BENCHMARK_TOKEN is not configured.'
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 20 --output /dev/null \
+            -H "Authorization: Bearer $OPS_BENCHMARK_TOKEN" -H 'Content-Type: application/json' \
+            --data-binary "@$RUNNER_TEMP/reader-sizes.json" https://ops-ingest.mdbase.dev/v1/benchmarks
       - name: Verify generated files are committed
         run: |
           if [ -n "$(git status --porcelain)" ]; then
