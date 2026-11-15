@@ -28,6 +28,10 @@ const legacyBeta6 = JSON.parse(
 const legacyBeta7 = JSON.parse(
   await readFile(new URL("./fixtures/reader-pack-beta7.json", import.meta.url), "utf8"),
 );
+// Exact beta.8 pack, the last whose annotation contract and starter require `document.file_id`.
+const legacyBeta8 = JSON.parse(
+  await readFile(new URL("./fixtures/reader-pack-beta8.json", import.meta.url), "utf8"),
+);
 const application = await buildReaderManifest();
 const current = application.provisions.type_packs.find(
   (pack) => pack.manifest.id === "dev.mdbase.reader",
@@ -49,6 +53,11 @@ const settingsSources = new Set([
   "types/reader-settings.md",
 ]);
 const isSettings = ({ source }) => settingsSources.has(source);
+// What beta.9 added: the annotation contract whose document needs no Connect file ID.
+const annotationContract = "contracts/dev.mdbase.reader.annotation/1.0.0-beta.2.md";
+const annotationStarter = "types/reader-annotation.md";
+// Resources an upgrade from a pack before beta.6 creates.
+const isNew = (resource) => isSettings(resource) || resource.source === annotationContract;
 const settingsSchema = "schemas/dev.mdbase.reader.settings/1.1.0.schema.json";
 // beta.6's settings contract and schema, which beta.7 retires.
 const retiredSettings = new Set([
@@ -65,6 +74,22 @@ function withoutSettings(pack) {
 }
 const provision = (pack) => ({ manifest: pack.manifest, resources: pack.resources });
 
+// A pack as it was before beta.9: no annotation contract 1.0.0-beta.2, and the version-2
+// annotation starter that beta.4 to beta.8 shipped.
+function beforeBeta9(pack) {
+  const copy = structuredClone(pack);
+  copy.manifest.resources = copy.manifest.resources.filter(
+    ({ source }) => source !== annotationContract,
+  );
+  copy.resources = copy.resources.filter(({ source }) => source !== annotationContract);
+  const seed = copy.manifest.resources.find(({ source }) => source === annotationStarter);
+  const [starter, ...earlier] = seed.upgrade_from;
+  seed.digest = starter.digest;
+  seed.upgrade_from = earlier;
+  copy.resources.find(({ source }) => source === annotationStarter).document = starter.document;
+  return copy;
+}
+
 // Published identities must not change. Add a new version/digest instead of updating this pin.
 // Pins are the installer's desired pack digest, which covers `upgrade_from`; the beta.4 and
 // beta.5 pins match the mdbase CLI's `packs assess`.
@@ -75,6 +100,7 @@ const releasedDigests = {
   "1.0.0-beta.6": "sha256:82027c429b2e4c061f2e447f3af4004463c969633de2454653e8327a2bda2f54",
   "1.0.0-beta.7": "sha256:3962ae19ef014455a8b147dd6469e6d2e3c77cc9b61e9aabad5b0f54c0283b37",
   "1.0.0-beta.8": "sha256:ae9ba33386a4dc952c7b838983edd4a3400358798fe90206f4dfab2736967c98",
+  "1.0.0-beta.9": "sha256:aa3303f08f27f0298163a55e42dca548b1eb46737940b0439e56338c9dc6de10",
 };
 // The vendored mdbase-contracts view pack, pinned the same way. 1.0.1 ships the version-2
 // view starter (no pinned `type`, open top level) with `upgrade_from` the 1.0.0 starter;
@@ -82,9 +108,10 @@ const releasedDigests = {
 const releasedViewPackDigests = {
   "1.0.1": "sha256:b32222bce5f16b01b87c34736b0e70bfad3583b5678557fa6c42ee706f7ef1d4",
 };
-// Every distinct starter Reader shipped before version 2, by the first pack that shipped it,
-// newest first: the order beta.5 lists them as `upgrade_from` baselines. beta.2 changed only
-// reader-source, and the beta.3 starters were also served as beta.1 between #20 and #26.
+// Every distinct starter Reader shipped before the current one, by the first pack that shipped
+// it, newest first: the order the pack lists them as `upgrade_from` baselines. beta.2 changed
+// only reader-source, and the beta.3 starters were also served as beta.1 between #20 and #26.
+// beta.4 to beta.8 shipped version 2 of reader-annotation, which beta.9 replaces.
 const earlierStarters = {
   "types/reader-source.md": {
     "1.0.0-beta.3": "sha256:82869c12234662297cc273aab993732d35827b8a2ba8ad74bec18975cadf0c1a",
@@ -92,6 +119,7 @@ const earlierStarters = {
     "1.0.0-beta.1": "sha256:e8a3fca643d335e684810c2e83bc9e9c3fc702ecf5a23d29283615902e0cfa55",
   },
   "types/reader-annotation.md": {
+    "1.0.0-beta.4": "sha256:19e174941e390cb446ec63ea91a43fe26eba9918d70cd9f86ad693cca485628b",
     "1.0.0-beta.3": "sha256:1fb7e758a4aacd139a30f15d7937ca18e95a6d6bec447a5b2cd8e6fb7907a901",
     "1.0.0-beta.1": "sha256:9b6b0fc7e1d883b9a56c743c3e5525eb80946c76cae34e9158fc574bb87a4cbe",
   },
@@ -112,7 +140,7 @@ function baseline(resource, version) {
 
 // beta.3 as released: the current manifest with each seed's beta.3 baseline as its document.
 function beta3() {
-  const pack = withoutSettings(current);
+  const pack = beforeBeta9(withoutSettings(current));
   pack.manifest.version = "1.0.0-beta.3";
   for (const resource of pack.manifest.resources) {
     if (!resource.upgrade_from) continue;
@@ -126,7 +154,7 @@ function beta3() {
 
 // beta.4 as released: the current starters with the beta.3 starter as their single baseline.
 function beta4() {
-  const pack = withoutSettings(current);
+  const pack = beforeBeta9(withoutSettings(current));
   pack.manifest.version = "1.0.0-beta.4";
   for (const resource of pack.manifest.resources) {
     if (!resource.upgrade_from) continue;
@@ -195,8 +223,17 @@ async function assertPreserved(contents) {
 }
 
 test("Reader's new pack release preserves contract identities and capability protocol", async (t) => {
-  assert.equal(current.manifest.version, "1.0.0-beta.8");
-  assert.deepEqual(withoutSettings(current).provides, legacy.provides);
+  assert.equal(current.manifest.version, "1.0.0-beta.9");
+  const [source, annotation] = withoutSettings(current).provides;
+  assert.deepEqual(source, legacy.provides[0]);
+  assert.deepEqual(
+    [annotation.id, annotation.version],
+    ["dev.mdbase.reader.annotation", "1.0.0-beta.2"],
+  );
+  assert.deepEqual(
+    application.requirements.contracts.filter(({ id }) => id === annotation.id),
+    [annotation],
+  );
   assert.deepEqual(
     current.provides
       .filter(({ id }) => settingsContracts.has(id))
@@ -329,7 +366,7 @@ test("seed upgrades list every earlier starter type, newest first, as exact byte
       assert.equal(starter.kind, type.kind);
       assert.equal(starter.name, type.name);
       assert.equal(version, starter.version);
-      assert.equal(version, 1);
+      assert.equal(version, starterVersion(seed.source, digest) === "1.0.0-beta.4" ? 2 : 1);
     }
   }
   for (const resource of current.manifest.resources.filter(({ mode }) => mode !== "seed")) {
@@ -499,7 +536,7 @@ for (const edited of [false, true]) {
     assert.equal(upgrade.status, "upgrade");
     assert.equal(upgrade.applicable, true);
     for (const resource of upgrade.resources) {
-      if (isSettings(resource)) {
+      if (isNew(resource)) {
         assert.equal(resource.action, "create", resource.source);
         continue;
       }
@@ -538,7 +575,11 @@ test("starter types neither declare nor require the type key", () => {
   for (const resource of current.manifest.resources.filter(({ kind }) => kind === "type")) {
     const type = frontmatter(documents.get(resource.source));
     const schema = type.schema.value;
-    assert.equal(type.version, isSettings(resource) ? 3 : 2, resource.source);
+    assert.equal(
+      type.version,
+      isSettings(resource) || resource.source === annotationStarter ? 3 : 2,
+      resource.source,
+    );
     assert.equal(schema.additionalProperties, true, resource.source);
     for (const key of ["type", "types"]) {
       assert.equal(
@@ -750,8 +791,9 @@ for (const edited of [false, true]) {
     assert.deepEqual(actions, {
       "contracts/dev.mdbase.reader.source.md": "unchanged",
       "contracts/dev.mdbase.reader.annotation.md": "unchanged",
+      [annotationContract]: "create",
       "types/reader-source.md": "preserve",
-      "types/reader-annotation.md": "preserve",
+      [annotationStarter]: "update",
       "schemas/mdbase.app-settings/1.0.0.schema.json": "unchanged",
       "contracts/mdbase.app-settings/1.0.0.md": "unchanged",
       "schemas/dev.mdbase.reader.settings/1.1.0.schema.json": "create",
@@ -838,7 +880,7 @@ for (const variant of ["original-beta.1", "changed-beta.1"]) {
     if (original) {
       assert.equal(upgrade.status, "conflict");
       assert.equal(upgrade.applicable, false);
-      for (const resource of upgrade.resources.filter((resource) => !isSettings(resource))) {
+      for (const resource of upgrade.resources.filter((resource) => !isNew(resource))) {
         assert.equal(resource.action, resource.mode === "seed" ? "conflict" : "unchanged");
         if (resource.mode === "seed") assert.match(resource.reason, /top-level type setting/u);
       }
@@ -861,3 +903,121 @@ for (const variant of ["original-beta.1", "changed-beta.1"]) {
     await assertPreserved(contents);
   });
 }
+
+for (const edited of [false, true]) {
+  test(`upgrades beta.8's annotation starter to version 3 with ${edited ? "an edited" : "an unedited"} starter and keeps contract 1.0.0-beta.1`, async (t) => {
+    const root = await collection(t);
+    const installed = await assess(root, legacyBeta8);
+    assert.equal(installed.desired.digest, releasedDigests["1.0.0-beta.8"]);
+    await apply(root, legacyBeta8, installed);
+    const typePath = join(root, "_types", "reader-annotation.md");
+    if (edited) {
+      await writeFile(typePath, `${await readFile(typePath, "utf8")}\nCollection note.\n`);
+    }
+    const upgrade = await assess(root, current);
+    assert.equal(upgrade.status, "upgrade");
+    assert.equal(upgrade.applicable, true);
+    const actions = new Map(upgrade.resources.map(({ source, action }) => [source, action]));
+    assert.equal(actions.get(annotationStarter), "update");
+    assert.equal(actions.get(annotationContract), "create");
+    for (const resource of legacyBeta8.manifest.resources.filter(
+      ({ mode }) => mode === "managed",
+    )) {
+      assert.equal(actions.get(resource.source), "unchanged", resource.source);
+    }
+    const seed = upgrade.resources.find(({ source }) => source === annotationStarter);
+    assert.deepEqual(seed.upgrade_baseline, {
+      digest: legacyBeta8.manifest.resources.find(({ source }) => source === annotationStarter)
+        .digest,
+      version: 2,
+    });
+    await apply(root, current, upgrade);
+    const type = await readFile(typePath, "utf8");
+    const merged = frontmatter(type);
+    assert.equal(merged.version, 3);
+    assert.deepEqual(merged.schema.value.properties.document.required, ["file", "revision"]);
+    assert.equal(merged.implements[0].version, "1.0.0-beta.2");
+    if (edited) assert.match(type, /Collection note\./u);
+    else {
+      assert.equal(
+        type,
+        current.resources.find(({ source }) => source === annotationStarter).document,
+      );
+    }
+    // Collections whose own annotation type still implements beta.1 keep that contract.
+    assert.equal(
+      await readFile(join(root, "_contracts", "dev.mdbase.reader.annotation.md"), "utf8"),
+      legacyBeta8.resources.find(
+        ({ source }) => source === "contracts/dev.mdbase.reader.annotation.md",
+      ).document,
+    );
+    assert.equal((await assess(root, current)).status, "current");
+  });
+}
+
+test("an annotation names its document by file link, with or without a Connect file ID", async (t) => {
+  const root = await collection(t);
+  await apply(root, current, await assess(root, current));
+  await mkdir(join(root, "files"));
+  await writeFile(join(root, "files", "paper.pdf"), "pdf");
+  const opened = await Collection.open(root);
+  assert.ok(opened.collection, opened.error?.message);
+  const operations = new V03Operations(opened.collection);
+  const revision = `sha256:${"a".repeat(64)}`;
+  try {
+    const source = await operations.create({
+      path: "sources/example.md",
+      type: "reader-source",
+      frontmatter: {
+        id: "src_example",
+        title: "Example source",
+        kind: "document",
+        saved_at: "2026-08-09T14:21:00+10:00",
+        documents: [{ file: "[[files/paper.pdf]]", media_type: "application/pdf", revision }],
+      },
+    });
+    assert.equal(source.valid, true, JSON.stringify(source.diagnostics));
+    for (const [name, document] of [
+      ["by-path", { file: "[[files/paper.pdf]]", revision }],
+      [
+        "with-id",
+        { file_id: "01a1bea5-149d-77a7-b8d4-7c91c2da0783", file: "[[files/paper.pdf]]", revision },
+      ],
+    ]) {
+      const path = `annotations/${name}.md`;
+      const created = await operations.create({
+        path,
+        type: "reader-annotation",
+        frontmatter: {
+          id: `ann_${name}`,
+          source: "[[sources/example|Example source]]",
+          document,
+          annotation_type: "highlight",
+          created_at: "2026-08-09T14:22:00+10:00",
+        },
+      });
+      assert.equal(created.valid, true, JSON.stringify(created.diagnostics));
+      const view = await opened.collection.getContractView(
+        path,
+        "dev.mdbase.reader.annotation",
+        "1.0.0-beta.2",
+      );
+      assert.equal(view.valid, true, JSON.stringify(view.diagnostics));
+      assert.deepEqual(view.view.document, document);
+    }
+    const refused = await operations.create({
+      path: "annotations/no-file.md",
+      type: "reader-annotation",
+      frontmatter: {
+        id: "ann_no_file",
+        source: "[[sources/example|Example source]]",
+        document: { file_id: "01a1bea5-149d-77a7-b8d4-7c91c2da0783", revision },
+        annotation_type: "highlight",
+        created_at: "2026-08-09T14:22:00+10:00",
+      },
+    });
+    assert.equal(refused.valid, false, JSON.stringify(refused.diagnostics));
+  } finally {
+    await opened.collection.close();
+  }
+});

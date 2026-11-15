@@ -18,8 +18,8 @@
       },
       {
         "id": "dev.mdbase.reader.annotation",
-        "version": "1.0.0-beta.1",
-        "digest": "sha256:9593376fed19903b07013ce0167b1d25ff0517364c826ddb8ecf3b4b7d83ef7c"
+        "version": "1.0.0-beta.2",
+        "digest": "sha256:97d52b86a922a21479b88bcae5259630f987b7bbcc47d9a87d72ef823ae09898"
       },
       {
         "id": "mdbase.app-settings",
@@ -57,8 +57,8 @@
           },
           {
             "id": "dev.mdbase.reader.annotation",
-            "version": "1.0.0-beta.1",
-            "digest": "sha256:9593376fed19903b07013ce0167b1d25ff0517364c826ddb8ecf3b4b7d83ef7c"
+            "version": "1.0.0-beta.2",
+            "digest": "sha256:97d52b86a922a21479b88bcae5259630f987b7bbcc47d9a87d72ef823ae09898"
           },
           {
             "id": "mdbase.app-settings",
@@ -74,7 +74,7 @@
         "manifest": {
           "kind": "mdbase.type-pack",
           "id": "dev.mdbase.reader",
-          "version": "1.0.0-beta.8",
+          "version": "1.0.0-beta.9",
           "name": "mdbase Reader",
           "description": "Reader source and annotation contracts with starter implementations.",
           "resources": [
@@ -91,6 +91,13 @@
               "source": "contracts/dev.mdbase.reader.annotation.md",
               "target": "_contracts/dev.mdbase.reader.annotation.md",
               "digest": "sha256:28e045ca097a8ca0e9758fdd7562fbb4443b38e6089c6c9be4427cbe60e3c8bf"
+            },
+            {
+              "kind": "contract",
+              "mode": "managed",
+              "source": "contracts/dev.mdbase.reader.annotation/1.0.0-beta.2.md",
+              "target": "_contracts/dev.mdbase.reader.annotation/1.0.0-beta.2.md",
+              "digest": "sha256:88747f3af7ddeeee80402d66b192258ab3f89339c54db29b24cc6ea59cddb3f5"
             },
             {
               "kind": "type",
@@ -121,8 +128,13 @@
               "mode": "seed",
               "source": "types/reader-annotation.md",
               "target": "_types/reader-annotation.md",
-              "digest": "sha256:19e174941e390cb446ec63ea91a43fe26eba9918d70cd9f86ad693cca485628b",
+              "digest": "sha256:a7765ed03475468aeebec235ba2851bd5e743f8194a407b861c69481cf3f6ec6",
               "upgrade_from": [
+                {
+                  "digest": "sha256:19e174941e390cb446ec63ea91a43fe26eba9918d70cd9f86ad693cca485628b",
+                  "version": 2,
+                  "document": "---\nkind: mdbase.type\nname: reader-annotation\nversion: 2\ndescription: An independently addressable mdbase Reader annotation.\nschema:\n  dialect: json-schema-2020-12\n  value:\n    $schema: https://json-schema.org/draft/2020-12/schema\n    type: object\n    additionalProperties: true\n    required: [id, source, annotation_type, created_at]\n    properties:\n      id: { type: string, minLength: 1 }\n      source: { type: string, minLength: 1 }\n      document:\n        type: object\n        additionalProperties: false\n        required: [file_id, file, revision]\n        properties:\n          file_id: { type: string, minLength: 1 }\n          file: { type: string, minLength: 1 }\n          revision: { type: string, pattern: \"^sha256:[0-9a-f]{64}$\" }\n      annotation_type: { type: string, minLength: 1 }\n      motivation: { type: string }\n      color: { type: string }\n      locator:\n        type: object\n        additionalProperties: true\n      target:\n        type: object\n        additionalProperties: true\n      tags:\n        type: array\n        items: { type: string }\n      created_at: { type: string, format: date-time }\n      modified_at: { type: string, format: date-time }\n      created_by: { type: string }\ncollection:\n  unique:\n    - field: id\n      scope: type\n  links:\n    source:\n      target_type: reader-source\n      validate_exists: true\n    document.file:\n      target_type: any\n      validate_exists: true\nimplements:\n  - contract: dev.mdbase.reader.annotation\n    version: 1.0.0-beta.1\n    fields:\n      id: id\n      source: source\n      document: document\n      annotation_type: annotation_type\n      motivation: motivation\n      color: color\n      locator: locator\n      target: target\n      tags: tags\n      created_at: created_at\n      modified_at: modified_at\n      created_by: created_by\n---\n\n# Reader annotation\n\nThe body contains a readable quotation, an optional note, or both.\n"
+                },
                 {
                   "digest": "sha256:1fb7e758a4aacd139a30f15d7937ca18e95a6d6bec447a5b2cd8e6fb7907a901",
                   "version": 1,
@@ -208,12 +220,16 @@
             "document": "---\nkind: mdbase.contract\ncontract_type: record\nid: dev.mdbase.reader.annotation\nversion: 1.0.0-beta.1\nname: mdbase Reader annotation\ndescription: An independently addressable annotation attached to a Reader source.\nrecord_schema:\n  dialect: json-schema-2020-12\n  value:\n    $schema: https://json-schema.org/draft/2020-12/schema\n    type: object\n    additionalProperties: false\n    required: [id, source, annotation_type, created_at]\n    properties:\n      id: { type: string, minLength: 1 }\n      source: { type: string, minLength: 1 }\n      document:\n        type: object\n        additionalProperties: false\n        required: [file_id, file, revision]\n        properties:\n          file_id: { type: string, minLength: 1 }\n          file: { type: string, minLength: 1 }\n          revision: { type: string, pattern: \"^sha256:[0-9a-f]{64}$\" }\n      annotation_type: { type: string, minLength: 1 }\n      motivation: { type: string }\n      color: { type: string }\n      locator:\n        type: object\n        additionalProperties: true\n      target:\n        type: object\n        additionalProperties: true\n      tags:\n        type: array\n        items: { type: string }\n      created_at: { type: string, format: date-time }\n      modified_at: { type: string, format: date-time }\n      created_by: { type: string }\n---\n\n# mdbase Reader annotation\n\nThe portable Reader view of an annotation. Its Markdown body contains the\nreadable quotation and the user's note.\n"
           },
           {
+            "source": "contracts/dev.mdbase.reader.annotation/1.0.0-beta.2.md",
+            "document": "---\nkind: mdbase.contract\ncontract_type: record\nid: dev.mdbase.reader.annotation\nversion: 1.0.0-beta.2\nname: mdbase Reader annotation\ndescription: An independently addressable annotation attached to a Reader source.\nrecord_schema:\n  dialect: json-schema-2020-12\n  value:\n    $schema: https://json-schema.org/draft/2020-12/schema\n    type: object\n    additionalProperties: false\n    required: [id, source, annotation_type, created_at]\n    properties:\n      id: { type: string, minLength: 1 }\n      source: { type: string, minLength: 1 }\n      document:\n        type: object\n        additionalProperties: false\n        required: [file, revision]\n        properties:\n          file_id: { type: string, minLength: 1 }\n          file: { type: string, minLength: 1 }\n          revision: { type: string, pattern: \"^sha256:[0-9a-f]{64}$\" }\n      annotation_type: { type: string, minLength: 1 }\n      motivation: { type: string }\n      color: { type: string }\n      locator:\n        type: object\n        additionalProperties: true\n      target:\n        type: object\n        additionalProperties: true\n      tags:\n        type: array\n        items: { type: string }\n      created_at: { type: string, format: date-time }\n      modified_at: { type: string, format: date-time }\n      created_by: { type: string }\n---\n\n# mdbase Reader annotation\n\nThe portable Reader view of an annotation. Its Markdown body contains the\nreadable quotation and the user's note.\n\nAn annotation's document is the file its `file` link names, at `revision`.\n`file_id` is optional: it records the ID mdbase Connect gave that file when the\nannotation was made. Connect can assign new IDs to unchanged files, and other\ntools never know them, so readers must not use it to identify the document.\n"
+          },
+          {
             "source": "types/reader-source.md",
             "document": "---\nkind: mdbase.type\nname: reader-source\nversion: 2\ndescription: A source and user-authored literature note for mdbase Reader.\nschema:\n  dialect: json-schema-2020-12\n  value:\n    $schema: https://json-schema.org/draft/2020-12/schema\n    type: object\n    additionalProperties: true\n    required: [id, title, kind, saved_at]\n    properties:\n      id: { type: string, minLength: 1 }\n      title: { type: string, minLength: 1 }\n      kind: { type: string, minLength: 1 }\n      authors:\n        type: array\n        items: { type: string }\n      published:\n        oneOf:\n          - type: string\n          - type: number\n      url: { type: string }\n      description: { type: string }\n      language: { type: string }\n      saved_at: { type: string, format: date-time }\n      documents:\n        type: array\n        items:\n          type: object\n          additionalProperties: true\n          required: [file]\n          properties:\n            file_id: { type: string }\n            file: { type: string, minLength: 1 }\n            role: { type: string }\n            revision: { type: string, pattern: \"^sha256:[0-9a-f]{64}$\" }\n            format: { type: string }\n            media_type: { type: string }\n            label: { type: string }\n      reading:\n        type: object\n        additionalProperties: true\n        properties:\n          status: { type: string }\n          progress: { type: number, minimum: 0, maximum: 1 }\n      tags:\n        type: array\n        items:\n          type: [string, number, boolean]\n      relations:\n        type: array\n        items:\n          type: object\n          additionalProperties: true\n          required: [relation, target]\n          properties:\n            relation: { type: string }\n            target: { type: string }\n      csl: { type: object }\ncollection:\n  unique:\n    - field: id\n      scope: type\n  links:\n    documents[].file:\n      target_type: any\n      validate_exists: true\n    relations[].target:\n      target_type: reader-source\n      validate_exists: false\nimplements:\n  - contract: dev.mdbase.reader.source\n    version: 1.0.0-beta.1\n    fields:\n      id: id\n      title: title\n      kind: kind\n      authors: authors\n      published: published\n      url: url\n      description: description\n      language: language\n      saved_at: saved_at\n      documents: documents\n      reading: reading\n      tags: tags\n      relations: relations\n      csl: csl\n---\n\n# Reader source\n\nThe source body is the user's literature note. Reader never regenerates it\nfrom annotations.\n"
           },
           {
             "source": "types/reader-annotation.md",
-            "document": "---\nkind: mdbase.type\nname: reader-annotation\nversion: 2\ndescription: An independently addressable mdbase Reader annotation.\nschema:\n  dialect: json-schema-2020-12\n  value:\n    $schema: https://json-schema.org/draft/2020-12/schema\n    type: object\n    additionalProperties: true\n    required: [id, source, annotation_type, created_at]\n    properties:\n      id: { type: string, minLength: 1 }\n      source: { type: string, minLength: 1 }\n      document:\n        type: object\n        additionalProperties: false\n        required: [file_id, file, revision]\n        properties:\n          file_id: { type: string, minLength: 1 }\n          file: { type: string, minLength: 1 }\n          revision: { type: string, pattern: \"^sha256:[0-9a-f]{64}$\" }\n      annotation_type: { type: string, minLength: 1 }\n      motivation: { type: string }\n      color: { type: string }\n      locator:\n        type: object\n        additionalProperties: true\n      target:\n        type: object\n        additionalProperties: true\n      tags:\n        type: array\n        items: { type: string }\n      created_at: { type: string, format: date-time }\n      modified_at: { type: string, format: date-time }\n      created_by: { type: string }\ncollection:\n  unique:\n    - field: id\n      scope: type\n  links:\n    source:\n      target_type: reader-source\n      validate_exists: true\n    document.file:\n      target_type: any\n      validate_exists: true\nimplements:\n  - contract: dev.mdbase.reader.annotation\n    version: 1.0.0-beta.1\n    fields:\n      id: id\n      source: source\n      document: document\n      annotation_type: annotation_type\n      motivation: motivation\n      color: color\n      locator: locator\n      target: target\n      tags: tags\n      created_at: created_at\n      modified_at: modified_at\n      created_by: created_by\n---\n\n# Reader annotation\n\nThe body contains a readable quotation, an optional note, or both.\n"
+            "document": "---\nkind: mdbase.type\nname: reader-annotation\nversion: 3\ndescription: An independently addressable mdbase Reader annotation.\nschema:\n  dialect: json-schema-2020-12\n  value:\n    $schema: https://json-schema.org/draft/2020-12/schema\n    type: object\n    additionalProperties: true\n    required: [id, source, annotation_type, created_at]\n    properties:\n      id: { type: string, minLength: 1 }\n      source: { type: string, minLength: 1 }\n      document:\n        type: object\n        additionalProperties: false\n        required: [file, revision]\n        properties:\n          file_id: { type: string, minLength: 1 }\n          file: { type: string, minLength: 1 }\n          revision: { type: string, pattern: \"^sha256:[0-9a-f]{64}$\" }\n      annotation_type: { type: string, minLength: 1 }\n      motivation: { type: string }\n      color: { type: string }\n      locator:\n        type: object\n        additionalProperties: true\n      target:\n        type: object\n        additionalProperties: true\n      tags:\n        type: array\n        items: { type: string }\n      created_at: { type: string, format: date-time }\n      modified_at: { type: string, format: date-time }\n      created_by: { type: string }\ncollection:\n  unique:\n    - field: id\n      scope: type\n  links:\n    source:\n      target_type: reader-source\n      validate_exists: true\n    document.file:\n      target_type: any\n      validate_exists: true\nimplements:\n  - contract: dev.mdbase.reader.annotation\n    version: 1.0.0-beta.2\n    fields:\n      id: id\n      source: source\n      document: document\n      annotation_type: annotation_type\n      motivation: motivation\n      color: color\n      locator: locator\n      target: target\n      tags: tags\n      created_at: created_at\n      modified_at: modified_at\n      created_by: created_by\n---\n\n# Reader annotation\n\nThe body contains a readable quotation, an optional note, or both.\n\n`document.file` names the annotated file and `document.revision` the bytes the\nannotation was placed on. `document.file_id`, when present, is the mdbase\nConnect file ID recorded at the time; it is not the document's identity.\n"
           },
           {
             "source": "schemas/mdbase.app-settings/1.0.0.schema.json",
