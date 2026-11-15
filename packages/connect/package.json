@@ -13,7 +13,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@mdbase-dev/sdk": "0.1.0-beta.218",
+    "@mdbase-dev/sdk": "0.1.0-beta.220",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/migration": "workspace:*",
     "knap": "0.6.0",
