@@ -1,11 +1,26 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, writeFile, rm, symlink } from "node:fs/promises";
+import {
+  copyFile,
+  mkdtemp,
+  mkdir,
+  readFile,
+  realpath,
+  writeFile,
+  rm,
+  symlink,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { it } from "node:test";
-import { loadOriginals, productionPin, protectedHashes, installedMembers } from "./originals.mjs";
+import {
+  exactUiVersion,
+  loadOriginals,
+  productionPin,
+  protectedHashes,
+  installedMembers,
+} from "./originals.mjs";
 const root = new URL("../../", import.meta.url).pathname;
 const publication = JSON.parse(
   await readFile(join(root, "config/sdk-publication.json"), "utf8"),
@@ -154,4 +169,41 @@ it("installed inventory counts missing, changed and extra bytes and rejects syml
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }
+});
+for (const version of ["0.1.0-beta.212", "0.1.0", "0.2.3"])
+  it(`selects the production SDK pin for exact npm version ${version}`, async (t) => {
+    const fixture = await realpath(await mkdtemp(join(tmpdir(), "reader-sdk-pin-")));
+    t.after(() => rm(fixture, { recursive: true, force: true }));
+    const vendor = "packages/connect/vendor";
+    const current = await productionPin(root);
+    await mkdir(join(fixture, "apps/reader"), { recursive: true });
+    await mkdir(join(fixture, vendor), { recursive: true });
+    await writeFile(
+      join(fixture, "apps/reader/package.json"),
+      JSON.stringify({ dependencies: { "@mdbase-dev/sdk": version } }),
+    );
+    await copyFile(
+      join(root, vendor, current.pin.artifact),
+      join(fixture, vendor, current.pin.artifact),
+    );
+    const pin = {
+      ...current.pin,
+      version,
+      publication: { ...current.pin.publication, ref: "refs/tags/v" + version },
+    };
+    const slug = version.replace(/^0\.1\.0-beta\./, "beta");
+    await writeFile(join(fixture, vendor, `sdk-production-${slug}.json`), JSON.stringify(pin));
+    assert.equal((await productionPin(fixture)).pin.version, version);
+    for (const refused of ["^" + version, "latest", "0.0.9", "0.1.0-rc.1"]) {
+      await writeFile(
+        join(fixture, "apps/reader/package.json"),
+        JSON.stringify({ dependencies: { "@mdbase-dev/sdk": refused } }),
+      );
+      await assert.rejects(productionPin(fixture), /exact npm SDK required/);
+    }
+  });
+it("accepts beta and plain exact UI pins only", () => {
+  for (const version of ["0.1.0-beta.176", "0.1.0", "0.2.1"]) assert.match(version, exactUiVersion);
+  for (const version of ["^0.1.0", "latest", "0.1", "0.1.0 "])
+    assert.doesNotMatch(version, exactUiVersion);
 });

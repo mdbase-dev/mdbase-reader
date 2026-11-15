@@ -12,6 +12,9 @@ import {
   publicBytes,
   archiveBytes,
 } from "./authentication.mjs";
+import { parseSdkVersion } from "./sdk-version.mjs";
+// The shared UI pin is an exact npm version, beta (0.1.0-beta.N) or plain (0.1.0 on).
+export const exactUiVersion = /^\d+\.\d+\.\d+(?:-[\w.]+)?$/;
 const hash = (bytes, algorithm = "sha256") =>
   createHash(algorithm)
     .update(bytes)
@@ -81,7 +84,7 @@ export async function installedMembers(root, ignored = new Set()) {
 export async function productionPin(root) {
   const pkg = await json(join(root, "apps/reader/package.json")),
     spec = pkg.dependencies["@mdbase-dev/sdk"];
-  assert.match(spec, /^\d+\.\d+\.\d+-[\w.]+$/, "exact npm SDK required");
+  assert.ok(parseSdkVersion(spec), "exact npm SDK required");
   const directory = "packages/connect/vendor",
     pins = [];
   for (const name of await readdir(join(root, directory)))
@@ -195,7 +198,7 @@ export async function loadOriginals({
   };
   const pkg = await json(join(repoRoot, "apps/reader/package.json")),
     version = pkg.dependencies["@mdbase-dev/ui"];
-  assert.match(version, /^\d+\.\d+\.\d+-[\w.]+$/);
+  assert.match(version, exactUiVersion);
   const uiEntry = lock.split(`\n  '@mdbase-dev/ui@${version}':\n`)[1]?.split(/\n {2}[^ ]/)[0];
   const integrity = /resolution: \{integrity: (sha512-[A-Za-z0-9+/]+={0,2})\}/.exec(
     uiEntry ?? "",
