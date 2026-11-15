@@ -632,6 +632,7 @@ msgid "Abstract"
 msgstr "Résumé"
 
 #: apps/reader/src/CitationLookup.tsx
+msgctxt "Reader interface"
 msgid "Accept"
 msgstr "Accepter"
 
@@ -2190,10 +2191,6 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Comma suffix"
 msgstr "Virgule avant le suffixe"
 
-#: apps/extension/src/SavedHighlights.tsx
-msgid "Comment"
-msgstr "Commentaire"
-
 #: apps/reader/src/AnnotationTextArea.tsx
 msgctxt "AnnotationTextArea status or action"
 msgid "Comment"
@@ -2201,6 +2198,11 @@ msgstr "Commentaire"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
+msgid "Comment"
+msgstr "Commentaire"
+
+#: apps/extension/src/SavedHighlights.tsx
+msgctxt "Reader interface"
 msgid "Comment"
 msgstr "Commentaire"
 
@@ -2414,6 +2416,7 @@ msgstr "Contributeurs"
 
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/CitationPreview.tsx
+msgctxt "Reader interface"
 msgid "Copied"
 msgstr "Copié"
 
@@ -2440,7 +2443,7 @@ msgid "Copied the CSL-JSON"
 msgstr "CSL-JSON copié"
 
 #: apps/reader/src/CitationPreview.tsx
-#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "Reader interface"
 msgid "Copy"
 msgstr "Copier"
 
@@ -2937,6 +2940,7 @@ msgstr "Surlignages Readwise écartés ignorés (conservés dans l’archive nat
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
+msgctxt "Reader interface"
 msgid "Dismiss"
 msgstr "Fermer"
 
@@ -4308,6 +4312,7 @@ msgid "Insert a citation or annotation"
 msgstr "Insérer une citation ou une annotation"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
+msgctxt "Reader interface"
 msgid "Insert at the cursor"
 msgstr "Insérer à la position du curseur"
 
@@ -5880,6 +5885,10 @@ msgstr "Ouverture de la note de lecture…"
 msgid "Opening the new page…"
 msgstr "Ouverture de la nouvelle page…"
 
+#: apps/reader/src/ReaderBoot.tsx
+msgid "Opening your library"
+msgstr "Ouverture de votre bibliothèque"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
@@ -7035,6 +7044,7 @@ msgid "Regulation"
 msgstr "Règlement"
 
 #: apps/reader/src/ReaderErrorBoundary.tsx
+msgctxt "Reader interface"
 msgid "Reload"
 msgstr "Recharger"
 
@@ -7912,13 +7922,14 @@ msgctxt "CSL bibliographic field or item type"
 msgid "ShortTitle"
 msgstr "Titre court"
 
-#: apps/reader/src/AnnotationFilterMenu.tsx
-#: apps/reader/src/HighlightColorSettings.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
 msgid "Show"
 msgstr "Afficher"
 
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace interface"
+#: apps/reader/src/AnnotationFilterMenu.tsx
+#: apps/reader/src/HighlightColorSettings.tsx
+msgctxt "Reader interface"
 msgid "Show"
 msgstr "Afficher"
 

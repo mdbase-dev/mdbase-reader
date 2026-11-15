@@ -151,7 +151,7 @@ export function AnnotationFilterMenu({
       {/* Choices apply at once and leave the menu open, so several can be changed together. */}
       <div className="annotation-filter-panel" data-menu-keep-open>
         <RadioChoices
-          label={translate({ message: "Show" })}
+          label={translate({ message: "Show", context: "Reader interface" })}
           choices={filterChoices.map((choice) => ({
             ...choice,
             count: counts.get(choice.value) ?? 0,

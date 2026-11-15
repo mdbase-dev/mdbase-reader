@@ -632,6 +632,7 @@ msgid "Abstract"
 msgstr "摘要"
 
 #: apps/reader/src/CitationLookup.tsx
+msgctxt "Reader interface"
 msgid "Accept"
 msgstr "接受"
 
@@ -2190,10 +2191,6 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Comma suffix"
 msgstr "逗号后缀"
 
-#: apps/extension/src/SavedHighlights.tsx
-msgid "Comment"
-msgstr "评论"
-
 #: apps/reader/src/AnnotationTextArea.tsx
 msgctxt "AnnotationTextArea status or action"
 msgid "Comment"
@@ -2201,6 +2198,11 @@ msgstr "评论"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
+msgid "Comment"
+msgstr "评论"
+
+#: apps/extension/src/SavedHighlights.tsx
+msgctxt "Reader interface"
 msgid "Comment"
 msgstr "评论"
 
@@ -2414,6 +2416,7 @@ msgstr "贡献者"
 
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/CitationPreview.tsx
+msgctxt "Reader interface"
 msgid "Copied"
 msgstr "已复制"
 
@@ -2440,7 +2443,7 @@ msgid "Copied the CSL-JSON"
 msgstr "已复制 CSL-JSON"
 
 #: apps/reader/src/CitationPreview.tsx
-#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "Reader interface"
 msgid "Copy"
 msgstr "复制"
 
@@ -2937,6 +2940,7 @@ msgstr "已跳过已放弃的 Readwise 高亮（保留在原生存档中）"
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
+msgctxt "Reader interface"
 msgid "Dismiss"
 msgstr "忽略"
 
@@ -4308,6 +4312,7 @@ msgid "Insert a citation or annotation"
 msgstr "插入引文或注释"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
+msgctxt "Reader interface"
 msgid "Insert at the cursor"
 msgstr "在光标处插入"
 
@@ -5880,6 +5885,10 @@ msgstr "正在打开文献笔记…"
 msgid "Opening the new page…"
 msgstr "正在打开新页面…"
 
+#: apps/reader/src/ReaderBoot.tsx
+msgid "Opening your library"
+msgstr "正在打开你的文献库"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
@@ -7035,6 +7044,7 @@ msgid "Regulation"
 msgstr "条例"
 
 #: apps/reader/src/ReaderErrorBoundary.tsx
+msgctxt "Reader interface"
 msgid "Reload"
 msgstr "重新加载"
 
@@ -7912,13 +7922,14 @@ msgctxt "CSL bibliographic field or item type"
 msgid "ShortTitle"
 msgstr "简称"
 
-#: apps/reader/src/AnnotationFilterMenu.tsx
-#: apps/reader/src/HighlightColorSettings.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
 msgid "Show"
 msgstr "显示"
 
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace interface"
+#: apps/reader/src/AnnotationFilterMenu.tsx
+#: apps/reader/src/HighlightColorSettings.tsx
+msgctxt "Reader interface"
 msgid "Show"
 msgstr "显示"
 

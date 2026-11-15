@@ -132,12 +132,10 @@ export async function bootFailure(browser, origin) {
     const page = await context.newPage();
     await page.route("**/assets/index-*.js", (route) => route.abort());
     await page.goto(`${origin}/?preview=1`);
-    await expect(page.locator(".reader-boot-failure")).toContainText("Reader could not start");
-    await page.locator(".reader-boot summary").click();
-    await expect(
-      page.getByRole("link", { name: "Try Reader with a sample library" }),
-    ).toHaveAttribute("href", "?preview=1");
-    const bounds = await page.locator(".reader-boot").boundingBox();
+    const failure = page.getByRole("alert");
+    await expect(failure).toContainText("mdbase reader could not start");
+    await expect(failure.getByRole("link", { name: "Reload", exact: true })).toBeVisible();
+    const bounds = await page.locator(".mdbase-opening").boundingBox();
     assert.equal(bounds.height, page.viewportSize().height);
   } finally {
     await context.close();

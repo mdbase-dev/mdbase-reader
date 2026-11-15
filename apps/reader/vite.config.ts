@@ -1,4 +1,5 @@
 import { lingui } from "@lingui/vite-plugin";
+import { mdbaseOpeningPage } from "@mdbase-dev/ui/opening-page";
 import react from "@vitejs/plugin-react";
 import { loadEnv } from "vite";
 import { defineConfig, type UserConfig, type Plugin } from "vite";
@@ -6,6 +7,7 @@ import { defineConfig, type UserConfig, type Plugin } from "vite";
 import { bundleReport } from "./scripts/bundle-report.js";
 import { readerAppUrls } from "./scripts/deployment-environment.mjs";
 import { readerSdkTarget, verifiedReaderSdk } from "./scripts/reader-sdk.mjs";
+import { readerThemeColors } from "./src/reader-theme-color.js";
 
 import type * as SdkOfflineShell from "@mdbase-dev/sdk/offline-shell/build";
 
@@ -36,6 +38,11 @@ export default defineConfig(async ({ mode }): Promise<UserConfig> => {
     plugins: [
       react(),
       lingui({ macroTransform: true }),
+      mdbaseOpeningPage({
+        app: "reader",
+        title: "Opening your library",
+        themeColor: readerThemeColors,
+      }),
       deploymentRevision(buildId),
       {
         name: "mdbase-reader-sdk-receipt",

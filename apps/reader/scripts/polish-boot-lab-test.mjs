@@ -79,14 +79,14 @@ try {
       let previous = "";
       while (performance.now() < end) {
         const name = globalThis.document.querySelector(
-          ".reader-boot header, .reader-collection-switcher",
+          ".mdbase-opening small, .reader-collection-switcher",
         )?.textContent;
         const all = [...globalThis.document.querySelectorAll(".library-navigator button")].find(
           (button) => button.textContent.startsWith("All sources"),
         );
         const sidebar = globalThis.document.querySelector(".reader-dock-sidebar");
         const sample = {
-          boot: Boolean(globalThis.document.querySelector(".reader-boot")),
+          boot: Boolean(globalThis.document.querySelector(".mdbase-opening")),
           feature: Boolean(globalThis.document.querySelector(".reader-feature-skeleton")),
           name,
           rows: globalThis.document.querySelectorAll("[data-row-index]").length,

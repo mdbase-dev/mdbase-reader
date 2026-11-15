@@ -35,7 +35,7 @@ Electron's main process initializes synchronous English from copied compiler-own
 
 ## Shared kit dependency
 
-Every workspace pins `@mdbase-dev/i18n` and `@mdbase-dev/ui` to exactly `0.1.0-beta.147` from npm, with integrity recorded in `pnpm-lock.yaml`. Do not use a range or dist-tag: i18n's `latest` tag is a staging placeholder.
+Every workspace pins `@mdbase-dev/i18n` to exactly `0.1.0-beta.149` and `@mdbase-dev/ui` to exactly `0.1.0-beta.215` from npm, with integrity recorded in `pnpm-lock.yaml`. Do not use a range or dist-tag: i18n's `latest` tag is a staging placeholder.
 
 Its `createI18nRuntime` encodes backslashes in interpolated string values once per Lingui instance, so user text such as `C:\x41dir` renders literally. Reader relies on it and has no wrapper of its own; a second encoding pass would display `\` as `\u005c`.
 

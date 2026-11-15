@@ -136,8 +136,8 @@ export function CitationPreview({
         <button type="button" className="citation-button" disabled={!formatted} onClick={copy}>
           {copied?.kind === "copied" ? <CheckIcon /> : <CopyIcon />}
           {copied?.kind === "copied"
-            ? translate({ message: "Copied" })
-            : translate({ message: "Copy" })}
+            ? translate({ message: "Copied", context: "Reader interface" })
+            : translate({ message: "Copy", context: "Reader interface" })}
         </button>
       </div>
       <p

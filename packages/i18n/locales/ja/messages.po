@@ -632,6 +632,7 @@ msgid "Abstract"
 msgstr "要旨"
 
 #: apps/reader/src/CitationLookup.tsx
+msgctxt "Reader interface"
 msgid "Accept"
 msgstr "承認"
 
@@ -2190,10 +2191,6 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Comma suffix"
 msgstr "接尾辞のコンマ"
 
-#: apps/extension/src/SavedHighlights.tsx
-msgid "Comment"
-msgstr "コメント"
-
 #: apps/reader/src/AnnotationTextArea.tsx
 msgctxt "AnnotationTextArea status or action"
 msgid "Comment"
@@ -2201,6 +2198,11 @@ msgstr "コメント"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
+msgid "Comment"
+msgstr "コメント"
+
+#: apps/extension/src/SavedHighlights.tsx
+msgctxt "Reader interface"
 msgid "Comment"
 msgstr "コメント"
 
@@ -2414,6 +2416,7 @@ msgstr "寄稿者"
 
 #: apps/reader/src/CitationEditor.tsx
 #: apps/reader/src/CitationPreview.tsx
+msgctxt "Reader interface"
 msgid "Copied"
 msgstr "コピーしました"
 
@@ -2440,7 +2443,7 @@ msgid "Copied the CSL-JSON"
 msgstr "CSL-JSONをコピーしました"
 
 #: apps/reader/src/CitationPreview.tsx
-#: apps/reader/src/SelectionToolbar.tsx
+msgctxt "Reader interface"
 msgid "Copy"
 msgstr "コピー"
 
@@ -2937,6 +2940,7 @@ msgstr "破棄済みのReadwiseハイライトをスキップ（元のアーカ�
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
+msgctxt "Reader interface"
 msgid "Dismiss"
 msgstr "閉じる"
 
@@ -4308,6 +4312,7 @@ msgid "Insert a citation or annotation"
 msgstr "引用または注釈を挿入"
 
 #: apps/reader/src/SourceNoteInsertMenu.tsx
+msgctxt "Reader interface"
 msgid "Insert at the cursor"
 msgstr "カーソル位置に挿入"
 
@@ -5880,6 +5885,10 @@ msgstr "文献ノートを開いています…"
 msgid "Opening the new page…"
 msgstr "新しいページを開いています…"
 
+#: apps/reader/src/ReaderBoot.tsx
+msgid "Opening your library"
+msgstr "ライブラリを開いています"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer passwordPrompt"
 msgid "Opening..."
@@ -7035,6 +7044,7 @@ msgid "Regulation"
 msgstr "規則"
 
 #: apps/reader/src/ReaderErrorBoundary.tsx
+msgctxt "Reader interface"
 msgid "Reload"
 msgstr "再読み込み"
 
@@ -7912,13 +7922,14 @@ msgctxt "CSL bibliographic field or item type"
 msgid "ShortTitle"
 msgstr "短いタイトル"
 
-#: apps/reader/src/AnnotationFilterMenu.tsx
-#: apps/reader/src/HighlightColorSettings.tsx
+#: apps/reader/src/LibraryWorkspace.tsx
+msgctxt "LibraryWorkspace interface"
 msgid "Show"
 msgstr "表示"
 
-#: apps/reader/src/LibraryWorkspace.tsx
-msgctxt "LibraryWorkspace interface"
+#: apps/reader/src/AnnotationFilterMenu.tsx
+#: apps/reader/src/HighlightColorSettings.tsx
+msgctxt "Reader interface"
 msgid "Show"
 msgstr "表示"
 

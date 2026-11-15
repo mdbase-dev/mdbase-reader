@@ -479,7 +479,7 @@ function CitationKeyCopy({ citekey }: { readonly citekey: string }): JSX.Element
       </button>
       <span className="citation-key-status" role="status">
         {result === "copied"
-          ? translate({ message: "Copied" })
+          ? translate({ message: "Copied", context: "Reader interface" })
           : result === "failed"
             ? translate({ message: "Copying is unavailable here." })
             : ""}

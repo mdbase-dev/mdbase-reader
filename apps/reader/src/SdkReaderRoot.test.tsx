@@ -94,7 +94,9 @@ it("the header switcher asks about unsaved edits before switching collections", 
     root.render(<ReaderCollectionSwitcher mdbase={h.mdbase} beforeSwitch={beforeSwitch} />),
   );
   const trigger = host.querySelector<HTMLButtonElement>("button[aria-haspopup='dialog']");
-  expect(trigger?.getAttribute("aria-label")).toBe("Switch collection, current: Reading");
+  // Named by the collection it shows, so voice control users can say what they see.
+  expect(trigger?.hasAttribute("aria-label")).toBe(false);
+  expect(trigger?.textContent).toContain("Reading");
   const pick = async (): Promise<void> => {
     await act(async () => trigger?.click());
     const archive = [...document.querySelectorAll<HTMLElement>("[role=radio]")].find((row) =>

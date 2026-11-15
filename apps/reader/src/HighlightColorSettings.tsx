@@ -313,7 +313,7 @@ function ColorRow({
             disabled={disabled}
             onClick={() => actions.show(color)}
           >
-            <Trans>Show</Trans>
+            <Trans context="Reader interface">Show</Trans>
           </button>
         )}
       </span>
