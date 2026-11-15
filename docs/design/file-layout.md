@@ -354,7 +354,7 @@ policy for its own types and can derive paths without extra frontmatter fields.
 ## Name templates
 
 A collection can choose its own names for new source notes and annotations through the
-templates in `_settings/dev.mdbase.reader.md` (see [App settings](app-settings.md)).
+templates in `_mdbase/settings/dev.mdbase.reader.md` (or the legacy `_settings/` path) (see [App settings](app-settings.md)).
 
 - **How a name is built.** The rendered name is a preferred name, and the
   `preferredSourceNoteStems` and `preferredAnnotationLeaves` helpers in

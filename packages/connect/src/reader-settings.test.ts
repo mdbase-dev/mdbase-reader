@@ -8,7 +8,8 @@ import { memoryConnection } from "./native/testing.js";
 import { ReaderSettingsStore } from "./reader-settings.js";
 import { plan as plannedImport } from "./source-imports.fixtures.js";
 
-const path = "_settings/dev.mdbase.reader.md";
+const path = "_mdbase/settings/dev.mdbase.reader.md";
+const legacyPath = "_settings/dev.mdbase.reader.md";
 const record = {
   app: "dev.mdbase.reader",
   scope: "collection",
@@ -33,6 +34,74 @@ async function native(): Promise<{ replica: MemoryReplica; client: MdbaseClient 
 async function stored(client: MdbaseClient): Promise<Record<string, unknown>> {
   return (await client.get({ path })).frontmatter;
 }
+
+describe("ReaderSettingsStore paths", () => {
+  it.each([
+    ["new only", true, false, path],
+    ["legacy only", false, true, legacyPath],
+    ["both", true, true, path],
+    ["neither", false, false, path],
+  ] as const)(
+    "reads and saves %s without moving records",
+    async (_scenario, hasNew, hasLegacy, selected) => {
+      const { replica, client } = await native();
+      if (hasNew) {
+        replica.seed({ path, types: ["reader-settings"], frontmatter: record });
+      }
+      const legacyRecord = { ...record, source_name_template: "legacy-{{ title }}" };
+      if (hasLegacy) {
+        replica.seed({ path: legacyPath, types: ["reader-settings"], frontmatter: legacyRecord });
+      }
+      const store = new ReaderSettingsStore(client);
+      const snapshot = await store.current();
+      expect(store.path).toBe(selected);
+      expect(snapshot.frontmatter).toEqual(hasNew ? record : hasLegacy ? legacyRecord : undefined);
+      expect((await store.save({ annotation_name_template: "{{ words }}" })).ok).toBe(true);
+      expect((await client.get({ path: selected })).frontmatter).toMatchObject({
+        app: "dev.mdbase.reader",
+        annotation_name_template: "{{ words }}",
+      });
+      if (hasNew && hasLegacy) {
+        expect((await client.get({ path: legacyPath })).frontmatter).toEqual(legacyRecord);
+      } else {
+        expect(await client.find({ path: selected === path ? legacyPath : path })).toBeNull();
+      }
+    },
+  );
+
+  it("does not fall back when the new path cannot be read", async () => {
+    const { replica, client } = await native();
+    replica.seed({ path: legacyPath, types: ["reader-settings"], frontmatter: record });
+    const find = vi.spyOn(client, "find").mockRejectedValue(mdbaseError("forbidden", "Denied"));
+    const store = new ReaderSettingsStore(client);
+    expect((await store.current()).status).toBe("failed");
+    expect(find).toHaveBeenCalledTimes(1);
+    expect((await store.save({ annotation_name_template: "{{ words }}" })).ok).toBe(false);
+  });
+
+  it("follows both paths and releases both watches", async () => {
+    const { replica, client } = await native();
+    const changes = new Map<string, () => void>();
+    const stops = [vi.fn(), vi.fn()];
+    const store = new ReaderSettingsStore(client, {
+      watch: (watched, onChange) => {
+        changes.set(watched, onChange);
+        return stops[changes.size - 1] as () => void;
+      },
+    });
+    await store.current();
+    expect([...changes.keys()]).toEqual([path, legacyPath]);
+    replica.seed({ path: legacyPath, types: ["reader-settings"], frontmatter: record });
+    changes.get(legacyPath)?.();
+    await vi.waitFor(() => expect(store.path).toBe(legacyPath));
+    replica.seed({ path, types: ["reader-settings"], frontmatter: record });
+    changes.get(path)?.();
+    await vi.waitFor(() => expect(store.path).toBe(path));
+    store.dispose();
+    expect(stops[0]).toHaveBeenCalledOnce();
+    expect(stops[1]).toHaveBeenCalledOnce();
+  });
+});
 
 describe("ReaderSettingsStore reads", () => {
   it("uses the defaults without a record, and never creates one on read", async () => {

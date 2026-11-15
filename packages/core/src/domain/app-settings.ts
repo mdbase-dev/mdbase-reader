@@ -1,12 +1,15 @@
 /**
  * App settings records (`docs/design/app-settings.md`): one record per app at
- * `_settings/<app>.md` whose flat frontmatter holds collection-wide policy. This module is the
+ * `_mdbase/settings/<app>.md` (or `_settings/<app>.md` in older collections) whose flat
+ * frontmatter holds collection-wide policy. This module is the
  * pure part: where the record lives, how a record resolves to values (schema defaults for
  * anything missing or invalid), and which fields a save changes.
  */
 
 /** The folder collection-scope settings records live in. Visible: dot-paths are not records. */
-export const appSettingsFolder = "_settings";
+export const appSettingsFolder = "_mdbase/settings";
+
+export const legacyAppSettingsFolder = "_settings";
 
 /** One app setting: its default, and why a stored value is unusable (undefined when it is). */
 export interface AppSettingField<Value> {
@@ -53,6 +56,10 @@ export type AppSettingsChanges<Values extends object> = {
 
 export function appSettingsPath(app: string): string {
   return `${appSettingsFolder}/${app}.md`;
+}
+
+export function legacyAppSettingsPath(app: string): string {
+  return `${legacyAppSettingsFolder}/${app}.md`;
 }
 
 /** The defaults: what a collection with no settings record uses. */

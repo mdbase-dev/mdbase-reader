@@ -4,6 +4,7 @@ import {
   appSettingsPath,
   conflictingAppSettings,
   defaultAppSettings,
+  legacyAppSettingsPath,
   newAppSettingsFrontmatter,
   resolveAppSettings,
   type AppSettingsChanges,
@@ -28,6 +29,7 @@ export interface AppSettingsSnapshot<Values extends object> {
   /** The record's frontmatter as read; undefined when there is no record (yet). */
   readonly frontmatter?: Readonly<Record<string, unknown>>;
   readonly revision?: string;
+  readonly path?: string;
   /** Why the read failed, when it did. */
   readonly problem?: string;
 }
@@ -60,7 +62,6 @@ export interface AppSettingsStoreOptions<Values extends object> {
 }
 
 export class AppSettingsStore<Values extends object> {
-  readonly path: string;
   readonly #client: MdbaseClient;
   readonly #definition: AppSettingsDefinition<Values>;
   readonly #options: AppSettingsStoreOptions<Values>;
@@ -89,8 +90,11 @@ export class AppSettingsStore<Values extends object> {
     this.#client = client;
     this.#definition = definition;
     this.#options = options;
-    this.path = appSettingsPath(definition.app);
     this.#snapshot = { status: "loading", settings: defaultAppSettings(definition) };
+  }
+
+  public get path(): string {
+    return this.#snapshot.path ?? appSettingsPath(this.#definition.app);
   }
 
   public getSnapshot = (): AppSettingsSnapshot<Values> => this.#snapshot;
@@ -117,9 +121,15 @@ export class AppSettingsStore<Values extends object> {
    */
   public async current(): Promise<AppSettingsSnapshot<Values>> {
     if (!this.#stopWatching && !this.#disposed) {
-      this.#stopWatching = this.#options.watch?.(this.path, () => {
-        void this.reload();
-      });
+      const stops = [
+        appSettingsPath(this.#definition.app),
+        legacyAppSettingsPath(this.#definition.app),
+      ].map((path) =>
+        this.#options.watch?.(path, () => {
+          void this.reload();
+        }),
+      );
+      this.#stopWatching = () => stops.forEach((stop) => stop?.());
     }
     if (this.#snapshot.status === "ready") {
       return this.#snapshot;
@@ -223,7 +233,7 @@ export class AppSettingsStore<Values extends object> {
     const generation = ++this.#generation;
     try {
       const record = latest.frontmatter
-        ? await this.#patch(latest.frontmatter, latest.revision, changes)
+        ? await this.#patch(latest, changes)
         : await this.#create(changes);
       if (record === "unchanged") {
         return { ok: true, snapshot: latest };
@@ -245,7 +255,9 @@ export class AppSettingsStore<Values extends object> {
 
   async #read(): Promise<AppSettingsSnapshot<Values>> {
     try {
-      const record = await this.#client.find({ path: this.path });
+      const record =
+        (await this.#client.find({ path: appSettingsPath(this.#definition.app) })) ??
+        (await this.#client.find({ path: legacyAppSettingsPath(this.#definition.app) }));
       return record
         ? await this.#resolve(record)
         : this.#withRefusal({
@@ -264,6 +276,7 @@ export class AppSettingsStore<Values extends object> {
       settings: await this.#refine(resolveAppSettings(this.#definition, frontmatter)),
       frontmatter,
       revision: document.revision,
+      path: document.path,
     });
   }
 
@@ -286,13 +299,14 @@ export class AppSettingsStore<Values extends object> {
   }
 
   async #create(changes: AppSettingsChanges<Values>): Promise<RecordView> {
+    const path = appSettingsPath(this.#definition.app);
     const settled = await this.#client.settle(
       this.#client.create({
-        path: this.path,
+        path,
         type: this.#definition.type,
         frontmatter: newAppSettingsFrontmatter(this.#definition, changes) as JsonObject,
       }),
-      { read: { record: { path: this.path } } },
+      { read: { record: { path } } },
     );
     this.#pendingCreate =
       settled.outcome === "saved_on_device"
@@ -306,19 +320,18 @@ export class AppSettingsStore<Values extends object> {
   }
 
   async #patch(
-    frontmatter: Readonly<Record<string, unknown>>,
-    revision: string | undefined,
+    latest: AppSettingsSnapshot<Values>,
     changes: AppSettingsChanges<Values>,
   ): Promise<RecordView | "unchanged"> {
-    const patch = appSettingsPatch(this.#definition, frontmatter, changes);
+    const patch = appSettingsPatch(this.#definition, latest.frontmatter ?? {}, changes);
     if (Object.keys(patch).length === 0) {
       return "unchanged";
     }
     return updateRecord(
       this.#client,
-      { path: this.path },
+      { path: latest.path ?? appSettingsPath(this.#definition.app) },
       {
-        ...(revision ? { ifRevision: revision } : {}),
+        ...(latest.revision ? { ifRevision: latest.revision } : {}),
         ...frontmatterChanges(patch),
       },
     );

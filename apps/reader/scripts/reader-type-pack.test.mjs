@@ -25,6 +25,9 @@ const legacyBeta2 = JSON.parse(
 const legacyBeta6 = JSON.parse(
   await readFile(new URL("./fixtures/reader-pack-beta6.json", import.meta.url), "utf8"),
 );
+const legacyBeta7 = JSON.parse(
+  await readFile(new URL("./fixtures/reader-pack-beta7.json", import.meta.url), "utf8"),
+);
 const application = await buildReaderManifest();
 const current = application.provisions.type_packs.find(
   (pack) => pack.manifest.id === "dev.mdbase.reader",
@@ -41,6 +44,8 @@ const settingsSources = new Set([
   "contracts/mdbase.app-settings/1.0.0.md",
   "schemas/dev.mdbase.reader.settings/1.1.0.schema.json",
   "contracts/dev.mdbase.reader.settings/1.1.0.md",
+  "contracts/mdbase.app-settings/2.0.0.md",
+  "contracts/dev.mdbase.reader.settings/1.2.0.md",
   "types/reader-settings.md",
 ]);
 const isSettings = ({ source }) => settingsSources.has(source);
@@ -69,6 +74,7 @@ const releasedDigests = {
   "1.0.0-beta.5": "sha256:a8c684491b91ad290a8bd63a3709a949ea58679c69fc600aabba2422da95055b",
   "1.0.0-beta.6": "sha256:82027c429b2e4c061f2e447f3af4004463c969633de2454653e8327a2bda2f54",
   "1.0.0-beta.7": "sha256:3962ae19ef014455a8b147dd6469e6d2e3c77cc9b61e9aabad5b0f54c0283b37",
+  "1.0.0-beta.8": "sha256:ae9ba33386a4dc952c7b838983edd4a3400358798fe90206f4dfab2736967c98",
 };
 // The vendored mdbase-contracts view pack, pinned the same way. 1.0.1 ships the version-2
 // view starter (no pinned `type`, open top level) with `upgrade_from` the 1.0.0 starter;
@@ -189,15 +195,15 @@ async function assertPreserved(contents) {
 }
 
 test("Reader's new pack release preserves contract identities and capability protocol", async (t) => {
-  assert.equal(current.manifest.version, "1.0.0-beta.7");
+  assert.equal(current.manifest.version, "1.0.0-beta.8");
   assert.deepEqual(withoutSettings(current).provides, legacy.provides);
   assert.deepEqual(
     current.provides
       .filter(({ id }) => settingsContracts.has(id))
       .map(({ id, version }) => [id, version]),
     [
-      ["mdbase.app-settings", "1.0.0"],
-      ["dev.mdbase.reader.settings", "1.1.0"],
+      ["mdbase.app-settings", "2.0.0"],
+      ["dev.mdbase.reader.settings", "1.2.0"],
     ],
   );
   assert.equal(application.requirements.capabilities.contract_version, 2);
@@ -224,6 +230,66 @@ test("the released pack digest stays immutable and is independent of deployment 
   assert.deepEqual(staging.provisions.type_packs[0], current);
 });
 
+test("settings contracts keep the same fields in their inline schemas", () => {
+  const documents = new Map(current.resources.map(({ source, document }) => [source, document]));
+  const schema = JSON.parse(documents.get(settingsSchema));
+  schema.title = "dev.mdbase.reader.settings 1.2.0";
+  assert.deepEqual(
+    frontmatter(documents.get("contracts/dev.mdbase.reader.settings/1.2.0.md")).record_schema.value,
+    schema,
+  );
+  assert.deepEqual(frontmatter(documents.get("types/reader-settings.md")).schema.value, schema);
+  for (const source of [
+    "contracts/mdbase.app-settings/1.0.0.md",
+    "schemas/mdbase.app-settings/1.0.0.schema.json",
+    "contracts/dev.mdbase.reader.settings/1.1.0.md",
+    settingsSchema,
+  ]) {
+    assert.equal(
+      documents.get(source),
+      legacyBeta7.resources.find((resource) => resource.source === source).document,
+    );
+  }
+  assert.deepEqual(
+    application.requirements.contracts
+      .filter(({ id }) => settingsContracts.has(id))
+      .map(({ id, version }) => [id, version]),
+    [
+      ["mdbase.app-settings", "2.0.0"],
+      ["dev.mdbase.reader.settings", "1.2.0"],
+    ],
+  );
+});
+
+for (const edited of [false, true]) {
+  test(`upgrades beta.7's settings with ${edited ? "an edited" : "an unedited"} starter and retains its contracts`, async (testContext) => {
+    const root = await collection(testContext);
+    assert.equal((await assess(root, legacyBeta7)).desired.digest, releasedDigests["1.0.0-beta.7"]);
+    await apply(root, legacyBeta7, await assess(root, legacyBeta7));
+    const typePath = join(root, "_types", "reader-settings.md");
+    if (edited) {
+      await writeFile(typePath, `${await readFile(typePath, "utf8")}\nCollection note.\n`);
+    }
+    const upgrade = await assess(root, current);
+    const seed = upgrade.resources.find(({ source }) => source === "types/reader-settings.md");
+    assert.equal(seed.action, "update");
+    assert.equal(seed.upgrade_baseline.version, 2);
+    for (const resource of legacyBeta7.manifest.resources.filter(
+      ({ mode }) => mode === "managed",
+    )) {
+      assert.equal(
+        upgrade.resources.find(({ source }) => source === resource.source).action,
+        "unchanged",
+      );
+    }
+    await apply(root, current, upgrade);
+    const type = await readFile(typePath, "utf8");
+    assert.equal(frontmatter(type).version, 3);
+    if (edited) assert.match(type, /Collection note\./u);
+    assert.equal((await assess(root, current)).status, "current");
+  });
+}
+
 test("seed upgrades list every earlier starter type, newest first, as exact bytes", async (t) => {
   const seeds = current.manifest.resources.filter(
     (resource) => resource.mode === "seed" && !isSettings(resource),
@@ -238,7 +304,14 @@ test("seed upgrades list every earlier starter type, newest first, as exact byte
   );
   assert.deepEqual(
     settingsSeed.upgrade_from.map(({ digest, version }) => ({ digest, version })),
-    [{ digest: beta6Settings.digest, version: 1 }],
+    [
+      {
+        digest: legacyBeta7.manifest.resources.find(({ source }) => source === settingsSeed.source)
+          .digest,
+        version: 2,
+      },
+      { digest: beta6Settings.digest, version: 1 },
+    ],
   );
   const desired = new Map(current.resources.map(({ source, document }) => [source, document]));
   for (const seed of seeds) {
@@ -268,7 +341,7 @@ test("seed upgrades list every earlier starter type, newest first, as exact byte
     releasedDigests["1.0.0-beta.6"],
   );
   assert.equal(
-    settingsSeed.upgrade_from[0].document,
+    settingsSeed.upgrade_from[1].document,
     legacyBeta6.resources.find(({ source }) => source === settingsSeed.source).document,
   );
   // The released beta.1 and beta.2 packs shipped exactly these baselines.
@@ -464,10 +537,8 @@ test("starter types neither declare nor require the type key", () => {
   const documents = new Map(current.resources.map(({ source, document }) => [source, document]));
   for (const resource of current.manifest.resources.filter(({ kind }) => kind === "type")) {
     const type = frontmatter(documents.get(resource.source));
-    const schema = isSettings(resource)
-      ? JSON.parse(documents.get(settingsSchema))
-      : type.schema.value;
-    assert.equal(type.version, 2, resource.source);
+    const schema = type.schema.value;
+    assert.equal(type.version, isSettings(resource) ? 3 : 2, resource.source);
     assert.equal(schema.additionalProperties, true, resource.source);
     for (const key of ["type", "types"]) {
       assert.equal(
@@ -591,21 +662,21 @@ for (const typeKeys of ["[type]", "[mdbase_type]"]) {
     };
     try {
       const created = await operations.create({
-        path: "_settings/dev.mdbase.reader.md",
+        path: "_mdbase/settings/dev.mdbase.reader.md",
         type: "reader-settings",
         frontmatter: settings,
       });
       assert.equal(created.valid, true, JSON.stringify(created.diagnostics));
       for (const [contract, version, fields] of [
-        ["mdbase.app-settings", "1.0.0", ["app", "scope", "settings_version"]],
+        ["mdbase.app-settings", "2.0.0", ["app", "scope", "settings_version"]],
         [
           "dev.mdbase.reader.settings",
-          "1.1.0",
+          "1.2.0",
           ["app", "source_name_template", "highlight_colors", "highlight_meanings"],
         ],
       ]) {
         const view = await opened.collection.getContractView(
-          "_settings/dev.mdbase.reader.md",
+          "_mdbase/settings/dev.mdbase.reader.md",
           contract,
           version,
         );
@@ -614,25 +685,33 @@ for (const typeKeys of ["[type]", "[mdbase_type]"]) {
       }
       for (const [path, frontmatter, code] of [
         [
-          "_settings/empty-template.md",
+          "_mdbase/settings/empty-template.md",
           { ...settings, source_name_template: "" },
           "schema_min_length",
         ],
-        ["_settings/other-app.md", { ...settings, app: "tasknotes" }, "schema_const"],
-        ["_settings/no-colours.md", { ...settings, highlight_colors: [] }, "schema_min_items"],
+        ["_mdbase/settings/other-app.md", { ...settings, app: "tasknotes" }, "schema_const"],
         [
-          "_settings/twice.md",
+          "_mdbase/settings/no-colours.md",
+          { ...settings, highlight_colors: [] },
+          "schema_min_items",
+        ],
+        [
+          "_mdbase/settings/twice.md",
           { ...settings, highlight_colors: ["pink", "pink"] },
           "schema_unique_items",
         ],
-        ["_settings/orange.md", { ...settings, highlight_colors: ["orange"] }, "schema_enum"],
         [
-          "_settings/long-meaning.md",
+          "_mdbase/settings/orange.md",
+          { ...settings, highlight_colors: ["orange"] },
+          "schema_enum",
+        ],
+        [
+          "_mdbase/settings/long-meaning.md",
           { ...settings, highlight_meanings: { pink: "x".repeat(41) } },
           "schema_max_length",
         ],
         // One collection-scope record per app.
-        ["_settings/second.md", settings, "duplicate_value"],
+        ["_mdbase/settings/second.md", settings, "duplicate_value"],
       ]) {
         const refused = await operations.create({ path, type: "reader-settings", frontmatter });
         assert.equal(refused.valid, false, path);
@@ -648,7 +727,7 @@ for (const typeKeys of ["[type]", "[mdbase_type]"]) {
 }
 
 for (const edited of [false, true]) {
-  test(`upgrades beta.6's settings to contract 1.1.0 with ${edited ? "an edited" : "an unedited"} starter`, async (t) => {
+  test(`upgrades beta.6's settings to contract 1.2.0 with ${edited ? "an edited" : "an unedited"} starter`, async (t) => {
     const root = await collection(t);
     await apply(root, legacyBeta6, await assess(root, legacyBeta6));
     // A record written by beta.6 Reader stays a valid 1.1.0 record.
@@ -677,6 +756,8 @@ for (const edited of [false, true]) {
       "contracts/mdbase.app-settings/1.0.0.md": "unchanged",
       "schemas/dev.mdbase.reader.settings/1.1.0.schema.json": "create",
       "contracts/dev.mdbase.reader.settings/1.1.0.md": "create",
+      "contracts/mdbase.app-settings/2.0.0.md": "create",
+      "contracts/dev.mdbase.reader.settings/1.2.0.md": "create",
       "types/reader-settings.md": "update",
       "schemas/dev.mdbase.reader.settings/1.0.0.schema.json": "delete",
       "contracts/dev.mdbase.reader.settings/1.0.0.md": "delete",
@@ -694,11 +775,8 @@ for (const edited of [false, true]) {
     const type = await readFile(settingsType, "utf8");
     if (edited) {
       // Three-way merge: the collection's note survives alongside version 2's changes.
-      assert.equal(frontmatter(type).version, 2);
-      assert.equal(
-        frontmatter(type).schema.ref,
-        "../schemas/dev.mdbase.reader.settings/1.1.0.schema.json",
-      );
+      assert.equal(frontmatter(type).version, 3);
+      assert.equal(frontmatter(type).schema.value.title, "dev.mdbase.reader.settings 1.2.0");
       assert.match(type, /Collection note\./u);
     } else {
       assert.equal(type, current.resources.find(({ source }) => source === seed.source).document);
@@ -713,7 +791,7 @@ for (const edited of [false, true]) {
       const view = await opened.collection.getContractView(
         "_settings/dev.mdbase.reader.md",
         "dev.mdbase.reader.settings",
-        "1.1.0",
+        "1.2.0",
       );
       assert.equal(view.valid, true);
       assert.equal(view.view.annotation_name_template, "{{ date }}-{{ short_id }}");

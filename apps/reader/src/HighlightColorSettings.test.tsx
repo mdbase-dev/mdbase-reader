@@ -11,7 +11,7 @@ import { createRoot } from "./testing/i18n.js";
 
 import type { ReaderSettingsStore } from "@mdbase-reader/connect";
 
-const settingsPath = "_settings/dev.mdbase.reader.md";
+const settingsPath = "_mdbase/settings/dev.mdbase.reader.md";
 const deviceMeaningsKey = "mdbase-reader:highlight-meanings";
 const reserved = { app: "dev.mdbase.reader", scope: "collection", settings_version: 1 };
 

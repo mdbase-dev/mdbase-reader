@@ -17,7 +17,7 @@ import { readerDeployments } from "./deployment-environment.mjs";
 // highlight_colors and highlight_meanings fields, and ships version 2 of the reader-settings
 // starter to reference it. The 1.0.0 contract and schema leave the pack, so an unedited copy
 // is removed on upgrade.
-export const READER_TYPE_PACK_VERSION = "1.0.0-beta.7";
+export const READER_TYPE_PACK_VERSION = "1.0.0-beta.8";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 // Reader saves library views as mdbase.view records; this is the published
@@ -95,13 +95,26 @@ const resources = [
     target: "_contracts/dev.mdbase.reader.settings/1.1.0.md",
   },
   {
-    // Nobody needs to customise a settings schema, so this starter references the managed
-    // schema instead of carrying a snapshot of it (docs/design/app-settings.md).
+    kind: "contract",
+    mode: "managed",
+    source: "contracts/mdbase.app-settings/2.0.0.md",
+    target: "_contracts/mdbase.app-settings/2.0.0.md",
+  },
+  {
+    kind: "contract",
+    mode: "managed",
+    source: "contracts/dev.mdbase.reader.settings/1.2.0.md",
+    target: "_contracts/dev.mdbase.reader.settings/1.2.0.md",
+  },
+  {
     kind: "type",
     mode: "seed",
     source: "types/reader-settings.md",
     target: "_types/reader-settings.md",
-    upgradeFrom: ["baselines/1.0.0-beta.6/types/reader-settings.md"],
+    upgradeFrom: [
+      "baselines/1.0.0-beta.7/types/reader-settings.md",
+      "baselines/1.0.0-beta.6/types/reader-settings.md",
+    ],
   },
 ];
 
@@ -136,7 +149,14 @@ export async function buildReaderManifest({
     }),
   );
   const contracts = packResources
-    .filter((resource) => resource.kind === "contract")
+    .filter(
+      (resource) =>
+        resource.kind === "contract" &&
+        ![
+          "contracts/mdbase.app-settings/1.0.0.md",
+          "contracts/dev.mdbase.reader.settings/1.1.0.md",
+        ].includes(resource.source),
+    )
     .map((resource) => {
       const contract = parseFrontmatter(resource.document);
       return {
