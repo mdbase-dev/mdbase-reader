@@ -27,6 +27,8 @@ export type ReadingPosition =
 export interface CurrentReadingState {
   readonly status: ReadingStatus;
   readonly progress?: number;
+  /** The document read last, by its `file` link; older notes record only its file ID. */
+  readonly documentFile?: string;
   readonly documentFileId?: FileId;
   readonly position?: ReadingPosition;
   readonly startedAt?: DateTime;

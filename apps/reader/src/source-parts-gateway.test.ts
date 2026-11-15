@@ -45,9 +45,9 @@ describe("preview source parts", () => {
     await expect(gateway.setSourcePartOf(book, chapter.id)).rejects.toThrow(/cycle/u);
     await expect(gateway.setSourcePartOf(book, book.id)).rejects.toThrow(/self-reference/u);
     await expect(
-      gateway.setDocumentRange(chapter, document.fileId, fileRevision("sha256:bbbbbb"), null),
+      gateway.setDocumentRange(chapter, document, fileRevision("sha256:bbbbbb"), null),
     ).rejects.toThrow(/revision changed/u);
-    const saved = await gateway.setDocumentRange(chapter, document.fileId, document.revision, {
+    const saved = await gateway.setDocumentRange(chapter, document, document.revision, {
       kind: "pages",
       start: 1,
       end: 5,
@@ -56,12 +56,7 @@ describe("preview source parts", () => {
     await expect(gateway.setSourcePartOf(chapter, null)).rejects.toThrow(
       /Source revision changed/u,
     );
-    const clearedRange = await gateway.setDocumentRange(
-      saved,
-      document.fileId,
-      document.revision,
-      null,
-    );
+    const clearedRange = await gateway.setDocumentRange(saved, document, document.revision, null);
     expect(clearedRange.documents[0]?.range).toBeUndefined();
     const cleared = await gateway.setSourcePartOf(clearedRange, null);
     expect(cleared.partOf).toBeUndefined();
@@ -119,12 +114,17 @@ describe("Connect workspace source part surface", () => {
     });
     expect(await gateway.source(source.id)).toBe(saved);
     expect((await gateway.library()).sources[0]?.partOf).toBe(parentId);
-    await gateway.setDocumentRange(saved, fileId("file"), fileRevision("sha256:aaaaaa"), null);
+    const target = {
+      fileId: fileId("file"),
+      file: "[[files/book.pdf]]",
+      revision: fileRevision("sha256:aaaaaa"),
+    };
+    await gateway.setDocumentRange(saved, target, fileRevision("sha256:aaaaaa"), null);
     expect(setDocumentRange).toHaveBeenCalledWith({
       collectionId: source.collectionId,
       sourceId: source.id,
       expectedRevision: "rev-2",
-      documentFileId: "file",
+      document: target,
       expectedDocumentRevision: "sha256:aaaaaa",
       range: null,
     });

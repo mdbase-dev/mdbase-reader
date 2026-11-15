@@ -58,7 +58,11 @@ describe("Connect source reading state", () => {
       collectionId: collectionId("reading"),
       sourceId: sourceId("src_01"),
       expectedRevision: "stale-caller-revision" as never,
-      documentFileId: "file-01" as never,
+      document: {
+        fileId: "file-01" as never,
+        file: "[[files/crime.pdf]]",
+        revision: "sha256:aa" as never,
+      },
       position: { kind: "pdf", pageIndex: 7 },
       openedAt: dateTime("2026-08-09T00:00:00.000Z"),
     });
@@ -70,6 +74,8 @@ describe("Connect source reading state", () => {
         patch: {
           reading: expect.objectContaining({
             custom_session: "keep-me",
+            document_file: "[[files/crime.pdf]]",
+            document_file_id: "file-01",
             position: { pdf: { page_index: 7 } },
           }),
         },
@@ -90,7 +96,11 @@ describe("Connect source reading state with a current caller revision", () => {
     sourceId: sourceId("src_01"),
     expectedRevision: "rev-1" as never,
     expectedFrontmatter: frontmatter,
-    documentFileId: "file-01" as never,
+    document: {
+      fileId: "file-01" as never,
+      file: "[[files/crime.pdf]]",
+      revision: "sha256:aa" as never,
+    },
     position: { kind: "pdf", pageIndex: 3 } as const,
     openedAt: dateTime("2026-08-09T00:00:00.000Z"),
   };

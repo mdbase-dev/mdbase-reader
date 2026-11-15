@@ -1,6 +1,6 @@
+import { sameDocument, type DocumentTarget } from "./document.js";
 import { matchTextQuote, textQuoteAt, type TextQuote } from "./text-quote-match.js";
 
-import type { DocumentTarget } from "./document.js";
 import type { QuoteSelector } from "./selector.js";
 
 /** Portable evidence, independent of the index or renderer that found the match. */
@@ -26,7 +26,7 @@ export function searchDestinationMatchesDocument(
   document: DocumentTarget,
 ): boolean {
   return (
-    destination.document.fileId === document.fileId &&
+    sameDocument(destination.document, document) &&
     destination.document.revision === document.revision
   );
 }

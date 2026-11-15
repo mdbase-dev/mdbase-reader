@@ -1,3 +1,5 @@
+import { documentPath } from "@mdbase-reader/core";
+
 import { ConnectDocumentError, type ReaderFileClient } from "./documents.js";
 import { findFile } from "./native/native-files.js";
 
@@ -76,7 +78,7 @@ export class ConnectCollectionFileRepository implements CollectionFileRepository
     expectedRevision: FileRevision | undefined,
     options: CollectionFileReadOptions,
   ): Promise<ExportedCollectionFile> {
-    const path = portableFilePath(file);
+    const path = documentPath(file);
     const descriptor = await findFile(this.files, { path }, options);
     if (!descriptor) {
       throw new ConnectDocumentError("export file", "file_not_found");
@@ -124,11 +126,6 @@ function abortableRead<T>(pending: Promise<T>, signal?: AbortSignal): Promise<T>
 function abortError(signal?: AbortSignal): Error {
   const reason: unknown = signal?.reason;
   return reason instanceof Error ? reason : new DOMException("File read cancelled.", "AbortError");
-}
-
-function portableFilePath(link: string): string {
-  const wikilink = /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(link.trim());
-  return wikilink?.[1] ?? link.trim();
 }
 
 function mediaTypeFromPath(path: string): string {

@@ -1,6 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
+import { sameDocument } from "@mdbase-reader/core";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import {
@@ -358,8 +359,8 @@ function ChapterReadingHint({
 }
 
 function readingRangeLabel(source: SourceSummary, surface: ReadingSurface): string | undefined {
-  const range = source.documents.find(
-    (entry) => entry.fileId === surface.document.document.fileId,
+  const range = source.documents.find((entry) =>
+    sameDocument(entry, surface.document.document),
   )?.range;
   switch (range?.kind) {
     case "pages":
@@ -380,7 +381,7 @@ function nextKnownPart(
   sources: readonly SourceSummary[],
   surface: ReadingSurface,
 ): SourceSummary | undefined {
-  const entry = source.documents.find((item) => item.fileId === surface.document.document.fileId);
+  const entry = source.documents.find((item) => sameDocument(item, surface.document.document));
   const bounds = entry?.range;
   if (!entry || bounds?.kind !== "pages" || !source.partOf) {
     return undefined;
@@ -389,7 +390,7 @@ function nextKnownPart(
     .filter((item) => item.partOf === source.partOf && item.id !== source.id)
     .flatMap((item) =>
       item.documents.flatMap((document) =>
-        document.fileId === entry.fileId &&
+        sameDocument(document, entry) &&
         document.revision === entry.revision &&
         document.range?.kind === "pages" &&
         document.range.start > bounds.end

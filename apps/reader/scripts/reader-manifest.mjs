@@ -17,7 +17,13 @@ import { readerDeployments } from "./deployment-environment.mjs";
 // highlight_colors and highlight_meanings fields, and ships version 2 of the reader-settings
 // starter to reference it. The 1.0.0 contract and schema leave the pack, so an unedited copy
 // is removed on upgrade.
-export const READER_TYPE_PACK_VERSION = "1.0.0-beta.8";
+// beta.8 adds mdbase.app-settings 2.0.0 and dev.mdbase.reader.settings 1.2.0, keeping 1.0.0
+// and 1.1.0 in the pack, and ships version 3 of the reader-settings starter to implement them.
+// beta.9 adds dev.mdbase.reader.annotation 1.0.0-beta.2, whose document no longer requires
+// `file_id`: a document is the file its link names, and Connect file IDs can change. Version 3
+// of the reader-annotation starter implements it. The beta.1 contract stays in the pack for
+// collections whose annotation type still implements it.
+export const READER_TYPE_PACK_VERSION = "1.0.0-beta.9";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 // Reader saves library views as mdbase.view records; this is the published
@@ -47,6 +53,12 @@ const resources = [
     target: "_contracts/dev.mdbase.reader.annotation.md",
   },
   {
+    kind: "contract",
+    mode: "managed",
+    source: "contracts/dev.mdbase.reader.annotation/1.0.0-beta.2.md",
+    target: "_contracts/dev.mdbase.reader.annotation/1.0.0-beta.2.md",
+  },
+  {
     kind: "type",
     mode: "seed",
     source: "types/reader-source.md",
@@ -63,6 +75,7 @@ const resources = [
     source: "types/reader-annotation.md",
     target: "_types/reader-annotation.md",
     upgradeFrom: [
+      "baselines/1.0.0-beta.4/types/reader-annotation.md",
       "baselines/1.0.0-beta.3/types/reader-annotation.md",
       "baselines/1.0.0-beta.1/types/reader-annotation.md",
     ],
@@ -155,6 +168,7 @@ export async function buildReaderManifest({
         ![
           "contracts/mdbase.app-settings/1.0.0.md",
           "contracts/dev.mdbase.reader.settings/1.1.0.md",
+          "contracts/dev.mdbase.reader.annotation.md",
         ].includes(resource.source),
     )
     .map((resource) => {

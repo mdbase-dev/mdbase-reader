@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { sameDocument } from "@mdbase-reader/core";
 
 import {
   array,
@@ -206,12 +207,15 @@ function verifyImportedRecord(
     const document = object(record["document"]);
     if (
       !file ||
-      document["file_id"] !== file.fileId ||
+      !sameDocument({ file: text(document["file"]) }, { file: file.path }) ||
       document["revision"] !== file.contentDigest
     ) {
       throw new Error(t({ message: "Annotation target verification failed." }));
     }
   }
+}
+function text(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 function checkExistingDocuments(existing: Fields, expected: Fields[]): void {
   const documents = array(existing["documents"] ?? []).map((d) => object(d));
@@ -219,7 +223,7 @@ function checkExistingDocuments(existing: Fields, expected: Fields[]): void {
     if (
       !documents.some(
         (d) =>
-          d["file_id"] === file["file_id"] &&
+          sameDocument({ file: text(d["file"]) }, { file: text(file["file"]) }) &&
           d["revision"] === file["revision"] &&
           d["media_type"] === file["media_type"],
       )

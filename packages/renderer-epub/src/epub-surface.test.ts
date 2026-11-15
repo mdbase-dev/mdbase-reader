@@ -193,7 +193,7 @@ describe("ReadiumEpubSurface", () => {
       {
         ...matching,
         id: "ann-2" as never,
-        document: { ...matching.document, fileId: fileId("other") },
+        document: { ...matching.document, file: "[[books/other.epub]]" },
       },
     ]);
 

@@ -1,6 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useFeedback } from "@mdbase-dev/ui/feedback";
+import { documentKey } from "@mdbase-reader/core";
 import { Suspense, useCallback, useEffect, useMemo, useState, type JSX } from "react";
 
 import { isEpub, isHtml, isPdf } from "./document-media.js";
@@ -45,7 +46,7 @@ export function ConnectedDocument({
   }
   return (
     <OpenConnectedDocument
-      key={`${descriptor.fileId}:${descriptor.revision}`}
+      key={`${documentKey(descriptor)}:${descriptor.revision}`}
       descriptor={descriptor}
       repository={repository}
       source={source}
@@ -67,7 +68,7 @@ function OpenConnectedDocument({
   const stableDescriptor = useMemo(
     (): DocumentDescriptor => ({
       file: descriptor.file,
-      fileId: descriptor.fileId,
+      ...(descriptor.fileId ? { fileId: descriptor.fileId } : {}),
       mediaType: descriptor.mediaType,
       revision: descriptor.revision,
       role: descriptor.role,

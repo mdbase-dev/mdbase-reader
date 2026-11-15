@@ -71,7 +71,7 @@ describe("snippet display text", () => {
     const store = new LibraryTextStore(new IDBFactory());
     const index = new LibraryTextIndex("collection", store);
     const text = "Before ﬁne mo\u00adments with a ﬂower after.";
-    await index.put({ fileId: "html", revision: "r1" }, text);
+    await index.put({ path: "html", revision: "r1" }, text);
     const hit = index.search("mo\u00adments")[0]!;
     expect(hit.excerpt).toEqual({
       before: "Before fine ",

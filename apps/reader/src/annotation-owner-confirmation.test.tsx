@@ -213,7 +213,11 @@ it("saves bookmarks to the default chapter and source comments without a second 
     collectionId: book.collectionId,
     sourceId: book.id,
     source: "[[sources/anthology]]",
-    document: { fileId: book.documents[0]!.fileId, revision: book.documents[0]!.revision },
+    document: {
+      fileId: book.documents[0]!.fileId,
+      file: book.documents[0]!.file,
+      revision: book.documents[0]!.revision,
+    },
     annotationType: "bookmark",
     motivation: "bookmarking",
     target: { position: { kind: "pdf", pageIndex: 0 } },

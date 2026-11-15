@@ -11,7 +11,7 @@ import type {
   Annotation,
   AnnotationCreationRequest,
   AnnotationDeletionPlan,
-  FileId,
+  DocumentTarget,
   ReadingPosition,
   Source,
   SourceId,
@@ -195,21 +195,16 @@ export function useReadingPositionSave(
   setSource: (value: Exclude<SourceState, null>) => void,
 ): (
   sourceId: SourceId,
-  documentFileId: FileId,
+  document: DocumentTarget,
   position: ReadingPosition,
   progress?: number | null,
 ) => Promise<void> {
   return useCallback(
-    async (sourceId, documentFileId, position, progress): Promise<void> => {
+    async (sourceId, document, position, progress): Promise<void> => {
       if (source.status !== "ready" || source.value.id !== sourceId) {
         return;
       }
-      const updated = await gateway.saveReadingPosition(
-        source.value,
-        documentFileId,
-        position,
-        progress,
-      );
+      const updated = await gateway.saveReadingPosition(source.value, document, position, progress);
       setSource({ sourceId: updated.id, value: { status: "ready", value: updated } });
     },
     [gateway, setSource, source],

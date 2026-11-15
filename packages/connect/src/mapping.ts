@@ -61,13 +61,13 @@ function documents(value: unknown): readonly DocumentDescriptor[] {
     const mediaType = text(item["media_type"]);
     const title = text(item["label"]);
     const range = parseDocumentRange(item["range"]);
-    if (!id || !file || !revision || !role || !mediaType) {
+    if (!file || !revision || !role || !mediaType) {
       return [];
     }
     try {
       return [
         {
-          fileId: fileId(id),
+          ...(id ? { fileId: fileId(id) } : {}),
           file,
           revision: fileRevision(revision),
           role,
@@ -96,6 +96,7 @@ function readingState(value: unknown): CurrentReadingState | undefined {
     return undefined;
   }
   const progress = candidate["progress"];
+  const documentFile = text(candidate["document_file"]);
   const documentFileId = text(candidate["document_file_id"]);
   const position = readingPositionFromFrontmatter(candidate["position"]);
   const startedAt = optionalDateTime(candidate["started_at"]);
@@ -104,6 +105,7 @@ function readingState(value: unknown): CurrentReadingState | undefined {
   return {
     status,
     ...(typeof progress === "number" && progress >= 0 && progress <= 1 ? { progress } : {}),
+    ...(documentFile ? { documentFile } : {}),
     ...(documentFileId ? { documentFileId: fileId(documentFileId) } : {}),
     ...(position ? { position } : {}),
     ...(startedAt ? { startedAt } : {}),

@@ -1,3 +1,5 @@
+import { sameDocument } from "@mdbase-reader/core";
+
 import type { Annotation } from "@mdbase-reader/core";
 import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
@@ -13,7 +15,7 @@ export function annotationMatchesSurface(annotation: Annotation, surface: Readin
   if (!target) {
     return true;
   }
-  if (target.fileId !== surface.document.document.fileId) {
+  if (!sameDocument(target, surface.document.document)) {
     return false;
   }
   return (

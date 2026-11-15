@@ -1,4 +1,5 @@
-import type { DocumentTarget } from "../domain/document.js";
+import { documentKey as fileKey, type DocumentTarget } from "../domain/document.js";
+
 import type { SourceId } from "../domain/identity.js";
 import type { SourceTextSearchMatch } from "../domain/search.js";
 
@@ -7,7 +8,7 @@ const defaultCharacterBudget = 12_000_000;
 interface IndexedDocument {
   readonly key: string;
   readonly sourceId: SourceId;
-  readonly fileId: DocumentTarget["fileId"];
+  readonly file: string;
   readonly text: string;
 }
 
@@ -36,7 +37,7 @@ export class SessionDocumentTextIndex {
     const key = documentKey(sourceId, document);
     const normalized = normalize(text).slice(0, this.#characterBudget);
     for (const entry of this.#documents.values()) {
-      if (entry.sourceId === sourceId && entry.fileId === document.fileId && entry.key !== key) {
+      if (entry.sourceId === sourceId && entry.file === fileKey(document) && entry.key !== key) {
         this.#remove(entry.key);
       }
     }
@@ -45,7 +46,7 @@ export class SessionDocumentTextIndex {
       return;
     }
     this.#evictUntilFits(normalized.length);
-    this.#documents.set(key, { key, sourceId, fileId: document.fileId, text: normalized });
+    this.#documents.set(key, { key, sourceId, file: fileKey(document), text: normalized });
     this.#characterCount += normalized.length;
   }
 
@@ -88,7 +89,7 @@ export class SessionDocumentTextIndex {
 }
 
 function documentKey(sourceId: SourceId, document: DocumentTarget): string {
-  return `${sourceId}\u0000${document.fileId}\u0000${document.revision}`;
+  return `${sourceId}\u0000${fileKey(document)}\u0000${document.revision}`;
 }
 
 function normalize(value: string): string {

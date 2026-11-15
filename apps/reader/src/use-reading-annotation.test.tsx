@@ -63,7 +63,7 @@ it("chooses the closest PDF page and never compares another file/revision or sou
   const other: Annotation = {
     ...annotations[1]!,
     id: annotationId("other"),
-    document: { ...targetDocument, fileId: fileId("other") },
+    document: { ...targetDocument, file: "[[papers/other.pdf]]" },
   };
   expect(
     nearestPositionAnnotation(

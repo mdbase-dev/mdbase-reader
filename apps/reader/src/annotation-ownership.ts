@@ -1,4 +1,4 @@
-import { sourceLink } from "@mdbase-reader/core";
+import { sameDocument, sourceLink } from "@mdbase-reader/core";
 
 import type {
   AnnotationCreationRequest,
@@ -107,7 +107,7 @@ async function matchingParts(
       continue;
     }
     for (const document of part.documents) {
-      if (document.fileId !== opened.fileId || !document.range) {
+      if (!sameDocument(document, opened) || !document.range) {
         continue;
       }
       if (

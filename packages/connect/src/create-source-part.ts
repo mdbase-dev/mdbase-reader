@@ -2,6 +2,7 @@ import {
   authorYearFromCsl,
   cslValuesEqual,
   parseDocumentRange,
+  sameDocument,
   sourceFieldsFromCitation,
   validateCslItem,
   sourceLink,
@@ -53,8 +54,7 @@ export async function createSourcePart(
   const document = plan.document;
   if (
     document &&
-    (!document.fileId ||
-      !document.file ||
+    (!document.file ||
       !/^sha256:[a-f0-9]{64}$/u.test(document.revision) ||
       !parseDocumentRange(document.range) ||
       !(
@@ -67,10 +67,7 @@ export async function createSourcePart(
   if (
     document &&
     !parent.documents.some(
-      (entry) =>
-        entry.fileId === document.fileId &&
-        entry.file === document.file &&
-        entry.revision === document.revision,
+      (entry) => sameDocument(entry, document) && entry.revision === document.revision,
     )
   ) {
     throw new Error("The shared document is no longer attached to the book.");
@@ -89,7 +86,7 @@ export async function createSourcePart(
       ? {
           documents: [
             {
-              file_id: document.fileId,
+              ...(document.fileId ? { file_id: document.fileId } : {}),
               file: document.file,
               revision: document.revision,
               media_type: document.mediaType,

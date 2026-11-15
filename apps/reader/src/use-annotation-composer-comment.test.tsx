@@ -59,7 +59,7 @@ function surfaceFor(
   const activations = createEventEmitter<Annotation["id"]>();
   const document = {
     ...book.documents[0]!,
-    fileId: `${book.documents[0]!.fileId}-${String(documentIndex)}`,
+    fileId: `${String(book.documents[0]!.fileId)}-${String(documentIndex)}`,
   };
   const surface = {
     kind: "pdf",

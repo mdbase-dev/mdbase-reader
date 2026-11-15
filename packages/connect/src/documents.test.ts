@@ -59,7 +59,7 @@ describe("ConnectDocumentRepository", () => {
     const next = await repository.open(collection, target);
     expect(next.url).toBe(first.url);
     expect(client.get).toHaveBeenCalledTimes(2);
-    expect(client.get).toHaveBeenCalledWith(target.fileId, {});
+    expect(client.get).toHaveBeenCalledWith({ path: descriptor.path }, {});
     expect(client.download).toHaveBeenCalledExactlyOnceWith(descriptor);
     expect(objectUrls.revoke).not.toHaveBeenCalled();
     await next.close();
@@ -80,32 +80,56 @@ describe("ConnectDocumentRepository", () => {
     client.get.mockImplementation(files([changed]).get);
     const next = await repository.open(collection, target);
     expect(next.revision).toBe(changed.digest);
+    expect(client.get).toHaveBeenLastCalledWith(target.fileId, {});
     expect(client.download).toHaveBeenLastCalledWith(changed);
     expect(client.download).toHaveBeenCalledTimes(2);
     await next.close();
   });
+});
 
-  it("recovers a migrated ID by exact path and digest only", async () => {
+describe("ConnectDocumentRepository identity", () => {
+  it("opens the linked file under whatever ID Connect gives it now", async () => {
     const migrated = { ...descriptor, id: "file-02" };
     const client = files([migrated]);
     const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target);
     expect(handle.fileId).toBe("file-02");
-    expect(client.get.mock.calls.map(([target]) => target)).toEqual([
-      "file-01",
-      { path: descriptor.path },
-    ]);
+    expect(client.get.mock.calls.map(([target]) => target)).toEqual([{ path: descriptor.path }]);
     expect(client.download).toHaveBeenCalledWith(migrated);
     await handle.close();
   });
 
-  it("rejects a migrated path when the referenced digest is stale", async () => {
-    const client = files([{ ...descriptor, id: "file-02", digest: `sha256:${"b".repeat(64)}` }]);
-    await expect(new ConnectDocumentRepository(client).open(collection, target)).rejects.toThrow(
-      "file_not_found",
-    );
-    expect(client.download).not.toHaveBeenCalled();
+  it("opens changed bytes at the linked path and reports their revision", async () => {
+    const changed = { ...descriptor, id: "file-02", digest: `sha256:${"b".repeat(64)}` as const };
+    const client = files([changed]);
+    const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target);
+    expect(handle.revision).toBe(changed.digest);
+    expect(client.download).toHaveBeenCalledWith(changed);
+    await handle.close();
   });
 
+  it("prefers the linked path to another file that now holds the recorded ID", async () => {
+    const linked = { ...descriptor, id: "file-02" };
+    const other = { ...descriptor, path: "files/other.pdf" };
+    const client = files([other, linked]);
+    const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target);
+    expect(handle.fileId).toBe("file-02");
+    expect(client.download).toHaveBeenCalledWith(linked);
+    await handle.close();
+  });
+
+  it("opens by path alone when the source records no file ID", async () => {
+    const client = files([descriptor]);
+    const handle = await new ConnectDocumentRepository(client, urls()).open(collection, {
+      file: target.file,
+      revision: target.revision,
+    });
+    expect(handle.fileId).toBe("file-01");
+    expect(client.get).toHaveBeenCalledExactlyOnceWith({ path: descriptor.path }, {});
+    await handle.close();
+  });
+});
+
+describe("ConnectDocumentRepository lookup", () => {
   it("reports a missing descriptor", async () => {
     await expect(new ConnectDocumentRepository(files([])).open(collection, target)).rejects.toThrow(
       "file_not_found",
@@ -128,7 +152,7 @@ describe("ConnectDocumentRepository", () => {
     const handle = await new ConnectDocumentRepository(client, urls()).open(collection, target, {
       signal,
     });
-    expect(client.get).toHaveBeenCalledWith(target.fileId, { signal });
+    expect(client.get).toHaveBeenCalledWith({ path: descriptor.path }, { signal });
     expect(client.download).toHaveBeenCalledWith(descriptor, { signal });
     await handle.close();
   });

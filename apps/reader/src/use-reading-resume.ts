@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { documentKey, sameDocument } from "@mdbase-reader/core";
 import { useEffect, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -14,7 +15,7 @@ import {
   surfaceReadingContextKey,
 } from "./source-reading-range.js";
 
-import type { FileId, ReadingPosition, Source, SourceId } from "@mdbase-reader/core";
+import type { DocumentTarget, ReadingPosition, Source, SourceId } from "@mdbase-reader/core";
 import type {
   ReaderLocator,
   ReadingRangeResolution,
@@ -31,7 +32,7 @@ export function useReadingResume(input: {
   readonly surface: ReadingSurface | null;
   readonly save: (
     sourceId: SourceId,
-    documentFileId: FileId,
+    document: DocumentTarget,
     position: ReadingPosition,
     progress?: number | null,
   ) => Promise<void>;
@@ -49,7 +50,7 @@ export function useReadingResume(input: {
     (!surfaceReadingContextKey(surface) || surfaceReadingContextKey(surface) === contextKey) &&
     source.documents.some(
       (document) =>
-        document.fileId === surface.document.document.fileId &&
+        sameDocument(document, surface.document.document) &&
         document.revision === surface.document.document.revision,
     )
       ? source.id
@@ -83,7 +84,7 @@ export function useReadingResume(input: {
       }
       rememberWrite(writesKey(contextKey, surface), locator);
       queue.current = queue.current
-        .then(() => saveForSource(sourceId, surface.document.document.fileId, locator, value))
+        .then(() => saveForSource(sourceId, surface.document.document, locator, value))
         .then(() => {
           if (report && lifecycle.active) {
             setState({ status: "saved" });
@@ -166,7 +167,7 @@ const appWrites = new Map<string, string[]>();
 const rememberedWrites = 20;
 
 function writesKey(contextKey: string, surface: ReadingSurface): string {
-  return `${contextKey}\u0000${surface.document.document.fileId}`;
+  return `${contextKey}\u0000${documentKey(surface.document.document)}`;
 }
 
 function rememberWrite(key: string, locator: ReaderLocator): void {
@@ -236,8 +237,15 @@ async function resumeSourcePosition(
 
 function savedSourcePosition(source: Source, surface: ReadingSurface): ReaderLocator | undefined {
   const reading = source.reading;
-  return reading?.documentFileId === surface.document.document.fileId &&
-    reading.position?.kind === surface.kind
+  // Older notes record only the file ID; it names one of the source's own documents.
+  const file =
+    reading?.documentFile ??
+    source.documents.find(
+      ({ fileId }) => fileId !== undefined && fileId === reading?.documentFileId,
+    )?.file;
+  return file !== undefined &&
+    sameDocument({ file }, surface.document.document) &&
+    reading?.position?.kind === surface.kind
     ? reading.position
     : undefined;
 }

@@ -1,4 +1,4 @@
-import { fileId, fileRevision } from "@mdbase-reader/core";
+import { documentKey, fileId, fileRevision } from "@mdbase-reader/core";
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
 
@@ -11,6 +11,7 @@ import { LibraryTextIndex } from "./library-text-index.js";
 import { LibraryTextStore } from "./library-text-store.js";
 
 import type { LibraryIndexQueueOptions } from "./library-index-queue.js";
+import type { IndexedFile } from "./library-text-index.js";
 import type { DocumentDescriptor } from "@mdbase-reader/core";
 
 const revisionA = `sha256:${"a".repeat(64)}`;
@@ -24,6 +25,12 @@ function file(id = "file", revision = revisionA): DocumentDescriptor {
     mediaType: "text/html",
     role: "primary",
   };
+}
+function indexed(documents: readonly DocumentDescriptor[]): IndexedFile[] {
+  return documents.map((document) => ({
+    path: documentKey(document),
+    revision: document.revision,
+  }));
 }
 function fixture(): LibraryIndexQueueOptions {
   return {
@@ -169,11 +176,16 @@ describe("libraryIndexedDocuments", () => {
     const options = fixture();
     const archive = { ...file("archive"), role: "archive" };
     await runLibraryIndexQueue({ ...options, files: [file(), archive] });
-    expect(await options.client.reconcile([file(), archive], false)).toEqual(["file", "archive"]);
+    expect(await options.client.reconcile(indexed([file(), archive]), false)).toEqual([
+      "file.html",
+      "archive.html",
+    ]);
     await runLibraryIndexQueue({
       ...options,
       files: libraryIndexedDocuments([{ documents: [file(), archive] }]),
     });
-    expect(await options.client.reconcile([file(), archive], false)).toEqual(["file"]);
+    expect(await options.client.reconcile(indexed([file(), archive]), false)).toEqual([
+      "file.html",
+    ]);
   });
 });

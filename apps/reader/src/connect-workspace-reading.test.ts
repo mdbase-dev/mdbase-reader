@@ -1,6 +1,7 @@
 import {
   collectionId,
   fileId,
+  fileRevision,
   recordRevision,
   sourceId,
   type AnnotationRepository,
@@ -50,9 +51,14 @@ describe("ConnectWorkspaceGateway reading position", () => {
       throw new Error("The source should open.");
     }
     const position = { kind: "pdf", pageIndex: 1 } as const;
+    const document = {
+      fileId: fileId("file-01"),
+      file: "[[files/file-01.pdf]]",
+      revision: fileRevision(`sha256:${"a".repeat(64)}`),
+    };
 
-    await gateway.saveReadingPosition(opened, fileId("file-01"), position);
-    await gateway.saveReadingPosition(opened, fileId("file-01"), position);
+    await gateway.saveReadingPosition(opened, document, position);
+    await gateway.saveReadingPosition(opened, document, position);
 
     expect(updateReading).toHaveBeenLastCalledWith(
       expect.objectContaining({

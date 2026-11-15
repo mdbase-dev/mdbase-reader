@@ -1,4 +1,5 @@
 import { t } from "@lingui/core/macro";
+import { sameDocument } from "@mdbase-reader/core";
 import { useEffect, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -26,8 +27,8 @@ export function useDocumentDecorations(
     let active = true;
     const compatible = annotations.value.filter(
       ({ document }) =>
-        document?.fileId === surface.document.document.fileId &&
-        document.revision === surface.document.document.revision,
+        sameDocument(document, surface.document.document) &&
+        document?.revision === surface.document.document.revision,
     );
     const activeAnnotation = compatible.find(({ id }) => id === activeAnnotationId) ?? null;
     void capability

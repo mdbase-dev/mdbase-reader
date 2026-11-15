@@ -8,7 +8,8 @@ import type { SearchExcerpt } from "./search-passages.js";
 import type { QuoteSelector } from "@mdbase-reader/core";
 
 export interface IndexedFile {
-  readonly fileId: string;
+  /** The document's path key. */
+  readonly path: string;
   readonly revision: string;
 }
 export interface LibraryTextHit extends IndexedFile {
@@ -36,17 +37,26 @@ export class LibraryTextIndex {
   ) {}
 
   async load(): Promise<void> {
+    const stale: string[] = [];
     for (const entry of await this.store.list(this.collection)) {
-      this.remember(entry);
+      // Entries from before documents were keyed by path; their text is extracted again.
+      if (typeof entry.path === "string") {
+        this.remember(entry);
+      } else {
+        stale.push(entry.key);
+      }
+    }
+    if (stale.length) {
+      await this.store.remove(stale);
     }
   }
 
   /** Partial library snapshots must not remove entries not yet discovered. */
   async reconcile(files: readonly IndexedFile[], complete: boolean): Promise<readonly string[]> {
-    const revisions = new Map(files.map((file) => [file.fileId, file.revision]));
+    const revisions = new Map(files.map((file) => [file.path, file.revision]));
     const removed = [...this.entries.values()]
       .filter(({ entry }) => {
-        const revision = revisions.get(entry.fileId);
+        const revision = revisions.get(entry.path);
         return revision ? revision !== entry.revision : complete;
       })
       .map(({ entry }) => entry.key);
@@ -55,17 +65,18 @@ export class LibraryTextIndex {
     return files
       .filter(
         (file) =>
-          this.entries.get(libraryTextKey(this.collection, file.fileId))?.entry.revision ===
+          this.entries.get(libraryTextKey(this.collection, file.path))?.entry.revision ===
           file.revision,
       )
-      .map((file) => file.fileId);
+      .map((file) => file.path);
   }
 
   async put(file: IndexedFile, text: string): Promise<void> {
     const entry = {
-      ...file,
+      path: file.path,
+      revision: file.revision,
       collection: this.collection,
-      key: libraryTextKey(this.collection, file.fileId),
+      key: libraryTextKey(this.collection, file.path),
       text: text.replace(/\s+/gu, " ").trim(),
     };
     const removed = await this.store.put(entry);
@@ -83,7 +94,7 @@ export class LibraryTextIndex {
       if (terms.every((term) => folded.includes(term))) {
         const first = terms[0] ?? "";
         hits.push({
-          fileId: entry.fileId,
+          path: entry.path,
           revision: entry.revision,
           ...foldedPassage(entry.text, folded.indexOf(first), first.length),
         });

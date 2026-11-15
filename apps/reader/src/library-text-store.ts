@@ -1,7 +1,8 @@
 export interface LibraryTextEntry {
   readonly key: string;
   readonly collection: string;
-  readonly fileId: string;
+  /** The document's path key: one slot per file, whatever ID Connect gives it. */
+  readonly path: string;
   readonly revision: string;
   readonly text: string;
 }
@@ -16,8 +17,8 @@ export const libraryTextDatabase = "mdbase-reader-library-text-v1";
 export const libraryTextBudget = 32 * 1024 * 1024;
 const entryLimit = 2048;
 
-export function libraryTextKey(collection: string, fileId: string): string {
-  return JSON.stringify([collection, fileId]);
+export function libraryTextKey(collection: string, path: string): string {
+  return JSON.stringify([collection, path]);
 }
 
 /** Atomic, origin-wide FIFO eviction; one slot per file, never historical revisions. */
@@ -53,7 +54,7 @@ export class LibraryTextStore {
           2 * entry.key.length +
           entry.revision.length +
           entry.collection.length +
-          entry.fileId.length) +
+          entry.path.length) +
       512;
     if (bytes > this.budget) {
       throw new Error("Document text exceeds the local index budget.");

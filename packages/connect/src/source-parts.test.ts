@@ -37,6 +37,11 @@ const document = {
   role: "primary",
   future: { keep: true },
 };
+const sharedDocument = {
+  fileId: fileId("shared"),
+  file: "[[files/book.pdf]]",
+  revision: fileRevision("sha256:aaaaaa"),
+};
 const range = { kind: "pages" as const, start: 0, end: 9 };
 const base = {
   collectionId: collection,
@@ -182,7 +187,7 @@ describe("source part frontmatter round trips", () => {
     const fields = {
       documents: [
         { ...document, range: opaque },
-        { ...document, file_id: "other", future: 1 },
+        { ...document, file_id: "other", file: "[[files/other.pdf]]", future: 1 },
       ],
       relations: [
         { relation: "cites", target: "[[a]]", extra: { x: 1 } },
@@ -200,14 +205,14 @@ describe("source part frontmatter round trips", () => {
     ]);
     const patched = {
       ...related,
-      ...documentRangePatch(related, fileId("shared"), fileRevision("sha256:aaaaaa"), range),
+      ...documentRangePatch(related, sharedDocument, fileRevision("sha256:aaaaaa"), range),
     };
     const mapped = sourceFromDocument(collection, record(child, patched));
     expect(mapped.documents[0]?.range).toEqual(range);
     expect((patched.documents as unknown[])[1]).toEqual(fields.documents[1]);
     expect((patched.documents as Record<string, unknown>[])[0]?.["future"]).toEqual({ keep: true });
     expect(
-      documentRangePatch(patched, fileId("shared"), fileRevision("sha256:aaaaaa"), null),
+      documentRangePatch(patched, sharedDocument, fileRevision("sha256:aaaaaa"), null),
     ).toEqual({ documents: [document, fields.documents[1]] });
     expect(sourcePartOfPatch(patched, null)).toEqual({ relations: [fields.relations[0]] });
   });
@@ -272,7 +277,7 @@ describe("Connect source part repository", () => {
     const { repository, update } = fixture();
     const input = {
       ...base,
-      documentFileId: fileId("shared"),
+      document: sharedDocument,
       expectedDocumentRevision: fileRevision("sha256:aaaaaa"),
       range,
     };

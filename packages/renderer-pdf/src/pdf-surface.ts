@@ -1,4 +1,8 @@
-import { parseDocumentRange, searchDestinationMatchesDocument } from "@mdbase-reader/core";
+import {
+  parseDocumentRange,
+  sameDocument,
+  searchDestinationMatchesDocument,
+} from "@mdbase-reader/core";
 import { createEventEmitter, scrollMotionTracker } from "@mdbase-reader/reading-surface";
 
 import type { EmbedPdfRuntime } from "./embedpdf-runtime.js";
@@ -119,9 +123,7 @@ export class EmbedPdfSurface implements ReadingSurface {
       decorations: {
         setAnnotations: (annotations) => {
           runtime.setAnnotations(
-            annotations.filter(
-              ({ document }) => document?.fileId === this.document.document.fileId,
-            ),
+            annotations.filter(({ document }) => sameDocument(document, this.document.document)),
           );
           return Promise.resolve();
         },
@@ -224,6 +226,6 @@ export class EmbedPdfSurface implements ReadingSurface {
   private forThisDocument(annotation: {
     readonly document?: SurfaceDocument["document"];
   }): boolean {
-    return annotation.document?.fileId === this.document.document.fileId;
+    return sameDocument(annotation.document, this.document.document);
   }
 }

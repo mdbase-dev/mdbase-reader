@@ -1,4 +1,4 @@
-import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
+import { sameDocument, searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { ReadiumRuntime } from "./readium-runtime.js";
@@ -88,8 +88,8 @@ export class ReadiumEpubSurface implements ReadingSurface {
           runtime.setAnnotations(
             annotations.filter(
               ({ document }) =>
-                document?.fileId === this.document.document.fileId &&
-                document.revision === this.document.document.revision,
+                sameDocument(document, this.document.document) &&
+                document?.revision === this.document.document.revision,
             ),
           );
           return Promise.resolve();
@@ -154,8 +154,8 @@ export class ReadiumEpubSurface implements ReadingSurface {
     readonly document?: SurfaceDocument["document"];
   }): boolean {
     return (
-      annotation.document?.fileId === this.document.document.fileId &&
-      annotation.document.revision === this.document.document.revision
+      sameDocument(annotation.document, this.document.document) &&
+      annotation.document?.revision === this.document.document.revision
     );
   }
 }

@@ -1,6 +1,9 @@
+import { documentKey } from "@mdbase-reader/core";
+
 import { isHtml } from "./document-media.js";
 
 import type { LibraryTextClient } from "./library-text-client.js";
+import type { IndexedFile } from "./library-text-index.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { DocumentDescriptor } from "@mdbase-reader/core";
 
@@ -26,10 +29,14 @@ export interface LibraryIndexQueueOptions {
 }
 
 export function libraryFileRevisionKey(file: {
-  readonly fileId: string;
+  readonly file: string;
   readonly revision: string;
 }): string {
-  return JSON.stringify([file.fileId, file.revision]);
+  return JSON.stringify([documentKey(file), file.revision]);
+}
+
+function indexedFile(document: DocumentDescriptor): IndexedFile {
+  return { path: documentKey(document), revision: document.revision };
 }
 
 /**
@@ -47,7 +54,7 @@ export function libraryIndexedDocuments(
     );
     for (const document of documents) {
       if (!(readable && document.role === "archive")) {
-        files.set(document.fileId, document);
+        files.set(documentKey(document), document);
       }
     }
   }
@@ -58,7 +65,7 @@ export function libraryIndexedDocuments(
 export async function runLibraryIndexQueue(options: LibraryIndexQueueOptions): Promise<void> {
   const { client, files, complete, signal, attempted, report, gateway, idle, extract } = options;
   signal.throwIfAborted();
-  const present = new Set(await client.reconcile(files, complete));
+  const present = new Set(await client.reconcile(files.map(indexedFile), complete));
   signal.throwIfAborted();
   const supported = files.filter((file) => isHtml(file.mediaType, file.file));
   let checked = 0;
@@ -68,7 +75,7 @@ export async function runLibraryIndexQueue(options: LibraryIndexQueueOptions): P
   for (const file of supported) {
     signal.throwIfAborted();
     const key = libraryFileRevisionKey(file);
-    if (!present.has(file.fileId) && !attempted.has(key)) {
+    if (!present.has(documentKey(file)) && !attempted.has(key)) {
       // Each phase yields independently; input/reading can pause between IO and DOM work.
       await idle(signal);
       let text: string | undefined;
@@ -92,11 +99,11 @@ export async function runLibraryIndexQueue(options: LibraryIndexQueueOptions): P
       if (text !== undefined) {
         await idle(signal);
         signal.throwIfAborted();
-        await client.put(file, text);
+        await client.put(indexedFile(file), text);
         signal.throwIfAborted();
         attempted.add(key);
       }
-    } else if (!present.has(file.fileId)) {
+    } else if (!present.has(documentKey(file))) {
       skipped++;
     }
     checked++;

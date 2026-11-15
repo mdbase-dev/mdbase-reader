@@ -1,5 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
-import { parseDocumentRange } from "@mdbase-reader/core";
+import { documentKey as fileKey, parseDocumentRange, sameDocument } from "@mdbase-reader/core";
 
 import type { DocumentDescriptor, SourceSummary } from "@mdbase-reader/core";
 import type {
@@ -25,8 +25,8 @@ function rawRange(source: SourceSummary, entry: DocumentDescriptor): unknown {
     if (!value || typeof value !== "object") {
       return false;
     }
-    const item = value as Record<string, unknown>;
-    return item["file_id"] === entry.fileId || item["file"] === entry.file;
+    const file = (value as Record<string, unknown>)["file"];
+    return typeof file === "string" && sameDocument({ file }, entry);
   });
   return raw && typeof raw === "object" ? (raw as Record<string, unknown>)["range"] : undefined;
 }
@@ -36,7 +36,7 @@ export function sourceReadingContextKey(source: SourceSummary): string {
   return JSON.stringify([
     source.id,
     source.documents.map((entry) => [
-      entry.fileId,
+      fileKey(entry),
       entry.revision,
       entry.range ?? rawRange(source, entry),
     ]),
@@ -77,8 +77,8 @@ async function resolve(
   source: SourceSummary,
   surface: ReadingSurface,
 ): Promise<ReadingRangeResolution | null> {
-  const entry = source.documents.find(
-    (document) => document.fileId === surface.document.document.fileId,
+  const entry = source.documents.find((document) =>
+    sameDocument(document, surface.document.document),
   );
   if (!entry) {
     return null;

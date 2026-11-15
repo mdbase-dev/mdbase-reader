@@ -53,8 +53,8 @@ function documentTarget(value: unknown): DocumentTarget | undefined {
   const id = text(candidate?.["file_id"]);
   const file = text(candidate?.["file"]);
   const revision = text(candidate?.["revision"]);
-  return id && file && revision
-    ? { fileId: fileId(id), file, revision: fileRevision(revision) }
+  return file && revision
+    ? { ...(id ? { fileId: fileId(id) } : {}), file, revision: fileRevision(revision) }
     : undefined;
 }
 
@@ -226,7 +226,7 @@ export function annotationFrontmatter(annotation: Annotation): JsonObject {
     ...(annotation.document
       ? {
           document: {
-            file_id: annotation.document.fileId,
+            ...(annotation.document.fileId ? { file_id: annotation.document.fileId } : {}),
             file: annotation.document.file,
             revision: annotation.document.revision,
           },

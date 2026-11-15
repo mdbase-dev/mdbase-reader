@@ -1,5 +1,5 @@
 import { t as translate, plural } from "@lingui/core/macro";
-import { searchQuote } from "@mdbase-reader/core";
+import { documentKey, sameDocument, searchQuote } from "@mdbase-reader/core";
 import { useEffect, useMemo, useState } from "react";
 
 import { searchExcerpt, type SearchExcerpt } from "./search-passages.js";
@@ -87,11 +87,11 @@ export function useOpenDocumentSearch(
       const target = surface.document.document;
       const source = sources.find((item) =>
         item.documents.some(
-          (document) => document.fileId === target.fileId && document.revision === target.revision,
+          (document) => sameDocument(document, target) && document.revision === target.revision,
         ),
       );
       if (source && surface.capabilities.textExtraction) {
-        const key = `${source.id}:${target.fileId}:${target.revision}`;
+        const key = `${source.id}:${documentKey(target)}:${target.revision}`;
         unique.set(key, {
           key,
           sourceId: source.id,

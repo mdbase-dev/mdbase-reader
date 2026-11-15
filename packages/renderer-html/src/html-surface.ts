@@ -1,4 +1,4 @@
-import { searchDestinationMatchesDocument } from "@mdbase-reader/core";
+import { sameDocument, searchDestinationMatchesDocument } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { HtmlDocumentRuntime } from "./html-runtime.js";
@@ -136,8 +136,8 @@ export class HtmlReadingSurface implements ReadingSurface {
   private forThisDocument(annotations: readonly Annotation[]): readonly Annotation[] {
     return annotations.filter(
       ({ document }) =>
-        document?.fileId === this.document.document.fileId &&
-        document.revision === this.document.document.revision,
+        sameDocument(document, this.document.document) &&
+        document?.revision === this.document.document.revision,
     );
   }
 }

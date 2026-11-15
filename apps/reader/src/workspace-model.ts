@@ -11,7 +11,7 @@ import type {
   AnnotationCreationRequest,
   CollectionFileReadOptions,
   ExportedCollectionFile,
-  FileId,
+  DocumentTarget,
   FileRevision,
   DocumentRange,
   ReaderRequestOptions,
@@ -77,7 +77,7 @@ export interface ReaderWorkspaceGateway {
   setSourcePartOf?(source: Source, parentId: SourceId | null): Promise<Source>;
   setDocumentRange?(
     source: Source,
-    documentFileId: FileId,
+    document: DocumentTarget,
     expectedDocumentRevision: FileRevision,
     range: DocumentRange | null,
   ): Promise<Source>;
@@ -161,7 +161,7 @@ export interface ReaderWorkspaceGateway {
   transcludeAnnotation(source: Source, annotation: Annotation): Promise<Source>;
   saveReadingPosition(
     source: Source,
-    documentFileId: FileId,
+    document: DocumentTarget,
     position: ReadingPosition,
     progress?: number | null,
   ): Promise<Source>;

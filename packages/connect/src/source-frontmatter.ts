@@ -1,7 +1,8 @@
 import {
   parseDocumentRange,
+  sameDocument,
   type DocumentRange,
-  type FileId,
+  type DocumentTarget,
   type FileRevision,
   type PlannedSourceFileImport,
   type PlannedSourceRepresentation,
@@ -51,7 +52,7 @@ export function sourcePartOfPatch(
 /** A range belongs to a particular document revision, never silently to its replacement. */
 export function documentRangePatch(
   frontmatter: Readonly<Record<string, unknown>>,
-  id: FileId,
+  document: DocumentTarget,
   revision: FileRevision,
   range: DocumentRange | null,
 ): Readonly<Record<string, unknown>> {
@@ -62,7 +63,7 @@ export function documentRangePatch(
   if (!Array.isArray(current)) {
     throw new Error("Source document not found.");
   }
-  const matches = current.filter((entry) => object(entry)?.["file_id"] === id);
+  const matches = current.filter((entry) => isEntryFor(entry, document));
   if (matches.length !== 1) {
     throw new Error("Source document missing or ambiguous.");
   }
@@ -72,7 +73,7 @@ export function documentRangePatch(
   return {
     documents: current.map((entry: unknown): unknown => {
       const item = object(entry);
-      if (item?.["file_id"] !== id) {
+      if (!item || !isEntryFor(entry, document)) {
         return entry;
       }
       const next = { ...item };
@@ -84,6 +85,11 @@ export function documentRangePatch(
       return next;
     }),
   };
+}
+
+function isEntryFor(entry: unknown, document: DocumentTarget): boolean {
+  const file = object(entry)?.["file"];
+  return typeof file === "string" && sameDocument({ file }, document);
 }
 
 /** The frontmatter of a newly created source record. */
