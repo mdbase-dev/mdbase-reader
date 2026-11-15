@@ -15,21 +15,23 @@ const browser = await chromium.launch();
 const motion = [];
 async function trace(page, action) {
   return page.evaluate(async (action) => {
-    const dialog = document.querySelector(".mdbase-feedback-dialog");
+    // The shared Dialog mounts only while open or leaving, so look it up on every frame.
+    const find = () => document.querySelector(".mdbase-feedback-dialog");
     if (action === "open")
       document.querySelector(".reader-header .mdbase-feedback-trigger").click();
-    else dialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+    else find().dispatchEvent(new Event("cancel", { cancelable: true }));
     const start = performance.now();
     const samples = [];
     while (performance.now() - start < 300) {
       await new Promise(requestAnimationFrame);
+      const dialog = find();
       samples.push({
         time: performance.now() - start,
-        visible: dialog.getClientRects().length > 0,
-        opacity: Number(getComputedStyle(dialog).opacity),
+        visible: dialog ? dialog.getClientRects().length > 0 : false,
+        opacity: dialog ? Number(getComputedStyle(dialog).opacity) : 0,
         animations: document
           .getAnimations()
-          .filter((animation) => animation.effect?.target === dialog)
+          .filter((animation) => dialog && animation.effect?.target === dialog)
           .map((animation) => ({
             property: animation.transitionProperty,
             duration: animation.effect.getTiming().duration,
@@ -79,8 +81,8 @@ try {
             value: {
               getDisplayMedia: () => {
                 window.feedbackCaptures++;
-                window.feedbackCaptureVisible =
-                  document.querySelector(".mdbase-feedback-dialog").getClientRects().length > 0;
+                const dialog = document.querySelector(".mdbase-feedback-dialog");
+                window.feedbackCaptureVisible = dialog ? dialog.getClientRects().length > 0 : false;
                 return Promise.reject(new DOMException("Cancelled", "NotAllowedError"));
               },
             },
@@ -97,12 +99,18 @@ try {
         assertMotion(exit, 120, reducedMotion);
         assert.equal(exit.at(-1).visible, false);
         await trigger.click();
-        await page.getByRole("button", { name: "Close feedback", exact: true }).click();
+        await page
+          .locator(".mdbase-feedback-dialog")
+          .getByRole("button", { name: "Close", exact: true })
+          .click();
         await page.evaluate(async () => {
           await new Promise(requestAnimationFrame);
           document.querySelector(".reader-header .mdbase-feedback-trigger").click();
         });
         await expect(page.locator(".mdbase-feedback-dialog")).toHaveAttribute("open");
+        // The reopened dialog's Close button lands under the pointer, and its hover tooltip
+        // would take the first Escape. Rest the pointer on the backdrop instead.
+        await page.mouse.move(4, 4);
         await page.waitForTimeout(200);
         motion.push({ width, colorScheme, reducedMotion, enter, exit });
         const dialog = page.getByRole("dialog", { name: "Send feedback", exact: true });

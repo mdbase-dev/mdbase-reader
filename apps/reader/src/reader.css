@@ -1881,6 +1881,13 @@ button {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* Shared overlays already drop their motion; a lingering exit would keep a
+     dialog on screen, and in a feedback screenshot, after it closes. */
+  .mdbase-overlay,
+  .mdbase-overlay::backdrop {
+    transition-duration: 0s !important;
+  }
 }
 
 @media (forced-colors: active) {
