@@ -41,7 +41,7 @@ describe("SessionDocumentTextIndex", () => {
     const first = sourceId("src_01");
     const second = sourceId("src_02");
     index.add(first, firstDocument, "first text");
-    index.add(second, { ...firstDocument, fileId: fileId("file_02") }, "second text");
+    index.add(second, { ...firstDocument, file: "[[files/second.pdf]]" }, "second text");
 
     expect(index.search("first")).toEqual([]);
     expect(index.search("second")).toEqual([{ sourceId: second, kinds: ["document"] }]);

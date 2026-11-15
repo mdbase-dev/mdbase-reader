@@ -148,7 +148,7 @@ function source(
     readingStatus,
     documents: [
       {
-        fileId: `file-${id}` as SourceSummary["documents"][number]["fileId"],
+        fileId: `file-${id}` as NonNullable<SourceSummary["documents"][number]["fileId"]>,
         file: `[[files/${id}.pdf]]`,
         revision: `sha256:${"a".repeat(64)}` as SourceSummary["documents"][number]["revision"],
         mediaType: "application/pdf",

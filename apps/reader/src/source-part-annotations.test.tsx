@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { fileId, fileRevision, sourceId, annotationId } from "@mdbase-reader/core";
+import { fileRevision, sourceId, annotationId } from "@mdbase-reader/core";
 import {
   createEventEmitter,
   type ReadingSurface,
@@ -397,7 +397,7 @@ it.each<SurfaceKind>(["pdf", "epub", "html"])(
     const otherFile = {
       ...chapter,
       id: annotationId("other-file"),
-      document: { ...chapter.document!, fileId: fileId("separate-chapter-pdf") },
+      document: { ...chapter.document!, file: "[[files/separate-chapter.pdf]]" },
     };
     const setAnnotations = vi.fn().mockResolvedValue(undefined);
     const surface: ReadingSurface = {

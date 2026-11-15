@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { documentKey } from "@mdbase-reader/core";
 import { useEffect, useState } from "react";
 
 import { useLibraryDocumentIndex } from "./LibraryDocumentIndex.js";
@@ -22,16 +23,20 @@ export function mergeLibraryDocumentMatches(
   open: ReadonlyMap<SourceId, OpenDocumentMatch>,
 ): ReadonlyMap<SourceId, DocumentSearchHit> {
   const matches = new Map<SourceId, DocumentSearchHit>();
-  const byFile = new Map(indexed.map((hit) => [JSON.stringify([hit.fileId, hit.revision]), hit]));
+  const byFile = new Map(indexed.map((hit) => [JSON.stringify([hit.path, hit.revision]), hit]));
   for (const source of sources) {
     for (const file of source.documents) {
-      const hit = byFile.get(JSON.stringify([file.fileId, file.revision]));
+      const hit = byFile.get(JSON.stringify([documentKey(file), file.revision]));
       if (hit && !matches.has(source.id)) {
         matches.set(source.id, {
           excerpt: hit.excerpt,
           file: file.file,
           destination: {
-            document: { fileId: file.fileId, file: file.file, revision: file.revision },
+            document: {
+              ...(file.fileId ? { fileId: file.fileId } : {}),
+              file: file.file,
+              revision: file.revision,
+            },
             location: { kind: "html" },
             quote: hit.quote,
           },

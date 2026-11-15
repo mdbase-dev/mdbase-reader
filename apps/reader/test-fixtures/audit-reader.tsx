@@ -26,7 +26,7 @@ import type {
   AnnotationCreationRequest,
   AnnotationDeletionPlan,
   DocumentRepository,
-  FileId,
+  DocumentTarget,
   ReadingPosition,
   ReadingStatus,
   Source,
@@ -95,13 +95,14 @@ class AuditGateway extends PreviewGateway {
   }
   override async saveReadingPosition(
     source: Source,
-    fileId: FileId,
+    document: DocumentTarget,
     position: ReadingPosition,
   ): Promise<Source> {
     return api(`source/${source.id}`, {
       reading: {
         status: "reading",
-        documentFileId: fileId,
+        documentFile: document.file,
+        ...(document.fileId ? { documentFileId: document.fileId } : {}),
         position,
         lastOpenedAt: new Date().toISOString(),
       },
@@ -153,7 +154,7 @@ const gateway = Object.assign(base, {
   ) => {
     const records = await api<readonly Source[]>("library");
     const target = records.flatMap((source) => source.documents).find((item) => item.file === file);
-    if (!target || target.revision !== revision) {
+    if (!target?.fileId || target.revision !== revision) {
       throw new Error("[test] Indexed file revision changed");
     }
     const response = await fetch(`/__reader-audit/document/${target.fileId}?index=1`, {
@@ -171,6 +172,9 @@ const gateway = Object.assign(base, {
 });
 const repository: DocumentRepository = {
   async open(_collection, target, options) {
+    if (!target.fileId) {
+      throw new Error("[test] Audit documents are served by file ID");
+    }
     const response = await fetch(`/__reader-audit/document/${target.fileId}`, {
       signal: options?.signal ?? null,
     });

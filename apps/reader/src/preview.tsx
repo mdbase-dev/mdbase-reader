@@ -13,6 +13,7 @@ import {
   loadedCitation,
   parseCslProvenance,
   recordRevision,
+  sameDocument,
   sourceId,
   sourceLink,
   parseSourceRelations,
@@ -27,7 +28,7 @@ import {
   type CitationCandidate,
   type CitationResolutionRequest,
   type CslProvenance,
-  type FileId,
+  type DocumentTarget,
   type ReadingPosition,
   type ReadingStatus,
   type Source,
@@ -575,7 +576,7 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   saveReadingPosition(
     source: Source,
-    documentFileId: FileId,
+    document: DocumentTarget,
     position: ReadingPosition,
     progress?: number | null,
   ): Promise<Source> {
@@ -583,7 +584,8 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
     const reading = {
       ...current.reading,
       status: current.reading?.status ?? "reading",
-      documentFileId,
+      documentFile: document.file,
+      ...(document.fileId ? { documentFileId: document.fileId } : {}),
       position,
     };
     if (progress !== undefined) {
@@ -634,17 +636,17 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
   }
   async setDocumentRange(
     source: Source,
-    id: FileId,
+    target: DocumentTarget,
     revision: FileRevision,
     range: DocumentRange | null,
   ): Promise<Source> {
     const current = await this.#guardPartWrite(source);
     const frontmatter = {
       ...current.frontmatter,
-      ...documentRangePatch(current.frontmatter, id, revision, range),
+      ...documentRangePatch(current.frontmatter, target, revision, range),
     };
     const documents = current.documents.map((document) => {
-      if (document.fileId !== id) {
+      if (!sameDocument(document, target)) {
         return document;
       }
       const rest = { ...document };
@@ -858,7 +860,7 @@ function withRecordFrontmatter(source: Source): Source {
     ...(source.published !== undefined ? { published: source.published } : {}),
     ...(source.url ? { url: source.url } : {}),
     documents: source.documents.map((document) => ({
-      file_id: document.fileId,
+      ...(document.fileId ? { file_id: document.fileId } : {}),
       file: document.file,
       revision: document.revision,
       role: document.role,

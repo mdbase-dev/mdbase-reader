@@ -500,6 +500,7 @@ describe("archived citation evidence", () => {
             ? {
                 documents: [
                   {
+                    file: "[[files/example.archive.html]]",
                     file_id: "file-archive",
                     retrieved_at: "2026-08-09T00:00:00Z",
                     origin_url: "https://original.example",

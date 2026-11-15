@@ -1,4 +1,4 @@
-import { SessionDocumentTextIndex } from "@mdbase-reader/core";
+import { sameDocument, SessionDocumentTextIndex } from "@mdbase-reader/core";
 import { useEffect, useState } from "react";
 
 import type { SourceSummary, SourceTextSearchMatch } from "@mdbase-reader/core";
@@ -63,6 +63,6 @@ export function hasDocumentSearchIntent(query: string): boolean {
 function surfaceBelongsToSource(surface: ReadingSurface, source: SourceSummary): boolean {
   const target = surface.document.document;
   return source.documents.some(
-    (document) => document.fileId === target.fileId && document.revision === target.revision,
+    (document) => sameDocument(document, target) && document.revision === target.revision,
   );
 }

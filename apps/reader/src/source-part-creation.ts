@@ -1,6 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import {
   authorYearFromCsl,
+  sameDocument,
   sourceId,
   sourceNotePaths,
   validateCslItem,
@@ -222,8 +223,8 @@ export function partConflicts(
       const a = plan.document?.range;
       const b = document.range;
       if (
-        document.fileId !== plan.document?.fileId ||
-        document.revision !== plan.document.revision ||
+        !sameDocument(document, plan.document) ||
+        document.revision !== plan.document?.revision ||
         !a ||
         !b
       ) {

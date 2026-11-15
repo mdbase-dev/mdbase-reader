@@ -253,7 +253,7 @@ describe("EmbedPdfSurface", () => {
     const otherFile = {
       ...matching,
       id: "ann-other-file" as never,
-      document: { ...matching.document, fileId: fileId("other") },
+      document: { ...matching.document, file: "[[papers/other.pdf]]" },
     };
     await surface.capabilities.decorations?.setAnnotations([matching, previousRevision, otherFile]);
     expect(fixture.setAnnotations).toHaveBeenCalledWith([matching, previousRevision]);

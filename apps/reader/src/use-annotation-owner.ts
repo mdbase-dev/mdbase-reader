@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { sameDocument } from "@mdbase-reader/core";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAnnotationOwnerPreference } from "./annotation-owner-preference.js";
@@ -180,7 +181,7 @@ async function confirmExplicitOwner(
   if (!request.document) {
     return;
   }
-  const document = owner.documents.find(({ fileId }) => fileId === request.document?.fileId);
+  const document = owner.documents.find((entry) => sameDocument(entry, request.document));
   const contains =
     document?.range && request.target && document.revision === request.document.revision
       ? await surface?.capabilities.annotationRange?.contains(document.range, request.target)

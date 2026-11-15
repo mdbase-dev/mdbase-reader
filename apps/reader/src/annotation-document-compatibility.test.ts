@@ -57,7 +57,7 @@ describe("annotation document compatibility", () => {
       annotationMatchesSurface(
         {
           ...annotation,
-          document: { ...annotationDocument, fileId: fileId("file-2") },
+          document: { ...annotationDocument, file: "[[papers/other.pdf]]" },
         },
         surface,
       ),

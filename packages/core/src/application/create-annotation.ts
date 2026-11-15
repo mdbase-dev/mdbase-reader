@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 
 import { annotationEmbed, validateAnnotationDraft, type Annotation } from "../domain/annotation.js";
+import { sameDocument } from "../domain/document.js";
 import { DomainError } from "../domain/errors.js";
 
 import type {
@@ -90,7 +91,7 @@ function assertCurrentDocument(
   if (!request.document || !source) {
     return;
   }
-  const current = source.documents.find((document) => document.fileId === request.document?.fileId);
+  const current = source.documents.find((document) => sameDocument(document, request.document));
   if (!current) {
     throw new DomainError(
       "document-not-found",

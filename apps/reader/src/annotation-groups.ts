@@ -1,4 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
+import { sameDocument } from "@mdbase-reader/core";
 
 import { hasPassageAnchor } from "./annotation-anchor.js";
 import { annotationLocationLabel } from "./passage-labels.js";
@@ -35,8 +36,8 @@ export function annotationOutsideChapter(
   const owner = sources.find(({ id }) => id === annotation.sourceId);
   const range = owner?.documents.find(
     (document) =>
-      document.fileId === annotation.document?.fileId &&
-      document.revision === annotation.document.revision,
+      sameDocument(document, annotation.document) &&
+      document.revision === annotation.document?.revision,
   )?.range;
   const page =
     annotation.target?.pdf?.pageIndex ??

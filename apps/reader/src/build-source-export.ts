@@ -1,5 +1,6 @@
 import { t } from "@lingui/core/macro";
 import {
+  documentPath,
   materializeSource,
   serializeCslBibliography,
   type Annotation,
@@ -70,7 +71,7 @@ export async function buildSourceExport(input: {
       originalFileCount += 1;
     } catch (reason) {
       fileProblems.push({
-        path: portableFilePath(target.file),
+        path: documentPath(target.file),
         message:
           reason instanceof Error
             ? reason.message
@@ -114,7 +115,7 @@ function annotationFrontmatter(annotation: Annotation): Readonly<Record<string, 
       ...(annotation.document
         ? {
             document: {
-              file_id: annotation.document.fileId,
+              ...(annotation.document.fileId ? { file_id: annotation.document.fileId } : {}),
               file: annotation.document.file,
               revision: annotation.document.revision,
             },
@@ -140,14 +141,14 @@ interface FileTarget {
 function fileTargets(source: Source, annotations: readonly Annotation[]): readonly FileTarget[] {
   const targets = new Map<string, FileTarget>();
   for (const document of source.documents) {
-    targets.set(portableFilePath(document.file), {
+    targets.set(documentPath(document.file), {
       file: document.file,
       revision: document.revision,
     });
   }
   for (const annotation of annotations) {
     if (annotation.document) {
-      const path = portableFilePath(annotation.document.file);
+      const path = documentPath(annotation.document.file);
       if (!targets.has(path)) {
         targets.set(path, {
           file: annotation.document.file,
@@ -156,7 +157,7 @@ function fileTargets(source: Source, annotations: readonly Annotation[]): readon
       }
     }
     for (const file of embeddedFiles(annotation.body)) {
-      const path = portableFilePath(file);
+      const path = documentPath(file);
       if (!targets.has(path)) {
         targets.set(path, { file });
       }
@@ -171,13 +172,8 @@ function embeddedFiles(markdown: string): readonly string[] {
   );
 }
 
-function portableFilePath(link: string): string {
-  const wikilink = /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(link.trim());
-  return wikilink?.[1] ?? link.trim();
-}
-
 function safeArchivePath(path: string): string {
-  const safe = portableFilePath(path)
+  const safe = documentPath(path)
     .replaceAll("\\", "/")
     .split("/")
     .filter((part) => part && part !== "." && part !== "..")

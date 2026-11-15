@@ -1,4 +1,5 @@
 import {
+  documentPath,
   fileId as toFileId,
   fileRevision as toFileRevision,
   type CollectionId,
@@ -118,15 +119,16 @@ export class ConnectDocumentRepository implements DocumentRepository {
   }
 
   async #find(target: DocumentTarget, options: DocumentOpenOptions): Promise<FileView | null> {
-    // Look up current metadata on every open: a previously discovered descriptor may
-    // describe bytes that have since been replaced at the same file ID.
-    const current = await findFile(this.files, target.fileId, options);
-    if (current) {
-      return current;
+    // The document is the file its link names, whatever bytes it holds now; a changed
+    // revision is reported by the reader rather than refusing to open the file.
+    // Look up current metadata on every open: the bytes may have been replaced.
+    const linked = await findFile(this.files, { path: documentPath(target.file) }, options);
+    if (linked || !target.fileId) {
+      return linked;
     }
-    const migrated = await findFile(this.files, { path: portableFilePath(target.file) }, options);
-    // A path alone is not enough to assume a new file ID is the same document.
-    return migrated?.digest === target.revision ? migrated : null;
+    // Nothing is at the linked path: the file may have moved without its link following.
+    // Connect keeps a file's ID across a move, so the recorded ID, when there is one, finds it.
+    return findFile(this.files, target.fileId, options);
   }
 }
 
@@ -139,11 +141,6 @@ interface CachedDocument {
 
 function documentCacheKey(descriptor: FileView): string {
   return `${descriptor.id}:${descriptor.digest}`;
-}
-
-function portableFilePath(link: string): string {
-  const wikilink = /^\[\[([^\]|]+)(?:\|[^\]]+)?\]\]$/u.exec(link.trim());
-  return wikilink?.[1] ?? link.trim();
 }
 
 function mediaTypeFromPath(path: string): string {

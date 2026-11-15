@@ -61,7 +61,7 @@ import type {
   ContentHasher,
   ContentSearchRepository,
   CslProvenance,
-  FileId,
+  DocumentTarget,
   FileRevision,
   DocumentRange,
   MutationJournal,
@@ -806,7 +806,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async saveReadingPosition(
     source: Source,
-    documentFileId: FileId,
+    document: DocumentTarget,
     position: ReadingPosition,
     progress?: number | null,
   ): Promise<Source> {
@@ -818,7 +818,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       sourceId: source.id,
       expectedRevision: latest.recordRevision,
       expectedFrontmatter: latest.frontmatter,
-      documentFileId,
+      document,
       position,
       ...(progress !== undefined ? { progress } : {}),
       openedAt: this.runtime.clock.now(),
@@ -871,7 +871,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
 
   async setDocumentRange(
     source: Source,
-    documentFileId: FileId,
+    document: DocumentTarget,
     expectedDocumentRevision: FileRevision,
     range: DocumentRange | null,
   ): Promise<Source> {
@@ -882,7 +882,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       collectionId: this.collectionId,
       sourceId: source.id,
       expectedRevision: source.recordRevision,
-      documentFileId,
+      document,
       expectedDocumentRevision,
       range,
     });

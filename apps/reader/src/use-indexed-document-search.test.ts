@@ -36,7 +36,7 @@ const source: SourceSummary = {
 };
 const excerpt = { before: "", match: "needle", after: "" };
 const quote = { exact: "needle", prefix: "Before ", suffix: " after." };
-const hit = { fileId: "file", revision, excerpt, quote };
+const hit = { path: "page.html", revision, excerpt, quote };
 const destination = {
   document: { fileId: fileId("file"), file: "page.html", revision: fileRevision(revision) },
   location: { kind: "html" as const },
@@ -59,7 +59,7 @@ describe("index + open document result merge", () => {
     ).toBe(0);
     expect(mergeLibraryDocumentMatches([], [hit], new Map()).size).toBe(0);
     expect(
-      mergeLibraryDocumentMatches([source], [{ ...hit, fileId: "deleted" }], new Map()).size,
+      mergeLibraryDocumentMatches([source], [{ ...hit, path: "deleted.html" }], new Map()).size,
     ).toBe(0);
   });
 
@@ -102,7 +102,7 @@ describe("index + open document result merge", () => {
     const store = new LibraryTextStore(new IDBFactory());
     const index = new LibraryTextIndex("collection", store);
     const text = `${"Earlier context. ".repeat(20)}Une CAFÉ déjà vu. 世界文学研究 and 한글. ${"Later context. ".repeat(20)}`;
-    await index.put({ fileId: "file", revision }, text);
+    await index.put({ path: "page.html", revision }, text);
     // Reopen the persisted text: no new extraction or resident surface is needed.
     const reopened = new LibraryTextIndex("collection", store);
     await reopened.load();
@@ -131,7 +131,7 @@ describe("index + open document result merge", () => {
     const index = new LibraryTextIndex("collection", new LibraryTextStore(new IDBFactory()));
     const text =
       "Ambiguous passage with exactly repeated surrounding evidence and extra context. ".repeat(20);
-    await index.put({ fileId: "file", revision }, text);
+    await index.put({ path: "page.html", revision }, text);
     const mapped = mergeLibraryDocumentMatches(
       [source],
       index.search('"Ambiguous passage"'),

@@ -1,3 +1,4 @@
+import { sameDocument } from "@mdbase-reader/core";
 import { pageClaims, type Claim } from "@mdbase-reader/web-capture/citation-updates";
 
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -39,7 +40,9 @@ export async function archivedCitationClaims(
     const capture = record(source.frontmatter["capture"]);
     const entries = source.frontmatter["documents"];
     const entry = Array.isArray(entries)
-      ? entries.map(record).find((value) => value["file_id"] === archive.fileId)
+      ? entries
+          .map(record)
+          .find((value) => sameDocument({ file: text(value["file"]) ?? "" }, archive))
       : undefined;
     const url = text(entry?.["origin_url"]) ?? text(capture["canonical_url"]) ?? fallbackUrl;
     if (!url || !/^https?:\/\//iu.test(url)) {

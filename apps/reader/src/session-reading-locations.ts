@@ -1,3 +1,5 @@
+import { documentKey } from "@mdbase-reader/core";
+
 import { surfaceReadingContextKey } from "./source-reading-range.js";
 
 import type { ReaderLocator, ReadingSurface } from "@mdbase-reader/reading-surface";
@@ -20,7 +22,7 @@ export class SessionReadingLocations {
       return;
     }
     const target = surface.document.document;
-    const key = `${sessionId}:${surfaceReadingContextKey(surface)}:${target.fileId}:${target.revision}`;
+    const key = `${sessionId}:${surfaceReadingContextKey(surface)}:${documentKey(target)}:${target.revision}`;
     const previous = this.positions.get(key);
     restored.delete(surface);
     if (previous) {

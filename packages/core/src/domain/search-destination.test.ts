@@ -32,16 +32,16 @@ describe("search destinations", () => {
       })?.start,
     ).toBe(30);
   });
-  it("binds identity and revision, not the mutable file path", () => {
+  it("binds the file and its revision, not the recorded file ID", () => {
     const document = {
       fileId: fileId("file"),
       revision: fileRevision(`sha256:${"a".repeat(64)}`),
-      file: "old",
+      file: "[[files/page.html]]",
     };
     const destination = { document, location: { kind: "html" as const }, quote: { exact: "text" } };
-    expect(searchDestinationMatchesDocument(destination, { ...document, file: "renamed" })).toBe(
-      true,
-    );
+    expect(
+      searchDestinationMatchesDocument(destination, { ...document, fileId: fileId("other") }),
+    ).toBe(true);
     expect(
       searchDestinationMatchesDocument(destination, {
         ...document,
@@ -49,7 +49,10 @@ describe("search destinations", () => {
       }),
     ).toBe(false);
     expect(
-      searchDestinationMatchesDocument(destination, { ...document, fileId: fileId("other") }),
+      searchDestinationMatchesDocument(destination, {
+        ...document,
+        file: "[[files/renamed.html]]",
+      }),
     ).toBe(false);
   });
 });

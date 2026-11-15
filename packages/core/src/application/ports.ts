@@ -60,7 +60,8 @@ export interface SourceRepository extends SourceLookups {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
     readonly expectedRevision: RecordRevision;
-    readonly documentFileId: FileId;
+    /** The source's document entry to change, found by its `file` link. */
+    readonly document: DocumentTarget;
     readonly expectedDocumentRevision: FileRevision;
     readonly range: DocumentRange | null;
   }): Promise<Source>;
@@ -87,7 +88,7 @@ export interface SourceRepository extends SourceLookups {
     readonly expectedRevision: RecordRevision;
     /** The persisted frontmatter at `expectedRevision`, which lets the write skip a fresh read. */
     readonly expectedFrontmatter?: Source["frontmatter"];
-    readonly documentFileId: FileId;
+    readonly document: DocumentTarget;
     readonly position: ReadingPosition;
     /** Range-relative progress; null clears an unavailable measurement. */
     readonly progress?: number | null;

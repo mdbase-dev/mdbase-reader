@@ -1,4 +1,9 @@
-import { highlightColorKey, type Annotation, type HighlightColorKey } from "@mdbase-reader/core";
+import {
+  documentKey as fileKey,
+  highlightColorKey,
+  type Annotation,
+  type HighlightColorKey,
+} from "@mdbase-reader/core";
 
 import { annotationBodyContent } from "./annotation-body-content.js";
 export type AnnotationFilter = "all" | "comments" | "highlight" | "area" | "note" | "bookmark";
@@ -74,8 +79,9 @@ export function annotationMatchesColor(
     highlightColorKey(annotation.color) === color
   );
 }
-function documentKey(annotation: Annotation): string {
-  return `${annotation.document?.fileId ?? ""}@${annotation.document?.revision ?? ""}`;
+function annotationDocumentKey(annotation: Annotation): string {
+  const document = annotation.document;
+  return document ? `${fileKey(document)}@${document.revision}` : "@";
 }
 interface Position {
   readonly kind: number;
@@ -115,7 +121,7 @@ function compareDocumentOrder(a: Annotation, b: Annotation): number {
   const ap = position(a),
     bp = position(b);
   return (
-    documentKey(a).localeCompare(documentKey(b)) ||
+    annotationDocumentKey(a).localeCompare(annotationDocumentKey(b)) ||
     ap.kind - bp.kind ||
     sectionOrder.compare(ap.section, bp.section) ||
     ap.offset - bp.offset ||

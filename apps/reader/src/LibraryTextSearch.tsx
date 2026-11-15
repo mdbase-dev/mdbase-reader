@@ -1,6 +1,7 @@
 import { plural, t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans, useLingui } from "@lingui/react/macro";
+import { sameDocument } from "@mdbase-reader/core";
 import { useEffect, useId, useState, type JSX } from "react";
 
 import { readerErrorMessage } from "./errors.js";
@@ -181,7 +182,7 @@ function SearchResult({
         ? "annotations"
         : "note";
   const descriptor = source.documents.find((file) =>
-    destination ? file.fileId === destination.document.fileId : file.file === document?.file,
+    sameDocument(file, destination?.document ?? document),
   );
   const label =
     view === "document"

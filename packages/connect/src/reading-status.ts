@@ -8,7 +8,7 @@ import type { MdbaseClient } from "@mdbase-dev/sdk";
 import type {
   CollectionId,
   DateTime,
-  FileId,
+  DocumentTarget,
   ReadingPosition,
   ReadingStatus,
   Source,
@@ -70,7 +70,7 @@ export function readingWithStatus(
 export function readingPatch(
   frontmatter: Readonly<Record<string, unknown>>,
   input: {
-    readonly documentFileId: FileId;
+    readonly document: DocumentTarget;
     readonly position: ReadingPosition;
     readonly progress?: number | null;
     readonly openedAt: DateTime;
@@ -85,13 +85,15 @@ export function readingPatch(
   if (input.progress !== undefined) {
     Reflect.deleteProperty(rest, "progress");
   }
+  Reflect.deleteProperty(rest, "document_file_id");
   return {
     ...rest,
     ...(typeof input.progress === "number" && Number.isFinite(input.progress)
       ? { progress: Math.max(0, Math.min(1, input.progress)) }
       : {}),
     status: typeof existing["status"] === "string" ? existing["status"] : "reading",
-    document_file_id: input.documentFileId,
+    document_file: input.document.file,
+    ...(input.document.fileId ? { document_file_id: input.document.fileId } : {}),
     position: positionFrontmatter(input.position),
     started_at: existing["started_at"] ?? input.openedAt,
     last_opened_at: input.openedAt,

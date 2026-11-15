@@ -32,7 +32,7 @@ import type {
   Annotation,
   AnnotationCreationRequest,
   AnnotationDeletionPlan,
-  FileId,
+  DocumentTarget,
   ReadingPosition,
   Source,
   SourceFileImportRequest,
@@ -76,7 +76,7 @@ export interface ReaderSourceWorkspaceController {
   ) => Promise<void>;
   readonly saveReadingPosition: (
     sourceId: SourceId,
-    documentFileId: FileId,
+    document: DocumentTarget,
     position: ReadingPosition,
     progress?: number | null,
   ) => Promise<void>;

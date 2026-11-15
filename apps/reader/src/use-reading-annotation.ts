@@ -1,3 +1,4 @@
+import { sameDocument } from "@mdbase-reader/core";
 import { useEffect, useState } from "react";
 
 import type { Annotation, AnnotationId, ReadingPosition } from "@mdbase-reader/core";
@@ -16,8 +17,8 @@ export function nearestPositionAnnotation(
   let distance = Infinity;
   for (const annotation of annotations) {
     if (
-      annotation.document?.fileId !== surface.document.document.fileId ||
-      annotation.document.revision !== surface.document.document.revision
+      !sameDocument(annotation.document, surface.document.document) ||
+      annotation.document?.revision !== surface.document.document.revision
     ) {
       continue;
     }

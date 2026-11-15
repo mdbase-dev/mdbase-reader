@@ -134,7 +134,7 @@ it("names the source only when the list says it differs from the open one", () =
 });
 
 it("marks a card outside its chapter's pages only when no heading groups it", () => {
-  const document = { fileId: "file", revision: "rev" } as never;
+  const document = { fileId: "file", file: "[[files/book.pdf]]", revision: "rev" } as never;
   const owners = [
     {
       id: base.sourceId,

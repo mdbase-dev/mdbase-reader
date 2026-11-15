@@ -86,9 +86,11 @@ it("adds no headings when nothing has a usable location", () => {
 });
 
 it("notes a run of cards outside their chapter's pages once, on its first heading", () => {
-  const document = { fileId: "file", revision: "rev" } as unknown as NonNullable<
-    Annotation["document"]
-  >;
+  const document = {
+    fileId: "file",
+    file: "[[files/book.pdf]]",
+    revision: "rev",
+  } as unknown as NonNullable<Annotation["document"]>;
   const owners = [
     {
       id: chapter,

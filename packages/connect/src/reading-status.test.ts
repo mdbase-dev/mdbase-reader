@@ -1,4 +1,4 @@
-import { dateTime, fileId } from "@mdbase-reader/core";
+import { dateTime, fileId, fileRevision } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
 import { readingPatch, readingWithStatus } from "./reading-status.js";
@@ -9,7 +9,11 @@ const now = dateTime("2026-09-24T10:00:00Z");
 describe("readingWithStatus", () => {
   it("stores range-relative progress without completing the source and clears unavailable measurements", () => {
     const input = {
-      documentFileId: fileId("shared-book"),
+      document: {
+        fileId: fileId("shared-book"),
+        file: "[[files/book.pdf]]",
+        revision: fileRevision(`sha256:${"a".repeat(64)}`),
+      },
       position: { kind: "pdf", pageIndex: 15 } as const,
       openedAt: now,
     };

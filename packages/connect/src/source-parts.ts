@@ -111,7 +111,7 @@ export async function writeDocumentRange(
       ...frontmatterChanges(
         documentRangePatch(
           current.frontmatter,
-          input.documentFileId,
+          input.document,
           input.expectedDocumentRevision,
           input.range,
         ),

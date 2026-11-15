@@ -1,5 +1,5 @@
 import { IDBFactory } from "fake-indexeddb";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { LibraryTextIndex } from "./library-text-index.js";
 import { libraryTextKey, LibraryTextStore } from "./library-text-store.js";
@@ -8,11 +8,11 @@ import type { LibraryTextEntry } from "./library-text-store.js";
 
 function entry(
   collection: string,
-  fileId: string,
+  path: string,
   text = "hello",
   revision = "sha256:a",
 ): LibraryTextEntry {
-  return { key: libraryTextKey(collection, fileId), collection, fileId, text, revision };
+  return { key: libraryTextKey(collection, path), collection, path, text, revision };
 }
 
 describe("persistent library text", () => {
@@ -24,20 +24,36 @@ describe("persistent library text", () => {
     await index.load();
     expect(index.search("old")).toHaveLength(1);
     expect(index.search("other")).toEqual([]);
-    expect(await index.reconcile([{ fileId: "file", revision: "sha256:a" }], true)).toEqual([
-      "file",
-    ]);
-    expect(await index.reconcile([{ fileId: "file", revision: "sha256:b" }], true)).toEqual([]);
+    expect(await index.reconcile([{ path: "file", revision: "sha256:a" }], true)).toEqual(["file"]);
+    expect(await index.reconcile([{ path: "file", revision: "sha256:b" }], true)).toEqual([]);
     expect(index.search("old")).toEqual([]);
-    await index.put({ fileId: "file", revision: "sha256:b" }, "new text");
+    await index.put({ path: "file", revision: "sha256:b" }, "new text");
     expect(await store.list("a")).toEqual([entry("a", "file", "new text", "sha256:b")]);
     expect(await store.list("b")).toHaveLength(1);
+  });
+
+  it("drops entries saved before documents were keyed by path", async () => {
+    const legacy = { key: libraryTextKey("a", "id-1"), collection: "a", fileId: "id-1" };
+    const remove = vi.fn(() => Promise.resolve());
+    const index = new LibraryTextIndex("a", {
+      list: () =>
+        Promise.resolve([
+          { ...legacy, text: "old", revision: "r" } as unknown as LibraryTextEntry,
+          entry("a", "files/kept.html", "kept"),
+        ]),
+      put: () => Promise.resolve([]),
+      remove,
+    });
+    await index.load();
+    expect(index.search("old")).toEqual([]);
+    expect(index.search("kept")).toHaveLength(1);
+    expect(remove).toHaveBeenCalledWith([legacy.key]);
   });
 
   it("retains undiscovered files in partial snapshots, deletes removed files in complete ones", async () => {
     const store = new LibraryTextStore(new IDBFactory());
     const index = new LibraryTextIndex("a", store);
-    await index.put({ fileId: "file", revision: "a" }, "text");
+    await index.put({ path: "file", revision: "a" }, "text");
     await index.reconcile([], false);
     expect(index.search("text")).toHaveLength(1);
     await index.reconcile([], true);
@@ -50,7 +66,7 @@ describe("persistent library text", () => {
     await store.put(entry("b", "2"));
     const evicted = await store.put(entry("a", "3"));
     expect(evicted).toEqual([libraryTextKey("a", "1")]);
-    expect((await store.list("a")).map((item) => item.fileId)).toEqual(["3"]);
+    expect((await store.list("a")).map((item) => item.path)).toEqual(["3"]);
     expect(await store.list("b")).toHaveLength(1);
     // Replacement doesn't double-count space or retain an old revision.
     await store.put(entry("a", "3", "changed", "sha256:b"));
@@ -64,7 +80,7 @@ describe("persistent library text", () => {
       remove: (keys) => store.remove(keys),
       put: () => Promise.reject(new DOMException("Full", "QuotaExceededError")),
     });
-    await expect(index.put({ fileId: "file", revision: "a" }, "text")).rejects.toMatchObject({
+    await expect(index.put({ path: "file", revision: "a" }, "text")).rejects.toMatchObject({
       name: "QuotaExceededError",
     });
     expect(index.search("text")).toEqual([]);
@@ -73,7 +89,7 @@ describe("persistent library text", () => {
 
   it("case/diacritic folds, ANDs words, supports quoted phrases and CJK substrings", async () => {
     const index = new LibraryTextIndex("a", new LibraryTextStore(new IDBFactory()));
-    await index.put({ fileId: "file", revision: "a" }, "Une CAFÉ, déjà vu. 世界文学研究 and 한글.");
+    await index.put({ path: "file", revision: "a" }, "Une CAFÉ, déjà vu. 世界文学研究 and 한글.");
     expect(index.search('cafe "deja vu"')[0]?.excerpt.match).toBe("CAFÉ");
     expect(index.search('"cafe deja"')).toEqual([]);
     expect(index.search("界文学")[0]?.excerpt.match).toBe("界文学");

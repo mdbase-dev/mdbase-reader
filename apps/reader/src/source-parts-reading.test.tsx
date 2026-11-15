@@ -160,7 +160,7 @@ it.each([undefined, 15, 23])(
         : {
             reading: {
               status: "reading",
-              documentFileId: chapter.documents[0]!.fileId,
+              documentFile: chapter.documents[0]!.file,
               position: { kind: "pdf", pageIndex: saved },
             },
           }),
@@ -183,7 +183,7 @@ it.each([undefined, 15, 23])(
     });
     expect(save).toHaveBeenCalledWith(
       source.id,
-      source.documents[0]!.fileId,
+      expect.objectContaining({ file: source.documents[0]!.file }),
       { kind: "pdf", pageIndex: saved === 15 ? 15 : 10 },
       saved === 15 ? 0.5 : 0,
     );
@@ -213,7 +213,7 @@ it("leaves a reader outside the chapter where they are when the source record re
     ...chapter,
     reading: {
       status: "reading",
-      documentFileId: chapter.documents[0]!.fileId,
+      documentFile: chapter.documents[0]!.file,
       position: { kind: "pdf", pageIndex: 22 },
     },
   };
@@ -254,7 +254,7 @@ it("restores a position saved elsewhere while the surface was inactive, instead 
     ...chapter,
     reading: {
       status: "reading",
-      documentFileId: chapter.documents[0]!.fileId,
+      documentFile: chapter.documents[0]!.file,
       position: { pageIndex: 17, kind: "pdf" },
     },
   };
@@ -265,7 +265,7 @@ it("restores a position saved elsewhere while the surface was inactive, instead 
   expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 17 });
   expect(save).not.toHaveBeenCalledWith(
     chapter.id,
-    chapter.documents[0]!.fileId,
+    expect.objectContaining({ file: chapter.documents[0]!.file }),
     { kind: "pdf", pageIndex: 12 },
     expect.anything(),
   );
@@ -280,7 +280,7 @@ it("does not pull one pane to a position another pane of the same source wrote",
     ...chapter,
     reading: {
       status: "reading",
-      documentFileId: chapter.documents[0]!.fileId,
+      documentFile: chapter.documents[0]!.file,
       position: { kind: "pdf", pageIndex },
     },
   });
@@ -540,7 +540,13 @@ it("refuses old-revision and malformed/out-of-document ranges without jumping or
     ...chapter,
     documents: chapter.documents.map(({ range: _range, ...entry }) => entry),
     properties: {
-      documents: [{ file_id: chapter.documents[0]!.fileId, range: { kind: "future" } }],
+      documents: [
+        {
+          file: chapter.documents[0]!.file,
+          file_id: chapter.documents[0]!.fileId,
+          range: { kind: "future" },
+        },
+      ],
     },
   };
   expect(await resolveSourceReadingRange(unknown, pdf(unknown))).toMatchObject({
