@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile, mkdir } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
-import { Collection, applyTypePack, assessTypePack } from "@callumalpass/mdbase";
+import { applyTypePack, assessTypePack, loadCatalog, validateRecord } from "@mdbase-dev/mdbase";
 
 import { assertValidReaderManifest } from "./validate-manifest.mjs";
 
@@ -33,35 +32,49 @@ for (const pack of packs) {
   }
 }
 
-const collectionRoot = await mkdtemp(join(tmpdir(), "mdbase-reader-pack-"));
-try {
-  await writeFile(join(collectionRoot, "mdbase.yaml"), "spec_version: 0.3.0\n");
-  for (const pack of packs) {
-    const provision = { manifest: pack.manifest, resources: pack.resources };
-    const assessment = await assessTypePack(collectionRoot, provision, {
-      installedBy: manifest.id,
-    });
-    assertValid(assessment, "assessment");
-    if (assessment.result.status !== "install") {
-      fail(
-        `${pack.manifest.id} should install into an empty collection, not '${assessment.result.status}'.`,
-      );
-    }
-    const installed = await applyTypePack(collectionRoot, provision, {
-      installedBy: manifest.id,
-      expectedAssessmentDigest: assessment.result.assessment_digest,
-    });
-    assertValid(installed, "installation");
+// An empty collection, as its files by collection path. The helpers return each pack's writes.
+const collection = { "mdbase.yaml": "spec_version: 0.3.0\n" };
+for (const pack of packs) {
+  const input = {
+    pack: {
+      manifest: JSON.stringify(pack.manifest),
+      sources: Object.fromEntries(pack.resources.map(({ source, document }) => [source, document])),
+    },
+    options: { installed_by: manifest.id },
+  };
+  const assessment = await assessTypePack({ ...input, resources: collection });
+  if (assessment.status !== "install" || !assessment.applicable) {
+    fail(
+      `${pack.manifest.id} should install into an empty collection, not '${assessment.status}': ${describe(assessment.issues)}`,
+    );
   }
+  const installed = await applyTypePack({
+    ...input,
+    resources: collection,
+    expectedDigest: assessment.assessment_digest,
+  });
+  for (const { path, document } of installed.writes) collection[path] = document;
+}
 
-  await mkdir(join(collectionRoot, "views"));
-  await writeFile(
-    join(collectionRoot, "views", "example.md"),
-    "---\ntype: view\nid: reader.library.example\nversion: 1\nname: Example\nviews:\n  - id: all\n    name: All\n---\n",
+const catalog = await loadCatalog(collection);
+if (!catalog.valid) {
+  fail(`Installed collection has an invalid catalog: ${describe(catalog.issues)}`);
+}
+const implementations = new Map();
+for (const requirement of manifest.requirements.contracts) {
+  const found = catalog.implementations.filter(
+    ({ contract, version }) => contract === requirement.id && version === requirement.version,
   );
-  await mkdir(join(collectionRoot, "sources"));
-  await writeFile(
-    join(collectionRoot, "sources", "example.md"),
+  if (found.length !== 1) {
+    fail(`${requirement.id} should have exactly one starter implementation.`);
+  }
+  implementations.set(requirement.id, found[0]);
+}
+// Each record is valid as its starter type, and the contract reads the asserted field from the
+// record field of the same name, so the contract view carries the record's value.
+for (const [path, source, type, contract, field] of [
+  [
+    "sources/example.md",
     [
       "---",
       "type: reader-source",
@@ -74,56 +87,37 @@ try {
       "A literature note.",
       "",
     ].join("\n"),
-  );
-  const opened = await Collection.open(collectionRoot);
-  if (!opened.collection || opened.error) {
-    fail(`Installed collection did not open: ${opened.error?.message ?? "unknown error"}`);
+    "reader-source",
+    "dev.mdbase.reader.source",
+    "title",
+  ],
+  [
+    "views/example.md",
+    "---\ntype: view\nid: reader.library.example\nversion: 1\nname: Example\nviews:\n  - id: all\n    name: All\n---\n",
+    "view",
+    "mdbase.view",
+    "name",
+  ],
+]) {
+  const result = await validateRecord({ resources: collection, path, source });
+  if (result.issues.length > 0 || result.types.join() !== type) {
+    fail(`A Reader ${type} record is not a valid ${contract} record: ${describe(result.issues)}`);
   }
-  try {
-    for (const requirement of manifest.requirements.contracts) {
-      const implementations = opened.collection.getDataContractImplementations(
-        requirement.id,
-        requirement.version,
-      );
-      if (implementations.length !== 1) {
-        fail(`${requirement.id} should have exactly one starter implementation.`);
-      }
-    }
-    const source = await opened.collection.getContractView(
-      "sources/example.md",
-      "dev.mdbase.reader.source",
-      "1.0.0-beta.1",
-    );
-    if (!source.valid || source.view.title !== "Example source") {
-      fail("Reader source contract did not project a valid source view.");
-    }
-    const view = await opened.collection.getContractView(
-      "views/example.md",
-      "mdbase.view",
-      "1.0.0",
-    );
-    if (!view.valid || view.view.name !== "Example") {
-      fail("A Reader view record did not project a valid mdbase.view contract view.");
-    }
-  } finally {
-    await opened.collection.close();
+  const implementation = implementations.get(contract);
+  if (
+    implementation.type !== type ||
+    !implementation.fields.some(([from, to]) => from === field && to === field)
+  ) {
+    fail(`${contract} should read ${field} from Reader's ${type} records.`);
   }
-} finally {
-  await rm(collectionRoot, { recursive: true, force: true });
+}
+
+function describe(issues) {
+  return issues.map((issue) => issue.message).join("; ");
 }
 
 function digest(document) {
   return `sha256:${createHash("sha256").update(document).digest("hex")}`;
-}
-
-function assertValid(result, operation) {
-  if (!result.valid) {
-    fail(
-      `Reader type-pack ${operation} failed: ${result.diagnostics
-        .map((diagnostic) => diagnostic.message)
-        .join("; ")}`,
-    );
-  }
 }
 
 function fail(message) {
