@@ -47,7 +47,7 @@ export function SourceNoteInsertMenu({
       <button
         type="button"
         aria-label={t({ message: "Insert a citation or annotation" })}
-        title={t({ message: "Insert at the cursor" })}
+        title={t({ message: "Insert at the cursor", context: "Reader interface" })}
         popoverTarget={id}
         onClick={(event) => setPlacement(insertMenuPlacement(event.currentTarget))}
       >
@@ -93,7 +93,7 @@ export function SourceNoteInsertMenu({
               title={
                 embedded
                   ? t({ message: "Already embedded in this note" })
-                  : t({ message: "Insert at the cursor" })
+                  : t({ message: "Insert at the cursor", context: "Reader interface" })
               }
               onPointerDown={(event) => event.preventDefault()}
               onClick={() => insert(() => onInsertAnnotation(candidate.path))}

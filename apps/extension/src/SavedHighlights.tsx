@@ -250,7 +250,7 @@ function CommentEditor({
       }}
     >
       <label htmlFor={id} className="visually-hidden">
-        <Trans>Comment</Trans>
+        <Trans context="Reader interface">Comment</Trans>
       </label>
       <textarea
         className="mdbase-field"

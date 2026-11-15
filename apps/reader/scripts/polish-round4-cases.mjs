@@ -7,10 +7,10 @@ export async function staticBoot(browser, origin) {
   try {
     const page = await context.newPage();
     await page.goto(`${origin}/?preview=1`);
-    await expect(page.getByRole("main", { name: "Loading Reader", exact: true })).toBeVisible();
-    await expect(page.getByRole("status")).toContainText("Loading Reader");
-    await page.locator(".reader-boot summary").click();
-    await expect(page.getByRole("link", { name: "reload Reader", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("main", { name: "Opening your library", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("mdbase reader needs JavaScript to open.")).toBeVisible();
   } finally {
     await context.close();
   }

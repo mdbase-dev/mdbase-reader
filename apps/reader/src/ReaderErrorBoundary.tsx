@@ -43,7 +43,7 @@ export class ReaderErrorBoundary extends Component<
       >
         <div className="connection-actions">
           <button type="button" className="mdbase-button" onClick={reload}>
-            <Trans>Reload</Trans>
+            <Trans context="Reader interface">Reload</Trans>
           </button>
         </div>
         <FeedbackButton />

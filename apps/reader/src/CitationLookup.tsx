@@ -156,14 +156,14 @@ function CitationSuggestions({
                     review(index, () => editor.acceptSuggestions(new Set([suggestion.field])))
                   }
                 >
-                  <Trans>Accept</Trans>
+                  <Trans context="Reader interface">Accept</Trans>
                 </button>
                 <button
                   type="button"
                   aria-label={translate`Dismiss ${cslFieldLabel(suggestion.field)}`}
                   onClick={() => review(index, () => editor.dismissSuggestion(suggestion.field))}
                 >
-                  <Trans>Dismiss</Trans>
+                  <Trans context="Reader interface">Dismiss</Trans>
                 </button>
               </div>
             </div>

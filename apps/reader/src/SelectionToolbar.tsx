@@ -293,7 +293,7 @@ function SelectionCopyActions({
       >
         <CopyIcon />
         <span className="selection-toolbar-label">
-          <Trans>Copy</Trans>
+          <Trans context="SelectionToolbar interface">Copy</Trans>
         </span>
       </button>
       <button

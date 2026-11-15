@@ -110,7 +110,7 @@ export function HighlightSavedNotice({
           <button
             type="button"
             className="highlight-saved-dismiss"
-            aria-label={translate({ message: "Dismiss" })}
+            aria-label={translate({ message: "Dismiss", context: "Reader interface" })}
             aria-keyshortcuts="Escape"
             title={translate({ message: "Dismiss (Esc)" })}
             onClick={onDismiss}
