@@ -8,13 +8,13 @@ import { createRoot } from "./testing/i18n.js";
 
 import type { DocumentRepository } from "@mdbase-reader/core";
 
-const imports = vi.hoisted(() => ({ epub: vi.fn(), html: vi.fn() }));
+const imports = vi.hoisted(() => ({ epub: vi.fn(), html: vi.fn(), pdf: vi.fn(() => null) }));
 vi.mock("./document-renderers.js", async () => {
   const { lazyFeature } = await import("./lazy-feature.js");
   return {
     EpubViewerSurface: lazyFeature(imports.epub, "the EPUB renderer"),
     HtmlViewerSurface: lazyFeature(imports.html, "the HTML renderer"),
-    PdfViewerSurface: () => null,
+    PdfViewerSurface: imports.pdf,
     preloadDocumentRenderer: vi.fn(),
   };
 });
@@ -96,3 +96,31 @@ it.each([
     expect(close).not.toHaveBeenCalled();
   },
 );
+
+it("keeps the source's file ID when Connect opens the file under a new ID", async () => {
+  const source = partSource("Book");
+  const descriptor = source.documents[0]!;
+  // Found by path with the recorded bytes, under the ID Connect assigned later.
+  const open = vi.fn().mockResolvedValue({
+    fileId: "01a1bea5-149d-77a7-b8d4-7c91c2da0783",
+    revision: descriptor.revision,
+    mediaType: "application/pdf",
+    url: "blob:reader-identity-fixture",
+    close: vi.fn().mockResolvedValue(undefined),
+  });
+  await act(async () => {
+    root.render(
+      <ConnectedDocument
+        repository={{ open } satisfies DocumentRepository}
+        source={source}
+        onSurfaceChange={vi.fn()}
+      />,
+    );
+    await Promise.resolve();
+  });
+  expect(imports.pdf).toHaveBeenCalled();
+  const [props] = imports.pdf.mock.lastCall as unknown as [
+    { readonly document: { readonly document: { readonly fileId: string } } },
+  ];
+  expect(props.document.document.fileId).toBe(descriptor.fileId);
+});

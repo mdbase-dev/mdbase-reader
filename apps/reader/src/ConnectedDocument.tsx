@@ -116,11 +116,11 @@ function OpenConnectedDocument({
   useEffect(() => () => onSurfaceChange(null), [onSurfaceChange]);
   const handle = state.status === "open" ? state.handle : null;
   // The renderer reloads whenever this identity changes, so it must change only with the file.
+  // Keep the source's file ID: annotations, positions and ranges are keyed by it. A file
+  // found by path under a new Connect ID has the recorded bytes, so it is the same document.
   const currentDescriptor = useMemo(
     (): DocumentDescriptor =>
-      handle
-        ? { ...stableDescriptor, fileId: handle.fileId, revision: handle.revision }
-        : stableDescriptor,
+      handle ? { ...stableDescriptor, revision: handle.revision } : stableDescriptor,
     [handle, stableDescriptor],
   );
 
