@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 
-import { dataContractDigest } from "@callumalpass/mdbase";
+import { contractDigest } from "@mdbase-dev/mdbase";
 import { parse as parseYaml } from "yaml";
 
 import { readerDeployments } from "./deployment-environment.mjs";
@@ -137,7 +137,7 @@ export async function buildReaderManifest({
 } = {}) {
   const normalizedOrigin = origin.replace(/\/$/u, "");
   const appUrl = new URL(normalizeBasePath(basePath), `${normalizedOrigin}/`).href;
-  const packResources = await Promise.all(
+  const documents = await Promise.all(
     resources.map(async (resource) => {
       const document = await readFile(resolve(projectRoot, "mdbase", resource.source), "utf8");
       const baselines = await Promise.all(
@@ -150,16 +150,29 @@ export async function buildReaderManifest({
           };
         }),
       );
-      return {
-        ...resource,
-        digest: digest(document),
-        document,
-        ...(baselines.length === 0 ? {} : { upgrade_from: baselines }),
-        ...(resource.kind === "contract"
-          ? { contractDigest: await contractDigest(resource.source, document) }
-          : {}),
-      };
+      return { ...resource, document, baselines };
     }),
+  );
+  // A contract's digest covers its schemas, not their wrappers: the engine replaces a `ref` by
+  // the schema it names, here the pack's own schema at its collection target.
+  const installed = Object.fromEntries(documents.map(({ target, document }) => [target, document]));
+  const packResources = await Promise.all(
+    documents.map(async ({ baselines, ...resource }) => ({
+      ...resource,
+      digest: digest(resource.document),
+      ...(baselines.length === 0 ? {} : { upgrade_from: baselines }),
+      ...(resource.kind === "contract"
+        ? {
+            contractDigest: (
+              await contractDigest({
+                source: resource.document,
+                path: resource.target,
+                resources: installed,
+              })
+            ).digest,
+          }
+        : {}),
+    })),
   );
   const contracts = packResources
     .filter(
@@ -248,22 +261,6 @@ export function readerInstallationOrigins({ labOrigin } = {}) {
     }
   }
   return origins;
-}
-
-/**
- * A contract's digest covers its schemas, not their wrappers: a `ref` is replaced by the schema
- * it names, read from the pack, as mdbase-contracts does when it publishes a pack.
- */
-async function contractDigest(source, document) {
-  const contract = parseFrontmatter(document);
-  for (const field of ["record_schema", "binding_schema"]) {
-    const wrapper = contract[field];
-    if (wrapper && typeof wrapper.ref === "string") {
-      const path = resolve(projectRoot, "mdbase", dirname(source), wrapper.ref);
-      contract[field] = { value: JSON.parse(await readFile(path, "utf8")) };
-    }
-  }
-  return dataContractDigest(contract);
 }
 
 function digest(document) {
