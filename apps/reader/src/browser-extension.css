@@ -1,0 +1,63 @@
+.reader-extension-discovery {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.45;
+}
+
+.reader-extension-heading {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.reader-extension-discovery p {
+  margin: 0;
+}
+
+.reader-extension-discovery.is-add-source {
+  margin: 20px 24px 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.reader-extension-discovery.is-empty-library {
+  justify-items: center;
+  max-width: 36ch;
+  margin-top: 20px;
+}
+
+.reader-extension-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reader-extension-link:hover {
+  color: var(--accent);
+}
+
+.reader-extension-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.reader-extension-availability {
+  color: var(--muted);
+}
+
+.reader-extension-setup {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  line-height: 1.5;
+}
+
+.reader-extension-setup li + li {
+  margin-top: 6px;
+}

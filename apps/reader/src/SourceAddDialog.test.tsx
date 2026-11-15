@@ -12,6 +12,7 @@ const idle: Lookup = {
   canCancel: false,
   cancel: () => undefined,
   progress: null,
+  extensionHint: null,
   offer: null,
   notice: null,
   chapterOffer: null,
@@ -53,6 +54,23 @@ const book: SourceSummary = {
 };
 
 describe("source addition follow-ups", () => {
+  it("offers browser capture alongside the existing link and file choices", () => {
+    const html = render({});
+    expect(html).toContain("Save from your browser");
+    expect(html).toContain("optional Chrome extension");
+    expect(html.indexOf("reader-extension-discovery")).toBeGreaterThan(
+      html.indexOf("source-file-choice"),
+    );
+  });
+
+  it("shows extension-required guidance as the main message rather than hidden details", () => {
+    const message = "Save X posts from their live page using the mdbase Reader extension.";
+    const html = render({ extensionHint: message });
+    expect(html).toContain(`role="alert"><p>${message}</p>`);
+    expect(html).not.toContain("Couldn’t confirm this source was added");
+    expect(html).not.toContain("<details>");
+  });
+
   it("states outcomes plainly and keeps the underlying error in its details", () => {
     const notice = render({
       notice: {

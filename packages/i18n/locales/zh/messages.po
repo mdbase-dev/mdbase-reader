@@ -1285,6 +1285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Available date"
 msgstr "可用日期"
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Available in Chrome on a computer."
+msgstr "可在电脑上的 Chrome 中使用。"
+
 #: apps/reader/src/SettingsPage.tsx
 msgid "Back"
 msgstr "返回"
@@ -1418,6 +1422,10 @@ msgstr "来自 Kindle、Apple Books、Instapaper、播客及其他经典 Readwis
 msgctxt "CSL bibliographic field or item type"
 msgid "Broadcast"
 msgstr "广播节目"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Browser extension"
+msgstr "浏览器扩展"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
@@ -2300,6 +2308,10 @@ msgstr "连接其他集合…"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
 msgstr "Connect 拒绝了此扩展的来源。请重新加载当前扩展构建并重试。如果问题仍然存在，请检查 {0} Connect 配置；Reader 不会绕过来源检查。"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Connect the extension to the same collection you use in Reader."
+msgstr "将扩展连接到你在 Reader 中使用的同一个集合。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
@@ -3888,6 +3900,10 @@ msgstr "全屏"
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
 msgstr "体裁"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Get Chrome extension"
+msgstr "获取 Chrome 扩展"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
@@ -6269,6 +6285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
 msgstr "个人通信"
 
+#: apps/reader/src/SettingsSections.tsx
+msgid "Pin mdbase Reader to your Chrome toolbar."
+msgstr "将 mdbase Reader 固定到 Chrome 工具栏。"
+
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
@@ -7385,6 +7405,14 @@ msgstr "保存区域截图"
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
 msgstr "阅读时将文章和 PDF 保存到你的 mdbase 集合，高亮段落，并在 Reader 中再次找到它们。"
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read with the optional Chrome extension."
+msgstr "使用可选的 Chrome 扩展，在阅读时保存文章和 PDF，并高亮网页内容。"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read."
+msgstr "在阅读时保存文章和 PDF，并高亮网页内容。"
+
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
 msgstr "另存为新视图"
@@ -7409,6 +7437,10 @@ msgstr "保存详情"
 #: apps/electron/src/main.ts
 msgid "Save export"
 msgstr "保存导出"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save from your browser"
+msgstr "从浏览器保存"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"

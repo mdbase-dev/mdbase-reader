@@ -1,6 +1,7 @@
 import { collectionId, dateTime, recordRevision, sourceId, type Source } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { BrowserExtensionHintError } from "./browser-extension.js";
 import { addSourceFromInput, type SourceAdditionServices } from "./source-addition-flow.js";
 
 import type { CaptureResult } from "./web-capture-client.js";
@@ -511,7 +512,7 @@ describe("adding social sources", () => {
       ),
     });
     await expect(addSourceFromInput("https://any-instance.test/@fixture", deps)).rejects.toThrow(
-      "Feeds cannot",
+      BrowserExtensionHintError,
     );
     expect(deps.lookUp).not.toHaveBeenCalled();
     expect(deps.workspace.createSource).not.toHaveBeenCalled();

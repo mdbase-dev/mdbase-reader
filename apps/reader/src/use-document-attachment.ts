@@ -1,6 +1,7 @@
 import { t } from "@lingui/core/macro";
 import { useCallback, useMemo, useState } from "react";
 
+import { BrowserExtensionHintError } from "./browser-extension.js";
 import { readerErrorMessage } from "./errors.js";
 import { droppedMediaType } from "./use-source-addition.js";
 
@@ -13,6 +14,7 @@ export interface DocumentAttachmentState {
   readonly busy: boolean;
   readonly message: string | null;
   readonly error: string | null;
+  readonly extensionHint?: boolean;
 }
 
 /** Adds a document to a source that has none: a chosen file, or a free PDF found online. */
@@ -51,6 +53,7 @@ export function useDocumentAttachment(
           busy: false,
           message: null,
           error: readerErrorMessage(reason, t({ message: "Reader could not attach a document." })),
+          extensionHint: reason instanceof BrowserExtensionHintError,
         });
       }
     },
@@ -117,7 +120,7 @@ export function useDocumentAttachment(
           ]);
           const pdf = await findOpenAccessPdf(work, { capture: fetchCapture });
           if (!pdf) {
-            throw new Error(
+            throw new BrowserExtensionHintError(
               t({
                 message:
                   "No open-access PDF was found. Attach a copy you have, or save it from the publisher with the browser extension.",

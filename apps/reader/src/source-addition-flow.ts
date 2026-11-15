@@ -13,6 +13,7 @@ import {
   type WebCaptureImport,
 } from "@mdbase-reader/web-capture";
 
+import { BrowserExtensionHintError } from "./browser-extension.js";
 import { chapterBooks, type ChapterDoiOffer } from "./chapter-doi.js";
 import { newCitationProvenance } from "./new-citation-provenance.js";
 import { findOpenAccessPdf, pdfFileName, type PdfSearchServices } from "./open-access-pdf.js";
@@ -102,9 +103,7 @@ async function addFromUrl(
     captured = await services.capture(url, { allowPdf: true, ...signalOf(services) });
   } catch (reason) {
     services.signal?.throwIfAborted();
-    if (cannotOfferCitationOnly(socialAddress, reason)) {
-      throw reason;
-    }
+    rejectSocialCaptureFailure(socialAddress, reason);
     services.onStatus(translate({ message: "Looking up citation details instead…" }));
     const candidate = await services.lookUp({ kind: "url", value: url }).catch(() => null);
     if (candidate) {
@@ -154,11 +153,25 @@ async function addCapturedPdf(
   );
 }
 
-function cannotOfferCitationOnly(
+function rejectSocialCaptureFailure(
   address: ReturnType<typeof postAddress>,
   reason: unknown,
-): boolean {
-  return Boolean(address) || messageOf(reason).includes("Feeds cannot be saved as sources");
+): void {
+  if (messageOf(reason).includes("Feeds cannot be saved as sources")) {
+    throw feedCaptureError();
+  }
+  if (address) {
+    throw reason;
+  }
+}
+
+function feedCaptureError(): BrowserExtensionHintError {
+  return new BrowserExtensionHintError(
+    translate({
+      message:
+        "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension.",
+    }),
+  );
 }
 
 function capturedPageCitation(
@@ -177,15 +190,10 @@ function capturedPageCitation(
 function assertSocialInput(url: string): ReturnType<typeof postAddress> {
   const address = postAddress(url);
   if (siteAdapters.some((adapter) => adapter.matches(url)) && !address) {
-    throw new Error(
-      translate({
-        message:
-          "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension.",
-      }),
-    );
+    throw feedCaptureError();
   }
   if (address?.platform === "x") {
-    throw new Error(
+    throw new BrowserExtensionHintError(
       translate({
         message: "Save X posts from their live page using the mdbase Reader extension.",
       }),

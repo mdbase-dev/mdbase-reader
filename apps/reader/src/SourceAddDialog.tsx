@@ -4,6 +4,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useEffect, useRef, useState, type JSX, type ReactNode } from "react";
 
+import { BrowserExtensionDiscovery, BrowserExtensionHint } from "./BrowserExtensionHelp.js";
 import { chapterIsbns } from "./chapter-doi.js";
 import { citationDateText, citationNames, displayCslValue } from "./citation-form-model.js";
 import { CloseIcon, FileIcon } from "./icons.js";
@@ -145,14 +146,7 @@ function OpenSourceAddDialog({
             {lookup.progress}
           </p>
         ) : null}
-        {error ? (
-          <SourceAdditionError error={error}>
-            <Trans>
-              Couldn’t confirm this source was added. Open the pending changes menu in the header
-              and check your library before trying again.
-            </Trans>
-          </SourceAdditionError>
-        ) : null}
+        <SourceAdditionFeedback error={error} extensionHint={lookup.extensionHint} />
         <LookupFollowUp busy={busy} lookup={lookup} />
       </form>
       <div className="source-add-divider">
@@ -169,6 +163,7 @@ function OpenSourceAddDialog({
           </Trans>
         </p>
       )}
+      <BrowserExtensionDiscovery placement="add-source" />
     </ModalDialog>
   );
 }
@@ -184,6 +179,26 @@ function SourceAddHeading(): JSX.Element {
       </p>
     </header>
   );
+}
+
+function SourceAdditionFeedback({
+  error,
+  extensionHint,
+}: {
+  readonly error: string | null;
+  readonly extensionHint: string | null;
+}): JSX.Element | null {
+  if (extensionHint) {
+    return <BrowserExtensionHint message={extensionHint} />;
+  }
+  return error ? (
+    <SourceAdditionError error={error}>
+      <Trans>
+        Couldn’t confirm this source was added. Open the pending changes menu in the header and
+        check your library before trying again.
+      </Trans>
+    </SourceAdditionError>
+  ) : null;
 }
 
 /** After a lookup: offer to keep just the citation, or say what went wrong before opening. */

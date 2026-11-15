@@ -1285,6 +1285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Available date"
 msgstr "Date de disponibilité"
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Available in Chrome on a computer."
+msgstr "Disponible dans Chrome sur ordinateur."
+
 #: apps/reader/src/SettingsPage.tsx
 msgid "Back"
 msgstr "Retour"
@@ -1418,6 +1422,10 @@ msgstr "Les livres provenant de Kindle, Apple Books, Instapaper, des podcasts et
 msgctxt "CSL bibliographic field or item type"
 msgid "Broadcast"
 msgstr "Émission"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Browser extension"
+msgstr "Extension de navigateur"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
@@ -2300,6 +2308,10 @@ msgstr "Connecter une autre collection…"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
 msgstr "Connect a rejeté l’origine de cette extension. Rechargez la version actuelle de l’extension et réessayez. Si le problème persiste, vérifiez la configuration de {0} Connect ; Reader ne contournera pas la vérification d’origine."
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Connect the extension to the same collection you use in Reader."
+msgstr "Connectez l’extension à la même collection que celle que vous utilisez dans Reader."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
@@ -3888,6 +3900,10 @@ msgstr "Plein écran"
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
 msgstr "Catégorie"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Get Chrome extension"
+msgstr "Obtenir l’extension Chrome"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
@@ -6269,6 +6285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
 msgstr "Communication personnelle"
 
+#: apps/reader/src/SettingsSections.tsx
+msgid "Pin mdbase Reader to your Chrome toolbar."
+msgstr "Épinglez mdbase Reader dans la barre d’outils de Chrome."
+
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
@@ -7385,6 +7405,14 @@ msgstr "Enregistrer la capture de zone"
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
 msgstr "Enregistrez des articles et des PDF dans votre collection mdbase au fil de vos lectures, surlignez des passages et retrouvez-les dans Reader."
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read with the optional Chrome extension."
+msgstr "Enregistrez des articles et des PDF et surlignez du texte sur les pages web pendant votre lecture grâce à l’extension Chrome facultative."
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read."
+msgstr "Enregistrez des articles et des PDF et surlignez du texte sur les pages web pendant votre lecture."
+
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
 msgstr "Enregistrer comme nouvelle vue"
@@ -7409,6 +7437,10 @@ msgstr "Enregistrer les détails"
 #: apps/electron/src/main.ts
 msgid "Save export"
 msgstr "Enregistrer l’export"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save from your browser"
+msgstr "Enregistrer depuis le navigateur"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"

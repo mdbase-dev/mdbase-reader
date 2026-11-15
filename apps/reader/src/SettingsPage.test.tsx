@@ -186,11 +186,16 @@ describe("SettingsPage", () => {
     expect(document.querySelector("dialog[open]")?.classList.contains("settings-page")).toBe(true);
     expect([...document.querySelectorAll("h2")].map((section) => section.textContent)).toEqual([
       "This device",
+      "Browser extension",
       "This collection",
       "Connection",
     ]);
     expect(document.body.textContent).toContain("Default highlight colour");
     expect(document.querySelector("h3")?.textContent).toBe("Highlight colours");
+    const extension = document.querySelector("[aria-labelledby$='-extension']");
+    expect(extension?.querySelector("a")?.textContent).toBe("Get Chrome extension");
+    expect(extension?.textContent).toContain("same collection you use in Reader");
+    expect(extension?.textContent).toContain("Pin mdbase Reader to your Chrome toolbar.");
 
     await act(async () => button("Back").click());
     await settle();

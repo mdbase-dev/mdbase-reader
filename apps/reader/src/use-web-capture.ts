@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { signalMdbaseMark, useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
 import { useCallback, useRef, useState } from "react";
 
+import { BrowserExtensionHintError } from "./browser-extension.js";
 import { readerErrorMessage } from "./errors.js";
 import { useCaptureTask } from "./use-capture-task.js";
 import { useChapterDoi } from "./use-chapter-doi.js";
@@ -17,6 +18,18 @@ import type { ReaderWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
 import type { CitationCandidate, SourceId } from "@mdbase-reader/core";
 
+interface CaptureProblem {
+  readonly message: string;
+  readonly extensionHint: boolean;
+}
+
+function captureProblem(reason: unknown): CaptureProblem {
+  return {
+    message: readerErrorMessage(reason, t({ message: "Reader could not add that source." })),
+    extensionHint: reason instanceof BrowserExtensionHintError,
+  };
+}
+
 export interface WebCaptureFlow {
   readonly chapterOffer: ChapterDoiOffer | null;
   readonly bookOffer: CitationCandidate | null;
@@ -27,6 +40,7 @@ export interface WebCaptureFlow {
   /** What the current addition is doing, for a live status line. */
   readonly progress: string | null;
   readonly error: string | null;
+  readonly extensionHint: string | null;
   /** A page could not be fetched but its citation was found; it can be saved on its own. */
   readonly offer: { readonly title: string; readonly reason: string } | null;
   /** A source was added with a problem worth reading before it opens. */
@@ -52,7 +66,7 @@ export function useWebCapture(
   const chapter = useChapterDoi(gateway, workspace, onImported);
   const proposeChapter = chapter.propose;
   const { status, progress, canCancel, cancel, begin } = useCaptureTask();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CaptureProblem | null>(null);
   const [offer, setOffer] = useState<{
     readonly candidate: CitationCandidate;
     readonly url: string;
@@ -121,7 +135,7 @@ export function useWebCapture(
       } catch (reason) {
         if (operation.isCurrent()) {
           signalMdbaseMark("error");
-          setError(readerErrorMessage(reason, t({ message: "Reader could not add that source." })));
+          setError(captureProblem(reason));
         }
       } finally {
         operation.finish();
@@ -146,7 +160,8 @@ export function useWebCapture(
     saveChapterBook: chapter.saveChapterBook,
     status: chapter.busy ? "capturing" : status,
     progress,
-    error: error ?? chapter.error ?? workspace.importError,
+    error: (error?.extensionHint ? null : error?.message) ?? chapter.error ?? workspace.importError,
+    extensionHint: error?.extensionHint ? error.message : null,
     offer: citationOffer(offer),
     notice,
     canCancel: canCancel || chapter.canCancel,

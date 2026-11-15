@@ -13,6 +13,7 @@ import {
   type JSX,
 } from "react";
 
+import { BrowserExtensionDiscovery } from "./BrowserExtensionHelp.js";
 import { CitationQualitySummary } from "./CitationQualitySummary.js";
 import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
@@ -700,6 +701,7 @@ export function LibraryWorkspace({
                     <button type="button" onClick={onAddSource}>
                       <Trans>Add source…</Trans>
                     </button>
+                    <BrowserExtensionDiscovery placement="empty-library" />
                   </>
                 ) : (
                   <>

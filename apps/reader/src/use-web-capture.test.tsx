@@ -100,6 +100,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
+  vi.restoreAllMocks();
 });
 
 async function type(value: string): Promise<void> {
@@ -128,6 +129,65 @@ async function dismiss(): Promise<void> {
     dialog.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: -1 }));
   });
 }
+
+describe("browser extension capture guidance", () => {
+  it.each(["https://x.com/fixture/status/100", "https://x.com/home", "https://bsky.app/search"])(
+    "offers actionable extension guidance without capture or writes for %s",
+    async (url) => {
+      vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+        "Mozilla/5.0 (X11; Linux x86_64) Chrome/130.0",
+      );
+      await start(url);
+      await act(async () => pending);
+      expect(flow.extensionHint).toContain("extension");
+      expect(flow.error).toBeNull();
+      const alert = host.querySelector("[role=alert]");
+      expect(alert?.textContent).toContain(flow.extensionHint);
+      expect(alert?.querySelector("a")?.textContent).toBe("Get Chrome extension");
+      expect(alert?.querySelector("details")).toBeNull();
+      expect(mocks.capture).not.toHaveBeenCalled();
+      expect(mocks.lookUp).not.toHaveBeenCalled();
+      expect(createSource).not.toHaveBeenCalled();
+      expect(importSourceFile).not.toHaveBeenCalled();
+      expect(saveNewSourceCitation).not.toHaveBeenCalled();
+      await type("https://example.com/article");
+      expect(flow.extensionHint).toBeNull();
+      expect(host.querySelector("[role=alert]")).toBeNull();
+    },
+  );
+
+  it("preserves the pending-changes warning for ordinary capture failures", async () => {
+    mocks.capture.mockRejectedValueOnce(new Error("Capture unavailable"));
+    mocks.lookUp.mockRejectedValueOnce(new Error("Lookup unavailable"));
+    await start("https://example.com/article");
+    await act(async () => pending);
+    expect(flow.extensionHint).toBeNull();
+    expect(host.querySelector("[role=alert]")?.textContent).toContain(
+      "Couldn’t confirm this source was added",
+    );
+    expect(host.querySelector("[role=alert] details")?.textContent).toContain(
+      "Capture unavailable",
+    );
+  });
+
+  it("turns a marker-confirmed feed rejection into visible extension guidance", async () => {
+    mocks.capture.mockRejectedValueOnce(
+      new Error(
+        "Feeds cannot be saved as sources. Choose individual posts in the Reader extension.",
+      ),
+    );
+    await start("https://any-instance.test/@fixture");
+    await act(async () => pending);
+    expect(flow.error).toBeNull();
+    expect(flow.extensionHint).toBe(
+      "Feeds, profiles and search pages cannot be saved. Choose individual posts in the Reader extension.",
+    );
+    expect(host.querySelector("[role=alert]")?.textContent).toContain(flow.extensionHint);
+    expect(mocks.lookUp).not.toHaveBeenCalled();
+    expect(createSource).not.toHaveBeenCalled();
+    expect(importSourceFile).not.toHaveBeenCalled();
+  });
+});
 
 describe("cancellable source addition", () => {
   it("keeps a typed link on Escape/backdrop and only dismisses an empty add dialog", async () => {
