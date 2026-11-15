@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { test } from "vitest";
 
 import { readerDeployments } from "../../reader/scripts/deployment-environment.mjs";
+import { parseSdkVersion } from "../../../scripts/publisher/sdk-version.mjs";
 import { extensionSdk } from "./extension-sdk.mjs";
 
 const repo = new URL("../../../", import.meta.url).pathname;
@@ -30,7 +31,8 @@ test("each extension build resolves its own environment's packaged SDK", async (
     assert.equal(sdk.receipt.environment, target);
     assert.equal(sdk.receipt.cpOrigin, readerDeployments[target].connectUrl);
     if (target === "production") {
-      assert.match(extension.dependencies[name], /^0\.1\.0-beta\.\d+$/u);
+      // An exact npm pin: 0.1.0-beta.N, or plain semver from 0.1.0.
+      assert.ok(parseSdkVersion(extension.dependencies[name]), extension.dependencies[name]);
     } else {
       assert.ok(extension.dependencies[name].endsWith(sdk.receipt.artifact));
     }
