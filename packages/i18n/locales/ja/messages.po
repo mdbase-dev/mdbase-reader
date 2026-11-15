@@ -1285,6 +1285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Available date"
 msgstr "公開日"
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Available in Chrome on a computer."
+msgstr "パソコンの Chrome で利用できます。"
+
 #: apps/reader/src/SettingsPage.tsx
 msgid "Back"
 msgstr "戻る"
@@ -1418,6 +1422,10 @@ msgstr "Kindle、Apple Books、Instapaper、ポッドキャストなど、従来
 msgctxt "CSL bibliographic field or item type"
 msgid "Broadcast"
 msgstr "放送番組"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Browser extension"
+msgstr "ブラウザー拡張機能"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
@@ -2300,6 +2308,10 @@ msgstr "別のコレクションを接続…"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
 msgstr "Connectがこの拡張機能のオリジンを拒否しました。現在の拡張機能を再読み込みして再試行してください。解決しない場合は{0}のConnect設定を確認してください。Readerはオリジンの確認を迂回しません。"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Connect the extension to the same collection you use in Reader."
+msgstr "拡張機能を、Reader で使用しているコレクションに接続します。"
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
@@ -3888,6 +3900,10 @@ msgstr "全画面表示"
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
 msgstr "ジャンル"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Get Chrome extension"
+msgstr "Chrome 拡張機能を入手"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
@@ -6269,6 +6285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
 msgstr "私信"
 
+#: apps/reader/src/SettingsSections.tsx
+msgid "Pin mdbase Reader to your Chrome toolbar."
+msgstr "mdbase Reader を Chrome のツールバーに固定します。"
+
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
@@ -7385,6 +7405,14 @@ msgstr "領域のキャプチャを保存"
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
 msgstr "読書中に記事やPDFをmdbaseコレクションへ保存し、箇所をハイライトしてReaderで再び見つけられます。"
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read with the optional Chrome extension."
+msgstr "Chrome 拡張機能を追加すると、記事や PDF を保存し、ウェブページを読みながらハイライトできます。"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read."
+msgstr "記事や PDF を保存し、ウェブページを読みながらハイライトできます。"
+
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
 msgstr "新しいビューとして保存"
@@ -7409,6 +7437,10 @@ msgstr "詳細を保存"
 #: apps/electron/src/main.ts
 msgid "Save export"
 msgstr "エクスポート内容を保存"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save from your browser"
+msgstr "ブラウザーから保存"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"

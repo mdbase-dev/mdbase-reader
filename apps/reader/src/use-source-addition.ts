@@ -30,6 +30,7 @@ export interface SourceAdditionController {
     | "canCancel"
     | "cancel"
     | "progress"
+    | "extensionHint"
     | "offer"
     | "notice"
     | "saveCitationOnly"
@@ -122,6 +123,7 @@ export function useSourceAddition(
       canCancel: webCapture.canCancel,
       cancel: webCapture.cancel,
       progress: webCapture.progress,
+      extensionHint: webCapture.extensionHint,
       offer: webCapture.offer,
       notice: webCapture.notice,
       saveCitationOnly: webCapture.saveCitationOnly,

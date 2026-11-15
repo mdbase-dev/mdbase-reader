@@ -4,6 +4,7 @@ import { Trans } from "@lingui/react/macro";
 import { highlightPalette } from "@mdbase-reader/core";
 import { useCallback, useId, useState, type JSX } from "react";
 
+import { BrowserExtensionLink } from "./BrowserExtensionHelp.js";
 import { DisplayChoice, DisplaySettings } from "./DisplaySettings.js";
 import { FileNameSettings } from "./FileNameSettings.js";
 import {
@@ -70,6 +71,25 @@ export function SettingsSections({
           <DisplaySettings {...display} />
           <DefaultHighlightColor />
         </div>
+      </section>
+      <section className="settings-section" aria-labelledby={`${id}-extension`}>
+        <h2 id={`${id}-extension`}>
+          <Trans>Browser extension</Trans>
+        </h2>
+        <p className="settings-section-intro">
+          <Trans>Save articles and PDFs, and highlight web pages as you read.</Trans>
+        </p>
+        <div>
+          <BrowserExtensionLink />
+        </div>
+        <ol className="reader-extension-setup">
+          <li>
+            <Trans>Connect the extension to the same collection you use in Reader.</Trans>
+          </li>
+          <li>
+            <Trans>Pin mdbase Reader to your Chrome toolbar.</Trans>
+          </li>
+        </ol>
       </section>
       <section className="settings-section" aria-labelledby={`${id}-collection`}>
         <h2 id={`${id}-collection`}>

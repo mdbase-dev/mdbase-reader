@@ -1285,6 +1285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Available date"
 msgstr "이용 가능 날짜"
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Available in Chrome on a computer."
+msgstr "컴퓨터의 Chrome에서 사용할 수 있습니다."
+
 #: apps/reader/src/SettingsPage.tsx
 msgid "Back"
 msgstr "뒤로"
@@ -1418,6 +1422,10 @@ msgstr "Kindle, Apple Books, Instapaper, 팟캐스트 등 Readwise의 기존 자
 msgctxt "CSL bibliographic field or item type"
 msgid "Broadcast"
 msgstr "방송"
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Browser extension"
+msgstr "브라우저 확장 프로그램"
 
 #: apps/reader/src/SourceNoteEditor.tsx
 msgctxt "SourceNoteEditor formatActions"
@@ -2300,6 +2308,10 @@ msgstr "다른 컬렉션 연결…"
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect rejected this extension’s origin. Reload the current extension build and retry. If it persists, check the {0} Connect configuration; Reader will not bypass the origin check."
 msgstr "Connect가 이 확장 프로그램의 출처를 거부했습니다. 현재 확장 프로그램 빌드를 다시 불러온 뒤 재시도해 주세요. 계속되면 {0} Connect 설정을 확인해 주세요. Reader는 출처 확인을 우회하지 않습니다."
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Connect the extension to the same collection you use in Reader."
+msgstr "확장 프로그램을 Reader에서 사용하는 것과 같은 컬렉션에 연결하세요."
 
 #: apps/extension/src/ConnectionPanel.tsx
 msgid "Connect to mdbase{target}"
@@ -3888,6 +3900,10 @@ msgstr "전체 화면"
 msgctxt "CSL bibliographic field or item type"
 msgid "Genre"
 msgstr "장르"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Get Chrome extension"
+msgstr "Chrome 확장 프로그램 받기"
 
 #: apps/reader/src/ImportInput.tsx
 msgid "Get your <0>Readwise access token</0>. It stays in memory in this tab and is sent only to Readwise. Although the token allows writes, this importer only reads."
@@ -6269,6 +6285,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
 msgstr "개인 통신"
 
+#: apps/reader/src/SettingsSections.tsx
+msgid "Pin mdbase Reader to your Chrome toolbar."
+msgstr "mdbase Reader를 Chrome 툴바에 고정하세요."
+
 #: apps/reader/src/dockview-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
@@ -7385,6 +7405,14 @@ msgstr "영역 캡처 저장"
 msgid "Save articles and PDFs to your mdbase collection as you read, highlight passages, and find them again in Reader."
 msgstr "읽으면서 기사와 PDF를 mdbase 컬렉션에 저장하고, 구절을 하이라이트하여 Reader에서 다시 찾아보세요."
 
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read with the optional Chrome extension."
+msgstr "선택 사항인 Chrome 확장 프로그램으로 기사와 PDF를 저장하고 웹 페이지를 읽으면서 하이라이트할 수 있습니다."
+
+#: apps/reader/src/SettingsSections.tsx
+msgid "Save articles and PDFs, and highlight web pages as you read."
+msgstr "기사와 PDF를 저장하고 웹 페이지를 읽으면서 하이라이트할 수 있습니다."
+
 #: apps/reader/src/LibraryViewSaveDialog.tsx
 msgid "Save as a new view"
 msgstr "새 보기로 저장"
@@ -7409,6 +7437,10 @@ msgstr "세부 정보 저장"
 #: apps/electron/src/main.ts
 msgid "Save export"
 msgstr "내보내기 저장"
+
+#: apps/reader/src/BrowserExtensionHelp.tsx
+msgid "Save from your browser"
+msgstr "브라우저에서 저장"
 
 #: apps/reader/src/AnnotationComposer.tsx
 msgctxt "AnnotationComposer interface"

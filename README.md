@@ -75,6 +75,9 @@ or suspended documents. **Ctrl/⌘+F** remains available for searching within th
 
 The optional Chrome extension saves articles and PDFs to your collection and lets you
 highlight web-page text while you read. It requires **Chrome 123 or newer**.
+Reader links to the extension from **Add source**, the empty library, and
+**Settings → Browser extension**. On mobile, these explain that the extension is
+available in Chrome on a computer.
 
 ### Install
 

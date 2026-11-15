@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { ReaderButton } from "@mdbase-reader/ui";
 import { useRef, useState } from "react";
 
+import { BrowserExtensionLink } from "./BrowserExtensionHelp.js";
 import { NoteIcon } from "./icons.js";
 
 import type { DocumentAttachmentController } from "./use-document-attachment.js";
@@ -137,6 +138,12 @@ function AttachmentStatus({
     return (
       <p className="document-empty-status is-error" role="alert">
         {state.error}
+        {state.extensionHint ? (
+          <>
+            {" "}
+            <BrowserExtensionLink />
+          </>
+        ) : null}
       </p>
     );
   }
