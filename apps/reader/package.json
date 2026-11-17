@@ -38,7 +38,7 @@
     "@lingui/core": "6.10.1",
     "@lingui/react": "6.10.1",
     "@mdbase-dev/sdk-legacy-729b5391": "file:../../vendor/mdbase-dev-sdk-0.0.0-729b5391.tgz",
-    "@mdbase-dev/ui": "0.1.0",
+    "@mdbase-dev/ui": "0.1.5",
     "@mdbase-reader/connect": "workspace:*",
     "@mdbase-reader/core": "workspace:*",
     "@mdbase-reader/i18n": "workspace:*",
