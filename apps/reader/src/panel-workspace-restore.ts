@@ -1,19 +1,25 @@
 import { apply, emptyWorkspace, fromSnapshot, type WorkspaceState } from "@mdbase-dev/panels";
 
 import {
-  inspectorPanelId,
+  isSidePanel,
+  navigatorPanel,
   navigatorPanelId,
+  navigatorPanelKind,
+  navigatorWidth,
+  notesPanel,
+  notesPanels,
+  notesWidth,
   panelStorageKey,
   panelTab,
-  sideOf,
-  sidePanel,
-  sidePanelIds,
-  sideWidth,
   tabPanel,
   tabPanelKind,
   type WorkspaceStorage,
 } from "./panel-workspace-state.js";
-import { createLibraryWorkspaceTab, type WorkspaceTab } from "./source-workspace-layout.js";
+import {
+  createLibraryWorkspaceTab,
+  notesViews,
+  type WorkspaceTab,
+} from "./source-workspace-layout.js";
 import { sourcesForWorkspaceRestore } from "./workspace-restore-sources.js";
 
 import type { WorkspaceNavigation } from "./workspace-navigation.js";
@@ -83,11 +89,12 @@ function withoutMissing(state: WorkspaceState, known: ReadonlySet<SourceId>): Wo
   let next = state;
   for (const panel of Object.values(state.panels)) {
     const tab = panelTab(panel);
-    // Only Reader's own panels come back: a tab, or a side panel of the kind its id names.
+    // Only Reader's own panels come back: a tab, Sources under its own id, or a Notes panel.
     const invalid =
       panel.kind === tabPanelKind
         ? !tab
-        : !sidePanelIds.has(panel.id) || panel.kind !== sidePanel(panel.id).kind;
+        : !isSidePanel(panel) ||
+          (panel.kind === navigatorPanelKind) !== (panel.id === navigatorPanelId);
     if (invalid || (tab?.kind === "source" && !known.has(tab.sourceId))) {
       next = apply(next, { type: "remove", panel: panel.id });
     }
@@ -104,33 +111,43 @@ function newWorkspace(): RestoredWorkspace {
   return { state, focusedPanel: id, fresh: true };
 }
 
-/** Both side panels exist: the sources beside the workspace, the notes ready but closed. */
+/** Sources beside a new workspace, and the Notes panels ready at the right but closed. */
 export function withSidePanels(state: WorkspaceState, fresh: boolean): WorkspaceState {
   let next = state;
-  for (const id of [navigatorPanelId, inspectorPanelId]) {
-    const side = sideOf(id);
-    if (
-      !next.panels[id] &&
-      (fresh || id === inspectorPanelId) &&
-      !next.edges[side]?.stack.panels.length
-    ) {
-      next = apply(next, {
-        type: "batch",
-        operations: [
-          { type: "add", panel: sidePanel(id), target: { at: "edge", side }, activate: false },
-          {
-            type: "configureEdge",
-            side,
-            options: { size: sideWidth(id), min: 180, visible: id === navigatorPanelId },
-          },
-        ],
-      });
-    }
+  if (fresh && !next.panels[navigatorPanelId] && !next.edges.left?.stack.panels.length) {
+    next = apply(next, {
+      type: "batch",
+      operations: [
+        {
+          type: "add",
+          panel: navigatorPanel(),
+          target: { at: "edge", side: "left" },
+          activate: false,
+        },
+        { type: "configureEdge", side: "left", options: { size: navigatorWidth, visible: true } },
+      ],
+    });
   }
-  for (const id of sidePanelIds) {
+  // A workspace with no Notes panel at all predates them, or is new: closing the last one in
+  // the right region only closes the region.
+  if (!notesPanels(next).length && !next.edges.right?.stack.panels.length) {
+    next = apply(next, {
+      type: "batch",
+      operations: [
+        ...notesViews.map((view) => ({
+          type: "add" as const,
+          panel: notesPanel(view),
+          target: { at: "edge" as const, side: "right" as const },
+          activate: false,
+        })),
+        { type: "configureEdge", side: "right", options: { size: notesWidth, visible: false } },
+      ],
+    });
+  }
+  for (const panel of Object.values(next.panels)) {
     // Workspaces saved before panels could follow have side panels that would lead.
-    if (next.panels[id] && next.panels[id].leads !== false) {
-      next = apply(next, { type: "update", panel: id, changes: { leads: false } });
+    if (isSidePanel(panel) && panel.leads !== false) {
+      next = apply(next, { type: "update", panel: panel.id, changes: { leads: false } });
     }
   }
   for (const side of ["left", "right"] as const) {

@@ -1,7 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import { allStacks, edgeOfStack, mainStacks, type PanelDescriptor } from "@mdbase-dev/panels";
 
-import { canFollow } from "./panel-workspace-state.js";
+import { canFollow, notesView } from "./panel-workspace-state.js";
 
 import type { ReaderPanelWorkspace } from "./panel-workspace.js";
 import type { WorkspaceTab } from "./source-workspace-layout.js";
@@ -52,6 +52,14 @@ export function tabMenu(dock: ReaderPanelWorkspace, panel: PanelDescriptor): Men
   }
   if (tab) {
     items.push(...ownItems(dock, panel.id, tab, siblings));
+  } else if (notesView(panel)) {
+    items.push({
+      // Pinned, a Notes panel stays on the source it is showing, as that source's own tab.
+      label: translate({ message: "Pin tab", context: "dockview menus" }),
+      disabled: !dock.followedSource,
+      action: () => dock.hold(panel.id),
+      separated: true,
+    });
   }
   items.push(...arrangementItems(dock));
   return items;
@@ -65,7 +73,7 @@ function ownItems(
   siblings: readonly string[],
 ): MenuItem[] {
   const items: MenuItem[] = [];
-  if (["document", "note", "annotations"].includes(tab.view)) {
+  if (["library", "document", "note", "annotations"].includes(tab.view)) {
     items.push({
       label: translate({ message: "Open beside" }),
       action: () => {
@@ -88,10 +96,10 @@ function ownItems(
     ...(canFollow(tab)
       ? [
           {
-            label: tab.follow
-              ? translate({ message: "Stop following the active document" })
-              : translate({ message: "Follow the active document" }),
-            action: () => dock.setFollow(id, !tab.follow),
+            // It becomes a Notes panel: the same view of whichever source is being worked on.
+            label: translate({ message: "Follow the active document" }),
+            disabled: tab.dirty,
+            action: () => dock.follow(id),
           },
         ]
       : []),

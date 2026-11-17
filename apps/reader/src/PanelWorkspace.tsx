@@ -20,18 +20,18 @@ import {
   DocumentWorkspace,
   type DocumentWorkspaceProps,
 } from "./DocumentWorkspace.js";
-import { CloseIcon, LinkIcon, PinIcon } from "./icons.js";
+import { CloseIcon, PinIcon } from "./icons.js";
 import { MobileSourceViews } from "./MobileSourceViews.js";
 import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { PaneActions } from "./PaneActions.js";
-import { inspectorPanelId, navigatorPanelId } from "./panel-ids.js";
+import { navigatorPanelId } from "./panel-ids.js";
 import { tabMenu } from "./panel-menus.js";
-import { follows, sidePanelIds } from "./panel-workspace-state.js";
+import { isSidePanel, notesView } from "./panel-workspace-state.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { sidePanelTitle, workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
 
 import type { ReaderPanelWorkspace } from "./panel-workspace.js";
-import type { SourceWorkspaceLayout } from "./source-workspace-layout.js";
+import type { NotesView, SourceWorkspaceLayout } from "./source-workspace-layout.js";
 import type { PanelDescriptor, WorkspaceChange } from "@mdbase-dev/panels";
 import type { SourceSummary } from "@mdbase-reader/core";
 import "@mdbase-dev/panels/styles.css";
@@ -49,18 +49,19 @@ function ReaderTab({
   dock,
   panel,
   title,
-  inspectorTitle,
+  count,
   close,
 }: {
   readonly dock: ReaderPanelWorkspace;
   readonly panel: PanelDescriptor;
   readonly title: string;
-  readonly inspectorTitle: string | null;
+  /** How many annotations the Annotations panel is showing, when it has any. */
+  readonly count: number | null;
   readonly close: () => void;
 }): JSX.Element {
   const { t } = useLingui();
   const tab = dock.tab(panel.id);
-  const side = sidePanelIds.has(panel.id);
+  const side = isSidePanel(panel);
   return (
     // A tab is one control, so its close affordance is pointer-only; the keyboard uses Delete,
     // the tab's context menu or the pane menu, all of which go through the dirty-tab guard.
@@ -79,16 +80,6 @@ function ReaderTab({
           <PinIcon />
         </span>
       ) : null}
-      {follows(tab) ? (
-        <span
-          role="img"
-          aria-label={t({ message: "Follows the active document" })}
-          title={t({ message: "Follows the active document" })}
-          className="dock-tab-marker is-following"
-        >
-          <LinkIcon />
-        </span>
-      ) : null}
       {tab?.dirty ? (
         <span
           role="img"
@@ -96,16 +87,8 @@ function ReaderTab({
           className="dock-tab-marker is-dirty"
         />
       ) : null}
-      {panel.id === inspectorPanelId && inspectorTitle ? (
-        // The panel keeps its stable title; its tab names the source it inspects instead of
-        // repeating that name in a row of its own.
-        <span className="reader-tab-title" title={inspectorTitle}>
-          <span className="sr-only">{title}: </span>
-          {inspectorTitle}
-        </span>
-      ) : (
-        <span className="reader-tab-title">{title}</span>
-      )}
+      <span className="reader-tab-title">{title}</span>
+      {count ? <span className="reader-tab-count">{count}</span> : null}
       <span
         className="reader-tab-close"
         aria-hidden="true"
@@ -160,8 +143,8 @@ function usePanelTitles(
     const tab = dock.tab(panel.id);
     return tab
       ? workspaceTabAccessibleTitle(tab, sourceOf(panel))
-      : sidePanelIds.has(panel.id)
-        ? sidePanelTitle(panel.id)
+      : isSidePanel(panel)
+        ? sidePanelTitle(panel)
         : t({ message: "Source", context: "DockviewWorkspace status or action" });
   };
   useEffect(() => {
@@ -242,16 +225,17 @@ function useHydratedTabs(
 
 export function PanelWorkspace({
   navigator,
-  inspector,
-  inspectorSource = null,
+  renderNotes,
+  annotationCount = null,
   ...document
 }: DocumentWorkspaceProps & {
   readonly navigator: ReactNode;
-  readonly inspector: ReactNode;
-  readonly inspectorSource?: SourceSummary | null;
+  /** A Notes panel's content: one tool of the source the reader is working on. */
+  readonly renderNotes: (view: NotesView, visible: boolean) => ReactNode;
+  /** How many annotations that source has, once known. */
+  readonly annotationCount?: number | null;
 }): JSX.Element {
   const { t } = useLingui();
-  const inspectorTitle = inspectorSource?.title ?? null;
   const dock = document.sourceWorkspace.dock;
   const layout = document.sourceWorkspace.layout;
   useEffect(() => dock.attach(), [dock]);
@@ -271,6 +255,7 @@ export function PanelWorkspace({
         />
       );
     }
+    const view = notesView(panel);
     return (
       <div
         className="reader-dock-sidebar"
@@ -279,11 +264,7 @@ export function PanelWorkspace({
         data-visible={info.visible}
         aria-hidden={!info.visible}
       >
-        {panel.id === navigatorPanelId
-          ? navigator
-          : panel.id === inspectorPanelId
-            ? inspector
-            : null}
+        {panel.id === navigatorPanelId ? navigator : view ? renderNotes(view, info.visible) : null}
       </div>
     );
   };
@@ -292,7 +273,7 @@ export function PanelWorkspace({
       dock={dock}
       panel={panel}
       title={titleOf(panel)}
-      inspectorTitle={inspectorTitle}
+      count={notesView(panel) === "annotations" ? annotationCount : null}
       close={info.close}
     />
   );

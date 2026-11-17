@@ -958,7 +958,6 @@ msgstr "和"
 msgid "Annotation"
 msgstr "注释"
 
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/LibraryCells.tsx
 msgid "Annotation count not yet known"
 msgstr "批注数量尚不明确"
@@ -1007,13 +1006,7 @@ msgid "Annotation view options{0}"
 msgstr "注释视图选项{0}"
 
 #: apps/reader/src/FileNameSettings.tsx
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
-msgid "Annotations"
-msgstr "注释"
-
-#: apps/reader/src/InspectorPane.tsx
-msgctxt "InspectorPane interface"
 msgid "Annotations"
 msgstr "注释"
 
@@ -1859,7 +1852,6 @@ msgstr "约"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/extension/src/PanelTabs.tsx
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
 msgstr "引文"
@@ -2706,6 +2698,10 @@ msgstr "CSL-JSON 引文详情"
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "CSL-JSON 有错误——请修复或放弃"
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Ctrl-click or middle-click opens in a new tab"
+msgstr "按住 Ctrl 单击或中键单击可在新标签页中打开"
 
 #: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Ctrl+/ for shortcuts"
@@ -3841,10 +3837,6 @@ msgstr "跟随阅读位置"
 #: apps/reader/src/panel-menus.ts
 msgid "Follow the active document"
 msgstr "跟随当前文档"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgid "Follows the active document"
-msgstr "正在跟随当前文档"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
@@ -5594,11 +5586,6 @@ msgctxt "MobileSourceViews views"
 msgid "Note"
 msgstr "笔记"
 
-#: apps/reader/src/workspace-tab-display.ts
-msgctxt "dockview side panels"
-msgid "Notes"
-msgstr "笔记"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Notes & annotations"
@@ -6156,8 +6143,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Pamphlet"
 msgstr "小册子"
 
-#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === sourceWorkspace.activePane.id) + 1)
-#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === workbenchOwner.pane.id) + 1)
+#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex((pane) => pane.id === id) + 1)
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Pane {0}"
 msgstr "窗格 {0}"
@@ -8034,6 +8020,14 @@ msgstr "显示操作"
 msgid "Show all tabs at once"
 msgstr "一次显示所有标签页"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Annotations panel"
+msgstr "显示注释面板"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Citation panel"
+msgstr "显示引文面板"
+
 #: apps/reader/src/PanelWorkspace.tsx
 msgctxt "Workspace canvas"
 msgid "Show every pane"
@@ -8058,6 +8052,10 @@ msgstr "以平铺列表显示部分"
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
 msgstr "显示所选注释（清除筛选条件）"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Source note panel"
+msgstr "显示文献笔记面板"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Show the whole book’s annotations"
@@ -8469,10 +8467,6 @@ msgstr "停止添加"
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
 msgstr "停止并清除耗时记录"
-
-#: apps/reader/src/panel-menus.ts
-msgid "Stop following the active document"
-msgstr "停止跟随当前文档"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop import"
@@ -9266,10 +9260,6 @@ msgstr "此来源记录已不存在。"
 #: apps/extension/src/NotePanel.tsx
 msgid "This source was removed from your collection"
 msgstr "此来源已从你的集合中移除"
-
-#: apps/reader/src/ReaderWorkspaceView.tsx
-msgid "This tab follows the document you are working on. Open or select a source to see it here."
-msgstr "此标签页会跟随你正在处理的文档。打开或选择一个来源即可在此查看。"
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work."

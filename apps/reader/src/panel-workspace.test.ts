@@ -1,10 +1,10 @@
 import { computeLayout, edgeOfStack, mainStacks, stackOfPanel } from "@mdbase-dev/panels";
 import { describe, expect, it, vi } from "vitest";
 
-import { inspectorPanelId, navigatorPanelId } from "./panel-ids.js";
-import { panelStorageKey } from "./panel-workspace-state.js";
+import { navigatorPanelId } from "./panel-ids.js";
+import { notesView, panelStorageKey } from "./panel-workspace-state.js";
 import { ReaderPanelWorkspace } from "./panel-workspace.js";
-import { createWorkspaceTab } from "./source-workspace-layout.js";
+import { createWorkspaceTab, type NotesView } from "./source-workspace-layout.js";
 
 import type { SourceId } from "@mdbase-reader/core";
 
@@ -44,6 +44,16 @@ const sideOfPanel = (workspace: ReaderPanelWorkspace, panel: string): string | n
   const stack = stackOfPanel(workspace.store.state, panel);
   return stack ? edgeOfStack(workspace.store.state, stack.id) : null;
 };
+/** The Notes panel showing one of a source's tools. */
+const notes = (workspace: ReaderPanelWorkspace, view: NotesView): string => {
+  const panel = workspace.notesPanels().find((candidate) => notesView(candidate) === view);
+  if (!panel) {
+    throw new Error(`No Notes panel for ${view}`);
+  }
+  return panel.id;
+};
+const notesViewsOf = (workspace: ReaderPanelWorkspace): (NotesView | null)[] =>
+  workspace.notesPanels().map(notesView);
 const idOf = (workspace: ReaderPanelWorkspace, source: SourceId, view = "document"): string => {
   const panel = workspace.contentPanels().find(({ id }) => {
     const tab = workspace.tab(id);
@@ -64,7 +74,8 @@ describe("a new workspace", () => {
     expect(workspace.view).toBe("columns");
     expect(workspace.isSidebarVisible("left")).toBe(true);
     expect(workspace.isSidebarVisible("right")).toBe(false);
-    expect(workspace.panel(inspectorPanelId)).toBeDefined();
+    expect(notesViewsOf(workspace)).toEqual(["annotations", "note", "citation"]);
+    expect(sideOfPanel(workspace, notes(workspace, "citation"))).toBe("right");
   });
   it("ignores layouts saved by earlier workspaces and anything it cannot read", () => {
     const storage = memory();
@@ -79,16 +90,36 @@ describe("a new workspace", () => {
 });
 
 describe("tabs", () => {
-  it("shows another library view in the library tab that is already open", () => {
+  it("gives a view a tab of its own beside a pinned library tab, and reuses an unpinned one", () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
+    const views = (): (string | undefined)[] =>
+      workspace.contentPanels().flatMap(({ id }) => {
+        const tab = workspace.tab(id);
+        return tab?.kind === "library" ? [tab.libraryViewId] : [];
+      });
     workspace.open(one);
+    // The library tab a workspace starts with is pinned to All sources.
     workspace.openLibrary("reading", "Reading");
-    expect(titles(workspace)).toEqual(["library", `${one}:document`]);
+    expect(titles(workspace)).toEqual(["library", `${one}:document`, "library"]);
     const tab = workspace.activeTab();
     expect(tab?.kind === "library" ? [tab.libraryViewId, tab.title] : null).toEqual([
       "reading",
       "Reading",
     ]);
+    // The unpinned tab moves on to the next view; a view already open is gone to, not repeated.
+    workspace.openLibrary("finished", "Finished");
+    expect(views()).toEqual(["all-sources", "finished"]);
+    workspace.openLibrary();
+    expect(views()).toEqual(["all-sources", "finished"]);
+    expect(workspace.activeTab()?.libraryViewId).toBe("all-sources");
+    // A tab's own view switcher changes that tab, pinned or not.
+    workspace.showLibraryView(workspace.activeTab()?.id ?? "", "reading", "Reading");
+    expect(views()).toEqual(["reading", "finished"]);
+    workspace.openLibraryTab("all-sources", "All sources");
+    expect(views()).toEqual(["reading", "finished", "all-sources"]);
+    // Asking for a new tab gives one, even for a view that already has a tab here.
+    workspace.openLibraryTab("all-sources", "All sources");
+    expect(views()).toEqual(["reading", "finished", "all-sources", "all-sources"]);
   });
   it("replaces the previous preview in place, and keeps a tab once it is opened for good", () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
@@ -191,7 +222,8 @@ describe("side panels", () => {
     workspace.toggleSidebar("left");
     expect(workspace.isSidebarVisible("left")).toBe(true);
     workspace.toggleSidebar("right");
-    expect(workspace.isSideVisible(inspectorPanelId)).toBe(true);
+    expect(workspace.isSideVisible(notes(workspace, "annotations"))).toBe(true);
+    expect(workspace.isSideVisible(notes(workspace, "note"))).toBe(false);
   });
   it("lets the notes give way in a narrow window, unless they were asked for last", () => {
     const storage = memory();
@@ -232,13 +264,14 @@ describe("side panels", () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
     sized(workspace, 1400);
     workspace.open(one);
-    workspace.setSideVisible(inspectorPanelId, true);
-    expect(workspace.activePanel()?.id).toBe(inspectorPanelId);
+    workspace.showNotes("note");
+    expect(workspace.activePanel()?.id).toBe(notes(workspace, "note"));
     workspace.toggleSidebar("right");
     expect(workspace.activeTab()?.sourceId).toBe(one);
     sized(workspace, 390);
     workspace.toggleSidebar("right");
-    expect(workspace.activePanel()?.id).toBe(inspectorPanelId);
+    expect(workspace.activePanel()?.id).toBe(notes(workspace, "note"));
+    expect(workspace.isSidebarVisible("right")).toBe(true);
     sized(workspace, 1400);
     expect(workspace.isSidebarVisible("right")).toBe(false);
     expect(workspace.activeTab()?.sourceId).toBe(one);
@@ -251,8 +284,8 @@ describe("side panels", () => {
     workspace.open(one);
     expect(workspace.isSidebarVisible("left")).toBe(false);
     expect(wanted(workspace).left).toBe(true);
-    // Working in the Notes panel is still reading.
-    workspace.setSideVisible(inspectorPanelId, true);
+    // Working in a Notes panel is still reading.
+    workspace.showNotes("annotations");
     expect(workspace.isSidebarVisible("left")).toBe(false);
     // The reader can look at Sources anyway, and put it away again, without changing the rule.
     workspace.toggleSidebar("left");
@@ -269,6 +302,9 @@ describe("side panels", () => {
     workspace.activate(idOf(workspace, one));
     expect(workspace.isSidebarVisible("left")).toBe(true);
   });
+});
+
+describe("side panels away from home", () => {
   it("lets Sources and Notes live anywhere, and brings one home when its side is opened empty", () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
     sized(workspace, 1400);
@@ -282,73 +318,122 @@ describe("side panels", () => {
     workspace.toggleSidebar("left");
     expect(sideOfPanel(workspace, navigatorPanelId)).toBe("left");
     expect(workspace.isSidebarVisible("left")).toBe(true);
-    workspace.move(inspectorPanelId, pane);
+    // A Notes panel that was closed comes back when its side is opened empty; the others stay.
+    const [annotations, note, citation] = workspace.notesPanels().map(({ id }) => id);
+    for (const id of [annotations, note, citation]) {
+      workspace.move(id ?? "", pane);
+    }
+    workspace.close(citation ?? "");
     workspace.toggleSidebar("right");
-    expect(sideOfPanel(workspace, inspectorPanelId)).toBe("right");
-    // A tab can share a side region, and then the region is not Notes' alone to close.
+    expect(notesViewsOf(workspace)).toEqual(["annotations", "note", "citation"]);
+    expect(sideOfPanel(workspace, notes(workspace, "citation"))).toBe("right");
+    expect(sideOfPanel(workspace, annotations ?? "")).toBeNull();
+    // With none closed, the ones elsewhere come home.
+    workspace.move(notes(workspace, "citation"), pane);
+    workspace.toggleSidebar("right");
+    expect(workspace.notesPanels().map(({ id }) => sideOfPanel(workspace, id))).toEqual([
+      "right",
+      "right",
+      "right",
+    ]);
+    // A tab can share a side region, and then the region is not a Notes panel's alone to close.
     workspace.open(two, "note");
-    const note = idOf(workspace, two, "note");
-    workspace.store.dispatch({ type: "move", panel: note, target: { at: "edge", side: "right" } });
-    expect(sideOfPanel(workspace, note)).toBe("right");
-    workspace.setSideVisible(inspectorPanelId, false);
+    const tab = idOf(workspace, two, "note");
+    workspace.store.dispatch({ type: "move", panel: tab, target: { at: "edge", side: "right" } });
+    expect(sideOfPanel(workspace, tab)).toBe("right");
+    workspace.setSideVisible(notes(workspace, "annotations"), false);
     expect(workspace.isSidebarVisible("right")).toBe(true);
+  });
+  it("goes to a Notes panel wherever it is, and brings back one that was closed", () => {
+    const workspace = new ReaderPanelWorkspace("preview", null, known);
+    sized(workspace, 1400);
+    workspace.showNotes("citation");
+    expect(workspace.isSidebarVisible("right")).toBe(true);
+    expect(workspace.activePanel()?.id).toBe(notes(workspace, "citation"));
+    workspace.close(notes(workspace, "citation"));
+    expect(notesViewsOf(workspace)).toEqual(["annotations", "note"]);
+    workspace.showNotes("citation");
+    expect(notesViewsOf(workspace)).toEqual(["annotations", "note", "citation"]);
+    // Resetting the arrangement brings every one of them back to the right.
+    workspace.close(notes(workspace, "note"));
+    workspace.move(notes(workspace, "annotations"), workspace.pane()?.id ?? "");
+    workspace.reset();
+    expect(notesViewsOf(workspace)).toHaveLength(3);
+    expect(new Set(notesViewsOf(workspace))).toEqual(new Set(["annotations", "note", "citation"]));
+    expect(workspace.notesPanels().every(({ id }) => sideOfPanel(workspace, id) === "right")).toBe(
+      true,
+    );
   });
 });
 
-describe("following the active document", () => {
-  it("shows the source of the tab last worked in, and stays put while pinned", () => {
+describe("Notes panels and the source they show", () => {
+  it("holds a pinned panel on its source as that source's tab, and follows again unpinned", () => {
+    const workspace = new ReaderPanelWorkspace("preview", null, known);
+    sized(workspace, 1400);
+    const panel = notes(workspace, "note");
+    // With no source to show there is nothing to pin it to.
+    workspace.hold(panel);
+    expect(workspace.tab(panel)).toBeNull();
+    workspace.open(one);
+    workspace.setFollowed(one);
+    workspace.hold(panel);
+    expect(workspace.tab(panel)).toMatchObject({
+      kind: "source",
+      sourceId: one,
+      view: "note",
+      pinned: true,
+      follow: true,
+    });
+    expect(notesViewsOf(workspace)).toEqual(["annotations", "citation"]);
+    expect(sideOfPanel(workspace, panel)).toBe("right");
+    // Pinned, it is a tab about its own source, as any note tab is.
+    workspace.open(two);
+    workspace.setFollowed(two);
+    expect(workspace.tab(panel)?.sourceId).toBe(one);
+    workspace.activate(panel);
+    expect(workspace.leaderTab()?.id).toBe(panel);
+    workspace.activate(idOf(workspace, two));
+    workspace.patch(panel, { pinned: false });
+    expect(workspace.tab(panel)).toBeNull();
+    expect(notesView(workspace.panel(panel))).toBe("note");
+    expect(workspace.panel(panel)?.leads).toBe(false);
+  });
+  it("turns a source's own tab into a Notes panel, once its changes are saved", () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
     sized(workspace, 1400);
     workspace.open(one);
-    workspace.open(one, "note");
-    const note = workspace.activePanel()?.id ?? "";
-    workspace.setFollow(note, true);
-    workspace.split(note, "horizontal");
-    const follow = (): void => {
-      const leader = workspace.leaderTab();
-      workspace.setFollowed(leader?.kind === "source" ? leader.sourceId : null);
-    };
-    // Using the following tab does not make it the active document.
-    expect(workspace.activePanel()?.id).toBe(note);
+    workspace.open(one, "citation");
+    const tab = workspace.activePanel()?.id ?? "";
+    expect(workspace.leaderTab()?.id).toBe(tab);
+    workspace.patch(tab, { dirty: true });
+    workspace.follow(tab);
+    expect(workspace.tab(tab)?.view).toBe("citation");
+    workspace.patch(tab, { dirty: false });
+    workspace.follow(tab);
+    expect(workspace.tab(tab)).toBeNull();
+    expect(notesView(workspace.panel(tab))).toBe("citation");
+    // Using a Notes panel does not make it the tab the panels are about.
+    expect(workspace.activePanel()?.id).toBe(tab);
     expect(workspace.leaderTab()?.view).toBe("document");
-    workspace.activate(idOf(workspace, one));
-    workspace.open(two);
-    follow();
-    expect(workspace.tab(note)?.sourceId).toBe(two);
-    workspace.patch(note, { pinned: true });
-    workspace.open(three);
-    follow();
-    expect(workspace.tab(note)?.sourceId).toBe(two);
-    // Pinned, it is a tab about its own source, as any note tab is.
-    workspace.activate(note);
-    expect(workspace.leaderTab()?.id).toBe(note);
-    workspace.activate(idOf(workspace, three));
-    workspace.patch(note, { pinned: false });
-    expect(workspace.tab(note)?.sourceId).toBe(three);
+    expect(workspace.getSnapshot().panes.flatMap(({ tabs }) => tabs)).toHaveLength(2);
   });
-  it("waits for unsaved changes before moving on, and comes back following after a reload", () => {
+  it("comes back after a reload as it was: following, or pinned to its source", () => {
     const storage = memory();
     const workspace = new ReaderPanelWorkspace("preview", storage, known);
     sized(workspace, 1400);
-    workspace.open(one, "annotations");
-    const tab = workspace.activePanel()?.id ?? "";
-    workspace.setFollow(tab, true);
-    workspace.patch(tab, { dirty: true });
-    workspace.setFollowed(two);
-    expect(workspace.tab(tab)?.sourceId).toBe(one);
-    workspace.patch(tab, { dirty: false });
-    expect(workspace.tab(tab)?.sourceId).toBe(two);
+    workspace.open(one);
+    workspace.setFollowed(one);
+    const panel = notes(workspace, "annotations");
+    workspace.hold(panel);
     workspace.store.flush();
     const restored = new ReaderPanelWorkspace("preview", storage, known);
-    expect(restored.tab(tab)).toMatchObject({ follow: true, sourceId: two, view: "annotations" });
-    expect(restored.panel(tab)?.leads).toBe(false);
-  });
-  it("is for notes and annotations: a citation form belongs to one source", () => {
-    const workspace = new ReaderPanelWorkspace("preview", null, known);
-    workspace.open(one, "citation");
-    const tab = workspace.activePanel()?.id ?? "";
-    workspace.setFollow(tab, true);
-    expect(workspace.tab(tab)).not.toHaveProperty("follow");
+    expect(restored.tab(panel)).toMatchObject({ follow: true, pinned: true, sourceId: one });
+    expect(notesViewsOf(restored)).toEqual(["note", "citation"]);
+    expect(restored.notesPanels().every(({ leads }) => leads === false)).toBe(true);
+    // Its source deleted, the pinned tab goes; the panels that follow stay.
+    const without = new ReaderPanelWorkspace("preview", storage, new Set([two]));
+    expect(without.panel(panel)).toBeUndefined();
+    expect(notesViewsOf(without)).toEqual(["note", "citation"]);
   });
 });
 

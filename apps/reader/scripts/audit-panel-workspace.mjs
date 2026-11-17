@@ -106,7 +106,8 @@ export async function auditPanelWorkspace(page, { screenshot }) {
   completed.push("Undoing an arrangement change restores the layout and keeps every tab");
 
   await menu(tab(name(3)), "Show all tabs at once");
-  await expect(page.locator(".mp-card")).toHaveCount(7);
+  // Five tabs, Sources and the three Notes panels.
+  await expect(page.locator(".mp-card")).toHaveCount(9);
   await screenshot("workspace-overview");
   await page
     .locator(".mp-card")

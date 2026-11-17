@@ -1459,10 +1459,6 @@ button {
     width: min(var(--reader-inspector-width), 88vw);
     box-shadow: -18px 0 48px -36px var(--color-scrim);
   }
-
-  .inspector-pane.is-mobile-closed {
-    display: none;
-  }
 }
 
 @media (max-width: 680px) {

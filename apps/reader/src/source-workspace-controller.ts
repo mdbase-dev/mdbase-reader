@@ -16,6 +16,8 @@ export interface SourceWorkspaceActions {
     paneId?: WorkspacePaneId,
   ) => void;
   readonly openLibrary: (libraryViewId?: string, title?: string, paneId?: WorkspacePaneId) => void;
+  /** A library view in a tab of its own, whatever the library tab in use is showing. */
+  readonly openLibraryTab: (libraryViewId: string, title: string) => void;
   readonly openLibraryBeside: (
     libraryViewId: string,
     title: string,

@@ -958,7 +958,6 @@ msgstr "y"
 msgid "Annotation"
 msgstr "Anotación"
 
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/LibraryCells.tsx
 msgid "Annotation count not yet known"
 msgstr "Aún no se conoce el número de anotaciones"
@@ -1007,13 +1006,7 @@ msgid "Annotation view options{0}"
 msgstr "Opciones de vista de anotaciones{0}"
 
 #: apps/reader/src/FileNameSettings.tsx
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
-msgid "Annotations"
-msgstr "Anotaciones"
-
-#: apps/reader/src/InspectorPane.tsx
-msgctxt "InspectorPane interface"
 msgid "Annotations"
 msgstr "Anotaciones"
 
@@ -1859,7 +1852,6 @@ msgstr "Aproximadamente"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/extension/src/PanelTabs.tsx
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
 msgstr "Cita"
@@ -2706,6 +2698,10 @@ msgstr "Datos de la cita en CSL-JSON"
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "El CSL-JSON contiene errores: corrígelos o descártalo"
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Ctrl-click or middle-click opens in a new tab"
+msgstr "Ctrl+clic o clic central abre en una pestaña nueva"
 
 #: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Ctrl+/ for shortcuts"
@@ -3841,10 +3837,6 @@ msgstr "Seguir la posición de lectura"
 #: apps/reader/src/panel-menus.ts
 msgid "Follow the active document"
 msgstr "Seguir el documento activo"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgid "Follows the active document"
-msgstr "Sigue el documento activo"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
@@ -5594,11 +5586,6 @@ msgctxt "MobileSourceViews views"
 msgid "Note"
 msgstr "Nota"
 
-#: apps/reader/src/workspace-tab-display.ts
-msgctxt "dockview side panels"
-msgid "Notes"
-msgstr "Notas"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Notes & annotations"
@@ -6156,8 +6143,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Pamphlet"
 msgstr "Folleto"
 
-#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === sourceWorkspace.activePane.id) + 1)
-#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === workbenchOwner.pane.id) + 1)
+#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex((pane) => pane.id === id) + 1)
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Pane {0}"
 msgstr "Panel {0}"
@@ -8034,6 +8020,14 @@ msgstr "Mostrar acciones"
 msgid "Show all tabs at once"
 msgstr "Mostrar todas las pestañas a la vez"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Annotations panel"
+msgstr "Mostrar el panel Anotaciones"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Citation panel"
+msgstr "Mostrar el panel Cita"
+
 #: apps/reader/src/PanelWorkspace.tsx
 msgctxt "Workspace canvas"
 msgid "Show every pane"
@@ -8058,6 +8052,10 @@ msgstr "Mostrar las partes como lista plana"
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
 msgstr "Mostrar la anotación seleccionada (borrar filtros)"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Source note panel"
+msgstr "Mostrar el panel Nota de la fuente"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Show the whole book’s annotations"
@@ -8469,10 +8467,6 @@ msgstr "Dejar de añadir"
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
 msgstr "Detener y borrar tiempos"
-
-#: apps/reader/src/panel-menus.ts
-msgid "Stop following the active document"
-msgstr "Dejar de seguir el documento activo"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop import"
@@ -9266,10 +9260,6 @@ msgstr "Este registro de fuente ya no existe."
 #: apps/extension/src/NotePanel.tsx
 msgid "This source was removed from your collection"
 msgstr "Esta fuente se eliminó de tu colección"
-
-#: apps/reader/src/ReaderWorkspaceView.tsx
-msgid "This tab follows the document you are working on. Open or select a source to see it here."
-msgstr "Esta pestaña sigue el documento en el que trabajas. Abre o selecciona una fuente para verla aquí."
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work."

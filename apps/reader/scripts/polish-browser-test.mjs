@@ -178,7 +178,7 @@ async function desktopPanes(page, output, name, reducedMotion) {
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect.poll(widths).toEqual(before);
   console.log(`${name}: desktop layout restored`);
-  await inspector.getByRole("tab", { name: "Citation", exact: true }).click();
+  await page.getByRole("tab", { name: "Citation", exact: true }).click();
   await inspector.getByRole("button", { name: "Fix details", exact: true }).click();
   console.log(`${name}: citation edit`);
   const bounds = await inspector.boundingBox();

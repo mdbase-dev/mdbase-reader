@@ -9,7 +9,6 @@ export interface WorkspaceShellPreferences {
   readonly inspectorWidth: number;
   readonly inspectorHeight: number;
   readonly inspectorDock: InspectorDock;
-  readonly inspectorTab: "annotations" | "note" | "citation";
   readonly libraryPresentation: LibraryPresentation;
   readonly typography: ReadingTypography;
   /** Hide the Sources sidebar while a document has focus, and bring it back for the library. */
@@ -22,7 +21,6 @@ const defaults: WorkspaceShellPreferences = {
   inspectorWidth: 340,
   inspectorHeight: 320,
   inspectorDock: "right",
-  inspectorTab: "annotations",
   libraryPresentation: "compact",
   typography: defaultReadingTypography,
   sidebarWhileReading: "hide",
@@ -43,9 +41,6 @@ export function parseShellPreferences(value: unknown): WorkspaceShellPreferences
     inspectorWidth: clamp(candidate.inspectorWidth, 280, 560, defaults.inspectorWidth),
     inspectorHeight: clamp(candidate.inspectorHeight, 220, 520, defaults.inspectorHeight),
     inspectorDock: candidate.inspectorDock === "bottom" ? "bottom" : "right",
-    inspectorTab: ["annotations", "note", "citation"].includes(candidate.inspectorTab ?? "")
-      ? (candidate.inspectorTab ?? defaults.inspectorTab)
-      : defaults.inspectorTab,
     libraryPresentation: ["compact", "bibliography", "grid"].includes(
       candidate.libraryPresentation ?? "",
     )

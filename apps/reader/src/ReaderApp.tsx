@@ -11,7 +11,6 @@ import {
   libraryLoadFallback,
 } from "./connection-recovery.js";
 import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
-import { inspectorPanelId } from "./panel-ids.js";
 import {
   useDocumentSurfaceTiming,
   useReaderAnnotationComposer as useComposer,
@@ -164,17 +163,7 @@ function OpenedReaderApp({
     citationSources: library.sources,
     saveFile,
   });
-  const sourceRemoval = useSourceRemoval(workspace, (id) => {
-    const activeTab = sourceWorkspace.dock.activeTab();
-    if (
-      activeTab?.kind === "source" &&
-      activeTab.sourceId === id &&
-      sourceWorkspace.dock.isSideVisible(inspectorPanelId)
-    ) {
-      sourceWorkspace.dock.setSideVisible(inspectorPanelId, false);
-    }
-    sourceWorkspace.close(id);
-  });
+  const sourceRemoval = useSourceRemoval(workspace, sourceWorkspace.close);
   const sourceStatus = useSourceStatus(gateway, workspace.reconcileSource);
 
   useReaderShortcuts({

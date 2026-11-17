@@ -3,8 +3,9 @@ import { expect } from "@playwright/test";
 const storageKey = "mdbase-reader:panels:v1:test-reader-audit";
 
 /**
- * Side regions as ordinary panes, tabs that follow the active document, and the canvas. Runs
- * after the panel workspace audit, which leaves every tab in one pane.
+ * Library views as tabs, side regions as ordinary panes, the Notes tabs that follow the active
+ * document, and the canvas. Runs after the panel workspace audit, which leaves every tab in one
+ * pane.
  */
 export async function auditPanelCanvas(page, { screenshot }) {
   const completed = [];
@@ -44,6 +45,31 @@ export async function auditPanelCanvas(page, { screenshot }) {
     await page.mouse.up();
   };
 
+  // --- Library views as tabs
+  await expect(region("left")).toBeVisible();
+  const ids = (locator) =>
+    locator.evaluateAll((elements) => elements.map((element) => element.dataset.panelId));
+  const view = page.locator(".navigator-view-section > div > button").first();
+  const viewName = (await view.locator("span").innerText()).trim();
+  const tabCount = await tabs.count();
+  const original = await ids(tab(viewName));
+  await view.click({ modifiers: ["Control"] });
+  await expect(tabs).toHaveCount(tabCount + 1);
+  await expect(tab(viewName)).toHaveCount(original.length + 1);
+  // A plain click goes to a tab that already shows the view.
+  await view.click();
+  await expect(tabs).toHaveCount(tabCount + 1);
+  await menu(tab(viewName).last(), "Open beside");
+  await expect(panes).toHaveCount(2);
+  await expect(tab(viewName)).toHaveCount(original.length + 2);
+  await screenshot("workspace-library-tabs");
+  for (const id of (await ids(tab(viewName))).filter((id) => !original.includes(id))) {
+    await menu(panel(id), "Close");
+  }
+  await expect(panes).toHaveCount(1);
+  await expect(tabs).toHaveCount(tabCount);
+  completed.push("A library view opens in a tab of its own, beside another, as often as wanted");
+
   // --- Side regions
   await expect(region("left")).toBeVisible();
   await notesButton.click();
@@ -82,34 +108,70 @@ export async function auditPanelCanvas(page, { screenshot }) {
   await expect(region("right")).toBeHidden();
   expect(await wanted()).toEqual({ left: true, right: false });
 
-  // --- Following the active document
+  // --- Notes: three tabs that show whichever document is being worked on
+  const notesTab = (title) =>
+    page.locator(".reader-dock-tab.is-side").filter({
+      has: page.locator(".reader-tab-title", { hasText: new RegExp(`^${escape(title)}$`) }),
+    });
+  const showing = (id) =>
+    page.locator(`.reader-dock-sidebar[data-panel-id="${id}"] .inspector-source`);
   await tab(name(0)).click();
+  await notesButton.click();
+  await expect(region("right")).toBeVisible();
+  for (const title of ["Annotations", "Source note", "Citation"]) {
+    await expect(region("right").locator(notesTab(title))).toHaveCount(1);
+  }
+  await notesTab("Source note").click();
+  const note = await notesTab("Source note").getAttribute("data-panel-id");
+  await expect(showing(note)).toContainText(name(0));
+  await tab(name(1)).click();
+  await expect(showing(note)).toContainText(name(1));
+  await screenshot("workspace-notes-tabs");
+
+  // Pinned, it is that source's own note tab, wherever it sits; unpinned, it follows again.
+  await menu(panel(note), "Pin tab");
+  await expect(panel(note)).not.toHaveClass(/is-side/u);
+  await expect(panel(note).locator(".dock-tab-marker.is-pinned")).toBeVisible();
+  await expect(panel(note)).toContainText(name(1));
+  await tab(name(2)).click();
+  await expect(panel(note)).toContainText(name(1));
+  await screenshot("workspace-notes-pinned");
+  await menu(panel(note), "Unpin tab");
+  await expect(panel(note)).toHaveClass(/is-side/u);
+  await expect(showing(note)).toContainText(name(2));
+
+  // A source's own note tab can be told to follow, which makes it one more Notes panel.
   await page.getByRole("button", { name: /^Search and commands/u }).click();
   await page
     .getByRole("combobox", { name: "Search sources and commands", exact: true })
     .fill("Open source note");
   await page.getByRole("option", { name: /^Open source note/u }).click();
-  const noteTab = tabs.filter({ hasText: "Source note" });
-  await expect(noteTab).toHaveCount(1);
-  const note = await noteTab.getAttribute("data-panel-id");
-  await menu(panel(note), "Follow the active document");
-  await expect(panel(note).locator(".dock-tab-marker.is-following")).toBeVisible();
+  const ownTab = tabs.filter({ hasText: "Source note" });
+  await expect(ownTab).toHaveCount(1);
+  const own = await ownTab.getAttribute("data-panel-id");
+  await menu(panel(own), "Follow the active document");
+  await expect(panel(own)).toHaveClass(/is-side/u);
+  // The document it was about takes over as the one being worked on.
+  await expect(showing(own)).toContainText(name(2));
+  await expect(showing(note)).toContainText(name(2));
+  await menu(panel(own), "Close");
+  await expect(panel(own)).toHaveCount(0);
+
+  // Like any tab it can leave its region, and it keeps following from wherever it is put.
   await menu(panel(note), "Move to new pane right");
   await expect(panes).toHaveCount(2);
-  await expect(panel(note)).toContainText(name(0));
   await tab(name(1)).click();
-  await expect(panel(note)).toContainText(name(1));
-  await screenshot("workspace-following");
-  await menu(panel(note), "Pin tab");
+  await expect(showing(note)).toContainText(name(1));
   await tab(name(2)).click();
-  await expect(panel(note)).toContainText(name(1));
-  await menu(panel(note), "Unpin tab");
-  await expect(panel(note)).toContainText(name(2));
-  // Working in the following tab does not change which document it follows.
-  await page.locator(`[data-mp-panel="${note}"]`).click();
-  await expect(panel(note)).toContainText(name(2));
+  await expect(showing(note)).toContainText(name(2));
+  await screenshot("workspace-following");
+  // Working in the panel does not change which document it shows.
+  await page.locator(`.reader-dock-sidebar[data-panel-id="${note}"]`).click();
+  await expect(showing(note)).toContainText(name(2));
+  await notesButton.click();
+  await expect(region("right")).toBeHidden();
   completed.push(
-    "A note tab follows the active document, holds still while pinned, and catches up",
+    "Notes are three tabs that follow the active document, hold a source while pinned, and move like any tab",
   );
 
   // --- The canvas
@@ -218,8 +280,8 @@ export async function auditPanelCanvas(page, { screenshot }) {
   await page.reload();
   await expect(panes).toHaveCount(3, { timeout: 30000 });
   await expect(root).toHaveAttribute("data-mp-view", "canvas");
-  await expect(panel(note).locator(".dock-tab-marker.is-following")).toBeVisible();
-  completed.push("The canvas, its panes and the following tab survive a reload");
+  await expect(panel(note)).toHaveClass(/is-side/u);
+  completed.push("The canvas, its panes and the Notes tab in a pane survive a reload");
 
   await menu(tab(name(2)).first(), "Fit panes to the window");
   await expect(root).toHaveAttribute("data-mp-view", "tiling");

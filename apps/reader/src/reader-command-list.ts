@@ -312,6 +312,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       shortcut: "mod+shift+\\",
       run: input.toggleInspector,
     },
+    ...notesCommands(input),
     {
       id: "reopen",
       label: translate({ message: "Reopen closed tab", context: "reader command list" }),
@@ -478,6 +479,34 @@ function paneCommands(
       detail: translate`Pane ${paneLabel}`,
       group: "Workspace",
       run: () => input.workspace.closePane(input.workspace.layout.focusedPaneId),
+    },
+  ];
+}
+
+/** Go to one of the Notes panels, bringing back one that was closed. */
+function notesCommands(input: ReaderCommandInput): ReaderCommand[] {
+  const dock = input.workspace.dock;
+  return [
+    {
+      id: "show-notes-annotations",
+      label: translate({ message: "Show Annotations panel" }),
+      keywords: "notes highlights comments right sidebar",
+      group: "Workspace",
+      run: () => dock.showNotes("annotations"),
+    },
+    {
+      id: "show-notes-note",
+      label: translate({ message: "Show Source note panel" }),
+      keywords: "notes literature note right sidebar",
+      group: "Workspace",
+      run: () => dock.showNotes("note"),
+    },
+    {
+      id: "show-notes-citation",
+      label: translate({ message: "Show Citation panel" }),
+      keywords: "notes reference bibliography right sidebar",
+      group: "Workspace",
+      run: () => dock.showNotes("citation"),
     },
   ];
 }

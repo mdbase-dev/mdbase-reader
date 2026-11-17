@@ -25,25 +25,31 @@ import { restoreWorkspace, sessionId, withSidePanels } from "./panel-workspace-r
 import {
   activePanel,
   canFollow,
-  follows,
+  homeOf,
   initialLayoutSnapshot,
-  inspectorPanelId,
+  isSidePanel,
+  navigatorPanel,
   navigatorPanelId,
+  navigatorWidth,
+  notesPanel,
+  notesPanelKind,
+  notesPanels,
+  notesView,
+  notesWidth,
   panelStorageKey,
   panelTab,
   projectLayout,
-  sideOf,
-  sidePanel,
-  sidePanelIds,
-  sideWidth,
   tabData,
   tabPanel,
+  tabPanelKind,
   tabPanels,
   type WorkspaceStorage,
 } from "./panel-workspace-state.js";
 import {
   createLibraryWorkspaceTab,
   createWorkspaceTab,
+  notesViews,
+  type NotesView,
   type SourceWorkspaceLayout,
   type SourceWorkspaceView,
   type WorkspaceSplitDirection,
@@ -59,8 +65,8 @@ const skip = { history: "skip" } as const;
 
 /**
  * Reader's workspace: which tabs are open and how they are arranged. The arrangement lives in a
- * panel store; this adds what only Reader knows (previews, unsaved changes, history, where the
- * Sources and Notes panels start, tabs that follow the active document) and a pane-and-tab
+ * panel store; this adds what only Reader knows (previews, unsaved changes, history, where
+ * Sources and the Notes panels start, pinning a Notes panel to a source) and a pane-and-tab
  * projection for its commands.
  *
  * A side region saves one thing: whether the reader wants it open. Whether it is on screen now
@@ -86,7 +92,7 @@ export class ReaderPanelWorkspace {
   private hidden: readonly EdgeSide[] = [];
   /** The side asked for last: when there is not room for both, the other one gives way. */
   private asked: EdgeSide | null = null;
-  /** The source that tabs following the active document show. */
+  /** The source the Notes panels show. */
   private followed: SourceId | null = null;
   private overviewOpen = false;
   private chromeHidden = false;
@@ -177,7 +183,7 @@ export class ReaderPanelWorkspace {
     if (active && active.id !== this.focusedPanel) {
       this.focusedPanel = active.id;
       this.navigation.visit(active);
-    } else if (this.focusedPanel && !change.state.panels[this.focusedPanel]) {
+    } else if (this.focusedPanel && !panelTab(change.state.panels[this.focusedPanel])) {
       this.focusedPanel = tabPanels(change.state)[0]?.id ?? null;
     }
     this.refreshReading();
@@ -247,34 +253,63 @@ export class ReaderPanelWorkspace {
   ): void {
     this.openTab(createWorkspaceTab(sourceId, view, preview), this.pane(paneId));
   }
+  /**
+   * Go to a library view. A tab already showing it is used. Otherwise the library tab in use
+   * shows it, unless that tab is pinned: then the view gets a tab of its own.
+   */
   openLibrary(
     view = "all-sources",
     title = t({ message: "All sources", context: "dockview workspace" }),
     paneId?: string,
   ): void {
     const pane = this.pane(paneId);
-    const candidates = paneId ? (pane?.panels ?? []) : Object.keys(this.state.panels);
-    const existing = candidates.find((id) => this.tab(id)?.kind === "library");
-    const current = this.tab(existing);
-    if (existing && current?.kind === "library") {
-      const tab = { ...current, libraryViewId: view, title };
-      this.store.dispatch(
-        {
-          type: "batch",
-          operations: [
-            { type: "update", panel: existing, changes: { data: tabData(tab), title } },
-            { type: "activate", panel: existing },
-          ],
-        },
-        skip,
-      );
-      // Showing another view in the tab that is already active is still a visit.
-      this.focusedPanel = existing;
-      this.navigation.visit(tab);
-      this.notify();
+    const within = paneId ? (pane?.panels ?? []) : this.contentPanels().map(({ id }) => id);
+    const libraries = within.filter((id) => this.tab(id)?.kind === "library");
+    const inUse = this.activeTab()?.id;
+    const preferred = (ids: readonly string[]): string | undefined =>
+      ids.find((id) => id === inUse) ?? ids[0];
+    const showing = preferred(libraries.filter((id) => this.tab(id)?.libraryViewId === view));
+    const free = preferred(libraries.filter((id) => !this.tab(id)?.pinned));
+    if (showing) {
+      this.activate(showing);
+    } else if (free) {
+      this.showLibraryView(free, view, title);
     } else {
       this.openTab(createLibraryWorkspaceTab(view, title), pane);
     }
+  }
+  /** A library view in a new tab in the pane in use, even when a tab there already shows it. */
+  openLibraryTab(view: string, title: string): void {
+    const pane = this.pane();
+    this.store.dispatch(
+      this.add(
+        createLibraryWorkspaceTab(view, title),
+        pane ? { at: "stack", stack: pane.id } : { at: "focus" },
+      ),
+      skip,
+    );
+  }
+  /** Show another view in a library tab, pinned or not: what its own view switcher does. */
+  showLibraryView(id: string, view: string, title: string): void {
+    const current = this.tab(id);
+    if (current?.kind !== "library") {
+      return;
+    }
+    const tab = { ...current, libraryViewId: view, title };
+    this.store.dispatch(
+      {
+        type: "batch",
+        operations: [
+          { type: "update", panel: id, changes: { data: tabData(tab), title } },
+          { type: "activate", panel: id },
+        ],
+      },
+      skip,
+    );
+    // Showing another view in the tab that is already active is still a visit.
+    this.focusedPanel = id;
+    this.navigation.visit(tab);
+    this.notify();
   }
   private existingTool(tab: WorkspaceTab): string | undefined {
     return tab.kind === "source" && tab.view === "citation"
@@ -351,6 +386,11 @@ export class ReaderPanelWorkspace {
     ) {
       return;
     }
+    if (changes.pinned === false && canFollow(tab) && tab.follow && !tab.dirty) {
+      // Unpinned, a tab that was a Notes panel is one again.
+      this.follow(id);
+      return;
+    }
     const next = {
       ...tab,
       ...changes,
@@ -363,70 +403,81 @@ export class ReaderPanelWorkspace {
     }
     if (next.pinned !== tab.pinned || next.preview !== tab.preview) {
       this.store.dispatch(
-        { type: "update", panel: id, changes: { data: tabData(next), leads: !follows(next) } },
+        { type: "update", panel: id, changes: { data: tabData(next) } },
         { ...skip, animate: false },
       );
     } else {
       this.notify();
     }
-    // A tab that was held by a pin or by unsaved changes catches up with the active document.
-    this.syncFollowers();
   }
-  /** The tab the Notes panel and following tabs are about: the last one used that leads. */
+  /** The tab the Notes panels are about: the last one the reader used. */
   leaderTab = (): WorkspaceTab | null => this.tab(this.state.leader);
-  /** The source that following tabs show, or null when there is no active source. */
+  /** The source the Notes panels show, or null when there is none. */
   get followedSource(): SourceId | null {
     return this.followed;
   }
   setFollowed(sourceId: SourceId | null): void {
     if (this.followed !== sourceId) {
       this.followed = sourceId;
-      this.syncFollowers();
       this.notify();
     }
   }
-  /** Whether a note or annotations tab shows the active document's source instead of its own. */
-  setFollow(id: string, follow: boolean): void {
-    const tab = this.tab(id);
-    if (!canFollow(tab) || Boolean(tab.follow) === follow) {
+  notesPanels = (): PanelDescriptor[] => notesPanels(this.state);
+  /**
+   * Pin a Notes panel to the source it is showing. It becomes that source's own pinned tab,
+   * where it is, and a Notes panel again when it is unpinned.
+   */
+  hold(id: string): void {
+    const view = notesView(this.state.panels[id]);
+    const sourceId = this.followed;
+    if (!view || !sourceId) {
       return;
     }
-    const next = { ...tab, preview: false, follow };
-    // The tab in use starts by following the document it was opened for, if that is open.
-    const document =
-      follow && this.state.leader === id
-        ? this.contentPanels().find((panel) => {
-            const other = this.tab(panel.id);
-            return other?.view === "document" && other.sourceId === tab.sourceId;
-          })
-        : undefined;
+    const tab = { ...createWorkspaceTab(sourceId, view), id, pinned: true, follow: true };
+    this.store.dispatch(
+      {
+        type: "update",
+        panel: id,
+        changes: { kind: tabPanelKind, data: tabData(tab), leads: true },
+      },
+      { ...skip, animate: false },
+    );
+  }
+  /**
+   * Let a note, annotations or citation tab show whichever source the reader is working on: it
+   * becomes a Notes panel, where it is. One with unsaved changes stays as it is.
+   */
+  follow(id: string): void {
+    const tab = this.tab(id);
+    if (!canFollow(tab) || tab.dirty) {
+      return;
+    }
+    // It was a tab the Notes panels could be about. Its source's document takes over, if open.
+    const others = this.contentPanels().filter((panel) => panel.id !== id);
+    const heir = (
+      others.find((panel) => {
+        const other = this.tab(panel.id);
+        return other?.view === "document" && other.sourceId === tab.sourceId;
+      }) ?? others[0]
+    )?.id;
+    const leading = this.state.leader === id;
+    if (this.focusedPanel === id) {
+      this.focusedPanel = heir ?? null;
+    }
     this.store.dispatch(
       {
         type: "batch",
         operations: [
-          { type: "update", panel: id, changes: { data: tabData(next), leads: !follows(next) } },
-          ...(document ? [{ type: "lead" as const, panel: document.id }] : []),
+          {
+            type: "update",
+            panel: id,
+            changes: { kind: notesPanelKind, data: { view: tab.view }, leads: false },
+          },
+          ...(heir && leading ? [{ type: "lead" as const, panel: heir }] : []),
         ],
       },
       { ...skip, animate: false },
     );
-    this.syncFollowers();
-  }
-  /** Point following tabs at the active source. One with unsaved changes waits until it is saved. */
-  private syncFollowers(): void {
-    const sourceId = this.followed;
-    if (!sourceId) {
-      return;
-    }
-    const operations: Operation[] = this.contentPanels().flatMap(({ id }) => {
-      const tab = this.tab(id);
-      return follows(tab) && !tab.dirty && tab.sourceId !== sourceId
-        ? [{ type: "update", panel: id, changes: { data: tabData({ ...tab, sourceId }) } }]
-        : [];
-    });
-    if (operations.length) {
-      this.store.dispatch({ type: "batch", operations }, { ...skip, animate: false });
-    }
   }
   /** Keep a tab's name with its panel: the overview and menus show it. */
   setTitle(id: string, title: string): void {
@@ -646,7 +697,10 @@ export class ReaderPanelWorkspace {
   isSideVisible = (id: string): boolean => this.isPanelVisible(id);
   isSidebarVisible = (position: "left" | "right"): boolean => {
     if (this.mobile) {
-      return this.isSideVisible(position === "left" ? navigatorPanelId : inspectorPanelId);
+      // A phone shows one panel at a time: a side is open while one of its panels is the screen.
+      return position === "left"
+        ? this.isPanelVisible(navigatorPanelId)
+        : this.notesPanels().some(({ id }) => this.isPanelVisible(id));
     }
     const edge = this.state.edges[position];
     return (
@@ -662,16 +716,20 @@ export class ReaderPanelWorkspace {
   };
   /**
    * The header's buttons open and close a side region, whatever tabs it holds. An empty region
-   * has nothing to show, so opening it brings home the panel that starts there.
+   * has nothing to show, so opening it brings home the panels that start there.
    */
   toggleSidebar(position: "left" | "right"): void {
-    const home = position === "left" ? navigatorPanelId : inspectorPanelId;
     if (this.mobile) {
-      // A phone shows one panel at a time, so the button goes to that panel and back.
-      if (this.activePanel()?.id === home) {
+      // A phone shows one panel at a time, so the button goes to that side's panel and back.
+      const active = this.activePanel();
+      if (active && isSidePanel(active) && homeOf(active).side === position) {
         this.backToContent();
+      } else if (position === "left") {
+        this.show(navigatorPanelId, true);
       } else {
-        this.show(home, true);
+        const showing = this.state.edges.right?.stack.active;
+        const panel = (showing ? this.state.panels[showing] : undefined) ?? this.notesPanels()[0];
+        this.showNotes(notesView(panel) ?? "annotations");
       }
       return;
     }
@@ -680,7 +738,7 @@ export class ReaderPanelWorkspace {
     } else if (this.state.edges[position]?.stack.panels.length) {
       this.reveal(position);
     } else {
-      this.reveal(position, this.homeOperations(home, false));
+      this.reveal(position, this.homeOperations(position));
     }
   }
   /** Put a side region on screen, without activating or moving anything in it. */
@@ -725,24 +783,51 @@ export class ReaderPanelWorkspace {
         : []),
     ];
   }
-  /** Bring the Sources or Notes panel to the side it starts at, from wherever it is. */
-  private homeOperations(id: string, activate: boolean): Operation[] {
-    const side = sideOf(id);
+  /**
+   * What fills an empty side region with the panels that start there. Ones that were closed
+   * come back; only when none was closed do the ones elsewhere in the workspace come home.
+   */
+  private homeOperations(side: "left" | "right"): Operation[] {
     const target: Target = { at: "edge", side };
+    const existing =
+      side === "right"
+        ? this.notesPanels()
+        : [this.state.panels[navigatorPanelId]].filter((panel) => panel !== undefined);
+    const missing =
+      side === "right"
+        ? notesViews
+            .filter((view) => !existing.some((panel) => notesView(panel) === view))
+            .map(notesPanel)
+        : existing.length
+          ? []
+          : [navigatorPanel()];
     return [
-      this.state.panels[id]
-        ? { type: "move", panel: id, target, activate }
-        : { type: "add", panel: sidePanel(id), target, activate },
-      ...(this.state.edges[side]?.stack.panels.length
-        ? []
-        : [
-            {
-              type: "configureEdge" as const,
-              side,
-              options: { size: sideWidth(id), min: 180, priority: side === "left" ? 1 : 0 },
-            },
-          ]),
+      ...(missing.length
+        ? missing.map((panel) => ({ type: "add" as const, panel, target, activate: false }))
+        : existing.map(({ id }) => ({
+            type: "move" as const,
+            panel: id,
+            target,
+            activate: false,
+          }))),
+      ...this.edgeSetup(side),
     ];
+  }
+  /** A side region that has been emptied starts again at the width its own panels want. */
+  private edgeSetup(side: "left" | "right"): Operation[] {
+    return this.state.edges[side]?.stack.panels.length
+      ? []
+      : [
+          {
+            type: "configureEdge",
+            side,
+            options: {
+              size: side === "left" ? navigatorWidth : notesWidth,
+              min: 180,
+              priority: side === "left" ? 1 : 0,
+            },
+          },
+        ];
   }
   /** Focus mode: the pane in use fills the workspace until it is turned off. */
   setSinglePane = (value: boolean): void => {
@@ -758,7 +843,7 @@ export class ReaderPanelWorkspace {
     }
   };
   /**
-   * Show or put away the Sources or Notes panel, wherever the reader has moved it. Putting it
+   * Show or put away Sources or a Notes panel, wherever the reader has moved it. Putting it
    * away closes the side region it is showing in; in a pane of the main area it stays.
    */
   setSideVisible(id: string, visible: boolean, activate = true): void {
@@ -776,6 +861,18 @@ export class ReaderPanelWorkspace {
       this.hide(side);
     }
   }
+  /** Go to the Notes panel for one of a source's tools. One that was closed comes back. */
+  showNotes(view: NotesView, activate = true): void {
+    const existing = this.notesPanels().find((panel) => notesView(panel) === view);
+    if (existing) {
+      this.show(existing.id, activate);
+      return;
+    }
+    this.bring("right", [
+      { type: "add", panel: notesPanel(view), target: { at: "edge", side: "right" }, activate },
+      ...this.edgeSetup("right"),
+    ]);
+  }
   private show(id: string, activate: boolean): void {
     const stack = stackOfPanel(this.state, id);
     const side = stack ? edgeOfStack(this.state, stack.id) : null;
@@ -787,24 +884,28 @@ export class ReaderPanelWorkspace {
         // In a pane, or on a phone where it is a screen of its own: going to it is enough.
         this.store.dispatch({ type: "batch", operations: focus }, skip);
       }
+    } else if (id === navigatorPanelId) {
+      this.bring("left", [
+        { type: "add", panel: navigatorPanel(), target: { at: "edge", side: "left" }, activate },
+        ...this.edgeSetup("left"),
+      ]);
+    }
+  }
+  /** Add panels to the side they start at, and put that side on screen. */
+  private bring(side: "left" | "right", operations: readonly Operation[]): void {
+    if (!this.mobile) {
+      this.reveal(side, operations);
       return;
     }
-    if (this.mobile) {
-      // A phone's screen says nothing about whether the side is open on a wider window.
-      const visible = this.state.edges[sideOf(id)]?.visible ?? false;
-      this.store.dispatch(
-        {
-          type: "batch",
-          operations: [
-            ...this.homeOperations(id, activate),
-            { type: "configureEdge", side: sideOf(id), options: { visible } },
-          ],
-        },
-        skip,
-      );
-      return;
-    }
-    this.reveal(sideOf(id), this.homeOperations(id, activate));
+    // A phone's screen says nothing about whether the side is open on a wider window.
+    const visible = this.state.edges[side]?.visible ?? false;
+    this.store.dispatch(
+      {
+        type: "batch",
+        operations: [...operations, { type: "configureEdge", side, options: { visible } }],
+      },
+      skip,
+    );
   }
 
   /** Every tab back in one pane and the side panels back at their sides, nothing closed. */
@@ -816,28 +917,45 @@ export class ReaderPanelWorkspace {
     this.peeked.clear();
     this.asked = null;
     const operations: Operation[] = [{ type: "maximize", stack: null }, { type: "flatten" }];
-    for (const id of sidePanelIds) {
-      const stack = stackOfPanel(this.state, id);
-      const side = stack ? edgeOfStack(this.state, stack.id) : null;
-      const position = sideOf(id);
-      if (stack && side !== position) {
-        operations.push({
-          type: "move",
-          panel: id,
-          target: { at: "edge", side: position },
-          activate: false,
-        });
-      }
-      if (
-        stack &&
-        (side !== position || this.state.edges[position]?.visible || id === navigatorPanelId)
-      ) {
-        operations.push({
-          type: "configureEdge",
-          side: position,
-          options: { size: sideWidth(id), ...(id === navigatorPanelId ? { visible: true } : {}) },
-        });
-      }
+    const away = (panel: PanelDescriptor, side: EdgeSide): boolean => {
+      const stack = stackOfPanel(this.state, panel.id);
+      return !stack || edgeOfStack(this.state, stack.id) !== side;
+    };
+    const home = (panel: PanelDescriptor, side: EdgeSide): Operation => ({
+      type: "move",
+      panel: panel.id,
+      target: { at: "edge", side },
+      activate: false,
+    });
+    const navigator = this.state.panels[navigatorPanelId];
+    if (navigator) {
+      operations.push(...(away(navigator, "left") ? [home(navigator, "left")] : []), {
+        type: "configureEdge",
+        side: "left",
+        options: { size: navigatorWidth, visible: true },
+      });
+    }
+    // The Notes panels go back to the right, and ones that were closed come back with them.
+    const notes = this.notesPanels();
+    const strays = notes.filter((panel) => away(panel, "right"));
+    const closed = notesViews.filter((view) => !notes.some((panel) => notesView(panel) === view));
+    operations.push(
+      ...strays.map((panel) => home(panel, "right")),
+      ...closed.map((view) => ({
+        type: "add" as const,
+        panel: notesPanel(view),
+        target: { at: "edge" as const, side: "right" as const },
+        activate: false,
+      })),
+    );
+    // Putting a panel into a region opens it, and a panel that was closed is not asking to show.
+    const open = Boolean(strays.length || this.state.edges.right?.visible);
+    if (open || closed.length) {
+      operations.push({
+        type: "configureEdge",
+        side: "right",
+        options: { size: notesWidth, visible: open },
+      });
     }
     if (focused) {
       operations.push({ type: "activate", panel: focused });

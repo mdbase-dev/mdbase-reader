@@ -1747,14 +1747,26 @@
 
 /* Source tools (right sidebar) --------------------------------------------- */
 
+/* A Notes panel's tab names the tool, so the panel starts by naming the source. */
 .inspector-context {
   min-width: 0;
-  container: inspector-context / inline-size;
   display: flex;
   align-items: center;
   gap: 2px;
-  padding-right: 6px;
+  padding: 0 6px 0 14px;
   border-bottom: 1px solid var(--line);
+}
+
+.inspector-source {
+  min-width: 0;
+  flex: 1 1 auto;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--ui-control);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inspector-context .icon-button {
@@ -1772,39 +1784,6 @@
   height: 16px;
 }
 
-.inspector-tabs {
-  min-width: 0;
-  flex: 1 1 auto;
-  display: flex;
-  gap: 2px;
-  padding: 0 6px;
-  overflow: hidden;
-}
-
-.inspector-tabs button {
-  position: relative;
-  min-width: 0;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 8px;
-  border: 0;
-  color: var(--muted);
-  background: transparent;
-  font-size: var(--ui-control);
-  white-space: nowrap;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.inspector-tabs button:hover:not(:disabled) {
-  color: var(--ink);
-}
-.inspector-tabs button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -3px;
-}
 .library-source-link {
   color: inherit;
   text-decoration: none;
@@ -1859,8 +1838,7 @@
   .library-workspace .library-workspace-header :is(button, summary, input, select),
   .reader-menu-panel :is(button, input, select),
   .library-row-more,
-  .library-part-toggle,
-  .inspector-tabs button {
+  .library-part-toggle {
     min-height: 44px;
     min-width: 44px;
   }
@@ -1871,49 +1849,6 @@
 
   .library-search-scope.mdbase-select {
     margin-block: 0;
-  }
-}
-
-.inspector-tabs button[aria-selected="true"] {
-  color: var(--ink);
-  background: var(--selected);
-}
-
-.inspector-tabs button:disabled {
-  cursor: default;
-  opacity: 0.45;
-}
-
-.inspector-tabs svg {
-  width: 14px;
-  height: 14px;
-  flex: 0 0 auto;
-}
-
-.inspector-tabs .inspector-tab-count {
-  min-width: 18px;
-  padding: 1px 5px;
-  border-radius: 999px;
-  color: var(--muted);
-  background: var(--hover);
-  font-size: var(--ui-meta);
-  text-align: center;
-}
-
-@container inspector-context (max-width: 376px) {
-  .inspector-tabs button {
-    gap: 4px;
-  }
-}
-
-@container inspector-context (max-width: 250px) {
-  .inspector-tabs .inspector-tab-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 }
 
@@ -1992,12 +1927,6 @@
 [role="gridcell"].annotation-kind.is-area::before {
   border: 1px dashed var(--accent);
   background: transparent;
-}
-
-@media (pointer: coarse) {
-  .inspector-tabs button {
-    height: 44px;
-  }
 }
 
 /* The source title is live metadata; saved document text (and annotation anchors) stays intact. */

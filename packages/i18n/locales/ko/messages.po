@@ -958,7 +958,6 @@ msgstr "및"
 msgid "Annotation"
 msgstr "주석"
 
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/LibraryCells.tsx
 msgid "Annotation count not yet known"
 msgstr "아직 주석 수를 알 수 없습니다"
@@ -1007,13 +1006,7 @@ msgid "Annotation view options{0}"
 msgstr "주석 보기 옵션{0}"
 
 #: apps/reader/src/FileNameSettings.tsx
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
-msgid "Annotations"
-msgstr "주석"
-
-#: apps/reader/src/InspectorPane.tsx
-msgctxt "InspectorPane interface"
 msgid "Annotations"
 msgstr "주석"
 
@@ -1859,7 +1852,6 @@ msgstr "경"
 
 #: apps/extension/src/CitationCard.tsx
 #: apps/extension/src/PanelTabs.tsx
-#: apps/reader/src/InspectorPane.tsx
 #: apps/reader/src/SourceNoteInsertMenu.tsx
 msgid "Citation"
 msgstr "인용"
@@ -2706,6 +2698,10 @@ msgstr "CSL-JSON 인용 정보"
 #: apps/reader/src/CitationEditor.tsx
 msgid "CSL-JSON has errors — fix them or discard"
 msgstr "CSL-JSON에 오류가 있습니다 — 수정하거나 버리세요"
+
+#: apps/reader/src/LibraryNavigator.tsx
+msgid "Ctrl-click or middle-click opens in a new tab"
+msgstr "Ctrl+클릭 또는 가운데 클릭으로 새 탭에서 열기"
 
 #: apps/reader/src/ReaderCommandPalette.tsx
 msgid "Ctrl+/ for shortcuts"
@@ -3841,10 +3837,6 @@ msgstr "읽기 위치 따라가기"
 #: apps/reader/src/panel-menus.ts
 msgid "Follow the active document"
 msgstr "활성 문서 따라가기"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgid "Follows the active document"
-msgstr "활성 문서를 따라가는 중"
 
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
@@ -5594,11 +5586,6 @@ msgctxt "MobileSourceViews views"
 msgid "Note"
 msgstr "노트"
 
-#: apps/reader/src/workspace-tab-display.ts
-msgctxt "dockview side panels"
-msgid "Notes"
-msgstr "노트"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgctxt "LibraryWorkspace searchScopeOptions"
 msgid "Notes & annotations"
@@ -6156,8 +6143,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Pamphlet"
 msgstr "팸플릿"
 
-#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === sourceWorkspace.activePane.id) + 1)
-#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === workbenchOwner.pane.id) + 1)
+#. placeholder {0}: String(sourceWorkspace.layout.panes.findIndex((pane) => pane.id === id) + 1)
 #: apps/reader/src/ReaderWorkspaceView.tsx
 msgid "Pane {0}"
 msgstr "창 {0}"
@@ -8034,6 +8020,14 @@ msgstr "작업 표시"
 msgid "Show all tabs at once"
 msgstr "모든 탭을 한 번에 표시"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Annotations panel"
+msgstr "주석 패널 표시"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Citation panel"
+msgstr "인용 패널 표시"
+
 #: apps/reader/src/PanelWorkspace.tsx
 msgctxt "Workspace canvas"
 msgid "Show every pane"
@@ -8058,6 +8052,10 @@ msgstr "부분 항목을 일렬 목록으로 표시"
 #: apps/reader/src/AnnotationList.tsx
 msgid "Show selected annotation (clear filters)"
 msgstr "선택한 주석 표시(필터 해제)"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Show Source note panel"
+msgstr "자료 노트 패널 표시"
 
 #: apps/reader/src/AnnotationFilterMenu.tsx
 msgid "Show the whole book’s annotations"
@@ -8469,10 +8467,6 @@ msgstr "추가 중지"
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
 msgstr "타이밍 중지 및 지우기"
-
-#: apps/reader/src/panel-menus.ts
-msgid "Stop following the active document"
-msgstr "활성 문서 따라가기 중지"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop import"
@@ -9266,10 +9260,6 @@ msgstr "이 출처 레코드가 더 이상 존재하지 않습니다."
 #: apps/extension/src/NotePanel.tsx
 msgid "This source was removed from your collection"
 msgstr "이 자료가 컬렉션에서 제거되었습니다"
-
-#: apps/reader/src/ReaderWorkspaceView.tsx
-msgid "This tab follows the document you are working on. Open or select a source to see it here."
-msgstr "이 탭은 작업 중인 문서를 따라갑니다. 소스를 열거나 선택하면 여기에 표시됩니다."
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work."

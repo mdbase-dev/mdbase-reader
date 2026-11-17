@@ -28,6 +28,7 @@ export function panelWorkspaceActions(dock: ReaderPanelWorkspace): SourceWorkspa
     open: (id, pane) => dock.open(id, "document", pane),
     openView: (id, view, pane) => dock.open(id, view, pane),
     openLibrary: (view, title, pane) => dock.openLibrary(view, title, pane),
+    openLibraryTab: (view, title) => dock.openLibraryTab(view, title),
     openLibraryBeside: (view, title, direction) =>
       dock.beside(createLibraryWorkspaceTab(view, title), direction),
     activateTab: (id) => dock.activate(id),

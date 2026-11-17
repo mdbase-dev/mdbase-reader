@@ -8,13 +8,11 @@ import { useReaderFeedbackContext } from "./FeedbackRoot.js";
 import { bindHighlightSettings } from "./highlight-colors.js";
 import { importHref } from "./import-navigation.js";
 import { inspectorSourceForTab } from "./inspector-source.js";
-import { InspectorPane, preloadInspectorTools, type InspectorTab } from "./InspectorPane.js";
+import { InspectorPane, preloadInspectorTools } from "./InspectorPane.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { OverlayPresence } from "./OverlayPresence.js";
-import { inspectorPanelId } from "./panel-ids.js";
-import { follows } from "./panel-workspace-state.js";
 import { PanelWorkspace } from "./PanelWorkspace.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
@@ -42,6 +40,7 @@ import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type {
+  NotesView,
   SourceWorkspaceLayout,
   SourceWorkspacePane,
   SourceWorkspaceTab,
@@ -118,15 +117,6 @@ export function ReaderWorkspaceView({
     library.sources[0]?.collectionId ?? library.collectionName,
   );
   const dock = sourceWorkspace.dock;
-  const setInspectorOpen = useCallback(
-    (value: boolean | ((current: boolean) => boolean)): void => {
-      dock.setSideVisible(
-        inspectorPanelId,
-        typeof value === "function" ? value(dock.isSideVisible(inspectorPanelId)) : value,
-      );
-    },
-    [dock],
-  );
   const pendingAnnotationRef = useRef<PendingWorkspaceAnnotation | null>(null);
   const searchNavigation = useSearchNavigation(sourceWorkspace, model.surfaces);
   const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
@@ -161,11 +151,8 @@ export function ReaderWorkspaceView({
   );
   const beforeCollectionSwitch = (): Promise<boolean> =>
     confirmCollectionSwitch(sourceWorkspace.layout, library.sources);
-  const workbenchOwner = findWorkbenchOwner(
-    sourceWorkspace.layout,
-    inspectorSource?.id ?? null,
-    shell.value.inspectorTab,
-  );
+  const paneLabel = (id: WorkspacePaneId): string =>
+    translate`Pane ${String(sourceWorkspace.layout.panes.findIndex((pane) => pane.id === id) + 1)}`;
   useEffect(() => {
     const revealId = composer.editingAnnotationId ?? composer.revealedAnnotationId;
     if (!revealId) {
@@ -176,22 +163,10 @@ export function ReaderWorkspaceView({
       return;
     }
     routedEditingIdRef.current = revealId;
-    const timer = globalThis.setTimeout(() => {
-      if (shell.value.inspectorTab !== "annotations") {
-        shell.update({ inspectorTab: "annotations" });
-      }
-      setInspectorOpen(true);
-    }, 0);
+    // The annotation's card is in the Annotations panel, wherever the reader keeps it.
+    const timer = globalThis.setTimeout(() => dock.showNotes("annotations"), 0);
     return () => globalThis.clearTimeout(timer);
-  }, [
-    composer.editingAnnotationId,
-    composer.revealedAnnotationId,
-    inspectorSource,
-    model,
-    shell,
-    sourceWorkspace,
-    setInspectorOpen,
-  ]);
+  }, [composer.editingAnnotationId, composer.revealedAnnotationId, inspectorSource, dock]);
   useEffect(() => {
     const pendingAnnotation = pendingAnnotationRef.current;
     if (!pendingAnnotation || !composer.canOpenAnnotation) {
@@ -279,6 +254,7 @@ export function ReaderWorkspaceView({
               onOpenView={(view) => {
                 sourceWorkspace.openLibrary(view.key, view.name);
               }}
+              onOpenViewInTab={(view) => sourceWorkspace.openLibraryTab(view.key, view.name)}
               onAddSource={sourceAddition.open}
               addingSource={sourceAddition.adding}
               hideRecent={libraryTabActive(sourceWorkspace)}
@@ -307,20 +283,8 @@ export function ReaderWorkspaceView({
           }
           renderTool={(workspaceTab, paneId) => {
             const toolSource = library.sources.find(({ id }) => id === workspaceTab.sourceId);
-            if (follows(workspaceTab) && !dock.followedSource && !workspaceTab.dirty) {
-              return (
-                <p className="inspector-status">
-                  <Trans>
-                    This tab follows the document you are working on. Open or select a source to see
-                    it here.
-                  </Trans>
-                </p>
-              );
-            }
             return toolSource ? (
               <WorkspaceToolTab
-                // Following another source starts over, as opening that source's own tab would.
-                key={workspaceTab.sourceId}
                 tab={workspaceTab}
                 source={toolSource}
                 gateway={model.gateway}
@@ -365,7 +329,8 @@ export function ReaderWorkspaceView({
                 onOpenSourceView={searchNavigation.open}
                 controller={model.libraryViews}
                 focused={focused}
-                onOpenView={(next) => sourceWorkspace.openLibrary(next.key, next.name)}
+                // A tab's own view switcher changes that tab, even one pinned to its view.
+                onOpenView={(next) => dock.showLibraryView(workspaceTab.id, next.key, next.name)}
                 onOpenSource={(id) => sourceWorkspace.open(id)}
                 onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
                 onInspectSource={workspace.selectSource}
@@ -402,38 +367,49 @@ export function ReaderWorkspaceView({
           }}
           onAddSource={sourceAddition.open}
           onToggleFocus={() => model.setFocusMode((value) => !value)}
-          inspectorSource={inspectorSource}
-          inspector={
-            <InspectorPane
-              open={true}
-              tab={shell.value.inspectorTab}
-              source={inspectorSource}
-              paneLabel={translate`Pane ${String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === sourceWorkspace.activePane.id) + 1)}`}
-              workspace={workspace}
-              composer={composer}
-              gateway={model.gateway}
-              workbenchOwner={
-                workbenchOwner
-                  ? {
-                      tab: shell.value.inspectorTab,
-                      paneLabel: translate`Pane ${String(sourceWorkspace.layout.panes.findIndex(({ id }) => id === workbenchOwner.pane.id) + 1)}`,
-                      onOpen: () =>
-                        sourceWorkspace.activateTab(workbenchOwner.tab.id, workbenchOwner.pane.id),
-                    }
-                  : null
-              }
-              onTabChange={(inspectorTab) => shell.update({ inspectorTab })}
-              onPromote={(tab) => {
-                if (inspectorSource) {
-                  sourceWorkspace.openView(inspectorSource.id, tab, sourceWorkspace.activePane.id);
-                  setInspectorOpen(false);
-                }
-              }}
-              onOpenSourceView={(sourceId, view) =>
-                sourceWorkspace.openView(sourceId, view, sourceWorkspace.activePane.id)
-              }
-            />
+          annotationCount={
+            inspectorSource && workspace.annotations.status === "ready"
+              ? workspace.annotations.value.length
+              : null
           }
+          renderNotes={(view, visible) => {
+            const owner = findWorkbenchOwner(
+              sourceWorkspace.layout,
+              inspectorSource?.id ?? null,
+              view,
+            );
+            return (
+              <InspectorPane
+                tab={view}
+                visible={visible}
+                source={inspectorSource}
+                paneLabel={paneLabel(sourceWorkspace.activePane.id)}
+                workspace={workspace}
+                composer={composer}
+                gateway={model.gateway}
+                workbenchOwner={
+                  owner
+                    ? {
+                        paneLabel: paneLabel(owner.pane.id),
+                        onOpen: () => sourceWorkspace.activateTab(owner.tab.id, owner.pane.id),
+                      }
+                    : null
+                }
+                onPromote={() => {
+                  if (inspectorSource) {
+                    sourceWorkspace.openView(
+                      inspectorSource.id,
+                      view,
+                      sourceWorkspace.activePane.id,
+                    );
+                  }
+                }}
+                onOpenSourceView={(sourceId, sourceView) =>
+                  sourceWorkspace.openView(sourceId, sourceView, sourceWorkspace.activePane.id)
+                }
+              />
+            );
+          }}
         />
       </main>
       <SourceAdditionOverlays
@@ -489,8 +465,8 @@ export function ReaderWorkspaceView({
  * for them.
  */
 /**
- * The source that Notes and following tabs are about: that of the tab the reader last worked
- * in, not their own. Following tabs are pointed at it here.
+ * The source the Notes panels are about: that of the tab the reader last worked in. The
+ * workspace is told, so that pinning a Notes panel holds it on this source.
  */
 function useLeaderSource(model: ReaderWorkspaceViewModel): SourceSummary | null {
   const { library, workspace, sourceWorkspace } = model;
@@ -603,7 +579,7 @@ function useApplyTypography(
 function findWorkbenchOwner(
   layout: SourceWorkspaceLayout,
   sourceId: SourceId | null,
-  view: InspectorTab,
+  view: NotesView,
 ): { readonly pane: SourceWorkspacePane; readonly tab: SourceWorkspaceTab } | undefined {
   // Citation forms still use an explicit validated save; text editors share their writer.
   if (!sourceId || view !== "citation") {

@@ -1,14 +1,23 @@
 import { t as translate } from "@lingui/core/macro";
 
-import { navigatorPanelId } from "./panel-ids.js";
+import { notesView } from "./panel-workspace-state.js";
 
 import type { WorkspacePaneId, WorkspaceTab } from "./source-workspace-layout.js";
+import type { PanelDescriptor } from "@mdbase-dev/panels";
 import type { SourceSummary } from "@mdbase-reader/core";
 
-export function sidePanelTitle(id: string): string {
-  return id === navigatorPanelId
-    ? translate({ message: "Sources", context: "dockview side panels" })
-    : translate({ message: "Notes", context: "dockview side panels" });
+/** The name of Sources or of a Notes panel, which is named for the tool it shows. */
+export function sidePanelTitle(panel: PanelDescriptor): string {
+  switch (notesView(panel)) {
+    case "annotations":
+      return translate({ message: "Annotations", context: "workspace tab display" });
+    case "note":
+      return translate({ message: "Source note" });
+    case "citation":
+      return translate({ message: "Citation", context: "workspace tab display" });
+    case null:
+      return translate({ message: "Sources", context: "dockview side panels" });
+  }
 }
 
 export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | null): string {

@@ -7,11 +7,13 @@ import {
   type PanelData,
 } from "@mdbase-dev/panels";
 
-import { inspectorPanelId, navigatorPanelId } from "./panel-ids.js";
+import { navigatorPanelId } from "./panel-ids.js";
 import {
   createPane,
   createSourceWorkspaceLayout,
+  notesViews,
   sourceWorkspaceViews,
+  type NotesView,
   type SourceWorkspaceLayout,
   type SourceWorkspaceTab,
   type SourceWorkspaceView,
@@ -20,46 +22,64 @@ import {
 
 import type { SourceId } from "@mdbase-reader/core";
 
-export { navigatorPanelId, inspectorPanelId } from "./panel-ids.js";
+export { navigatorPanelId } from "./panel-ids.js";
 
-/**
- * Panel kinds: a `workspace` panel is a reader tab; the other two are the Sources and Notes
- * panels, which start at the sides and are otherwise ordinary tabs.
- */
 export interface WorkspaceStorage {
   readonly getItem: (key: string) => string | null;
   readonly setItem: (key: string, value: string) => void;
 }
 
+/**
+ * Panel kinds. A `workspace` panel is a reader tab: a library view, or one view of one source.
+ * The `navigator` panel is Sources. A `notes` panel shows the annotations, note or citation of
+ * whichever source the reader is working on. Sources starts at the left and the Notes panels at
+ * the right; apart from that they are ordinary tabs.
+ */
 export const tabPanelKind = "workspace";
+export const navigatorPanelKind = "navigator";
+export const notesPanelKind = "notes";
 export const panelStorageKey = (collection: string): string =>
   `mdbase-reader:panels:v1:${collection}`;
 
-export const sidePanelIds: ReadonlySet<string> = new Set([navigatorPanelId, inspectorPanelId]);
-export const sideOf = (id: string): "left" | "right" =>
-  id === navigatorPanelId ? "left" : "right";
-export const sideWidth = (id: string): number => (id === navigatorPanelId ? 260 : 340);
+export const navigatorWidth = 260;
+export const notesWidth = 340;
+const about = { app: "reader", minWidth: 180, minHeight: 120, leads: false } as const;
 
-export function sidePanel(id: string): PanelDescriptor {
-  return {
-    id,
-    kind: id === navigatorPanelId ? "navigator" : "inspector",
-    app: "reader",
-    minWidth: 180,
-    minHeight: 120,
-    // Both are about other tabs, so using them does not change which tab they are about.
-    leads: false,
-  };
+export function navigatorPanel(): PanelDescriptor {
+  // Sources is about other tabs, so using it does not change which tab the Notes panels show.
+  return { id: navigatorPanelId, kind: navigatorPanelKind, ...about };
 }
 
-/** Views a tab can follow the active document with. A citation form is one per source. */
+/** A new Notes panel. Its id is a tab's, so pinning it to a source keeps it the same panel. */
+export function notesPanel(view: NotesView): PanelDescriptor {
+  return notesPanelFor(`reader:session:${crypto.randomUUID()}`, view);
+}
+
+export function notesPanelFor(id: string, view: NotesView): PanelDescriptor {
+  return { id, kind: notesPanelKind, data: { view }, ...about };
+}
+
+/** Which of a source's tools a Notes panel shows, or null for any other panel. */
+export function notesView(panel: PanelDescriptor | null | undefined): NotesView | null {
+  const view = panel?.kind === notesPanelKind && isRecord(panel.data) ? panel.data["view"] : null;
+  return notesViews.find((candidate) => candidate === view) ?? null;
+}
+
+/** Whether a panel is Sources or a Notes panel, rather than a tab. */
+export function isSidePanel(panel: PanelDescriptor | null | undefined): boolean {
+  return panel?.kind === navigatorPanelKind || notesView(panel) !== null;
+}
+
+/** The side a panel starts at, and goes back to when the arrangement is reset. */
+export function homeOf(panel: PanelDescriptor): { side: "left" | "right"; width: number } {
+  return panel.kind === navigatorPanelKind
+    ? { side: "left", width: navigatorWidth }
+    : { side: "right", width: notesWidth };
+}
+
+/** Tabs that can become a Notes panel: a note, annotations or citation tab of one source. */
 export function canFollow(tab: WorkspaceTab | null): tab is SourceWorkspaceTab {
-  return tab?.kind === "source" && (tab.view === "note" || tab.view === "annotations");
-}
-
-/** Whether a tab is following the active document now: it is set to, and not pinned. */
-export function follows(tab: WorkspaceTab | null): tab is SourceWorkspaceTab {
-  return canFollow(tab) && tab.follow === true && !tab.pinned;
+  return tab?.kind === "source" && tab.view !== "document";
 }
 
 /** What a panel stores about its reader tab. Unsaved-changes state is never part of it. */
@@ -85,12 +105,11 @@ export function tabPanel(tab: WorkspaceTab, title?: string): PanelDescriptor {
     data: tabData(tab),
     minWidth: 180,
     minHeight: 120,
-    // A tab that follows is about another tab, so it never becomes the one being followed.
-    ...(follows(tab) ? { leads: false } : {}),
+    leads: true,
   };
 }
 
-/** The reader tab a panel holds, or null for a side panel. */
+/** The reader tab a panel holds, or null for Sources and the Notes panels. */
 export function panelTab(
   panel: PanelDescriptor | null | undefined,
   dirty?: ReadonlySet<string>,
@@ -165,6 +184,16 @@ export function tabPanels(state: WorkspaceState): PanelDescriptor[] {
   );
 }
 
+/** The Notes panels, in the order their stacks appear. */
+export function notesPanels(state: WorkspaceState): PanelDescriptor[] {
+  return allStacks(state).flatMap((stack) =>
+    stack.panels.flatMap((id) => {
+      const panel = state.panels[id];
+      return panel && notesView(panel) ? [panel] : [];
+    }),
+  );
+}
+
 export function stackIdOf(state: WorkspaceState, panel: string): string | undefined {
   return stackOfPanel(state, panel)?.id;
 }
@@ -206,7 +235,8 @@ export function parseWorkspaceTab(value: unknown, id: string): WorkspaceTab {
     sourceId: value["sourceId"] as SourceId,
     view: value["view"] as SourceWorkspaceView,
   };
-  return value["follow"] === true && canFollow(tab) ? { ...tab, follow: true } : tab;
+  // Only a pinned tab remembers having been a Notes panel; unpinned, it would be one.
+  return value["follow"] === true && tab.pinned && canFollow(tab) ? { ...tab, follow: true } : tab;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

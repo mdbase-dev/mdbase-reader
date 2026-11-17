@@ -154,6 +154,17 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* How many annotations the source being worked on has, on the Annotations panel's tab. */
+.reader-tab-count {
+  flex: 0 0 auto;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--hover);
+  font-size: var(--ui-meta);
+  text-align: center;
+}
 .reader-dock-tab.is-preview .reader-tab-title {
   font-style: italic;
 }
@@ -206,6 +217,18 @@
   height: 7px;
   border-radius: 50%;
   background: var(--accent);
+}
+/* Several side panels sharing a region are narrow tabs: each names one tool, so they keep room
+   for their names instead of a close button. The tab menu closes one; the header's button hides
+   the region. */
+.reader-dock .mp-stack[data-mp-edge]:has(.mp-tab + .mp-tab) .mp-tab:has(.reader-dock-tab.is-side) {
+  padding: 0 9px;
+}
+.reader-dock
+  .mp-stack[data-mp-edge]:has(.mp-tab + .mp-tab)
+  .reader-dock-tab.is-side
+  .reader-tab-close {
+  display: none;
 }
 /* Sources or Notes alone in its group reads as a quiet heading: the header's buttons show and
    hide it, so its close button and pane menu wait for the pointer. */

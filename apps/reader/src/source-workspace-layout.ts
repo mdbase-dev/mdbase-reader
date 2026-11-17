@@ -4,6 +4,9 @@ import type { SourceId } from "@mdbase-reader/core";
 
 export const sourceWorkspaceViews = ["document", "note", "annotations", "citation"] as const;
 export type SourceWorkspaceView = (typeof sourceWorkspaceViews)[number];
+/** A source's tools: what a Notes panel shows about the source the reader is working on. */
+export const notesViews = ["annotations", "note", "citation"] as const;
+export type NotesView = (typeof notesViews)[number];
 export const workspaceViews = ["library", ...sourceWorkspaceViews] as const;
 export type WorkspaceView = (typeof workspaceViews)[number];
 /** Pane identity: an opaque string the panel workspace assigns. */
@@ -25,8 +28,8 @@ export interface SourceWorkspaceTab extends WorkspaceTabBase {
   readonly title?: undefined;
   readonly view: SourceWorkspaceView;
   /**
-   * A note or annotations tab that shows whichever source the reader is working on, rather
-   * than one source. Pinning it holds it on the source it is showing.
+   * A pinned tab that was a Notes panel until it was pinned to this source. Unpinning it lets
+   * it follow the source the reader is working on again.
    */
   readonly follow?: boolean;
 }

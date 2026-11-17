@@ -5,7 +5,7 @@ Status: implemented; supersedes the Dockview workspace and the hand-built two-pa
 ## One layout engine
 
 Reader uses **`@mdbase-dev/panels`** for the entire workspace: document, library and tool
-sessions, the Sources navigator, and the Notes panel. The library is vendored as a
+sessions, the Sources navigator, and the Notes panels. The library is vendored as a
 tarball in `vendor/` until it is published; it has no runtime dependencies besides React.
 
 The library owns panes, tab order, active panels, split geometry, resizing, drop
@@ -38,14 +38,19 @@ The first three are a saved setting of the workspace; the last two are presentat
 ## Side regions
 
 A side region is a pane docked to the left or right edge. Sources lives in the left one
-and Notes in the right one by default, and that is the only thing special about them: any
-tab can be dragged into a side region, Sources and Notes can be dragged into a reading
-pane, and a region with no tabs is not drawn.
+and the three Notes panels (Annotations, Source note, Citation) in the right one by
+default, and that is the only thing special about them: any tab can be dragged into a side
+region, Sources and the Notes panels can be dragged into a reading pane, and a region with
+no tabs is not drawn.
 
 - The header buttons act on the region. Showing: hide it. Hidden with tabs in it: show it.
-  Empty: bring Sources (or Notes) home, moving the tab from wherever it is.
-- Closing Sources or Notes while it is alone in its region hides the region and keeps the
-  panel loaded. Closing it anywhere else removes the tab; its button brings it back.
+  Empty: bring home the panels that start there. A panel that was closed is added again;
+  if none is missing, the ones living elsewhere are moved back.
+- Closing a side panel while it is alone in its region hides the region and keeps the
+  panel loaded. Closing it anywhere else removes the tab. A header button, the "Show …
+  panel" commands or a reset bring it back.
+- Side panels sharing a region are narrow tabs without a close button; the tab menu closes
+  one.
 - One thing is saved per region: whether the reader wants it (`visible`), with its width.
   Whether it is drawn right now is worked out each time from the room available, the
   hide-while-reading preference, a maximized pane and the phone layout, and is never
@@ -55,19 +60,49 @@ pane, and a region with no tabs is not drawn.
   makes way while some pane shows a document and none shows the library. Opening it by
   hand shows it until reading starts again.
 
-## Tabs that follow the active document
+## Notes panels and following the active document
 
-A source-note or annotations tab can follow the active document (tab menu: "Follow the
-active document"). The rule is **unpinned follows, pinned stays**: pinning a following tab
-holds it on its current source, and unpinning lets it catch up.
+The right region starts with three ordinary tabs: **Annotations**, **Source note** and
+**Citation**. Each is a panel of kind `notes` holding only its view; it shows that view of
+whichever source is being worked on, and names the source at its top. They are not
+`WorkspaceTab`s, so they take no part in tab history, close guards or the pane projection,
+exactly like Sources.
 
-The active document is the library's _leader_: the last focused tab that is not itself a
-follower. Working in a following tab, or in a side region, therefore does not change what
-is followed. A library tab leads with its selected source. With no leader, a following
-tab says so instead of showing a stale source. A following tab with unsaved changes stays
-where it is until they are saved. Citation tabs cannot follow, because a citation form
-has one writable owner per source; the Notes panel covers that case and follows the same
-leader.
+The source being worked on is the library's _leader_: the last focused panel that leads.
+Notes panels and Sources never lead, so working in them, or moving them, does not change
+which source they show. A library tab leads with its selected source. With no leader a
+Notes panel says so instead of showing a stale source.
+
+Following is a property of the tab, and the rule is **unpinned follows, pinned stays**:
+
+- **Pin tab** on a Notes panel turns it, in place, into the pinned tab of the source it is
+  showing (a `source` tab with `follow: true`). It keeps its id and its place, and from
+  then on it is that source's own note, annotations or citation tab.
+- **Unpin tab** on such a tab turns it back into a Notes panel.
+- **Follow the active document** on any source's note, annotations or citation tab does
+  the same for a tab that was opened the ordinary way. The source's document tab, if
+  open, takes over as the leader. A tab with unsaved changes stays as it is until they
+  are saved.
+
+A source still has one writable editor per record: when a source's own tab is open for
+the tool a Notes panel shows, the panel points to that tab instead of opening a second
+editor. A Citation panel that has been opened stays mounted while another tab of its pane
+is in front, so a form being filled in is not lost.
+
+## Library views as tabs
+
+A library tab shows one view, and any number of library tabs can be open, in one pane or
+several.
+
+- Choosing a view in Sources goes to a tab already showing it. Otherwise the library tab
+  in use shows it, unless that tab is pinned: then the view gets a tab of its own. A new
+  workspace starts with a pinned All sources tab, so the first other view opens beside it.
+- Ctrl-click or middle-click on a view always opens a new tab.
+- A library tab's own view switcher changes that tab, pinned or not.
+- "Open beside" on a library tab opens the same view in a new pane.
+
+Each library tab keeps its own selection, search and mode. The tab in use is the one
+whose selected source the Notes panels show.
 
 ## The canvas
 
@@ -111,8 +146,8 @@ independent of the layout engine.
 
 ## Source tools and close policy
 
-The Notes panel follows the active document (the leader, above). Focusing or moving
-Sources, Notes or a following tab does not replace the source context. Source-bound workbench notes
+The Notes panels show the source being worked on (the leader, above). Focusing or moving
+Sources or a Notes panel does not replace the source context. Source-bound workbench notes
 share live text and save state with the inspector. Annotation comments keep keystrokes
 local to one editor; Edit here transfers ownership and its pending buffer between panes.
 Citation forms redirect to their existing writable owner.
@@ -174,8 +209,8 @@ to a new pane and dragging one across a document without reloading its frame, re
 the columns and fit-to-window views, the overview, undo, reload, a phone-width visit and
 reset. `READER_AUDIT_WORKSPACE_ONLY=1` runs only that part, followed by
 `scripts/audit-panel-canvas.mjs` (which the full audit does not run): side regions giving
-way and coming back, Sources dragged into a pane and brought home, a following note tab,
-and the canvas (seeding, zoom, covered panes, moving a pane, a selection toolbar in a moved
+way and coming back, Sources dragged into a pane and brought home, library views opened
+as tabs, the Notes tabs (following, pinned to a source, moved into a pane), and the canvas (seeding, zoom, covered panes, moving a pane, a selection toolbar in a moved
 pane, reload). They are not an authenticated Connect acceptance test. `panel-workspace.test.ts` covers restoration, identity, preview
-replacement, tool reuse, close guards, side regions, following tabs, the canvas, undo and
+replacement, tool reuse, close guards, library tabs, side regions, Notes panels, the canvas, undo and
 reset; the library has its own tests, including property tests of its operations.
