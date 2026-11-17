@@ -764,6 +764,16 @@ button {
   container-type: inline-size;
 }
 
+/*
+ * A frame inside a selection in this page is painted with the selection colour over the whole
+ * document. A double-click that opens a source can leave such a selection behind, so frames
+ * that show documents are never part of this page's selection. Selecting inside them is their
+ * own document's business and is unaffected.
+ */
+.document-canvas iframe {
+  user-select: none;
+}
+
 .html-viewer {
   width: 100%;
   height: 100%;
