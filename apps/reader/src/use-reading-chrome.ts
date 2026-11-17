@@ -5,7 +5,7 @@ import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 const settleMs = 1400;
 /** The band at the top of the window where a pointer brings reading mode's chrome back. */
 const revealBandPx = 64;
-const chromeSelector = ".reader-header, .dv-tabs-and-actions-container";
+const chromeSelector = ".reader-header, .mp-header";
 /** Set on the shell while its chrome is hidden; styles key off it. */
 export const chromeHiddenAttribute = "data-chrome-hidden";
 

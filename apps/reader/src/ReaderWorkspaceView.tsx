@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } fro
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
 import { useShellNotices } from "./CreateFollowThroughNotice.js";
-import { inspectorPanelId, navigatorPanelId } from "./dockview-workspace-state.js";
-import { DockviewWorkspace } from "./DockviewWorkspace.js";
 import { useReaderFeedbackContext } from "./FeedbackRoot.js";
 import { bindHighlightSettings } from "./highlight-colors.js";
 import { importHref } from "./import-navigation.js";
@@ -15,6 +13,8 @@ import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { OverlayPresence } from "./OverlayPresence.js";
+import { inspectorPanelId, navigatorPanelId } from "./panel-ids.js";
+import { PanelWorkspace } from "./PanelWorkspace.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
 import { ReaderCommandPalette as CommandPalette } from "./ReaderCommandPalette.js";
@@ -267,7 +267,7 @@ export function ReaderWorkspaceView({
       />
       <main className="reader-main reader-dock-main">
         <SearchPassageStatus message={searchNavigation.message} />
-        <DockviewWorkspace
+        <PanelWorkspace
           navigator={
             <LibraryNavigator
               open={true}
@@ -524,10 +524,8 @@ function useShellChrome(
   const readingDocument = activeTab?.kind === "source" && activeTab.view === "document";
   const dock = model.sourceWorkspace.dock;
   const relayout = useCallback(() => {
-    const engine = shell.current?.querySelector<HTMLElement>(".reader-dock-engine");
-    if (engine) {
-      dock.layoutViewport(engine.clientWidth, engine.clientHeight);
-    }
+    // Reading mode takes the tab strips away with the header, in the same frame.
+    dock.setChrome(shell.current?.hasAttribute("data-chrome-hidden") ?? false);
   }, [dock, shell]);
   useReadingChrome({
     shell,

@@ -12,7 +12,7 @@ export function workspaceSessionKey(
   paneId: WorkspacePaneId,
   tabId: WorkspaceTabId,
 ): WorkspaceSessionKey {
-  // Dockview panel IDs survive moves between groups; legacy IDs were pane-scoped.
+  // Panel IDs survive moves between panes.
   return tabId.startsWith("reader:session:")
     ? (tabId as WorkspaceSessionKey)
     : `${paneId}:${tabId}`;

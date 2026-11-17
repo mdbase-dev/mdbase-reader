@@ -1,20 +1,20 @@
 import { expect, it } from "vitest";
 
-import { DockviewNavigation } from "./dockview-navigation.js";
 import { createWorkspaceTab } from "./source-workspace-layout.js";
+import { WorkspaceNavigation } from "./workspace-navigation.js";
 
 import type { SourceId } from "@mdbase-reader/core";
 
 const a = "a" as SourceId;
 const b = "b" as SourceId;
 it("persists recent sources, navigation and clean closed-session descriptors", () => {
-  const navigation = new DockviewNavigation();
+  const navigation = new WorkspaceNavigation();
   const first = { ...createWorkspaceTab(a), id: "reader:session:a" };
   const second = { ...createWorkspaceTab(b), id: "reader:session:b", dirty: true };
   navigation.visit(first);
   navigation.visit(second);
   navigation.close(second);
-  const restored = new DockviewNavigation();
+  const restored = new WorkspaceNavigation();
   restored.restore(JSON.parse(JSON.stringify(navigation.toJSON())), new Set([a, b]));
   expect(restored.recentSourceIds).toEqual([b, a]);
   expect(restored.reopen()).toEqual({ ...second, dirty: false });
@@ -33,7 +33,7 @@ it("persists recent sources, navigation and clean closed-session descriptors", (
   expect(visited).toEqual([a, b]);
 });
 it("validates history and drops removed-source or corrupt closed tabs", () => {
-  const navigation = new DockviewNavigation();
+  const navigation = new WorkspaceNavigation();
   navigation.restore(
     {
       entries: [{ kind: "source", sourceId: "gone", view: "document" }],

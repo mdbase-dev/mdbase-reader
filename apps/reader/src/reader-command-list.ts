@@ -194,6 +194,57 @@ function viewLabel(view: string): string {
         : translate({ message: "Document", context: "reader command list" });
 }
 
+/** How the panes are laid out: fitted or scrolling, all at once, and stepping back. */
+function arrangementCommands(
+  dock: ReaderCommandInput["workspace"]["dock"],
+): readonly ReaderCommand[] {
+  const columns = dock.view === "columns";
+  return [
+    {
+      id: "toggle-pane-columns",
+      label: columns
+        ? translate({ message: "Fit panes to the window" })
+        : translate({ message: "Scroll panes as columns" }),
+      detail: columns
+        ? translate({ message: "Every pane shares the window" })
+        : translate({ message: "Panes keep a readable width and scroll sideways" }),
+      group: "Workspace",
+      keywords: "columns tiling layout scroll",
+      run: () => dock.setView(columns ? "tiling" : "columns"),
+    },
+    {
+      id: "show-all-tabs",
+      label: translate({ message: "Show all tabs at once" }),
+      detail: translate({ message: "Pick a tab from an overview of everything open" }),
+      group: "Workspace",
+      keywords: "overview expose",
+      run: () => dock.setOverview(true),
+    },
+    ...(dock.canUndo
+      ? [
+          {
+            id: "undo-arrangement",
+            label: translate({ message: "Undo arrangement change" }),
+            detail: translate({ message: "Tabs stay open" }),
+            group: "Workspace" as const,
+            run: () => dock.undo(),
+          },
+        ]
+      : []),
+    ...(dock.canRedo
+      ? [
+          {
+            id: "redo-arrangement",
+            label: translate({ message: "Redo arrangement change" }),
+            detail: translate({ message: "Tabs stay open" }),
+            group: "Workspace" as const,
+            run: () => dock.redo(),
+          },
+        ]
+      : []),
+  ];
+}
+
 function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   const sourceId = input.activeSource?.id;
   const panes = input.workspace.layout.panes;
@@ -214,6 +265,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       group: "Workspace",
       run: () => input.workspace.dock.reset(),
     },
+    ...arrangementCommands(input.workspace.dock),
     {
       id: "toggle-focus",
       label: input.focusMode

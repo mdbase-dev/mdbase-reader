@@ -271,22 +271,8 @@
   opacity: 0;
 }
 
-/* In reading mode the tab strip goes with the header, leaving the page the whole window rather
-   than a blank band where the tabs were. */
-.reader-dock .dv-tabs-and-actions-container {
-  height: var(--dv-tabs-and-actions-container-height);
-  transition:
-    opacity 220ms var(--ease-out),
-    height 220ms var(--ease-out);
-}
-
-.reader-shell[data-chrome-hidden] .reader-dock .dv-tabs-and-actions-container {
-  height: 0;
-  overflow: hidden;
-  border-bottom: 0;
-  pointer-events: none;
-  opacity: 0;
-}
+/* In reading mode the tab strips go with the header (the workspace lays itself out without
+   them), leaving the page the whole window rather than a blank band where the tabs were. */
 
 /* Pointer moves over a document's frame never reach Reader, so while reading mode hides the
    chrome a thin band over the top edge hears the pointer that asks for it back. */
@@ -1213,12 +1199,11 @@
     min-height: 44px;
     min-width: 44px;
   }
-  .reader-dock .dv-tabs-and-actions-container.dv-single-tab {
-    display: none;
-  }
 }
 
-.reader-dock .dv-single-tab:has([data-tab-panel-id="reader:navigator"]) .dv-tabs-container {
+.reader-dock
+  .mp-stack:has(.reader-dock-tab[data-panel-id="reader:navigator"]):not(:has(.mp-tab + .mp-tab))
+  .mp-tabs {
   visibility: hidden;
 }
 
@@ -1866,8 +1851,7 @@
   pointer-events: auto;
 }
 @media (prefers-reduced-motion: reduce) {
-  .reader-header,
-  .reader-dock .dv-tabs-and-actions-container {
+  .reader-header {
     transition: none;
   }
 }

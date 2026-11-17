@@ -15,7 +15,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
   await tools.getByRole("button", { name: "Open annotations in workbench", exact: true }).click();
   const tab = page
     .locator(".reader-dock-tab:not(.is-side)")
-    .filter({ has: page.locator(".dv-default-tab-content", { hasText: "Annotations —" }) });
+    .filter({ has: page.locator(".reader-tab-title", { hasText: "Annotations —" }) });
   const panelId = await tab.getAttribute("data-panel-id");
   const workbench = page.locator(`[data-session-id="${panelId}"]`);
   // Promotion hides the retained sidebar. Explicitly transfer its editor lease

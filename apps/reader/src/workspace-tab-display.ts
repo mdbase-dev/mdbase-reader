@@ -1,7 +1,15 @@
 import { t as translate } from "@lingui/core/macro";
 
+import { navigatorPanelId } from "./panel-ids.js";
+
 import type { WorkspacePaneId, WorkspaceTab } from "./source-workspace-layout.js";
 import type { SourceSummary } from "@mdbase-reader/core";
+
+export function sidePanelTitle(id: string): string {
+  return id === navigatorPanelId
+    ? translate({ message: "Sources", context: "dockview side panels" })
+    : translate({ message: "Notes", context: "dockview side panels" });
+}
 
 export function workspaceTabLabel(tab: WorkspaceTab, source: SourceSummary | null): string {
   if (tab.kind === "library") {

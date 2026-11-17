@@ -1,6 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
 
-import { panelTab } from "./dockview-workspace-state.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
 import { CloseIcon } from "./icons.js";
 import {
@@ -22,7 +21,7 @@ export function mobileSourceBar(
 ): ReaderHeaderSourceBar | undefined {
   const { sourceWorkspace: workspace, composer } = model;
   const dock = workspace.dock;
-  const tab = mobileSourceActive(dock) ? panelTab(dock.api?.activePanel) : null;
+  const tab = mobileSourceActive(dock) ? dock.activeTab() : null;
   if (tab?.kind !== "source") {
     return undefined;
   }

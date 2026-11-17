@@ -55,7 +55,7 @@ Deployed on user approval as **`87e4c05c9901-production-mu4rpd5i`** to **https:/
 
 Known old record revisions cannot replace newer session state. Source writes refresh before saving; failed annotation writes can fetch the current record and offer a revision-checked conflict choice without a page reload. Deletion checks acquire an owner-specific session lock, pause all editors, and drain an outstanding write. Closing the checking view releases its lock; an already committed deletion request retains the lock until it completes.
 
-Dockview still exclusively owns layout. Editor bodies and recovery state are not serialized into its layout envelope.
+The panel workspace exclusively owns layout. Editor bodies and recovery state are not serialized into its layout envelope.
 
 ## Explicit-save annotation redesign (historical)
 

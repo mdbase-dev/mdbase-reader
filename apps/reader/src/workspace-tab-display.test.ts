@@ -1,10 +1,10 @@
 import { readerI18n } from "@mdbase-reader/i18n";
 import { describe, expect, it } from "vitest";
 
-import { navigatorPanelId, inspectorPanelId } from "./dockview-panel-ids.js";
-import { sidePanelTitle } from "./dockview-side-panels.js";
+import { navigatorPanelId, inspectorPanelId } from "./panel-ids.js";
 import { createLibraryWorkspaceTab, createWorkspaceTab } from "./source-workspace-layout.js";
 import {
+  sidePanelTitle,
   workspaceTabAccessibleTitle,
   workspaceTabLabel,
   workspaceTabTitle,

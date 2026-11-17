@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from "react";
 
-/** Iframe input does not bubble to Dockview. Observe input without injecting scripts or relaxing sandboxing. */
+/** Input inside an iframe never reaches the page around it. Observe input without injecting scripts or relaxing sandboxing. */
 export function useDockPanelFocus(host: RefObject<HTMLElement | null>, activate: () => void): void {
   useEffect(() => {
     const element = host.current;

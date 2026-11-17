@@ -30,7 +30,7 @@ const evidence = {
 };
 
 async function choose(suffix) {
-  await page.locator(".dv-tab").filter({ hasText: "All sources" }).first().click();
+  await page.locator(".mp-tab").filter({ hasText: "All sources" }).first().click();
   await page.locator(".library-add-button").first().click();
   const chooser = page.waitForEvent("filechooser");
   await page.getByRole("button", { name: /Choose or drop a file/u }).click();
@@ -69,7 +69,7 @@ async function finish(name) {
   }
   added.push(name);
   evidence.assertions.push({ name, durationMs: Date.now() - started });
-  await page.locator(".dv-tab").filter({ hasText: "All sources" }).first().click();
+  await page.locator(".mp-tab").filter({ hasText: "All sources" }).first().click();
   await expect(page.locator(".library-source-link").filter({ hasText: name })).toHaveCount(1);
   await expect(page.locator(".reader-save-status")).toHaveCount(0, { timeout: 30_000 });
 }
@@ -138,7 +138,7 @@ try {
   }
   for (const name of attempted) {
     try {
-      await page.locator(".dv-tab").filter({ hasText: "All sources" }).first().click();
+      await page.locator(".mp-tab").filter({ hasText: "All sources" }).first().click();
       const row = page.locator(".library-table-row[data-row-index]").filter({ hasText: name });
       if (await row.count()) {
         await row.focus();

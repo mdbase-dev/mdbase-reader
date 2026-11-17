@@ -1,11 +1,10 @@
-import { parseDockTab } from "./dockview-workspace-state.js";
+import { parseWorkspaceTab } from "./panel-workspace-state.js";
 import {
   tabLocation,
   sourceWorkspaceViews,
   type WorkspaceLocation,
   type WorkspaceTab,
   type SourceWorkspaceView,
-  type SourceWorkspaceLayout,
 } from "./source-workspace-layout.js";
 
 import type { SourceId } from "@mdbase-reader/core";
@@ -16,8 +15,8 @@ interface NavigationState {
   readonly closed: readonly WorkspaceTab[];
   readonly recentSourceIds: readonly SourceId[];
 }
-/** Domain navigation metadata is independent of Dockview's visual arrangement. */
-export class DockviewNavigation {
+/** Where the reader has been: independent of how the panels are arranged. */
+export class WorkspaceNavigation {
   private state: NavigationState = { entries: [], index: -1, closed: [], recentSourceIds: [] };
   private navigating = false;
   get recentSourceIds(): readonly SourceId[] {
@@ -70,19 +69,6 @@ export class DockviewNavigation {
     } finally {
       this.navigating = false;
     }
-  }
-  restoreLegacy(layout: SourceWorkspaceLayout): void {
-    const history = layout.panes.find(({ id }) => id === layout.focusedPaneId)?.history;
-    this.state = {
-      entries: history?.entries ?? [],
-      index: history?.index ?? -1,
-      recentSourceIds: layout.recentSourceIds,
-      closed: layout.recentlyClosed.map(({ tab }) => ({
-        ...tab,
-        id: `reader:session:${crypto.randomUUID()}`,
-        dirty: false,
-      })),
-    };
   }
   restore(value: unknown, known: ReadonlySet<SourceId>): void {
     if (!isRecord(value)) {
@@ -143,7 +129,7 @@ function closedFrom(value: unknown, known: ReadonlySet<SourceId>): WorkspaceTab[
     return [];
   }
   try {
-    const tab = parseDockTab(value, value["id"]);
+    const tab = parseWorkspaceTab(value, value["id"]);
     return tab.kind === "library" || known.has(tab.sourceId) ? [tab] : [];
   } catch {
     return [];

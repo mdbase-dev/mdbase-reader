@@ -9,7 +9,7 @@ if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
   throw new Error("Accessibility audits only run against an explicit loopback origin.");
 }
 const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js");
-// Dockview names pane regions after their active tab; an inactive group can be left unnamed.
+// Pane regions are named after their active tab; an inactive pane can be left unnamed.
 const knownLibraryIssues = new Set(["landmark-unique"]);
 
 const browser = await chromium.launch({ headless: true });

@@ -503,7 +503,7 @@ msgstr "{reason}: {0}"
 msgid "{state, plural, one {In # note · Review} other {In # notes · Review}}"
 msgstr "{state, plural, one {В # заметке · Проверить} few {В # заметках · Проверить} many {В # заметках · Проверить} other {В # заметке · Проверить}}"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "{title} · Drag to move or split · Right-click for pane actions · Delete closes the tab"
 msgstr "{title} · Перетащите, чтобы переместить или разделить · Щёлкните правой кнопкой, чтобы открыть действия с панелью · Удалите, чтобы закрыть вкладку"
 
@@ -843,6 +843,10 @@ msgstr "Все аннотации"
 msgid "All fields added"
 msgstr "Все поля добавлены"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "All open tabs"
+msgstr "Все открытые вкладки"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "All pages"
@@ -855,7 +859,7 @@ msgstr "Все страницы"
 msgid "All sources"
 msgstr "Все источники"
 
-#: apps/reader/src/dockview-workspace.ts
+#: apps/reader/src/panel-workspace.ts
 msgctxt "dockview workspace"
 msgid "All sources"
 msgstr "Все источники"
@@ -2043,7 +2047,7 @@ msgctxt "AnnotationEditor interface"
 msgid "Close"
 msgstr "Закрыть"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Close workspace tab"
 msgid "Close"
 msgstr "Закрыть"
@@ -2095,15 +2099,15 @@ msgstr "Закрыть документ"
 msgid "Close focused pane and keep its tabs"
 msgstr "Закрыть активную панель, не закрывая её вкладки"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Close other unpinned tabs"
 msgstr "Закрыть остальные незакреплённые вкладки"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Close pane and tabs…"
 msgstr "Закрыть панель и вкладки…"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Close tab"
 msgstr "Закрыть вкладку"
@@ -2117,7 +2121,7 @@ msgstr "Закрыть вкладку"
 msgid "Close this tab?"
 msgstr "Закрыть эту вкладку?"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Close unpinned tabs to the right"
 msgstr "Закрыть незакреплённые вкладки справа"
 
@@ -3522,6 +3526,10 @@ msgstr "Название события"
 msgid "Every column is shown."
 msgstr "Отображаются все столбцы."
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Every pane shares the window"
+msgstr "Все панели делят окно между собой"
+
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
 msgstr "Контрольная сумма каждого блока данных проверяется перед записью в коллекцию. Пока требуется браузер с поддержкой выбора папки, например Chrome."
@@ -3778,6 +3786,11 @@ msgstr "Завершение добавления…"
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
 msgstr "Номер первой ссылки в сноске"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Fit panes to the window"
+msgstr "Вписать панели в окно"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
@@ -4670,11 +4683,6 @@ msgstr "Законодательный акт"
 msgid "Library"
 msgstr "Библиотека"
 
-#: apps/reader/src/source-workspace-persistence.ts
-msgctxt "source workspace persistence"
-msgid "Library"
-msgstr "Библиотека"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Library actions"
 msgstr "Действия с библиотекой"
@@ -4911,7 +4919,7 @@ msgstr "Статья в журнале"
 msgid "Make an annotation to preview its name."
 msgstr "Создайте аннотацию, чтобы увидеть предварительный вариант её имени."
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Make room to read"
 msgstr "Освободите место для чтения"
 
@@ -4947,8 +4955,8 @@ msgstr "На этой странице найдено несколько сов�
 msgid "Matching passage: “{0}”. Temporarily highlighted in the document."
 msgstr "Подходящий фрагмент: «{0}». Временно выделен в документе."
 
-#: apps/reader/src/DockPaneActions.tsx
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/PaneActions.tsx
+#: apps/reader/src/panel-menus.ts
 msgid "Maximize / restore pane"
 msgstr "Развернуть / восстановить панель"
 
@@ -5016,7 +5024,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Medium"
 msgstr "Средний"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Merge into another reading pane"
 msgstr "Объединить с другой панелью чтения"
 
@@ -5047,10 +5055,6 @@ msgstr "Нет родительского источника — восстан�
 #: packages/migration/src/zotero-validation.ts
 msgid "Missing primary attachment payload."
 msgstr "Отсутствуют основные данные вложения."
-
-#: apps/reader/src/dockview-side-panels.ts
-msgid "Missing sidebar edge group"
-msgstr "Отсутствует группа границ боковой панели"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Missing Zotero PDF rectangles."
@@ -5131,52 +5135,50 @@ msgstr "Переместить влево"
 msgid "Move right"
 msgstr "Переместить вправо"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Move tab to pane below"
 msgstr "Переместить вкладку на панель снизу"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Move tab to pane right"
 msgstr "Переместить вкладку на панель справа"
 
+#. placeholder {0}: active.title
 #. placeholder {0}: source.title
 #: apps/reader/src/AnnotationOwnerActions.tsx
+#: apps/reader/src/panel-menus.ts
 msgid "Move to {0}"
 msgstr "Переместить в {0}"
 
-#: apps/reader/src/dockview-menus.ts
-msgid "Move to {title}"
-msgstr "Переместить в {title}"
-
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
 msgstr "Переместить в нижнюю боковую панель"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
 msgstr "Переместить в левую боковую панель"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Move to new pane below"
 msgstr "Переместить на новую панель снизу"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Move to new pane right"
 msgstr "Переместить на новую панель справа"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
 msgstr "Переместить на панель"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
 msgstr "Переместить в правую боковую панель"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
 msgstr "Переместить в верхнюю боковую панель"
@@ -5569,7 +5571,7 @@ msgctxt "MobileSourceViews views"
 msgid "Note"
 msgstr "Заметка"
 
-#: apps/reader/src/dockview-side-panels.ts
+#: apps/reader/src/workspace-tab-display.ts
 msgctxt "dockview side panels"
 msgid "Notes"
 msgstr "Заметки"
@@ -5720,7 +5722,7 @@ msgctxt "PDF viewer emptyState"
 msgid "Open a PDF document to get started."
 msgstr "Откройте документ PDF, чтобы начать."
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Open a source from the library. Drag tabs to arrange your workspace."
 msgstr "Откройте источник из библиотеки. Перетащите вкладки, чтобы расположить рабочую область."
 
@@ -5733,8 +5735,8 @@ msgstr "Открыть аннотации"
 msgid "Open below"
 msgstr "Открыть снизу"
 
-#: apps/reader/src/dockview-menus.ts
 #: apps/reader/src/LibraryRowMenu.tsx
+#: apps/reader/src/panel-menus.ts
 msgid "Open beside"
 msgstr "Открыть рядом"
 
@@ -5779,7 +5781,7 @@ msgstr "Открыть в Reader"
 msgid "Open in Reader to highlight"
 msgstr "Откройте в Reader, чтобы выделить фрагмент"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Open library"
 msgstr "Открыть библиотеку"
 
@@ -5826,6 +5828,7 @@ msgstr "Открыть заметку об источнике"
 msgid "Open source note beside"
 msgstr "Открыть заметку об источнике рядом"
 
+#: apps/reader/src/PanelWorkspace.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Open tabs"
 msgstr "Открытые вкладки"
@@ -5851,7 +5854,7 @@ msgstr "Открыть вкладку рабочей области"
 msgid "Open your library in mdbase Reader"
 msgstr "Откройте библиотеку в mdbase Reader"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Opened {title}"
 msgstr "Открыто: {title}"
 
@@ -5860,7 +5863,7 @@ msgstr "Открыто: {title}"
 msgid "Opening {0}…"
 msgstr "Открывается {0}…"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Opening {title}"
 msgstr "Открытие {title}"
 
@@ -6144,10 +6147,14 @@ msgstr "Панель {paneLabel}"
 msgid "Pane {paneLabel} is focused"
 msgstr "Панель {paneLabel} активна"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgctxt "DockPaneActions interface"
 msgid "Pane actions"
 msgstr "Действия с панелью"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Panes keep a readable width and scroll sideways"
+msgstr "Панели сохраняют удобную для чтения ширину и прокручиваются вбок"
 
 #: apps/reader/src/library-source-parts.ts
 msgid "Parent not indexed — coverage is partial"
@@ -6285,11 +6292,15 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
 msgstr "Личная переписка"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Pick a tab from an overview of everything open"
+msgstr "Выбрать вкладку в обзоре всего открытого"
+
 #: apps/reader/src/SettingsSections.tsx
 msgid "Pin mdbase Reader to your Chrome toolbar."
 msgstr "Закрепите mdbase Reader на панели инструментов Chrome."
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
 msgstr "Закрепить вкладку"
@@ -6298,7 +6309,7 @@ msgstr "Закрепить вкладку"
 msgid "Pin the extension"
 msgstr "Закрепить расширение"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Pinned"
 msgstr "Закреплено"
@@ -6846,7 +6857,7 @@ msgstr "Видео Reader"
 msgid "Reader was not given site access."
 msgstr "Reader не предоставлен доступ к сайту."
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Reader workspace"
 msgstr "Рабочая область Reader"
@@ -7041,6 +7052,11 @@ msgctxt "PDF viewer panel"
 msgid "Redaction Sidebar"
 msgstr "Боковая панель редактирования"
 
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Redo arrangement change"
+msgstr "Повторить изменение расположения"
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "References"
@@ -7179,10 +7195,6 @@ msgctxt "CSL item type"
 msgid "Report"
 msgstr "Отчёт"
 
-#: apps/reader/src/DockPaneActions.tsx
-msgid "Reset arrangement (keep tabs)"
-msgstr "Сбросить расположение панелей (сохранить вкладки)"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reset columns and layout"
 msgstr "Сбросить столбцы и макет"
@@ -7195,7 +7207,7 @@ msgstr "Сбросить столбцы и сортировку"
 msgid "Reset pane arrangement"
 msgstr "Сбросить расположение панелей"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Reset pane arrangement (keep tabs)"
 msgstr "Сбросить расположение панелей (сохранить вкладки)"
 
@@ -7211,6 +7223,10 @@ msgstr "Сбросить ширину"
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Resize {label} column"
 msgstr "Изменить размер столбца {label}"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Resize panes"
+msgstr "Изменить размер панелей"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Resolve the save problem or finish the other editor’s deletion check first."
@@ -7705,10 +7721,19 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
 msgstr "Автор сценария"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Scroll between panes"
+msgstr "Прокрутка между панелями"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
 msgstr "Макет прокрутки"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Scroll panes as columns"
+msgstr "Прокручивать панели как колонки"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
@@ -7969,9 +7994,18 @@ msgstr "Показать"
 msgid "Show {label}"
 msgstr "Показать «{label}»"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Show {title}"
+msgstr "Показать {title}"
+
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Show actions"
 msgstr "Показать действия"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Show all tabs at once"
+msgstr "Показать все вкладки сразу"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
@@ -8165,7 +8199,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Source"
 msgstr "Источник"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
 msgstr "Источник"
@@ -8264,7 +8298,7 @@ msgstr "Источник:"
 msgid "Sources"
 msgstr "Источники"
 
-#: apps/reader/src/dockview-side-panels.ts
+#: apps/reader/src/workspace-tab-display.ts
 msgctxt "dockview side panels"
 msgid "Sources"
 msgstr "Источники"
@@ -8492,6 +8526,10 @@ msgstr "Вкладка"
 msgctxt "LibraryWorkspace interface"
 msgid "Table"
 msgstr "Таблица"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Tabs stay open"
+msgstr "Вкладки остаются открытыми"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -9464,6 +9502,11 @@ msgctxt "Reader interface"
 msgid "Undo"
 msgstr "Отменить"
 
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Undo arrangement change"
+msgstr "Отменить изменение расположения"
+
 #: apps/reader/src/HighlightSavedNotice.tsx
 msgid "Undo highlight (Ctrl+Z)"
 msgstr "Отменить выделение (Ctrl+Z)"
@@ -9500,7 +9543,7 @@ msgstr "Неизвестный источник"
 msgid "Unlisted file in bundle."
 msgstr "В пакете найден файл, отсутствующий в списке."
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "dockview menus"
 msgid "Unpin tab"
 msgstr "Открепить вкладку"
@@ -9538,7 +9581,7 @@ msgctxt "CitationEditor interface"
 msgid "Unsaved changes"
 msgstr "Несохранённые изменения"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Unsaved changes"
 msgstr "Несохранённые изменения"

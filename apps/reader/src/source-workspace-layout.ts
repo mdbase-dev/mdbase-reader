@@ -6,7 +6,7 @@ export const sourceWorkspaceViews = ["document", "note", "annotations", "citatio
 export type SourceWorkspaceView = (typeof sourceWorkspaceViews)[number];
 export const workspaceViews = ["library", ...sourceWorkspaceViews] as const;
 export type WorkspaceView = (typeof workspaceViews)[number];
-/** Dockview group identity; legacy layouts used only primary/secondary. */
+/** Pane identity: an opaque string the panel workspace assigns. */
 export type WorkspacePaneId = string;
 export type WorkspaceSplitDirection = "horizontal" | "vertical";
 export type WorkspaceTabId = string;

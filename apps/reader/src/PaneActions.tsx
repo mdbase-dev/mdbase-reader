@@ -2,25 +2,29 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useRef, useState, type JSX } from "react";
 
 import { LayoutIcon } from "./icons.js";
+import { arrangementItems } from "./panel-menus.js";
 
-import type { ReaderDockWorkspace } from "./dockview-workspace.js";
-import type { DockviewGroupPanel } from "dockview-react";
+import type { ReaderPanelWorkspace } from "./panel-workspace.js";
+import type { StackInfo } from "@mdbase-dev/panels/react";
 
-export function DockPaneActions({
-  group,
+/** The menu at the end of a pane's tab strip. */
+export function PaneActions({
+  info,
   dock,
 }: {
-  readonly group: DockviewGroupPanel;
-  readonly dock: ReaderDockWorkspace;
+  readonly info: StackInfo;
+  readonly dock: ReaderPanelWorkspace;
 }): JSX.Element {
   const { t } = useLingui();
   const menu = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const id = `reader-pane-menu-${group.id}`;
+  const { stack } = info;
+  const id = `reader-pane-menu-${stack.id}`;
   const run = (action: () => void): void => {
     menu.current?.hidePopover();
     action();
   };
+  const active = stack.active;
   return (
     <div className="dock-pane-menu">
       <button
@@ -31,7 +35,7 @@ export function DockPaneActions({
         onClick={(event) => {
           const bounds = event.currentTarget.getBoundingClientRect();
           setPosition({
-            top: Math.max(8, Math.min(bounds.bottom + 4, globalThis.innerHeight - 260)),
+            top: Math.max(8, Math.min(bounds.bottom + 4, globalThis.innerHeight - 420)),
             left: Math.max(8, bounds.right - 245),
           });
         }}
@@ -49,53 +53,46 @@ export function DockPaneActions({
       >
         <button
           type="button"
-          disabled={group.api.location.type !== "grid"}
+          disabled={info.edge !== null}
           onClick={() =>
-            run(() => (group.api.isMaximized() ? group.api.exitMaximized() : group.api.maximize()))
+            run(() =>
+              dock.store.dispatch({ type: "maximize", stack: info.maximized ? null : stack.id }),
+            )
           }
         >
           <Trans>Maximize / restore pane</Trans>
         </button>
         <button
           type="button"
-          disabled={group.panels.length < 2}
-          onClick={() =>
-            run(() => {
-              const panel = group.activePanel;
-              if (panel) {
-                dock.split(panel.id, "horizontal");
-              }
-            })
-          }
+          disabled={stack.panels.length < 2 || !active}
+          onClick={() => run(() => active && dock.split(active, "horizontal"))}
         >
           <Trans>Move tab to pane right</Trans>
         </button>
         <button
           type="button"
-          disabled={group.panels.length < 2}
-          onClick={() =>
-            run(() => {
-              const panel = group.activePanel;
-              if (panel) {
-                dock.split(panel.id, "vertical");
-              }
-            })
-          }
+          disabled={stack.panels.length < 2 || !active}
+          onClick={() => run(() => active && dock.split(active, "vertical"))}
         >
           <Trans>Move tab to pane below</Trans>
         </button>
-        <button type="button" onClick={() => run(() => dock.merge(group.id))}>
+        <button type="button" onClick={() => run(() => dock.merge(stack.id))}>
           <Trans>Merge into another reading pane</Trans>
         </button>
-        <button
-          type="button"
-          onClick={() => run(() => dock.closeMany(group.panels.map(({ id }) => id)))}
-        >
+        <button type="button" onClick={() => run(() => dock.closeMany(stack.panels))}>
           <Trans>Close pane and tabs…</Trans>
         </button>
-        <button type="button" onClick={() => run(() => dock.reset())}>
-          <Trans>Reset arrangement (keep tabs)</Trans>
-        </button>
+        {arrangementItems(dock).map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            className={item.separated ? "is-separated" : undefined}
+            disabled={item.disabled}
+            onClick={() => run(item.action)}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
     </div>
   );

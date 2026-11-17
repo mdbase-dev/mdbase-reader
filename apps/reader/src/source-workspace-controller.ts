@@ -6,7 +6,7 @@ import type {
 } from "./source-workspace-layout.js";
 import type { SourceId } from "@mdbase-reader/core";
 
-/** Reader commands. Placement is implemented exclusively by the Dockview adapter. */
+/** Reader commands. Placement is implemented exclusively by the panel workspace. */
 export interface SourceWorkspaceActions {
   readonly preview: (sourceId: SourceId, paneId?: WorkspacePaneId) => void;
   readonly open: (sourceId: SourceId, paneId?: WorkspacePaneId) => void;

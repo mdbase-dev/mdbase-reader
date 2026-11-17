@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { dockWorkspaceActions } from "./dockview-workspace-actions.js";
-import { ReaderDockWorkspace } from "./dockview-workspace.js";
+import { panelWorkspaceActions } from "./panel-workspace-actions.js";
+import { ReaderPanelWorkspace } from "./panel-workspace.js";
 import {
   activeTab,
   focusedPane,
@@ -26,7 +26,7 @@ export interface SourceWorkspaceOptions {
   readonly confirmDiscard?: (tab: WorkspaceTab) => boolean | Promise<boolean>;
 }
 export interface SourceWorkspaceController extends SourceWorkspaceActions {
-  readonly dock: ReaderDockWorkspace;
+  readonly dock: ReaderPanelWorkspace;
   readonly layout: SourceWorkspaceLayout;
   readonly activePane: SourceWorkspacePane;
   readonly activeTab: WorkspaceTab | null;
@@ -36,7 +36,7 @@ export interface SourceWorkspaceController extends SourceWorkspaceActions {
 export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorkspaceController {
   const [dock] = useState(
     () =>
-      new ReaderDockWorkspace(
+      new ReaderPanelWorkspace(
         options.collectionKey,
         browserStorage(),
         new Set(options.sourceIds),
@@ -56,7 +56,7 @@ export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorks
       selectSource(sourceId);
     }
   }, [sourceId, selectSource]);
-  const actions = useMemo(() => dockWorkspaceActions(dock), [dock]);
+  const actions = useMemo(() => panelWorkspaceActions(dock), [dock]);
   return {
     dock,
     layout,

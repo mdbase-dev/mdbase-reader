@@ -94,6 +94,7 @@ describe("command palette", () => {
         layout: { panes: [{ id: "primary", tabs: [tab] }], focusedPaneId: "primary" },
         activeTab: null,
         openSourceIds: [open.id],
+        dock: { view: "columns", canUndo: true, canRedo: false },
       },
       sourceExport: { run: () => undefined },
       bibliographyExport: { run: () => undefined },
@@ -131,6 +132,11 @@ describe("command palette", () => {
     expect(active.find(({ id }) => id === "citation")?.label).toBe("Open citation details");
     expect(active.find(({ id }) => id === "split-right")?.label).toBe("Open beside");
     expect(active.find(({ id }) => id === "split-below")?.label).toBe("Open below");
+    expect(commands.find(({ id }) => id === "toggle-pane-columns")?.label).toBe(
+      "Fit panes to the window",
+    );
+    expect(commands.some(({ id }) => id === "undo-arrangement")).toBe(true);
+    expect(commands.some(({ id }) => id === "redo-arrangement")).toBe(false);
     for (const [query, id] of [
       ["literature note", "note"],
       ["owner", "annotations"],

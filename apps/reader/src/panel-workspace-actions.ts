@@ -1,24 +1,28 @@
-import { panelTab } from "./dockview-workspace-state.js";
+import { mainStacks } from "@mdbase-dev/panels";
+
 import { createLibraryWorkspaceTab, createWorkspaceTab } from "./source-workspace-layout.js";
 
-import type { ReaderDockWorkspace } from "./dockview-workspace.js";
+import type { ReaderPanelWorkspace } from "./panel-workspace.js";
 import type { SourceWorkspaceActions } from "./source-workspace-controller.js";
 
-/** Compatibility command names; all structural mutations are performed by Dockview. */
-export function dockWorkspaceActions(dock: ReaderDockWorkspace): SourceWorkspaceActions {
+/** Reader's command names, carried out on the panel workspace. */
+export function panelWorkspaceActions(dock: ReaderPanelWorkspace): SourceWorkspaceActions {
   const other = (id: string): string | undefined =>
     dock.getSnapshot().panes.find((pane) => pane.id !== id)?.id;
   const closeExcept = (id: string, pane: string, rightOnly = false): void => {
-    const tabs = dock.group(pane)?.panels ?? [];
-    const index = tabs.findIndex((panel) => panel.id === id);
+    const tabs = dock.pane(pane)?.panels ?? [];
+    const index = tabs.indexOf(id);
     dock.closeMany(
-      tabs
-        .filter(
-          (panel, i) => panel.id !== id && !panelTab(panel)?.pinned && (!rightOnly || i > index),
-        )
-        .map((panel) => panel.id),
+      tabs.filter(
+        (panel, i) => panel !== id && !dock.tab(panel)?.pinned && (!rightOnly || i > index),
+      ),
     );
   };
+  const ofSource = (id: string): string[] =>
+    dock
+      .contentPanels()
+      .filter((panel) => dock.tab(panel.id)?.sourceId === id)
+      .map((panel) => panel.id);
   return {
     preview: (id, pane) => dock.open(id, "document", pane, true),
     open: (id, pane) => dock.open(id, "document", pane),
@@ -28,55 +32,53 @@ export function dockWorkspaceActions(dock: ReaderDockWorkspace): SourceWorkspace
       dock.beside(createLibraryWorkspaceTab(view, title), direction),
     activateTab: (id) => dock.activate(id),
     activate: (id) => {
-      const panel = dock.contentPanels().find((panel) => panelTab(panel)?.sourceId === id);
+      const panel = ofSource(id)[0];
       if (panel) {
-        dock.activate(panel.id);
+        dock.activate(panel);
       }
     },
     promote: (id) => dock.patch(id, { preview: false }),
     pin: (id, _pane, pinned) => dock.patch(id, { pinned }),
     markDirty: (id, _pane, dirty) => dock.patch(id, { dirty }),
-    close: (id) =>
-      dock.closeMany(
-        dock
-          .contentPanels()
-          .filter((panel) => panelTab(panel)?.sourceId === id)
-          .map((panel) => panel.id),
-      ),
+    close: (id) => dock.closeMany(ofSource(id)),
     closeTab: (id) => dock.close(id),
     closeOthers: (id, pane) => closeExcept(id, pane),
     closeToRight: (id, pane) => closeExcept(id, pane, true),
     reopenClosed: () => dock.reopen(),
     reorder: (pane, from, to) => {
-      const panel = dock.group(pane)?.panels[from];
+      const panel = dock.pane(pane)?.panels[from];
       if (panel) {
-        dock.move(panel.id, pane, to);
+        dock.move(panel, pane, to);
       }
     },
     navigate: (direction) => dock.navigate(direction),
     switchRelative: (direction) => dock.switchRelative(direction),
-    focus: (pane) => dock.group(pane)?.api.setActive(),
+    focus: (pane) => dock.focusPane(pane),
     focusNextPane: () => dock.focusNext(),
     openBeside: (id, view = "document", direction) =>
       dock.beside(createWorkspaceTab(id, view), direction),
     splitTab: (id, _pane, direction) => dock.split(id, direction),
     moveTab: (id, _from, to, index) => dock.move(id, to, index),
     resizeSplit: (ratio) => {
-      const group = dock.group();
-      if (group && dock.api) {
-        group.api.setSize({ width: dock.api.width * ratio });
+      const root = dock.store.state.root;
+      if (root?.type === "split" && root.children.length === 2) {
+        dock.store.dispatch({ type: "resize", split: root.id, sizes: [ratio, 1 - ratio] });
       }
     },
     setSplitDirection: (direction) => {
-      const groups = dock.getSnapshot().panes;
-      const first = groups[0] ? dock.group(groups[0].id) : undefined;
+      const [first, ...rest] = mainStacks(dock.store.state);
       if (first) {
-        for (const pane of groups.slice(1)) {
-          dock.group(pane.id)?.api.moveTo({
-            group: first,
-            position: direction === "horizontal" ? "right" : "bottom",
-          });
-        }
+        dock.store.dispatch({
+          type: "batch",
+          operations: rest.map((stack) => ({
+            type: "moveStack" as const,
+            stack: stack.id,
+            target: {
+              at: "root" as const,
+              side: direction === "horizontal" ? ("right" as const) : ("bottom" as const),
+            },
+          })),
+        });
       }
     },
     closeSplit: () => {
@@ -86,14 +88,17 @@ export function dockWorkspaceActions(dock: ReaderDockWorkspace): SourceWorkspace
       }
     },
     closePane: (id) => dock.merge(id),
-    closePaneAndTabs: (id) => dock.closeMany(dock.group(id)?.panels.map((panel) => panel.id) ?? []),
+    closePaneAndTabs: (id) => dock.closeMany(dock.pane(id)?.panels ?? []),
     moveAllTabs: (id) => dock.merge(id),
     swapPanes: () => {
-      const current = dock.group();
+      const current = dock.pane();
       const next = current ? other(current.id) : undefined;
-      const destination = next ? dock.group(next) : undefined;
-      if (current && destination) {
-        current.api.moveTo({ group: destination, position: "right" });
+      if (current && next) {
+        dock.store.dispatch({
+          type: "moveStack",
+          stack: current.id,
+          target: { at: "split", stack: next, side: "right" },
+        });
       }
     },
   };

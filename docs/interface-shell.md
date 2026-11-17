@@ -231,7 +231,7 @@ buttons, selects and inputs now inherit the interface font.
 
 - `pnpm --filter @mdbase-reader/app test:a11y` runs axe-core over the preview's library, bulk
   selection, add-column menu, reading view with Notes, command palette and phone library, and
-  fails on any violation except Dockview's unnamed inactive pane region (`landmark-unique`).
+  fails on any violation except an unnamed inactive pane region (`landmark-unique`).
   The pass that added it fixed: `aria-controls` pointing at an unmounted panel, two low-contrast
   labels, `role="group"` on annotation `<article>`s, and a close button nested in each tab
   (tabs now close by Delete, their context menu or a pointer-only icon).

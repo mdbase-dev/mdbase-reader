@@ -503,7 +503,7 @@ msgstr "{reason}：{0}"
 msgid "{state, plural, one {In # note · Review} other {In # notes · Review}}"
 msgstr "{state, plural, other {位于 # 篇笔记中 · 查看}}"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "{title} · Drag to move or split · Right-click for pane actions · Delete closes the tab"
 msgstr "{title} · 拖动可移动或拆分 · 右键查看窗格操作 · 按 Delete 关闭标签页"
 
@@ -843,6 +843,10 @@ msgstr "所有注释"
 msgid "All fields added"
 msgstr "已添加所有字段"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "All open tabs"
+msgstr "所有打开的标签页"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer print"
 msgid "All pages"
@@ -855,7 +859,7 @@ msgstr "所有页面"
 msgid "All sources"
 msgstr "所有来源"
 
-#: apps/reader/src/dockview-workspace.ts
+#: apps/reader/src/panel-workspace.ts
 msgctxt "dockview workspace"
 msgid "All sources"
 msgstr "所有来源"
@@ -2043,7 +2047,7 @@ msgctxt "AnnotationEditor interface"
 msgid "Close"
 msgstr "关闭"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Close workspace tab"
 msgid "Close"
 msgstr "关闭"
@@ -2095,15 +2099,15 @@ msgstr "关闭文档"
 msgid "Close focused pane and keep its tabs"
 msgstr "关闭当前窗格并保留其标签页"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Close other unpinned tabs"
 msgstr "关闭其他未固定的标签页"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Close pane and tabs…"
 msgstr "关闭窗格和标签页…"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Close tab"
 msgstr "关闭标签页"
@@ -2117,7 +2121,7 @@ msgstr "关闭标签页"
 msgid "Close this tab?"
 msgstr "关闭此标签页？"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Close unpinned tabs to the right"
 msgstr "关闭右侧未固定的标签页"
 
@@ -3522,6 +3526,10 @@ msgstr "活动标题"
 msgid "Every column is shown."
 msgstr "已显示所有列。"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Every pane shares the window"
+msgstr "所有窗格共享窗口"
+
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
 msgstr "写入集合之前会验证每个载荷的校验和。目前需要支持文件夹选择的浏览器，例如 Chrome。"
@@ -3778,6 +3786,11 @@ msgstr "正在完成添加…"
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
 msgstr "首次引用注释编号"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Fit panes to the window"
+msgstr "让窗格适应窗口"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
@@ -4670,11 +4683,6 @@ msgstr "法规"
 msgid "Library"
 msgstr "文献库"
 
-#: apps/reader/src/source-workspace-persistence.ts
-msgctxt "source workspace persistence"
-msgid "Library"
-msgstr "文献库"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Library actions"
 msgstr "书库操作"
@@ -4911,7 +4919,7 @@ msgstr "杂志文章"
 msgid "Make an annotation to preview its name."
 msgstr "创建注释以预览其名称。"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Make room to read"
 msgstr "腾出空间阅读"
 
@@ -4947,8 +4955,8 @@ msgstr "与此页面上的多处位置匹配"
 msgid "Matching passage: “{0}”. Temporarily highlighted in the document."
 msgstr "匹配的段落：“{0}”。已在文档中临时高亮。"
 
-#: apps/reader/src/DockPaneActions.tsx
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/PaneActions.tsx
+#: apps/reader/src/panel-menus.ts
 msgid "Maximize / restore pane"
 msgstr "最大化 / 还原窗格"
 
@@ -5016,7 +5024,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Medium"
 msgstr "媒介"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Merge into another reading pane"
 msgstr "合并到另一个阅读窗格"
 
@@ -5047,10 +5055,6 @@ msgstr "缺少父来源——请修复部分所属链接"
 #: packages/migration/src/zotero-validation.ts
 msgid "Missing primary attachment payload."
 msgstr "缺少主要附件载荷。"
-
-#: apps/reader/src/dockview-side-panels.ts
-msgid "Missing sidebar edge group"
-msgstr "缺少侧边栏边缘组"
 
 #: packages/migration/src/zotero-pdf.ts
 msgid "Missing Zotero PDF rectangles."
@@ -5131,52 +5135,50 @@ msgstr "左移"
 msgid "Move right"
 msgstr "右移"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Move tab to pane below"
 msgstr "将标签页移到下方窗格"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgid "Move tab to pane right"
 msgstr "将标签页移到右侧窗格"
 
+#. placeholder {0}: active.title
 #. placeholder {0}: source.title
 #: apps/reader/src/AnnotationOwnerActions.tsx
+#: apps/reader/src/panel-menus.ts
 msgid "Move to {0}"
 msgstr "移至 {0}"
 
-#: apps/reader/src/dockview-menus.ts
-msgid "Move to {title}"
-msgstr "移至 {title}"
-
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to bottom sidebar"
 msgstr "移至底部侧边栏"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to left sidebar"
 msgstr "移至左侧边栏"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Move to new pane below"
 msgstr "移到下方新窗格"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Move to new pane right"
 msgstr "移到右侧新窗格"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to pane"
 msgstr "移至窗格"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to right sidebar"
 msgstr "移至右侧边栏"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "Workspace tab destination"
 msgid "Move to top sidebar"
 msgstr "移至顶部侧边栏"
@@ -5569,7 +5571,7 @@ msgctxt "MobileSourceViews views"
 msgid "Note"
 msgstr "笔记"
 
-#: apps/reader/src/dockview-side-panels.ts
+#: apps/reader/src/workspace-tab-display.ts
 msgctxt "dockview side panels"
 msgid "Notes"
 msgstr "笔记"
@@ -5720,7 +5722,7 @@ msgctxt "PDF viewer emptyState"
 msgid "Open a PDF document to get started."
 msgstr "打开 PDF 文档以开始使用。"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Open a source from the library. Drag tabs to arrange your workspace."
 msgstr "从文献库打开一个来源。拖动标签页即可排列你的工作区。"
 
@@ -5733,8 +5735,8 @@ msgstr "打开注释"
 msgid "Open below"
 msgstr "在下方打开"
 
-#: apps/reader/src/dockview-menus.ts
 #: apps/reader/src/LibraryRowMenu.tsx
+#: apps/reader/src/panel-menus.ts
 msgid "Open beside"
 msgstr "在旁边打开"
 
@@ -5779,7 +5781,7 @@ msgstr "在 Reader 中打开"
 msgid "Open in Reader to highlight"
 msgstr "在 Reader 中打开以进行高亮"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Open library"
 msgstr "打开文献库"
 
@@ -5826,6 +5828,7 @@ msgstr "打开文献笔记"
 msgid "Open source note beside"
 msgstr "在旁边打开文献笔记"
 
+#: apps/reader/src/PanelWorkspace.tsx
 #: apps/reader/src/reader-command-list.ts
 msgid "Open tabs"
 msgstr "打开的标签页"
@@ -5851,7 +5854,7 @@ msgstr "打开工作区标签页"
 msgid "Open your library in mdbase Reader"
 msgstr "在 mdbase Reader 中打开你的文献库"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Opened {title}"
 msgstr "已打开{title}"
 
@@ -5860,7 +5863,7 @@ msgstr "已打开{title}"
 msgid "Opening {0}…"
 msgstr "正在打开{0}…"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgid "Opening {title}"
 msgstr "正在打开{title}"
 
@@ -6144,10 +6147,14 @@ msgstr "窗格 {paneLabel}"
 msgid "Pane {paneLabel} is focused"
 msgstr "窗格 {paneLabel} 已获得焦点"
 
-#: apps/reader/src/DockPaneActions.tsx
+#: apps/reader/src/PaneActions.tsx
 msgctxt "DockPaneActions interface"
 msgid "Pane actions"
 msgstr "窗格操作"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Panes keep a readable width and scroll sideways"
+msgstr "窗格保持易读的宽度并横向滚动"
 
 #: apps/reader/src/library-source-parts.ts
 msgid "Parent not indexed — coverage is partial"
@@ -6285,11 +6292,15 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Personal communication"
 msgstr "个人通信"
 
+#: apps/reader/src/reader-command-list.ts
+msgid "Pick a tab from an overview of everything open"
+msgstr "从所有已打开内容的概览中选择标签页"
+
 #: apps/reader/src/SettingsSections.tsx
 msgid "Pin mdbase Reader to your Chrome toolbar."
 msgstr "将 mdbase Reader 固定到 Chrome 工具栏。"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "dockview menus"
 msgid "Pin tab"
 msgstr "固定标签页"
@@ -6298,7 +6309,7 @@ msgstr "固定标签页"
 msgid "Pin the extension"
 msgstr "固定扩展程序"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Pinned"
 msgstr "已固定"
@@ -6846,7 +6857,7 @@ msgstr "Reader 视频"
 msgid "Reader was not given site access."
 msgstr "Reader 未获得网站访问权限。"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Reader workspace"
 msgstr "Reader 工作区"
@@ -7041,6 +7052,11 @@ msgctxt "PDF viewer panel"
 msgid "Redaction Sidebar"
 msgstr "涂黑侧边栏"
 
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Redo arrangement change"
+msgstr "重做排列更改"
+
 #: apps/reader/src/citation-labels.ts
 msgctxt "CSL bibliographic field or item type"
 msgid "References"
@@ -7179,10 +7195,6 @@ msgctxt "CSL item type"
 msgid "Report"
 msgstr "报告"
 
-#: apps/reader/src/DockPaneActions.tsx
-msgid "Reset arrangement (keep tabs)"
-msgstr "重置排列（保留标签页）"
-
 #: apps/reader/src/LibraryWorkspace.tsx
 msgid "Reset columns and layout"
 msgstr "重置列和布局"
@@ -7195,7 +7207,7 @@ msgstr "重置列和排序"
 msgid "Reset pane arrangement"
 msgstr "重置窗格排列"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgid "Reset pane arrangement (keep tabs)"
 msgstr "重置窗格排列（保留标签页）"
 
@@ -7211,6 +7223,10 @@ msgstr "重置宽度"
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Resize {label} column"
 msgstr "调整“{label}”列的大小"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Resize panes"
+msgstr "调整窗格大小"
 
 #: apps/reader/src/use-annotation-deletion.ts
 msgid "Resolve the save problem or finish the other editor’s deletion check first."
@@ -7705,10 +7721,19 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
 msgstr "编剧"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Scroll between panes"
+msgstr "在窗格之间滚动"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
 msgstr "滚动布局"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Scroll panes as columns"
+msgstr "将窗格作为列滚动"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
@@ -7969,9 +7994,18 @@ msgstr "显示"
 msgid "Show {label}"
 msgstr "显示{label}"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Show {title}"
+msgstr "显示 {title}"
+
 #: apps/reader/src/DisplaySettings.tsx
 msgid "Show actions"
 msgstr "显示操作"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Show all tabs at once"
+msgstr "一次显示所有标签页"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
@@ -8165,7 +8199,7 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Source"
 msgstr "来源"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace status or action"
 msgid "Source"
 msgstr "来源"
@@ -8264,7 +8298,7 @@ msgstr "来源："
 msgid "Sources"
 msgstr "来源"
 
-#: apps/reader/src/dockview-side-panels.ts
+#: apps/reader/src/workspace-tab-display.ts
 msgctxt "dockview side panels"
 msgid "Sources"
 msgstr "来源"
@@ -8492,6 +8526,10 @@ msgstr "Tab"
 msgctxt "LibraryWorkspace interface"
 msgid "Table"
 msgstr "表格"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Tabs stay open"
+msgstr "标签页保持打开"
 
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 #: apps/reader/src/LibraryWorkspace.tsx
@@ -9464,6 +9502,11 @@ msgctxt "Reader interface"
 msgid "Undo"
 msgstr "撤销"
 
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Undo arrangement change"
+msgstr "撤销排列更改"
+
 #: apps/reader/src/HighlightSavedNotice.tsx
 msgid "Undo highlight (Ctrl+Z)"
 msgstr "撤销高亮（Ctrl+Z）"
@@ -9500,7 +9543,7 @@ msgstr "未知来源"
 msgid "Unlisted file in bundle."
 msgstr "数据包中有未列出的文件。"
 
-#: apps/reader/src/dockview-menus.ts
+#: apps/reader/src/panel-menus.ts
 msgctxt "dockview menus"
 msgid "Unpin tab"
 msgstr "取消固定标签页"
@@ -9538,7 +9581,7 @@ msgctxt "CitationEditor interface"
 msgid "Unsaved changes"
 msgstr "未保存的更改"
 
-#: apps/reader/src/DockviewWorkspace.tsx
+#: apps/reader/src/PanelWorkspace.tsx
 msgctxt "DockviewWorkspace interface"
 msgid "Unsaved changes"
 msgstr "未保存的更改"

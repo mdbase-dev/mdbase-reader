@@ -10,9 +10,8 @@ import {
   describeConnectionProblem,
   libraryLoadFallback,
 } from "./connection-recovery.js";
-import { inspectorPanelId } from "./dockview-panel-ids.js";
-import { panelTab } from "./dockview-workspace-state.js";
 import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
+import { inspectorPanelId } from "./panel-ids.js";
 import {
   useDocumentSurfaceTiming,
   useReaderAnnotationComposer as useComposer,
@@ -166,7 +165,7 @@ function OpenedReaderApp({
     saveFile,
   });
   const sourceRemoval = useSourceRemoval(workspace, (id) => {
-    const activeTab = panelTab(sourceWorkspace.dock.api?.activePanel);
+    const activeTab = sourceWorkspace.dock.activeTab();
     if (
       activeTab?.kind === "source" &&
       activeTab.sourceId === id &&

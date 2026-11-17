@@ -56,7 +56,7 @@ export interface DocumentWorkspaceProps {
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
 }
 
-/** One stable Dockview panel. Moving it never changes its React/session identity. */
+/** One workspace panel. Moving it never changes its React/session identity. */
 export function DocumentWorkspace({
   props,
   tab,

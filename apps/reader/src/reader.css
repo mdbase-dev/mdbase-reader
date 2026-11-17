@@ -145,8 +145,7 @@ button {
   .reader-shell,
   .reader-header,
   .workspace-pane,
-  .document-toolbar,
-  .reader-dock .dv-tabs-and-actions-container {
+  .document-toolbar {
     transition: none;
   }
 }

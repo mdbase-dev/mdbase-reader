@@ -390,7 +390,6 @@ export function SourceAdditionError({
 }): JSX.Element {
   const problem = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    document.querySelector(".dv-live-region")?.replaceChildren();
     problem.current?.focus();
   }, [error]);
   return (

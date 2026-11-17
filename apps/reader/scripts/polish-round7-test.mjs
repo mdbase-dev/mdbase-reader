@@ -315,13 +315,13 @@ try {
           await rows.first().focus();
           await page.keyboard.press("Enter");
           await page
-            .locator(".dv-tab")
+            .locator(".mp-tab")
             .filter({ hasText: "All sources" })
             .first()
             .click({ button: "right" });
           await page.getByText("Move to new pane right", { exact: true }).click();
           const library = await page.locator(".library-table-frame").boundingBox();
-          const divider = await page.locator(".dv-sash.dv-enabled").last().boundingBox();
+          const divider = await page.locator(".mp-splitter").last().boundingBox();
           assert.ok(library && divider);
           const dividerX = divider.x + divider.width / 2;
           const targetX = dividerX + (dividerX > library.x + 4 ? 1 : -1) * (750 - library.width);

@@ -2,24 +2,22 @@ import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Select } from "@mdbase-dev/ui/select";
 
-import { panelTab } from "./dockview-workspace-state.js";
 import { BackIcon } from "./icons.js";
 
-import type { ReaderDockWorkspace } from "./dockview-workspace.js";
+import type { ReaderPanelWorkspace } from "./panel-workspace.js";
 import type { JSX } from "react";
 
 /**
  * Whether a phone is showing a source's document or tools. The header then carries the source's
  * own navigation, so the workspace needs no row of its own.
  */
-export function mobileSourceActive(dock: ReaderDockWorkspace): boolean {
-  const active = dock.mobile ? dock.api?.activePanel : undefined;
-  return panelTab(active)?.kind === "source";
+export function mobileSourceActive(dock: ReaderPanelWorkspace): boolean {
+  return dock.mobile && dock.activeTab()?.kind === "source";
 }
 
 /** Returns to the library tab already open, or opens one. */
-export function backToLibrary(dock: ReaderDockWorkspace): void {
-  const library = dock.contentPanels().find((panel) => panelTab(panel)?.kind === "library");
+export function backToLibrary(dock: ReaderPanelWorkspace): void {
+  const library = dock.contentPanels().find((panel) => dock.tab(panel.id)?.kind === "library");
   if (library) {
     dock.activate(library.id);
   } else {
@@ -28,9 +26,9 @@ export function backToLibrary(dock: ReaderDockWorkspace): void {
 }
 
 /** Closes the active tab, unless it is the library, which is home. */
-export function closeActiveTab(dock: ReaderDockWorkspace): void {
-  const current = dock.api?.activePanel;
-  if (current && panelTab(current) && panelTab(current)?.kind !== "library") {
+export function closeActiveTab(dock: ReaderPanelWorkspace): void {
+  const current = dock.activeTab();
+  if (current && current.kind !== "library") {
     dock.close(current.id);
   }
 }
@@ -39,10 +37,10 @@ export function closeActiveTab(dock: ReaderDockWorkspace): void {
 export function WorkspaceTabSwitcher({
   dock,
 }: {
-  readonly dock: ReaderDockWorkspace;
+  readonly dock: ReaderPanelWorkspace;
 }): JSX.Element {
   const { t } = useLingui();
-  const active = dock.api?.activePanel;
+  const active = dock.activePanel();
   const tabs = dock.contentPanels();
   return (
     <div className="mobile-tab-switcher">
@@ -53,7 +51,7 @@ export function WorkspaceTabSwitcher({
         value={active?.id ?? ""}
         options={tabs.map((panel) => ({
           value: panel.id,
-          label: `${panel.title ?? ""}${panelTab(panel)?.dirty ? translate({ message: " — unsaved changes" }) : ""}`,
+          label: `${panel.title ?? ""}${dock.tab(panel.id)?.dirty ? translate({ message: " — unsaved changes" }) : ""}`,
         }))}
         onChange={(id) => dock.activate(id)}
       />
@@ -72,14 +70,14 @@ export function WorkspaceTabSwitcher({
 export function MobileWorkspaceNavigation({
   dock,
 }: {
-  readonly dock: ReaderDockWorkspace;
+  readonly dock: ReaderPanelWorkspace;
 }): JSX.Element | null {
   const { t } = useLingui();
   if (!dock.mobile || mobileSourceActive(dock)) {
     return null;
   }
-  const active = dock.api?.activePanel;
-  const side = active && !panelTab(active);
+  const active = dock.activePanel();
+  const side = active && !dock.tab(active.id);
   const tabs = dock.contentPanels();
   if (side) {
     return (

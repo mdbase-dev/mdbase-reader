@@ -6,8 +6,7 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 import { auditPdf, auditEpub } from "./reader-audit-documents.mjs";
-import { auditDockview } from "./audit-dockview.mjs";
-import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
+import { auditPanelWorkspace } from "./audit-panel-workspace.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
 import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
@@ -15,10 +14,7 @@ import { auditAnnotationSelection } from "./audit-annotation-selection.mjs";
 import { auditPdfTouchWorkspace } from "./audit-pdf-touch-workspace.mjs";
 import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
-import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
-import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
 import { auditReadingWorkspace } from "./audit-reading-workspace.mjs";
-import { auditResponsiveWorkspace } from "./audit-responsive-workspace.mjs";
 import { chooseOption } from "./audit-select.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
@@ -27,8 +23,7 @@ const readingAudit = process.env.READER_AUDIT_READING_ONLY === "1";
 const formatsAudit = process.env.READER_AUDIT_FORMATS_ONLY === "1";
 const selectionAudit = process.env.READER_AUDIT_SELECTION_ONLY === "1";
 const pdfTouchAudit = process.env.READER_AUDIT_PDF_TOUCH_ONLY === "1";
-const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
-const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
+const workspaceAudit = process.env.READER_AUDIT_WORKSPACE_ONLY === "1";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
   throw new Error("Reader audits only run against an explicit loopback origin.");
 }
@@ -233,20 +228,8 @@ try {
       })),
     );
   }
-  if (sidebarComparison) {
-    completed.push(...(await auditSidebarLayout(page, { screenshot, measurements })));
-    measurements.edgeApi = await auditEdgeGroupApi(context, origin);
-    if (responsiveAudit) {
-      expect(Object.values(measurements.sidebars.acceptance).every(Boolean)).toBe(true);
-      completed.push(
-        ...(await auditResponsiveWorkspace(page, {
-          screenshot,
-          blockWrites: (value) => {
-            writesBlocked = value;
-          },
-        })),
-      );
-    }
+  if (workspaceAudit) {
+    completed.push(...(await auditPanelWorkspace(page, { screenshot })));
   }
   if (
     !formatsAudit &&
@@ -254,7 +237,7 @@ try {
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
-    !sidebarComparison &&
+    !workspaceAudit &&
     process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1"
   ) {
     await expect(page.locator('.library-table[aria-label="Sources"]')).toBeVisible();
@@ -511,15 +494,7 @@ try {
         completed.push("EPUB page controls work with pointer and keyboard, persisting location");
       }
     }
-    completed.push(
-      ...(await auditDockview(page, {
-        screenshot,
-        blockWrites: (value) => {
-          writesBlocked = value;
-        },
-      })),
-    );
-    completed.push(...(await auditDockviewMigration(page)));
+    completed.push(...(await auditPanelWorkspace(page, { screenshot })));
   }
   if (
     !formatsAudit &&
@@ -527,7 +502,7 @@ try {
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
-    !sidebarComparison
+    !workspaceAudit
   ) {
     completed.push(
       ...(await auditAnnotations(page, {
@@ -580,7 +555,7 @@ try {
     stack: error.stack,
     workspace: await page
       .evaluate(() => ({
-        saved: localStorage.getItem("mdbase-reader:dockview:v1:test-reader-audit"),
+        saved: localStorage.getItem("mdbase-reader:panels:v1:test-reader-audit"),
         mobileOptions: Array.from(
           globalThis.document.querySelectorAll(".mobile-workspace-navigation option"),
         ).map((option) => ({ value: option.value, title: option.textContent })),

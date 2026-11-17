@@ -165,7 +165,7 @@ async function desktopPanes(page, output, name, reducedMotion) {
   console.log(`${name}: resized`);
   await expect.poll(async () => (await inspector.boundingBox()).width).toBe(365);
   const widths = () =>
-    page.locator(".dv-groupview-edge").evaluateAll((elements) =>
+    page.locator(".mp-stack:has(.reader-dock-tab.is-side)").evaluateAll((elements) =>
       elements.map((element) => ({
         name: element.getAttribute("aria-label"),
         width: element.getBoundingClientRect().width,
