@@ -47,6 +47,19 @@ dialog.mdbase-feedback-dialog,
 .reader-overlay .mdbase-command-search {
   grid-template-columns: minmax(0, 1fr);
 }
+/* The search field is the dialog's only control; the frame already says where focus is. */
+.reader-overlay .mdbase-command-search input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+/* A long title shortens before its author or kind disappears. */
+.reader-overlay .mdbase-command-copy > strong {
+  flex-shrink: 1;
+  min-width: 0;
+}
+.reader-overlay .mdbase-command-copy > small {
+  min-width: min(8em, 40%);
+}
 .reader-overlay :is(.mdbase-command-search, .reader-shortcut-help, .mdbase-command-footer) {
   flex: none;
 }
@@ -56,10 +69,6 @@ dialog.mdbase-feedback-dialog,
 }
 .reader-overlay .mdbase-command-results {
   flex: 1 1 auto;
-}
-.reader-overlay .mdbase-command-footer {
-  display: flex;
-  flex-wrap: wrap;
 }
 .reader-shortcut-help {
   overflow: auto;

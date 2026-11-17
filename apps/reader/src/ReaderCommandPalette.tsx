@@ -59,7 +59,7 @@ function OpenPalette({
   return (
     <ModalDialog
       active={open}
-      className="mdbase-command-palette"
+      className="mdbase-dialog mdbase-command-palette"
       labelledBy={`${id}-title`}
       initialFocus={input}
       onDismiss={onClose}
@@ -120,7 +120,7 @@ function OpenPalette({
               onMouseDown={(event) => event.preventDefault()}
               onClick={(event) => run(command, event.shiftKey)}
             >
-              <span>
+              <span className="mdbase-command-copy">
                 <strong>{command.label}</strong>
                 {command.detail ? <small>{command.detail}</small> : null}
               </span>
@@ -197,7 +197,7 @@ function ShortcutSheet({
   return (
     <ModalDialog
       active={open}
-      className="mdbase-command-palette"
+      className="mdbase-dialog mdbase-command-palette"
       labelledBy={id}
       initialFocus={heading}
       onDismiss={onClose}
