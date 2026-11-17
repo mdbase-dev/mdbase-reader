@@ -198,20 +198,38 @@ function viewLabel(view: string): string {
 function arrangementCommands(
   dock: ReaderCommandInput["workspace"]["dock"],
 ): readonly ReaderCommand[] {
-  const columns = dock.view === "columns";
-  return [
+  // One command per arrangement, leaving out the one in use.
+  const views: readonly (ReaderCommand & { readonly view: typeof dock.view })[] = [
     {
-      id: "toggle-pane-columns",
-      label: columns
-        ? translate({ message: "Fit panes to the window" })
-        : translate({ message: "Scroll panes as columns" }),
-      detail: columns
-        ? translate({ message: "Every pane shares the window" })
-        : translate({ message: "Panes keep a readable width and scroll sideways" }),
+      view: "tiling",
+      id: "fit-panes",
+      label: translate({ message: "Fit panes to the window" }),
+      detail: translate({ message: "Every pane shares the window" }),
       group: "Workspace",
-      keywords: "columns tiling layout scroll",
-      run: () => dock.setView(columns ? "tiling" : "columns"),
+      keywords: "tiling layout split",
+      run: () => dock.setView("tiling"),
     },
+    {
+      view: "columns",
+      id: "scroll-pane-columns",
+      label: translate({ message: "Scroll panes as columns" }),
+      detail: translate({ message: "Panes keep a readable width and scroll sideways" }),
+      group: "Workspace",
+      keywords: "columns layout scroll",
+      run: () => dock.setView("columns"),
+    },
+    {
+      view: "canvas",
+      id: "arrange-panes-on-canvas",
+      label: translate({ message: "Arrange panes on a canvas" }),
+      detail: translate({ message: "Place panes anywhere, at any size, and zoom out to see them" }),
+      group: "Workspace",
+      keywords: "canvas infinite freeform board zoom pan layout",
+      run: () => dock.setView("canvas"),
+    },
+  ];
+  return [
+    ...views.filter(({ view }) => view !== dock.view).map(({ view: _view, ...command }) => command),
     {
       id: "show-all-tabs",
       label: translate({ message: "Show all tabs at once" }),

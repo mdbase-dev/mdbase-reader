@@ -1,7 +1,10 @@
 import { t as translate } from "@lingui/core/macro";
 import { allStacks, edgeOfStack, mainStacks, type PanelDescriptor } from "@mdbase-dev/panels";
 
+import { canFollow } from "./panel-workspace-state.js";
+
 import type { ReaderPanelWorkspace } from "./panel-workspace.js";
+import type { WorkspaceTab } from "./source-workspace-layout.js";
 import type { MenuItem } from "@mdbase-dev/panels/react";
 
 /** Every close goes through Reader's own guard for unsaved changes. */
@@ -47,52 +50,85 @@ export function tabMenu(dock: ReaderPanelWorkspace, panel: PanelDescriptor): Men
       });
     }
   }
-  if (tab && ["document", "note", "annotations"].includes(tab.view)) {
-    items.push({
-      label: translate({ message: "Open beside" }),
-      action: () => {
-        dock.activate(panel.id);
-        dock.beside(tab, "horizontal");
-      },
-    });
-  }
   if (tab) {
-    const index = siblings.indexOf(panel.id);
-    const unpinned = (ids: readonly string[]): string[] =>
-      ids.filter((id) => id !== panel.id && !dock.tab(id)?.pinned);
-    items.push(
-      {
-        label: tab.pinned
-          ? translate({ message: "Unpin tab", context: "dockview menus" })
-          : translate({ message: "Pin tab", context: "dockview menus" }),
-        action: () => dock.patch(panel.id, { pinned: !tab.pinned }),
-        separated: true,
-      },
-      {
-        label: translate({ message: "Close unpinned tabs to the right" }),
-        action: () => dock.closeMany(unpinned(siblings.slice(index + 1))),
-      },
-      {
-        label: translate({ message: "Close other unpinned tabs" }),
-        action: () => dock.closeMany(unpinned(siblings)),
-      },
-    );
+    items.push(...ownItems(dock, panel.id, tab, siblings));
   }
   items.push(...arrangementItems(dock));
   return items;
 }
 
-/** Ways of looking at the whole workspace: the same items end every tab and pane menu. */
-export function arrangementItems(dock: ReaderPanelWorkspace): MenuItem[] {
-  return [
+/** What a tab can do about itself: open beside, pin, follow, and close its neighbours. */
+function ownItems(
+  dock: ReaderPanelWorkspace,
+  id: string,
+  tab: WorkspaceTab,
+  siblings: readonly string[],
+): MenuItem[] {
+  const items: MenuItem[] = [];
+  if (["document", "note", "annotations"].includes(tab.view)) {
+    items.push({
+      label: translate({ message: "Open beside" }),
+      action: () => {
+        dock.activate(id);
+        dock.beside(tab, "horizontal");
+      },
+    });
+  }
+  const index = siblings.indexOf(id);
+  const unpinned = (ids: readonly string[]): string[] =>
+    ids.filter((other) => other !== id && !dock.tab(other)?.pinned);
+  items.push(
     {
-      label:
-        dock.view === "columns"
-          ? translate({ message: "Fit panes to the window" })
-          : translate({ message: "Scroll panes as columns" }),
-      action: () => dock.setView(dock.view === "columns" ? "tiling" : "columns"),
+      label: tab.pinned
+        ? translate({ message: "Unpin tab", context: "dockview menus" })
+        : translate({ message: "Pin tab", context: "dockview menus" }),
+      action: () => dock.patch(id, { pinned: !tab.pinned }),
       separated: true,
     },
+    ...(canFollow(tab)
+      ? [
+          {
+            label: tab.follow
+              ? translate({ message: "Stop following the active document" })
+              : translate({ message: "Follow the active document" }),
+            action: () => dock.setFollow(id, !tab.follow),
+          },
+        ]
+      : []),
+    {
+      label: translate({ message: "Close unpinned tabs to the right" }),
+      action: () => dock.closeMany(unpinned(siblings.slice(index + 1))),
+    },
+    {
+      label: translate({ message: "Close other unpinned tabs" }),
+      action: () => dock.closeMany(unpinned(siblings)),
+    },
+  );
+  return items;
+}
+
+/** Ways of looking at the whole workspace: the same items end every tab and pane menu. */
+export function arrangementItems(dock: ReaderPanelWorkspace): MenuItem[] {
+  const views: MenuItem[] = [
+    {
+      label: translate({ message: "Fit panes to the window" }),
+      action: () => dock.setView("tiling"),
+      disabled: dock.view === "tiling",
+      separated: true,
+    },
+    {
+      label: translate({ message: "Scroll panes as columns" }),
+      action: () => dock.setView("columns"),
+      disabled: dock.view === "columns",
+    },
+    {
+      label: translate({ message: "Arrange panes on a canvas" }),
+      action: () => dock.setView("canvas"),
+      disabled: dock.view === "canvas",
+    },
+  ];
+  return [
+    ...views,
     {
       label: translate({ message: "Show all tabs at once" }),
       action: () => dock.setOverview(true),

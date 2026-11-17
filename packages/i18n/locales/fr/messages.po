@@ -655,6 +655,11 @@ msgstr "Consulté le"
 msgid "Actions for {0}"
 msgstr "Actions pour {0}"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Actual size"
+msgstr "Taille réelle"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1180,6 +1185,11 @@ msgstr "Capture de zone"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "Captures de zone"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Arrange panes on a canvas"
+msgstr "Disposer les panneaux sur un canevas"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3828,6 +3838,14 @@ msgstr "Activer le volet suivant"
 msgid "Follow reading position"
 msgstr "Suivre la position de lecture"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the active document"
+msgstr "Suivre le document actif"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Follows the active document"
+msgstr "Suit le document actif"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "Pour signaler des enregistrements lents ou échoués. Le panneau peut alors relever les temps de connexion et les télécharger ; rien n’est relevé tant que vous ne lancez pas l’opération depuis ce panneau."
@@ -5131,6 +5149,11 @@ msgstr "Descendre"
 msgid "Move left"
 msgstr "Déplacer vers la gauche"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Move pane"
+msgstr "Déplacer le panneau"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "Déplacer vers la droite"
@@ -6318,6 +6341,10 @@ msgstr "Épinglé"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "Lieu"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Place panes anywhere, at any size, and zoom out to see them"
+msgstr "Placez les panneaux où vous voulez, à la taille voulue, et dézoomez pour tous les voir"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -8007,6 +8034,11 @@ msgstr "Afficher les actions"
 msgid "Show all tabs at once"
 msgstr "Afficher tous les onglets à la fois"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Show every pane"
+msgstr "Afficher tous les panneaux"
+
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
 msgstr "Afficher dans le document"
@@ -8437,6 +8469,10 @@ msgstr "Arrêter l’ajout"
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
 msgstr "Arrêter et effacer les mesures"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Stop following the active document"
+msgstr "Ne plus suivre le document actif"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop import"
@@ -9230,6 +9266,10 @@ msgstr "Ce document source n’existe plus."
 #: apps/extension/src/NotePanel.tsx
 msgid "This source was removed from your collection"
 msgstr "Cette source a été retirée de votre collection"
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "This tab follows the document you are working on. Open or select a source to see it here."
+msgstr "Cet onglet suit le document sur lequel vous travaillez. Ouvrez ou sélectionnez une source pour la voir ici."
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work."
@@ -10059,6 +10099,11 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "Commandes de zoom"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom in"
+msgstr "Zoom avant"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10073,6 +10118,11 @@ msgstr "Niveau de zoom ({level} %)"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "Menu de zoom"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom out"
+msgstr "Zoom arrière"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

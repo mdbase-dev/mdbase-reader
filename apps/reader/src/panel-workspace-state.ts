@@ -13,6 +13,7 @@ import {
   createSourceWorkspaceLayout,
   sourceWorkspaceViews,
   type SourceWorkspaceLayout,
+  type SourceWorkspaceTab,
   type SourceWorkspaceView,
   type WorkspaceTab,
 } from "./source-workspace-layout.js";
@@ -21,7 +22,10 @@ import type { SourceId } from "@mdbase-reader/core";
 
 export { navigatorPanelId, inspectorPanelId } from "./panel-ids.js";
 
-/** Panel kinds: a `workspace` panel is a reader tab; the other two are the side panels. */
+/**
+ * Panel kinds: a `workspace` panel is a reader tab; the other two are the Sources and Notes
+ * panels, which start at the sides and are otherwise ordinary tabs.
+ */
 export interface WorkspaceStorage {
   readonly getItem: (key: string) => string | null;
   readonly setItem: (key: string, value: string) => void;
@@ -43,16 +47,32 @@ export function sidePanel(id: string): PanelDescriptor {
     app: "reader",
     minWidth: 180,
     minHeight: 120,
+    // Both are about other tabs, so using them does not change which tab they are about.
+    leads: false,
   };
 }
 
-/** A reader tab as a panel. Unsaved changes are never part of a layout. */
+/** Views a tab can follow the active document with. A citation form is one per source. */
+export function canFollow(tab: WorkspaceTab | null): tab is SourceWorkspaceTab {
+  return tab?.kind === "source" && (tab.view === "note" || tab.view === "annotations");
+}
+
+/** Whether a tab is following the active document now: it is set to, and not pinned. */
+export function follows(tab: WorkspaceTab | null): tab is SourceWorkspaceTab {
+  return canFollow(tab) && tab.follow === true && !tab.pinned;
+}
+
 /** What a panel stores about its reader tab. Unsaved-changes state is never part of it. */
 export function tabData(tab: WorkspaceTab): PanelData {
   const data =
     tab.kind === "library"
       ? { kind: tab.kind, view: tab.view, libraryViewId: tab.libraryViewId, title: tab.title }
-      : { kind: tab.kind, view: tab.view, sourceId: tab.sourceId };
+      : {
+          kind: tab.kind,
+          view: tab.view,
+          sourceId: tab.sourceId,
+          ...(tab.follow ? { follow: true } : {}),
+        };
   return { tab: { ...data, id: tab.id, preview: tab.preview, pinned: tab.pinned } };
 }
 
@@ -65,6 +85,8 @@ export function tabPanel(tab: WorkspaceTab, title?: string): PanelDescriptor {
     data: tabData(tab),
     minWidth: 180,
     minHeight: 120,
+    // A tab that follows is about another tab, so it never becomes the one being followed.
+    ...(follows(tab) ? { leads: false } : {}),
   };
 }
 
@@ -178,12 +200,13 @@ export function parseWorkspaceTab(value: unknown, id: string): WorkspaceTab {
   ) {
     throw new Error("Invalid source tab");
   }
-  return {
+  const tab: SourceWorkspaceTab = {
     ...base,
     kind: "source",
     sourceId: value["sourceId"] as SourceId,
     view: value["view"] as SourceWorkspaceView,
   };
+  return value["follow"] === true && canFollow(tab) ? { ...tab, follow: true } : tab;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

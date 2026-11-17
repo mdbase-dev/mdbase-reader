@@ -13,7 +13,8 @@ import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { OverlayPresence } from "./OverlayPresence.js";
-import { inspectorPanelId, navigatorPanelId } from "./panel-ids.js";
+import { inspectorPanelId } from "./panel-ids.js";
+import { follows } from "./panel-workspace-state.js";
 import { PanelWorkspace } from "./PanelWorkspace.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
@@ -136,14 +137,7 @@ export function ReaderWorkspaceView({
     setDensity: (density) => shell.update({ density }),
     openSettings: settingsPage.show,
   });
-  const activeSource = sourceWorkspace.activeSourceId
-    ? (library.sources.find(({ id }) => id === sourceWorkspace.activeSourceId) ?? null)
-    : null;
-  const inspectorSource = inspectorSourceForTab(
-    sourceWorkspace.activeTab,
-    activeSource,
-    workspace.selectedSource,
-  );
+  const inspectorSource = useLeaderSource(model);
   const sourceToolsOpen = dock.isSidebarVisible("right");
   useEffect(() => whenIdle(preloadInspectorTools), []);
   const mobile = useMediaQuery("(max-width: 680px)");
@@ -151,7 +145,7 @@ export function ReaderWorkspaceView({
   useEffect(() => {
     dock.setSinglePane(model.focusMode);
   }, [dock, model.focusMode]);
-  const reading = useReadingPreferences(model, shell, mobile);
+  const reading = useReadingPreferences(model, shell);
   const shellRef = useRef<HTMLDivElement>(null);
   useShellChrome(shellRef, model, mobile);
   const annotationCounts = useLibraryAnnotationCounts(model);
@@ -313,8 +307,20 @@ export function ReaderWorkspaceView({
           }
           renderTool={(workspaceTab, paneId) => {
             const toolSource = library.sources.find(({ id }) => id === workspaceTab.sourceId);
+            if (follows(workspaceTab) && !dock.followedSource && !workspaceTab.dirty) {
+              return (
+                <p className="inspector-status">
+                  <Trans>
+                    This tab follows the document you are working on. Open or select a source to see
+                    it here.
+                  </Trans>
+                </p>
+              );
+            }
             return toolSource ? (
               <WorkspaceToolTab
+                // Following another source starts over, as opening that source's own tab would.
+                key={workspaceTab.sourceId}
                 tab={workspaceTab}
                 source={toolSource}
                 gateway={model.gateway}
@@ -482,10 +488,33 @@ export function ReaderWorkspaceView({
  * Applies the reader's type settings and sidebar behaviour, and returns the header's controls
  * for them.
  */
+/**
+ * The source that Notes and following tabs are about: that of the tab the reader last worked
+ * in, not their own. Following tabs are pointed at it here.
+ */
+function useLeaderSource(model: ReaderWorkspaceViewModel): SourceSummary | null {
+  const { library, workspace, sourceWorkspace } = model;
+  const dock = sourceWorkspace.dock;
+  const leaderTab = dock.leaderTab();
+  const leaderSource =
+    leaderTab?.kind === "source"
+      ? (library.sources.find(({ id }) => id === leaderTab.sourceId) ?? null)
+      : null;
+  const followedSourceId =
+    leaderTab?.kind === "source"
+      ? leaderTab.sourceId
+      : leaderTab
+        ? (workspace.selectedSource?.id ?? null)
+        : null;
+  useEffect(() => {
+    dock.setFollowed(followedSourceId);
+  }, [dock, followedSourceId]);
+  return inspectorSourceForTab(leaderTab, leaderSource, workspace.selectedSource);
+}
+
 function useReadingPreferences(
   model: ReaderWorkspaceViewModel,
   shell: WorkspaceShellPreferencesController,
-  mobile: boolean,
 ): Pick<
   Parameters<typeof ReaderHeader>[0],
   | "typography"
@@ -499,10 +528,10 @@ function useReadingPreferences(
   const { typography, sidebarWhileReading } = shell.value;
   const activeTab = model.sourceWorkspace.activeTab;
   useApplyTypography(model.surfaces, typography);
-  useSidebarWhileReading(
-    model.sourceWorkspace,
-    sidebarWhileReading === "hide" && !mobile && !model.focusMode,
-  );
+  const dock = model.sourceWorkspace.dock;
+  useEffect(() => {
+    dock.setHideWhileReading(sidebarWhileReading === "hide");
+  }, [dock, sidebarWhileReading]);
   return {
     typography,
     onChangeTypography: (next) => shell.update({ typography: next }),
@@ -569,39 +598,6 @@ function useApplyTypography(
       void surface.capabilities.typography?.setTypography(typography).catch(() => undefined);
     }
   }, [surfaces, typography]);
-}
-
-/**
- * Hides the Sources sidebar when a document takes focus, and restores it on returning to a
- * library tab, but only if Reader was the one that hid it.
- */
-function useSidebarWhileReading(workspace: SourceWorkspaceController, enabled: boolean): void {
-  const dock = workspace.dock;
-  const activeTab = workspace.activeTab;
-  const kind =
-    activeTab?.kind === "source"
-      ? activeTab.view === "document"
-        ? "document"
-        : "tool"
-      : "library";
-  const previousKind = useRef<string | null>(null);
-  const hiddenByReader = useRef(false);
-  useEffect(() => {
-    const previous = previousKind.current;
-    previousKind.current = kind;
-    if (!enabled || previous === kind || activeTab === null) {
-      return;
-    }
-    if (kind === "document" && dock.isSideVisible(navigatorPanelId)) {
-      hiddenByReader.current = true;
-      dock.setSideVisible(navigatorPanelId, false);
-    } else if (kind === "library" && hiddenByReader.current) {
-      hiddenByReader.current = false;
-      if (!dock.isSideVisible(navigatorPanelId)) {
-        dock.setSideVisible(navigatorPanelId, true);
-      }
-    }
-  }, [activeTab, dock, enabled, kind]);
 }
 
 function findWorkbenchOwner(

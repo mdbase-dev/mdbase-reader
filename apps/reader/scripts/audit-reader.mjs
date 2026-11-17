@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 import { auditPdf, auditEpub } from "./reader-audit-documents.mjs";
+import { auditPanelCanvas } from "./audit-panel-canvas.mjs";
 import { auditPanelWorkspace } from "./audit-panel-workspace.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
@@ -230,6 +231,7 @@ try {
   }
   if (workspaceAudit) {
     completed.push(...(await auditPanelWorkspace(page, { screenshot })));
+    completed.push(...(await auditPanelCanvas(page, { screenshot })));
   }
   if (
     !formatsAudit &&

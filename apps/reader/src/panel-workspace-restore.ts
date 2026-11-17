@@ -127,6 +127,12 @@ export function withSidePanels(state: WorkspaceState, fresh: boolean): Workspace
       });
     }
   }
+  for (const id of sidePanelIds) {
+    // Workspaces saved before panels could follow have side panels that would lead.
+    if (next.panels[id] && next.panels[id].leads !== false) {
+      next = apply(next, { type: "update", panel: id, changes: { leads: false } });
+    }
+  }
   for (const side of ["left", "right"] as const) {
     if (next.edges[side]) {
       // Notes give way before sources when the window is too narrow for both.

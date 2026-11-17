@@ -171,7 +171,7 @@ function OpenedReaderApp({
       activeTab.sourceId === id &&
       sourceWorkspace.dock.isSideVisible(inspectorPanelId)
     ) {
-      sourceWorkspace.dock.toggleSidebar("right");
+      sourceWorkspace.dock.setSideVisible(inspectorPanelId, false);
     }
     sourceWorkspace.close(id);
   });

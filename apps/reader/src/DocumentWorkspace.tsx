@@ -86,8 +86,10 @@ export function DocumentWorkspace({
   useEffect(() => {
     if (focused && visible) {
       const frame = requestAnimationFrame(() => {
-        // Activation by a click or Tab inside the pane leaves focus on that control.
-        if (!host.current?.contains(host.current.ownerDocument.activeElement)) {
+        const active = host.current?.ownerDocument.activeElement;
+        // Activation by a click or Tab inside the pane leaves focus on that control. So does a
+        // menu opened by the same press: taking focus into a document's frame would close it.
+        if (!host.current?.contains(active ?? null) && !active?.closest('[role="menu"]')) {
           if (host.current) {
             if (tab.kind === "library" && !host.current.querySelector("[data-active-row]")) {
               host.current.focus({ preventScroll: true });

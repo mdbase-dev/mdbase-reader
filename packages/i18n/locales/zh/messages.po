@@ -655,6 +655,11 @@ msgstr "访问日期"
 msgid "Actions for {0}"
 msgstr "{0} 的操作"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Actual size"
+msgstr "实际大小"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1180,6 +1185,11 @@ msgstr "区域截图"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "区域截图"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Arrange panes on a canvas"
+msgstr "在画布上排列窗格"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3828,6 +3838,14 @@ msgstr "聚焦下一个窗格"
 msgid "Follow reading position"
 msgstr "跟随阅读位置"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the active document"
+msgstr "跟随当前文档"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Follows the active document"
+msgstr "正在跟随当前文档"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "用于报告缓慢或失败的保存。面板随后可以记录连接耗时并下载；在你于面板中启动之前，不会记录任何内容。"
@@ -5131,6 +5149,11 @@ msgstr "下移"
 msgid "Move left"
 msgstr "左移"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Move pane"
+msgstr "移动窗格"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "右移"
@@ -6318,6 +6341,10 @@ msgstr "已固定"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "地点"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Place panes anywhere, at any size, and zoom out to see them"
+msgstr "将窗格放在任意位置、设为任意大小，缩小即可一览全部"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -8007,6 +8034,11 @@ msgstr "显示操作"
 msgid "Show all tabs at once"
 msgstr "一次显示所有标签页"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Show every pane"
+msgstr "显示所有窗格"
+
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
 msgstr "在文档中显示"
@@ -8437,6 +8469,10 @@ msgstr "停止添加"
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
 msgstr "停止并清除耗时记录"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Stop following the active document"
+msgstr "停止跟随当前文档"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop import"
@@ -9230,6 +9266,10 @@ msgstr "此来源记录已不存在。"
 #: apps/extension/src/NotePanel.tsx
 msgid "This source was removed from your collection"
 msgstr "此来源已从你的集合中移除"
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "This tab follows the document you are working on. Open or select a source to see it here."
+msgstr "此标签页会跟随你正在处理的文档。打开或选择一个来源即可在此查看。"
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work."
@@ -10059,6 +10099,11 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "缩放控制"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom in"
+msgstr "放大"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10073,6 +10118,11 @@ msgstr "缩放级别（{level}%）"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "缩放菜单"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom out"
+msgstr "缩小"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

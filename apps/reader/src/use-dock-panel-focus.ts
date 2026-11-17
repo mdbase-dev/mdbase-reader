@@ -33,7 +33,12 @@ function observePanelInput(root: HTMLElement | Document, activate: () => void): 
         disposeDocument = undefined;
         try {
           if (frame.contentDocument) {
-            disposeDocument = observePanelInput(frame.contentDocument, activate);
+            const stopInput = observePanelInput(frame.contentDocument, activate);
+            const stopZoom = forwardCanvasZoom(frame, frame.contentDocument);
+            disposeDocument = () => {
+              stopInput();
+              stopZoom();
+            };
           }
         } catch {
           /* Cross-origin embedded content is deliberately inaccessible. */
@@ -58,4 +63,35 @@ function observePanelInput(root: HTMLElement | Document, activate: () => void): 
       dispose();
     }
   };
+}
+
+/**
+ * On the canvas, Ctrl or Cmd with the wheel zooms the workspace. Inside a document's frame the
+ * browser would zoom the whole page instead, so the gesture is handed to the workspace around it.
+ */
+function forwardCanvasZoom(frame: HTMLIFrameElement, content: Document): () => void {
+  const wheel = (event: WheelEvent): void => {
+    if (!(event.ctrlKey || event.metaKey) || !frame.closest('[data-mp-view="canvas"]')) {
+      return;
+    }
+    event.preventDefault();
+    // The frame is drawn at the canvas's zoom, so its own coordinates are scaled to the page's.
+    const bounds = frame.getBoundingClientRect();
+    const scale = frame.clientWidth ? bounds.width / frame.clientWidth : 1;
+    frame.dispatchEvent(
+      new WheelEvent("wheel", {
+        bubbles: true,
+        cancelable: true,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        deltaX: event.deltaX,
+        deltaY: event.deltaY,
+        deltaMode: event.deltaMode,
+        clientX: bounds.left + event.clientX * scale,
+        clientY: bounds.top + event.clientY * scale,
+      }),
+    );
+  };
+  content.addEventListener("wheel", wheel, { passive: false });
+  return () => content.removeEventListener("wheel", wheel);
 }

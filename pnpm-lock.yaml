@@ -1661,7 +1661,7 @@ packages:
     engines: {node: '>=20'}
 
   '@mdbase-dev/panels@file:vendor/mdbase-dev-panels-0.1.0.tgz':
-    resolution: {integrity: sha512-QKSd4UekNlmwuSqF9zfk7vTcFHhRrAKcv90Q58ZKYksczGVxuGzxiIqNjXx7KNg1CW2lj/KUngMCi8fZEIlIzA==, tarball: file:vendor/mdbase-dev-panels-0.1.0.tgz}
+    resolution: {integrity: sha512-BEDNV3UuQnMr2XvxvDvPrChztPH78ISamBQ+Bqn3G4T/AefJvGsqtXYNK7PLOLgI9Z4mrSzR0DAar2cjm/O1Ew==, tarball: file:vendor/mdbase-dev-panels-0.1.0.tgz}
     version: 0.1.0
     peerDependencies:
       react: ^18.0.0 || ^19.0.0

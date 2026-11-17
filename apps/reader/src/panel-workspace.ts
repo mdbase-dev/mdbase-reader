@@ -5,8 +5,10 @@ import {
   findStack,
   keepPanels,
   mainStacks,
+  seedFrames,
   stackOfPanel,
   WorkspaceStore,
+  type EdgeSide,
   type LayoutOptions,
   type Operation,
   type PanelDescriptor,
@@ -22,6 +24,8 @@ import { focusReadingPane } from "./focus-reading-pane.js";
 import { restoreWorkspace, sessionId, withSidePanels } from "./panel-workspace-restore.js";
 import {
   activePanel,
+  canFollow,
+  follows,
   initialLayoutSnapshot,
   inspectorPanelId,
   navigatorPanelId,
@@ -55,8 +59,12 @@ const skip = { history: "skip" } as const;
 
 /**
  * Reader's workspace: which tabs are open and how they are arranged. The arrangement lives in a
- * panel store; this adds what only Reader knows (previews, unsaved changes, history, the two
- * side panels) and a pane-and-tab projection for its commands.
+ * panel store; this adds what only Reader knows (previews, unsaved changes, history, where the
+ * Sources and Notes panels start, tabs that follow the active document) and a pane-and-tab
+ * projection for its commands.
+ *
+ * A side region saves one thing: whether the reader wants it open. Whether it is on screen now
+ * also depends on room, reading and the phone layout, and none of that is written back.
  */
 export class ReaderPanelWorkspace {
   readonly store: WorkspaceStore;
@@ -67,9 +75,19 @@ export class ReaderPanelWorkspace {
   private listeners = new Set<() => void>();
   private size: Size | null = null;
   private computed: { key: unknown[]; layout: WorkspaceLayout } | null = null;
+  private options: { key: unknown[]; value: LayoutOptions } | null = null;
   private singlePane = false;
-  /** Side regions that were closed on the desktop and are only open as a phone screen. */
-  private readonly phoneRevealed = new Set<"left" | "right">();
+  /** The reader's preference: Sources makes way while a document is on screen. */
+  private hideWhileReading = false;
+  private reading = false;
+  /** Sides opened while they were making way for reading; they stay until reading starts or ends. */
+  private readonly peeked = new Set<EdgeSide>();
+  /** Side regions kept off screen for now. Derived, and never saved. */
+  private hidden: readonly EdgeSide[] = [];
+  /** The side asked for last: when there is not room for both, the other one gives way. */
+  private asked: EdgeSide | null = null;
+  /** The source that tabs following the active document show. */
+  private followed: SourceId | null = null;
   private overviewOpen = false;
   private chromeHidden = false;
   private coarse = false;
@@ -114,6 +132,7 @@ export class ReaderPanelWorkspace {
     if (tab) {
       this.navigation.visit(tab);
     }
+    this.refreshReading();
     this.project();
     this.store.subscribe(this.changed);
   }
@@ -161,8 +180,43 @@ export class ReaderPanelWorkspace {
     } else if (this.focusedPanel && !change.state.panels[this.focusedPanel]) {
       this.focusedPanel = tabPanels(change.state)[0]?.id ?? null;
     }
+    this.refreshReading();
     this.notify();
   };
+  /**
+   * Reading is a document on screen in the main area with no library beside it. It is read
+   * from what is showing, not from where focus is, so using the Notes panel does not end it.
+   */
+  private refreshReading(): void {
+    const showing = mainStacks(this.state).map(({ active }) => this.tab(active));
+    const reading =
+      this.hideWhileReading &&
+      showing.some((tab) => tab?.kind === "source" && tab.view === "document") &&
+      !showing.some((tab) => tab?.kind === "library");
+    if (reading !== this.reading) {
+      this.reading = reading;
+      this.peeked.clear();
+    }
+    const side = this.readingSide();
+    const hidden = side && !this.peeked.has(side) ? [side] : [];
+    if (hidden.join() !== this.hidden.join()) {
+      this.hidden = hidden;
+    }
+  }
+  /** The side region that makes way for reading: the one Sources is in, wherever that is. */
+  private readingSide(): EdgeSide | null {
+    const stack = this.reading ? stackOfPanel(this.state, navigatorPanelId) : undefined;
+    return stack ? edgeOfStack(this.state, stack.id) : null;
+  }
+  /** Whether the Sources region makes way while a document is on screen. */
+  setHideWhileReading(hide: boolean): void {
+    if (this.hideWhileReading !== hide) {
+      this.hideWhileReading = hide;
+      this.refreshReading();
+      this.settleFocus();
+      this.notify();
+    }
+  }
 
   /** The reader tab in a panel, with its unsaved-changes flag. */
   tab = (id: string | null | undefined): WorkspaceTab | null =>
@@ -309,11 +363,69 @@ export class ReaderPanelWorkspace {
     }
     if (next.pinned !== tab.pinned || next.preview !== tab.preview) {
       this.store.dispatch(
-        { type: "update", panel: id, changes: { data: tabData(next) } },
+        { type: "update", panel: id, changes: { data: tabData(next), leads: !follows(next) } },
         { ...skip, animate: false },
       );
     } else {
       this.notify();
+    }
+    // A tab that was held by a pin or by unsaved changes catches up with the active document.
+    this.syncFollowers();
+  }
+  /** The tab the Notes panel and following tabs are about: the last one used that leads. */
+  leaderTab = (): WorkspaceTab | null => this.tab(this.state.leader);
+  /** The source that following tabs show, or null when there is no active source. */
+  get followedSource(): SourceId | null {
+    return this.followed;
+  }
+  setFollowed(sourceId: SourceId | null): void {
+    if (this.followed !== sourceId) {
+      this.followed = sourceId;
+      this.syncFollowers();
+      this.notify();
+    }
+  }
+  /** Whether a note or annotations tab shows the active document's source instead of its own. */
+  setFollow(id: string, follow: boolean): void {
+    const tab = this.tab(id);
+    if (!canFollow(tab) || Boolean(tab.follow) === follow) {
+      return;
+    }
+    const next = { ...tab, preview: false, follow };
+    // The tab in use starts by following the document it was opened for, if that is open.
+    const document =
+      follow && this.state.leader === id
+        ? this.contentPanels().find((panel) => {
+            const other = this.tab(panel.id);
+            return other?.view === "document" && other.sourceId === tab.sourceId;
+          })
+        : undefined;
+    this.store.dispatch(
+      {
+        type: "batch",
+        operations: [
+          { type: "update", panel: id, changes: { data: tabData(next), leads: !follows(next) } },
+          ...(document ? [{ type: "lead" as const, panel: document.id }] : []),
+        ],
+      },
+      { ...skip, animate: false },
+    );
+    this.syncFollowers();
+  }
+  /** Point following tabs at the active source. One with unsaved changes waits until it is saved. */
+  private syncFollowers(): void {
+    const sourceId = this.followed;
+    if (!sourceId) {
+      return;
+    }
+    const operations: Operation[] = this.contentPanels().flatMap(({ id }) => {
+      const tab = this.tab(id);
+      return follows(tab) && !tab.dirty && tab.sourceId !== sourceId
+        ? [{ type: "update", panel: id, changes: { data: tabData({ ...tab, sourceId }) } }]
+        : [];
+    });
+    if (operations.length) {
+      this.store.dispatch({ type: "batch", operations }, { ...skip, animate: false });
     }
   }
   /** Keep a tab's name with its panel: the overview and menus show it. */
@@ -354,7 +466,8 @@ export class ReaderPanelWorkspace {
       } else {
         const side = edgeOfStack(this.state, stack.id);
         if (side && stack.panels.length === 1) {
-          operations.push({ type: "configureEdge", side, options: { visible: false } });
+          // The only tab of a side region: closing it closes the region, and it stays loaded.
+          operations.push(...this.hideOperations(side));
           continue;
         }
       }
@@ -456,19 +569,30 @@ export class ReaderPanelWorkspace {
   }
 
   /** Options for laying the workspace out, shared by the view and by visibility checks. */
-  layoutOptions = (): LayoutOptions => ({
-    compactBelow,
-    headerHeight: this.chromeHidden ? 0 : this.coarse ? 44 : 36,
-    compactHeaderHeight: 0,
-    minMainWidth: 360,
-    minColumnWidth: 360,
-    overview: this.overviewOpen,
-  });
+  layoutOptions = (): LayoutOptions => {
+    const key = [this.overviewOpen, this.chromeHidden, this.coarse, this.hidden, this.asked];
+    if (!this.options || key.some((value, index) => value !== this.options?.key[index])) {
+      this.options = {
+        key,
+        value: {
+          compactBelow,
+          headerHeight: this.chromeHidden ? 0 : this.coarse ? 44 : 36,
+          compactHeaderHeight: 0,
+          minMainWidth: 360,
+          minColumnWidth: 360,
+          overview: this.overviewOpen,
+          hiddenEdges: this.hidden,
+          preferEdge: this.asked,
+        },
+      };
+    }
+    return this.options.value;
+  };
   private layout(): WorkspaceLayout | null {
     if (!this.size) {
       return null;
     }
-    const key = [this.state, this.size, this.overviewOpen, this.chromeHidden, this.coarse];
+    const key = [this.state, this.size, this.layoutOptions()];
     if (!this.computed || key.some((value, index) => value !== this.computed?.key[index])) {
       this.computed = { key, layout: computeLayout(this.state, this.size, this.layoutOptions()) };
     }
@@ -480,22 +604,9 @@ export class ReaderPanelWorkspace {
     if (previous?.width === layout.size.width && previous.height === layout.size.height) {
       return;
     }
-    const wasMobile = this.mobile;
     this.size = layout.size;
-    if (wasMobile && layout.size.width >= compactBelow && this.phoneRevealed.size) {
-      // Side panels opened as screens on a phone go back to being closed beside the content.
-      const operations: Operation[] = [...this.phoneRevealed].map((side) => ({
-        type: "configureEdge",
-        side,
-        options: { visible: false },
-      }));
-      this.phoneRevealed.clear();
-      const content = this.focusedPanel ?? this.contentPanels()[0]?.id;
-      if (content) {
-        operations.unshift({ type: "activate", panel: content });
-      }
-      this.store.dispatch({ type: "batch", operations }, skip);
-    }
+    // A side panel that was a phone's screen, or that has just given way, no longer holds focus.
+    this.settleFocus();
     // Width decides what is on screen: the phone layout, and side panels that give way.
     if (previous?.width !== layout.size.width) {
       this.notify();
@@ -519,6 +630,18 @@ export class ReaderPanelWorkspace {
       this.store.dispatch({ type: "activate", panel: id });
     }
   };
+  /** Focus belongs to something on screen: off a side region that is not showing. */
+  private settleFocus(): void {
+    const side = edgeOfStack(this.state, this.state.focus ?? "");
+    const content = this.focusedPanel ?? this.contentPanels()[0]?.id;
+    if (!side || this.mobile || !content || this.state.maximized) {
+      return;
+    }
+    const showing = this.layout()?.stacks.some(({ edge }) => edge === side);
+    if (showing === false) {
+      this.store.dispatch({ type: "activate", panel: content }, skip);
+    }
+  }
 
   isSideVisible = (id: string): boolean => this.isPanelVisible(id);
   isSidebarVisible = (position: "left" | "right"): boolean => {
@@ -528,34 +651,41 @@ export class ReaderPanelWorkspace {
     const edge = this.state.edges[position];
     return (
       this.layout()?.stacks.some((stack) => stack.edge === position) ??
-      // Before the first layout: a side with something in it, not hidden and not covered.
-      Boolean(edge?.visible && edge.stack.panels.length && !this.state.maximized)
+      // Before the first layout: a side with something in it, wanted and not covered.
+      Boolean(
+        edge?.visible &&
+        edge.stack.panels.length &&
+        !this.state.maximized &&
+        !this.hidden.includes(position),
+      )
     );
   };
+  /**
+   * The header's buttons open and close a side region, whatever tabs it holds. An empty region
+   * has nothing to show, so opening it brings home the panel that starts there.
+   */
   toggleSidebar(position: "left" | "right"): void {
-    const conventional = position === "left" ? navigatorPanelId : inspectorPanelId;
+    const home = position === "left" ? navigatorPanelId : inspectorPanelId;
     if (this.mobile) {
-      this.setSideVisible(conventional, !this.isSideVisible(conventional));
-      return;
-    }
-    if (this.isSidebarVisible(position)) {
-      this.store.dispatch(
-        { type: "configureEdge", side: position, options: { visible: false } },
-        skip,
-      );
-      return;
-    }
-    if (!this.state.edges[position]?.stack.panels.length) {
-      // An empty region would show nothing, so opening it brings its usual panel.
-      if (!this.state.panels[conventional]) {
-        this.show(conventional, false);
+      // A phone shows one panel at a time, so the button goes to that panel and back.
+      if (this.activePanel()?.id === home) {
+        this.backToContent();
+      } else {
+        this.show(home, true);
       }
       return;
     }
-    this.reveal(position);
+    if (this.isSidebarVisible(position)) {
+      this.hide(position);
+    } else if (this.state.edges[position]?.stack.panels.length) {
+      this.reveal(position);
+    } else {
+      this.reveal(position, this.homeOperations(home, false));
+    }
   }
-  /** Show a side region, without activating or moving anything in it. */
-  private reveal(position: "left" | "right", more: readonly Operation[] = []): void {
+  /** Put a side region on screen, without activating or moving anything in it. */
+  private reveal(position: EdgeSide, more: readonly Operation[] = []): void {
+    this.asked = position;
     this.store.dispatch(
       {
         type: "batch",
@@ -567,17 +697,52 @@ export class ReaderPanelWorkspace {
       },
       skip,
     );
-    if (!this.mobile && !this.isSidebarVisible(position)) {
-      // There is not room for both: the one just asked for wins.
-      this.store.dispatch(
-        {
-          type: "configureEdge",
-          side: position === "left" ? "right" : "left",
-          options: { visible: false },
-        },
-        skip,
-      );
+    if (this.readingSide() === position) {
+      // Asked for while reading: it shows until reading starts or ends.
+      this.peeked.add(position);
     }
+    this.refreshReading();
+    this.notify();
+  }
+  /** Take a side region off screen. */
+  private hide(position: EdgeSide): void {
+    if (this.peeked.delete(position) && this.readingSide() === position) {
+      // It was only showing as an exception to reading, so the reader still wants it otherwise.
+      this.refreshReading();
+      this.settleFocus();
+      this.notify();
+      return;
+    }
+    this.store.dispatch({ type: "batch", operations: this.hideOperations(position) }, skip);
+  }
+  private hideOperations(side: EdgeSide): Operation[] {
+    const content = this.focusedPanel ?? this.contentPanels()[0]?.id;
+    return [
+      { type: "configureEdge", side, options: { visible: false } },
+      // Focus goes back to the tab the reader was using, not to whichever pane comes first.
+      ...(this.state.focus === this.state.edges[side]?.stack.id && content
+        ? [{ type: "activate" as const, panel: content }]
+        : []),
+    ];
+  }
+  /** Bring the Sources or Notes panel to the side it starts at, from wherever it is. */
+  private homeOperations(id: string, activate: boolean): Operation[] {
+    const side = sideOf(id);
+    const target: Target = { at: "edge", side };
+    return [
+      this.state.panels[id]
+        ? { type: "move", panel: id, target, activate }
+        : { type: "add", panel: sidePanel(id), target, activate },
+      ...(this.state.edges[side]?.stack.panels.length
+        ? []
+        : [
+            {
+              type: "configureEdge" as const,
+              side,
+              options: { size: sideWidth(id), min: 180, priority: side === "left" ? 1 : 0 },
+            },
+          ]),
+    ];
   }
   /** Focus mode: the pane in use fills the workspace until it is turned off. */
   setSinglePane = (value: boolean): void => {
@@ -592,42 +757,54 @@ export class ReaderPanelWorkspace {
       this.store.dispatch({ type: "maximize", stack: null }, skip);
     }
   };
+  /**
+   * Show or put away the Sources or Notes panel, wherever the reader has moved it. Putting it
+   * away closes the side region it is showing in; in a pane of the main area it stays.
+   */
   setSideVisible(id: string, visible: boolean, activate = true): void {
     if (visible) {
       this.show(id, activate);
-    } else {
-      this.close(id);
+      return;
+    }
+    const stack = stackOfPanel(this.state, id);
+    const side = stack ? edgeOfStack(this.state, stack.id) : null;
+    if (this.mobile) {
+      if (this.activePanel()?.id === id) {
+        this.backToContent();
+      }
+    } else if (side && stack?.active === id && this.isPanelVisible(id)) {
+      this.hide(side);
     }
   }
   private show(id: string, activate: boolean): void {
     const stack = stackOfPanel(this.state, id);
     const side = stack ? edgeOfStack(this.state, stack.id) : null;
+    const focus: Operation[] = activate ? [{ type: "activate", panel: id }] : [];
     if (stack) {
-      const focus: Operation[] = activate ? [{ type: "activate", panel: id }] : [];
-      if (side === "left" || side === "right") {
-        if (this.mobile && !this.state.edges[side]?.visible) {
-          this.phoneRevealed.add(side);
-        }
+      if (side && !this.mobile) {
         this.reveal(side, focus);
       } else if (focus.length) {
+        // In a pane, or on a phone where it is a screen of its own: going to it is enough.
         this.store.dispatch({ type: "batch", operations: focus }, skip);
       }
       return;
     }
-    const position = sideOf(id);
-    const created = !this.state.edges[position]?.stack.panels.length;
-    this.reveal(position, [
-      { type: "add", panel: sidePanel(id), target: { at: "edge", side: position }, activate },
-      ...(created
-        ? [
-            {
-              type: "configureEdge" as const,
-              side: position,
-              options: { size: sideWidth(id), min: 180, priority: position === "left" ? 1 : 0 },
-            },
-          ]
-        : []),
-    ]);
+    if (this.mobile) {
+      // A phone's screen says nothing about whether the side is open on a wider window.
+      const visible = this.state.edges[sideOf(id)]?.visible ?? false;
+      this.store.dispatch(
+        {
+          type: "batch",
+          operations: [
+            ...this.homeOperations(id, activate),
+            { type: "configureEdge", side: sideOf(id), options: { visible } },
+          ],
+        },
+        skip,
+      );
+      return;
+    }
+    this.reveal(sideOf(id), this.homeOperations(id, activate));
   }
 
   /** Every tab back in one pane and the side panels back at their sides, nothing closed. */
@@ -636,6 +813,8 @@ export class ReaderPanelWorkspace {
       this.openLibrary();
     }
     const focused = this.focusedPanel;
+    this.peeked.clear();
+    this.asked = null;
     const operations: Operation[] = [{ type: "maximize", stack: null }, { type: "flatten" }];
     for (const id of sidePanelIds) {
       const stack = stackOfPanel(this.state, id);
@@ -676,7 +855,22 @@ export class ReaderPanelWorkspace {
     return this.state.view;
   }
   setView(view: WorkspaceState["view"]): void {
-    this.store.dispatch({ type: "setView", view });
+    if (view === this.state.view) {
+      return;
+    }
+    // The canvas starts from where the panes are now, so switching to it moves nothing.
+    const from =
+      view === "canvas" && this.size && !this.mobile
+        ? computeLayout({ ...this.state, maximized: null }, this.size, {
+            ...this.layoutOptions(),
+            overview: false,
+          })
+        : null;
+    this.store.dispatch({
+      type: "setView",
+      view,
+      ...(from ? { frames: seedFrames(from.stacks, from.main) } : {}),
+    });
   }
   get overview(): boolean {
     return this.overviewOpen;

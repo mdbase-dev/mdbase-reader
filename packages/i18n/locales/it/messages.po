@@ -654,6 +654,11 @@ msgstr "Accesso"
 msgid "Actions for {0}"
 msgstr "Azioni per {0}"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Actual size"
+msgstr "Dimensioni reali"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1179,6 +1184,11 @@ msgstr "Acquisizione di area"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "Acquisizioni di area"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Arrange panes on a canvas"
+msgstr "Disponi i riquadri su una tela"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3827,6 +3837,14 @@ msgstr "Attiva il riquadro successivo"
 msgid "Follow reading position"
 msgstr "Segui posizione di lettura"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the active document"
+msgstr "Segui il documento attivo"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Follows the active document"
+msgstr "Segue il documento attivo"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "Per segnalare salvataggi lenti o non riusciti. Il pannello può registrare i tempi di connessione e scaricarli; non viene registrato nulla finché non avvii la registrazione nel pannello."
@@ -5130,6 +5148,11 @@ msgstr "Sposta in basso"
 msgid "Move left"
 msgstr "Sposta a sinistra"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Move pane"
+msgstr "Sposta il riquadro"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "Sposta a destra"
@@ -6317,6 +6340,10 @@ msgstr "Fissato"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "Luogo"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Place panes anywhere, at any size, and zoom out to see them"
+msgstr "Posiziona i riquadri dove vuoi, di qualsiasi dimensione, e riduci lo zoom per vederli tutti"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -8006,6 +8033,11 @@ msgstr "Mostra azioni"
 msgid "Show all tabs at once"
 msgstr "Mostra tutte le schede insieme"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Show every pane"
+msgstr "Mostra tutti i riquadri"
+
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
 msgstr "Mostra nel documento"
@@ -8436,6 +8468,10 @@ msgstr "Interrompi aggiunta"
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
 msgstr "Interrompi e cancella i tempi registrati"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Stop following the active document"
+msgstr "Smetti di seguire il documento attivo"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop import"
@@ -9229,6 +9265,10 @@ msgstr "Questo record di origine non esiste più."
 #: apps/extension/src/NotePanel.tsx
 msgid "This source was removed from your collection"
 msgstr "Questa fonte è stata rimossa dalla raccolta"
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "This tab follows the document you are working on. Open or select a source to see it here."
+msgstr "Questa scheda segue il documento su cui stai lavorando. Apri o seleziona una fonte per vederla qui."
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work."
@@ -10058,6 +10098,11 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "Controlli dello zoom"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom in"
+msgstr "Ingrandisci"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10072,6 +10117,11 @@ msgstr "Livello di zoom ({level}%)"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "Menu di Zoom"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom out"
+msgstr "Riduci"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

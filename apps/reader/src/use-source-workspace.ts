@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { panelWorkspaceActions } from "./panel-workspace-actions.js";
+import { follows } from "./panel-workspace-state.js";
 import { ReaderPanelWorkspace } from "./panel-workspace.js";
 import {
   activeTab,
@@ -51,11 +52,13 @@ export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorks
   const pane = focusedPane(layout);
   const tab = activeTab(pane);
   const sourceId = workspaceTabSourceId(tab);
+  // A tab that follows the active document is about that document, so using it selects nothing.
+  const selectedId = follows(tab) ? workspaceTabSourceId(dock.leaderTab()) : sourceId;
   useEffect(() => {
-    if (sourceId) {
-      selectSource(sourceId);
+    if (selectedId) {
+      selectSource(selectedId);
     }
-  }, [sourceId, selectSource]);
+  }, [selectedId, selectSource]);
   const actions = useMemo(() => panelWorkspaceActions(dock), [dock]);
   return {
     dock,

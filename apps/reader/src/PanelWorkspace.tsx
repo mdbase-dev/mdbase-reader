@@ -20,13 +20,13 @@ import {
   DocumentWorkspace,
   type DocumentWorkspaceProps,
 } from "./DocumentWorkspace.js";
-import { CloseIcon, PinIcon } from "./icons.js";
+import { CloseIcon, LinkIcon, PinIcon } from "./icons.js";
 import { MobileSourceViews } from "./MobileSourceViews.js";
 import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { PaneActions } from "./PaneActions.js";
 import { inspectorPanelId, navigatorPanelId } from "./panel-ids.js";
 import { tabMenu } from "./panel-menus.js";
-import { sidePanelIds } from "./panel-workspace-state.js";
+import { follows, sidePanelIds } from "./panel-workspace-state.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { sidePanelTitle, workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
 
@@ -79,6 +79,16 @@ function ReaderTab({
           <PinIcon />
         </span>
       ) : null}
+      {follows(tab) ? (
+        <span
+          role="img"
+          aria-label={t({ message: "Follows the active document" })}
+          title={t({ message: "Follows the active document" })}
+          className="dock-tab-marker is-following"
+        >
+          <LinkIcon />
+        </span>
+      ) : null}
       {tab?.dirty ? (
         <span
           role="img"
@@ -96,20 +106,18 @@ function ReaderTab({
       ) : (
         <span className="reader-tab-title">{title}</span>
       )}
-      {side ? null : (
-        <span
-          className="reader-tab-close"
-          aria-hidden="true"
-          title={t({ message: "Close tab", context: "DockviewWorkspace interface" })}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
-            event.stopPropagation();
-            close();
-          }}
-        >
-          <CloseIcon />
-        </span>
-      )}
+      <span
+        className="reader-tab-close"
+        aria-hidden="true"
+        title={t({ message: "Close tab", context: "DockviewWorkspace interface" })}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          close();
+        }}
+      >
+        <CloseIcon />
+      </span>
     </div>
   );
 }
@@ -206,6 +214,11 @@ function useWorkspaceWording(
       overview: t({ message: "All open tabs" }),
       columns: t({ message: "Scroll between panes" }),
       show: (title) => t`Show ${title}`,
+      zoomIn: t({ message: "Zoom in", context: "Workspace canvas" }),
+      zoomOut: t({ message: "Zoom out", context: "Workspace canvas" }),
+      zoomReset: t({ message: "Actual size", context: "Workspace canvas" }),
+      zoomFit: t({ message: "Show every pane", context: "Workspace canvas" }),
+      movePane: t({ message: "Move pane", context: "Workspace canvas" }),
     },
   };
 }
@@ -323,7 +336,6 @@ export function PanelWorkspace({
           )}
           tabMenu={(panel) => tabMenu(dock, panel)}
           tabTitle={titleOf}
-          canClose={(panel) => !sidePanelIds.has(panel.id)}
           onRequestClose={dock.closeMany}
           overview={dock.overview}
           onOverviewChange={dock.setOverview}

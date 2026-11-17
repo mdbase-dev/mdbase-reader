@@ -1201,12 +1201,6 @@
   }
 }
 
-.reader-dock
-  .mp-stack:has(.reader-dock-tab[data-panel-id="reader:navigator"]):not(:has(.mp-tab + .mp-tab))
-  .mp-tabs {
-  visibility: hidden;
-}
-
 .library-table-head {
   position: sticky;
   z-index: 4;

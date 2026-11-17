@@ -207,8 +207,14 @@
   border-radius: 50%;
   background: var(--accent);
 }
-/* A side panel alone in its group reads as a quiet heading: the header toggles show and
-   hide it, so it needs no close button, and its pane menu appears on hover. */
+/* Sources or Notes alone in its group reads as a quiet heading: the header's buttons show and
+   hide it, so its close button and pane menu wait for the pointer. */
+.reader-dock
+  .mp-stack:has(.reader-dock-tab.is-side):not(:has(.mp-tab + .mp-tab))
+  .mp-tab:not(:hover)
+  .reader-tab-close {
+  visibility: hidden;
+}
 .reader-dock .mp-stack:has(.reader-dock-tab.is-side):not(:has(.mp-tab + .mp-tab)) .mp-tab {
   border-right: 0;
   background: none;

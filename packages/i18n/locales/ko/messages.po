@@ -655,6 +655,11 @@ msgstr "열람일"
 msgid "Actions for {0}"
 msgstr "{0} 작업"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Actual size"
+msgstr "실제 크기"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1180,6 +1185,11 @@ msgstr "영역 캡처"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "영역 캡처"
+
+#: apps/reader/src/panel-menus.ts
+#: apps/reader/src/reader-command-list.ts
+msgid "Arrange panes on a canvas"
+msgstr "패널을 캔버스에 배치"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3828,6 +3838,14 @@ msgstr "다음 창으로 이동"
 msgid "Follow reading position"
 msgstr "읽기 위치 따라가기"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the active document"
+msgstr "활성 문서 따라가기"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgid "Follows the active document"
+msgstr "활성 문서를 따라가는 중"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "느린 저장이나 실패한 저장을 보고하기 위한 설정입니다. 패널에서 연결 시간을 기록하고 다운로드할 수 있으며, 패널에서 시작하기 전에는 아무것도 기록되지 않습니다."
@@ -5131,6 +5149,11 @@ msgstr "아래로 이동"
 msgid "Move left"
 msgstr "왼쪽으로 이동"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Move pane"
+msgstr "패널 이동"
+
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "오른쪽으로 이동"
@@ -6318,6 +6341,10 @@ msgstr "고정됨"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "장소"
+
+#: apps/reader/src/reader-command-list.ts
+msgid "Place panes anywhere, at any size, and zoom out to see them"
+msgstr "패널을 원하는 위치와 크기로 놓고, 축소해서 한눈에 볼 수 있습니다"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -8007,6 +8034,11 @@ msgstr "작업 표시"
 msgid "Show all tabs at once"
 msgstr "모든 탭을 한 번에 표시"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Show every pane"
+msgstr "모든 패널 보기"
+
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
 msgstr "문서에서 보기"
@@ -8437,6 +8469,10 @@ msgstr "추가 중지"
 #: apps/extension/src/DiagnosticsPanel.tsx
 msgid "Stop and clear timings"
 msgstr "타이밍 중지 및 지우기"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Stop following the active document"
+msgstr "활성 문서 따라가기 중지"
 
 #: apps/reader/src/ImportReview.tsx
 msgid "Stop import"
@@ -9230,6 +9266,10 @@ msgstr "이 출처 레코드가 더 이상 존재하지 않습니다."
 #: apps/extension/src/NotePanel.tsx
 msgid "This source was removed from your collection"
 msgstr "이 자료가 컬렉션에서 제거되었습니다"
+
+#: apps/reader/src/ReaderWorkspaceView.tsx
+msgid "This tab follows the document you are working on. Open or select a source to see it here."
+msgstr "이 탭은 작업 중인 문서를 따라갑니다. 소스를 열거나 선택하면 여기에 표시됩니다."
 
 #: apps/reader/src/ReaderApp.tsx
 msgid "This tab has unsaved changes. Keep it open until saving finishes to avoid losing work."
@@ -10059,6 +10099,11 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "확대/축소 컨트롤"
 
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom in"
+msgstr "확대"
+
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10073,6 +10118,11 @@ msgstr "확대/축소 수준 ({level}%)"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "확대/축소 메뉴"
+
+#: apps/reader/src/PanelWorkspace.tsx
+msgctxt "Workspace canvas"
+msgid "Zoom out"
+msgstr "축소"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

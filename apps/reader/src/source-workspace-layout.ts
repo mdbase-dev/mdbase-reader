@@ -24,6 +24,11 @@ export interface SourceWorkspaceTab extends WorkspaceTabBase {
   readonly libraryViewId?: undefined;
   readonly title?: undefined;
   readonly view: SourceWorkspaceView;
+  /**
+   * A note or annotations tab that shows whichever source the reader is working on, rather
+   * than one source. Pinning it holds it on the source it is showing.
+   */
+  readonly follow?: boolean;
 }
 
 export interface LibraryWorkspaceTab extends WorkspaceTabBase {
