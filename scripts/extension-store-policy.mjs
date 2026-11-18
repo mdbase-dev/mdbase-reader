@@ -17,9 +17,27 @@ export function githubContent(file) {
     throw Object.assign(error, { reason: error.reason ?? "release-evidence-unavailable" });
   }
 }
-export function gh(path, { method, body, pages = false, raw = false } = {}) {
+const sleepSync = (milliseconds) =>
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+const networkFailure =
+  /timeout|timed out|connection (reset|refused|closed)|unexpected EOF|TLS handshake|dial tcp|no such host|temporary failure|network is unreachable|broken pipe|ECONNRESET|ETIMEDOUT|EAI_AGAIN/i;
+// Only transient read failures are retried: HTTP 5xx, 429, and network errors with no HTTP status.
+export function transientGhFailure(error) {
+  if (error.code === "ETIMEDOUT" || error.code === "ECONNRESET") return true;
+  if (error.code === "ENOENT" || error.code === "ENOBUFS") return false;
+  const stderr = String(error.stderr ?? "");
+  const status = stderr.match(/\bHTTP (\d{3})\b/)?.[1];
+  if (status) return Number(status) >= 500 || Number(status) === 429;
+  return networkFailure.test(stderr);
+}
+export function gh(
+  path,
+  { method, body, pages = false, raw = false } = {},
+  { exec = execFileSync, sleep = sleepSync, delays = [2000, 5000] } = {},
+) {
   const args = ["api", ...(pages ? ["--paginate", "--slurp"] : []), path];
   if (method) args.push("--method", method, "--input", "-");
+  const read = !method || method === "GET";
   const token =
     path.startsWith(`repos/${ops}/`) || path.startsWith("repos/mdbase-dev/mdbase-connect/")
       ? process.env.APP_EVIDENCE_GH_TOKEN
@@ -27,15 +45,24 @@ export function gh(path, { method, body, pages = false, raw = false } = {}) {
         ? process.env.READER_RELEASE_TOKEN
         : process.env.GITHUB_TOKEN;
   try {
-    const bytes = execFileSync("gh", args, {
-      input: body ? JSON.stringify(body) : undefined,
-      env: { ...process.env, GH_TOKEN: token },
-      stdio: ["pipe", "pipe", "pipe"],
-      maxBuffer: 100 * 1024 * 1024,
-    });
-    return raw ? bytes : JSON.parse(bytes);
+    for (let attempt = 0; ; attempt++) {
+      let bytes;
+      try {
+        bytes = exec("gh", args, {
+          input: body ? JSON.stringify(body) : undefined,
+          env: { ...process.env, GH_TOKEN: token },
+          stdio: ["pipe", "pipe", "pipe"],
+          maxBuffer: 100 * 1024 * 1024,
+        });
+      } catch (error) {
+        if (!read || attempt >= delays.length || !transientGhFailure(error)) throw error;
+        sleep(delays[attempt]);
+        continue;
+      }
+      return raw ? bytes : JSON.parse(bytes);
+    }
   } catch (error) {
-    if (!method || method === "GET") error.reason ??= "release-evidence-unavailable";
+    if (read) error.reason ??= "release-evidence-unavailable";
     throw error;
   }
 }
