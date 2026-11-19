@@ -2951,6 +2951,7 @@ msgstr "Destaques descartados do Readwise ignorados (mantidos no arquivo nativo)
 
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgctxt "Reader interface"
 msgid "Dismiss"

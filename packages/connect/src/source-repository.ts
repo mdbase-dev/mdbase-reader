@@ -1,4 +1,3 @@
-import { isMdbaseError } from "@mdbase-dev/sdk";
 import {
   bodyEmbedsAnnotation,
   filterSources,
@@ -27,6 +26,7 @@ import {
 import { readingPatch, writeReadingStatus, type ReadingStatusChange } from "./reading-status.js";
 import {
   requireCompleteQuery,
+  requireSaved,
   completeReaderPages,
   preflightDeleteRecord,
   deleteRecord,
@@ -50,7 +50,7 @@ import {
 } from "./source-parts.js";
 
 import type { CreateFollowThrough } from "./create-follow-through.js";
-import type { JsonObject, MdbaseClient, RecordView, wire } from "@mdbase-dev/sdk";
+import type { JsonObject, MdbaseClient, RecordView, Settlement, wire } from "@mdbase-dev/sdk";
 
 export class ConnectSourceRepository implements SourceRepository {
   readonly #deletePreflights = new Map<string, wire.Preflight>();
@@ -190,41 +190,38 @@ export class ConnectSourceRepository implements SourceRepository {
 
   async updateReading(input: Parameters<SourceRepository["updateReading"]>[0]): Promise<Source> {
     const path = await this.#path(input.sourceId, "save reading position");
-    if (input.expectedFrontmatter) {
-      // The caller's revision is usually current, so try it before paying for a fresh read.
-      try {
-        const record = await updateRecord(
-          this.client,
-          { path },
-          {
-            ifRevision: input.expectedRevision,
-            patch: {
-              reading: readingPatch(input.expectedFrontmatter, input) as JsonObject,
-            },
-          },
-        );
-        return await resolvedSource(this.client, sourceFromDocument(input.collectionId, record));
-      } catch (error) {
-        if (!isMdbaseError(error, "conflict")) {
-          throw error;
-        }
-      }
+    const include = { effective: true, body: true, document: true };
+    const current = await this.client.get({ path }, { include });
+    const save = (base: RecordView): Promise<Settlement> =>
+      this.client.settle(
+        this.client.update(base, {
+          ifRevision: base.revision,
+          patch: { reading: readingPatch(base.frontmatter, input) as JsonObject },
+        }),
+        { read: { record: base, include } },
+      );
+    let settled = await save(current);
+    let superseded: string | undefined;
+    if (
+      settled.outcome === "rejected" &&
+      settled.problem.code === "conflict" &&
+      settled.problem.reason === "revision"
+    ) {
+      superseded = settled.mutationId;
+      settled = await save(await this.client.get(current.id, { include }));
     }
-    const current = await this.client.get(
-      { path: path },
-      { include: { effective: true, body: true, document: true } },
-    );
-    const updated = await updateRecord(
+    requireSaved(settled);
+    // The retry now has its own ledger entry until confirmation.
+    if (superseded) {
+      await this.client.ledger.acknowledge(superseded);
+    }
+    if (!settled.record) {
+      throw new Error("The saved record no longer exists.");
+    }
+    return await resolvedSource(
       this.client,
-      { path: path },
-      {
-        ifRevision: recordRevision(current.revision),
-        patch: {
-          reading: readingPatch(current.frontmatter, input) as JsonObject,
-        },
-      },
+      sourceFromDocument(input.collectionId, settled.record),
     );
-    return await resolvedSource(this.client, sourceFromDocument(input.collectionId, updated));
   }
 
   async updateReadingStatus(input: ReadingStatusChange): Promise<Source> {

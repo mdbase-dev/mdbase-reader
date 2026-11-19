@@ -5,7 +5,11 @@ import { Menu } from "./Menu.js";
 import { sdkOffline, sdkSyncIncidents } from "./sdk-connection-state.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
 
-import type { Mdbase, MdbaseSnapshot } from "@mdbase-reader/connect/native";
+import type {
+  Mdbase,
+  MdbaseApplicationConnection,
+  MdbaseSnapshot,
+} from "@mdbase-reader/connect/native";
 
 const noop = (): void => undefined;
 
@@ -51,8 +55,8 @@ export function ReaderSaveStatus({
           storageWarning={online && Boolean(snapshot?.saveWarning)}
         />
         <SyncIncidentList incidents={incidents} />
-        <SaveStatusEntries entries={entries} />
-        {online && (stalled || needsAttention) ? (
+        <SaveStatusEntries entries={entries} connection={openConnection(snapshot)} />
+        {online && (stalled || incidents.length > 0) ? (
           <button
             className="connection-secondary"
             type="button"
@@ -66,9 +70,16 @@ export function ReaderSaveStatus({
   );
 }
 
+function openConnection(snapshot: MdbaseSnapshot | null): MdbaseApplicationConnection | null {
+  const phase = snapshot?.phase;
+  return phase?.kind === "ready" || phase?.kind === "unsynced" ? phase.connection : null;
+}
+
 function SaveStatusEntries({
   entries,
+  connection,
 }: {
+  readonly connection: MdbaseApplicationConnection | null;
   readonly entries: NonNullable<NonNullable<MdbaseSnapshot["sync"]>["writes"]>["pending"];
 }): JSX.Element {
   const { t } = useLingui();
@@ -80,6 +91,7 @@ function SaveStatusEntries({
           .filter((source) =>
             entry.records.some(
               (record) =>
+                source.replicaId === record ||
                 source.id === record ||
                 source.documents.some((document) => document.fileId === record),
             ),
@@ -114,6 +126,19 @@ function SaveStatusEntries({
                 <small>
                   {t`Record or file`}: {entry.records.join(", ")}
                 </small>
+              ) : null}
+              {entry.state === "rejected" && connection ? (
+                <button
+                  className="connection-secondary"
+                  type="button"
+                  onClick={() => {
+                    if (connection.isCurrent()) {
+                      void connection.records.ledger.acknowledge(entry.mutationId);
+                    }
+                  }}
+                >
+                  <Trans context="Reader interface">Dismiss</Trans>
+                </button>
               ) : null}
             </details>
           </li>

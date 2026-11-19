@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { createTestApp } from "@mdbase-reader/connect/testing";
 import { act } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 
@@ -219,3 +220,61 @@ it.each([
     expect(snapshot.sync.writes.rejected).toHaveLength(rejected);
   },
 );
+
+it("dismisses a reviewed refusal by mutation ID while another write is still pending", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const host = document.createElement("div");
+  document.body.append(host);
+  root = createRoot(host);
+  const app = await createTestApp();
+  try {
+    const replica = app.replica();
+    replica.stallConfirmations();
+    const client = app.client();
+    const record = replica.seed({ path: "sources/article.md" });
+    const refused = await client.update(await client.get(record.id), { patch: { title: "Edit" } });
+    const pending = await client.create({ path: "other.md" });
+    replica.reject(refused.mutationId, {
+      code: "conflict",
+      reason: "revision",
+      recovery: "refresh",
+      message: "The record changed since it was read.",
+    });
+    await vi.waitFor(() => expect(client.ledger.getSnapshot().rejected).toHaveLength(1));
+    app.set("ready");
+    const source = {
+      id: "article",
+      title: "Article",
+      replicaId: record.id,
+      documents: [],
+    } as unknown as SourceSummary;
+    const stop = client.ledger.subscribe(() => app.set("ready"));
+    try {
+      act(() =>
+        root.render(
+          <SourceLibraryContext value={[source]}>
+            <ReaderSaveStatus mdbase={app.mdbase} online={true} />
+          </SourceLibraryContext>,
+        ),
+      );
+      act(() => host.querySelector("summary")?.click());
+      const row = [...document.querySelectorAll(".reader-save-details li")].find(
+        (item) => item.querySelector("strong")?.textContent === "Changes to Article",
+      );
+      act(() => row?.querySelector("summary")?.click());
+      expect(row?.querySelector("button")?.textContent).toBe("Dismiss");
+      expect(document.querySelectorAll(".reader-save-details li button")).toHaveLength(1);
+      act(() => row?.querySelector("button")?.click());
+      expect(client.ledger.getSnapshot().rejected).toHaveLength(0);
+      expect(client.ledger.getSnapshot().pending.map((entry) => entry.mutationId)).toEqual([
+        pending.mutationId,
+      ]);
+      expect(host.textContent).toContain("1 pending");
+      expect(host.textContent).not.toContain("Changes need attention");
+    } finally {
+      stop();
+    }
+  } finally {
+    await app.close();
+  }
+});

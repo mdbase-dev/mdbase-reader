@@ -2951,6 +2951,7 @@ msgstr "破棄済みのReadwiseハイライトをスキップ（元のアーカ�
 
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgctxt "Reader interface"
 msgid "Dismiss"

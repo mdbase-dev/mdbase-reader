@@ -39,6 +39,8 @@ export interface CurrentReadingState {
 export interface SourceSummary {
   readonly collectionId: CollectionId;
   readonly id: SourceId;
+  /** Replica record identity used by the SDK write ledger. */
+  readonly replicaId?: string;
   readonly path: string;
   readonly title: string;
   readonly creators: readonly string[];
