@@ -27,7 +27,7 @@ const source: Source = {
 };
 
 describe("ConnectWorkspaceGateway reading position", () => {
-  it("saves against the newest revision even when the caller holds the opening copy", async () => {
+  it("publishes the freshly saved source even when the caller holds the opening copy", async () => {
     const saved = {
       ...source,
       recordRevision: recordRevision("rev-2"),
@@ -58,13 +58,9 @@ describe("ConnectWorkspaceGateway reading position", () => {
     };
 
     await gateway.saveReadingPosition(opened, document, position);
-    await gateway.saveReadingPosition(opened, document, position);
+    const latest = await gateway.saveReadingPosition(opened, document, position);
 
-    expect(updateReading).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        expectedRevision: "rev-2",
-        expectedFrontmatter: saved.frontmatter,
-      }),
-    );
+    expect(latest.recordRevision).toBe("rev-3");
+    expect(await gateway.source(source.id)).toBe(latest);
   });
 });

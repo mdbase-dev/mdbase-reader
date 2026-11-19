@@ -85,9 +85,6 @@ export interface SourceRepository extends SourceLookups {
   updateReading(input: {
     readonly collectionId: CollectionId;
     readonly sourceId: SourceId;
-    readonly expectedRevision: RecordRevision;
-    /** The persisted frontmatter at `expectedRevision`, which lets the write skip a fresh read. */
-    readonly expectedFrontmatter?: Source["frontmatter"];
     readonly document: DocumentTarget;
     readonly position: ReadingPosition;
     /** Range-relative progress; null clears an unavailable measurement. */

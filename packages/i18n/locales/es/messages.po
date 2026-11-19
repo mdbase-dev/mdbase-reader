@@ -2951,6 +2951,7 @@ msgstr "Resaltados de Readwise descartados omitidos (se conservan en el archivo 
 
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgctxt "Reader interface"
 msgid "Dismiss"

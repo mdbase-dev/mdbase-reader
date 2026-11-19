@@ -128,20 +128,21 @@ function optionalDateTime(value: unknown): ReturnType<typeof dateTime> | undefin
 
 function sourceFields(
   collection: CollectionId,
-  path: string,
+  record: RecordView,
   frontmatter: Readonly<Record<string, unknown>>,
 ): SourceSummary {
   const id = text(frontmatter["id"]);
   const title = text(frontmatter["title"]);
   if (!id || !title) {
-    throw new Error(`Source ${path} is missing its contract identity or title.`);
+    throw new Error(`Source ${record.path} is missing its contract identity or title.`);
   }
   const reading = readingState(frontmatter["reading"]);
   const citation = citationFields(frontmatter["csl"]);
   return {
     collectionId: collection,
     id: sourceId(id),
-    path,
+    path: record.path,
+    replicaId: record.id,
     title,
     creators: textArray(frontmatter["authors"]),
     tags: textArray(frontmatter["tags"]),
@@ -186,7 +187,7 @@ export function sourceSummaryFromQuery(
   // Library views can show any field as a column, so the listing keeps the frontmatter.
   const partOf = partOfFromResult(record);
   return {
-    ...sourceFields(collection, record.path, frontmatter),
+    ...sourceFields(collection, record, frontmatter),
     properties: frontmatter,
     ...(partOf ? { partOf } : {}),
   };
@@ -199,7 +200,7 @@ export function sourceFromDocument(
 ): Source {
   const provenance = (record.effective ?? record.frontmatter)[cslProvenanceKey];
   return {
-    ...sourceFields(collection, record.path, record.effective ?? record.frontmatter),
+    ...sourceFields(collection, record, record.effective ?? record.frontmatter),
     ...(partOf ? { partOf } : {}),
     properties: record.effective ?? record.frontmatter,
     ...(provenance !== undefined ? { cslProvenance: parseCslProvenance(provenance) } : {}),
@@ -224,7 +225,7 @@ export function sourceSummaryFromContract(
     throw new Error("Reader cannot select a unique source contract implementation.");
   }
   return {
-    ...sourceFields(collection, view.path, implementation.fields),
+    ...sourceFields(collection, view, implementation.fields),
     properties: implementation.fields,
   };
 }
