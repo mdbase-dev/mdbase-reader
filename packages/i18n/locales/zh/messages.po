@@ -2961,6 +2961,7 @@ msgstr "已跳过已放弃的 Readwise 高亮（保留在原生存档中）"
 
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgctxt "Reader interface"
 msgid "Dismiss"

@@ -2961,6 +2961,7 @@ msgstr "폐기된 Readwise 하이라이트를 건너뜀(기본 아카이브에 �
 
 #: apps/reader/src/CitationLookup.tsx
 #: apps/reader/src/HighlightSavedNotice.tsx
+#: apps/reader/src/ReaderSaveStatus.tsx
 #: apps/reader/src/SourceReadingBoundary.tsx
 msgctxt "Reader interface"
 msgid "Dismiss"

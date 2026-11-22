@@ -1,4 +1,4 @@
-import { mdbaseError } from "@mdbase-dev/sdk";
+import { Write, uuidv7 } from "@mdbase-dev/sdk";
 import { collectionId, dateTime, sourceId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
@@ -57,7 +57,6 @@ describe("Connect source reading state", () => {
     await repository.updateReading({
       collectionId: collectionId("reading"),
       sourceId: sourceId("src_01"),
-      expectedRevision: "stale-caller-revision" as never,
       document: {
         fileId: "file-01" as never,
         file: "[[files/crime.pdf]]",
@@ -80,12 +79,11 @@ describe("Connect source reading state", () => {
           }),
         },
       }),
-      expect.anything(),
     );
   });
 });
 
-describe("Connect source reading state with a current caller revision", () => {
+describe("Connect reading position writes", () => {
   const frontmatter = {
     id: "src_01",
     title: "Crime and Punishment",
@@ -94,8 +92,6 @@ describe("Connect source reading state with a current caller revision", () => {
   const input = {
     collectionId: collectionId("reading"),
     sourceId: sourceId("src_01"),
-    expectedRevision: "rev-1" as never,
-    expectedFrontmatter: frontmatter,
     document: {
       fileId: "file-01" as never,
       file: "[[files/crime.pdf]]",
@@ -108,6 +104,7 @@ describe("Connect source reading state with a current caller revision", () => {
   function repositoryWith(
     update: ReturnType<typeof vi.fn>,
     read = vi.fn(),
+    acknowledge = vi.fn(),
   ): ConnectSourceRepository {
     return new ConnectSourceRepository(
       mockSdk({
@@ -123,22 +120,25 @@ describe("Connect source reading state with a current caller revision", () => {
         ),
         get: read,
         update,
+        ledger: { acknowledge },
       }),
     );
   }
 
-  it("uses a native record witness and the caller's revision", async () => {
+  it("uses the same fresh record for its fields and revision on the first write", async () => {
     const update = vi.fn(() => Promise.resolve(testWrite(success(record("rev-2", frontmatter)))));
-    const read = vi.fn(() => Promise.resolve(record("rev-1", frontmatter)));
+    const read = vi.fn(() => Promise.resolve(record("rev-2", frontmatter)));
     const repository = repositoryWith(update, read);
 
-    await repository.updateReading(input);
+    const stale = { ...input, expectedRevision: "rev-1", expectedFrontmatter: {} };
+    await repository.updateReading(stale);
 
     expect(read).toHaveBeenCalledOnce();
+    expect(update).toHaveBeenCalledOnce();
     expect(update).toHaveBeenCalledWith(
       expect.objectContaining({ path: "sources/crime.md" }),
       expect.objectContaining({
-        ifRevision: "rev-1",
+        ifRevision: "rev-2",
         patch: {
           reading: expect.objectContaining({
             status: "queued",
@@ -147,30 +147,58 @@ describe("Connect source reading state with a current caller revision", () => {
           }),
         },
       }),
-      expect.anything(),
     );
   });
 
-  it("rebases on a fresh read when the caller's revision has moved on", async () => {
-    const newer = { ...frontmatter, reading: { status: "finished" } };
+  const refusal = (mutation: string): Write =>
+    new Write({
+      mutation,
+      state: "rejected",
+      problem: { code: "conflict", recovery: "refresh", reason: "revision", message: "Moved on" },
+    });
+
+  it.each(["confirmed", "pending"] as const)(
+    "acknowledges only the superseded refusal when the retry is %s",
+    async (state) => {
+      const newer = { ...frontmatter, reading: { status: "finished" } };
+      const refused = uuidv7();
+      const update = vi
+        .fn()
+        .mockResolvedValueOnce(refusal(refused))
+        .mockResolvedValueOnce(
+          new Write({ mutation: uuidv7(), state, records: [record("rev-3", newer)] }),
+        );
+      const read = vi
+        .fn()
+        .mockResolvedValueOnce(record("rev-1", frontmatter))
+        .mockResolvedValueOnce(record("rev-2", newer));
+      const acknowledge = vi.fn();
+      await repositoryWith(update, read, acknowledge).updateReading(input);
+
+      expect(read).toHaveBeenCalledTimes(2);
+      expect(update).toHaveBeenLastCalledWith(
+        expect.objectContaining({ revision: "rev-2" }),
+        expect.objectContaining({
+          ifRevision: "rev-2",
+          patch: { reading: expect.objectContaining({ status: "finished" }) },
+        }),
+      );
+      expect(acknowledge.mock.calls).toEqual([[refused]]);
+    },
+  );
+
+  it("leaves refusals available for review if the retry is also rejected", async () => {
     const update = vi
       .fn()
-      .mockRejectedValueOnce(mdbaseError("conflict", "Moved on"))
-      .mockResolvedValueOnce(testWrite(success(record("rev-3", newer))));
-    const read = vi.fn(() => Promise.resolve(success(record("rev-2", newer))));
-    const repository = repositoryWith(update, read);
-
-    await repository.updateReading(input);
-
-    expect(read).toHaveBeenCalledTimes(3);
-    expect(update).toHaveBeenLastCalledWith(
-      expect.objectContaining({ path: "sources/crime.md" }),
-      expect.objectContaining({
-        ifRevision: "rev-2",
-        patch: { reading: expect.objectContaining({ status: "finished" }) },
-      }),
-      expect.anything(),
-    );
+      .mockResolvedValueOnce(refusal(uuidv7()))
+      .mockResolvedValueOnce(refusal(uuidv7()));
+    const read = vi.fn().mockResolvedValue(record("rev-2", frontmatter));
+    const acknowledge = vi.fn();
+    await expect(
+      repositoryWith(update, read, acknowledge).updateReading(input),
+    ).rejects.toMatchObject({ code: "conflict" });
+    expect(update).toHaveBeenCalledTimes(2);
+    expect(acknowledge).not.toHaveBeenCalled();
   });
 });
 

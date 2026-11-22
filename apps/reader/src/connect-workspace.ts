@@ -810,14 +810,9 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     position: ReadingPosition,
     progress?: number | null,
   ): Promise<Source> {
-    // Callers may hold the source as it was when the document opened; each save replaces the
-    // cached copy, so it carries the newest revision this session has seen.
-    const latest = this.#sourcesById.get(source.id) ?? source;
     const updated = await this.sources.updateReading({
       collectionId: this.collectionId,
       sourceId: source.id,
-      expectedRevision: latest.recordRevision,
-      expectedFrontmatter: latest.frontmatter,
       document,
       position,
       ...(progress !== undefined ? { progress } : {}),

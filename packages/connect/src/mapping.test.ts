@@ -50,6 +50,7 @@ describe("Connect contract mapping", () => {
     }) satisfies RecordView;
     expect(sourceSummaryFromQuery(collectionId("reading"), record)).toMatchObject({
       id: "src_01",
+      replicaId: record.id,
       title: "Crime and Punishment",
       creators: ["Fyodor Dostoevsky"],
       published: 2002,
