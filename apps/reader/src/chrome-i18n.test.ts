@@ -10,7 +10,6 @@ import { connectionProblemDetail, describeConnectionProblem } from "./connection
 import { columnLabel, formatPropertyValue, propertySortValue } from "./library-columns.js";
 import { fieldValueSuggestions, matchesCondition, operatorLabels } from "./library-conditions.js";
 import { publicationDateLabel } from "./library-publication-date.js";
-import { signInCopy } from "./native-signin-ui.js";
 import { readerCommandGroupLabel } from "./reader-command-list.js";
 
 function id(message: MessageDescriptor): string {
@@ -32,7 +31,6 @@ describe("Reader model copy uses the active real Lingui catalogue", () => {
       [id(msg({ message: "Title", context: "Library table column" }))]: "Titre",
       [id(msg({ message: "Passage", context: "Annotation table column" }))]: "Extrait",
       [id(msg({ message: "Yes", context: "library columns" }))]: "Oui",
-      [id(msg({ message: "Sign in", context: "Native sign-in" }))]: "Se connecter",
       [id(msg`Workspace`)]: "Espace de travail",
       [id(
         msg({
@@ -50,7 +48,6 @@ describe("Reader model copy uses the active real Lingui catalogue", () => {
     expect(formatPropertyValue(true)).toBe("Oui");
     expect(propertySortValue(true)).toBe("true");
     expect(propertySortValue([true, false])).toBe("true, false");
-    expect(signInCopy.signIn).toBe("Se connecter");
     expect(readerCommandGroupLabel("Workspace")).toBe("Espace de travail");
     expect(cslFieldLabel("original-publisher-place")).toBe("Lieu de publication original");
     expect(cslFieldLabel("DOI")).toBe("DOI");

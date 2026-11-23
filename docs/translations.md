@@ -45,7 +45,7 @@ Publisher tests compare every installed UI member against `scripts/tests/fixture
 
 npm installation is **not native publisher/release qualification**: the live native guard still requires an independently approved file intake. Historical approved UI archives and protected hashes remain unchanged; tests use them only in disposable historical fixtures. No publication or deployment is authorized by this dependency swap.
 
-Italian also appears in the separate citation-output locale picker. The citation-js bundled locale subset has no Italian data, so `src/locales/csl-it-IT.xml` supplies pinned, attributed CSL data (see its adjacent README), loaded lazily from Reader’s own deployment. Citation output language remains an explicit choice, separate from interface language; source metadata is never rewritten.
+Italian also appears in the separate citation-output locale picker. The citation-js bundled locale subset has no Italian data, so `packages/ui/src/locales/csl-it-IT.xml` supplies pinned, attributed CSL data (see its adjacent README), loaded lazily from Reader’s own deployment. Citation output language remains an explicit choice, separate from interface language; source metadata is never rewritten.
 
 All shells were audited: web and Capacitor share the renderer’s ten-locale runtime; Electron validates through the kit and copies every compiled locale; extension pages/worker share kit validation and the Chrome map emits `it` assets. Zotero exporter has no locale list or locale-negotiation system; its standalone UI remains outside this catalogue scope.
 
