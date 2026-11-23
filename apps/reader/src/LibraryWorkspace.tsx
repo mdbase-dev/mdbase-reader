@@ -260,6 +260,16 @@ export function LibraryWorkspace({
     focused && mode === "sources",
     onInspectSource,
   );
+  // "Export citations" takes the selection, or every source in this view.
+  const exportScope = selectedSources.length > 0 ? selectedSources : sources;
+  const { setScope: setExportScope } = bibliographyExport;
+  useEffect(() => {
+    if (!focused || mode !== "sources") {
+      return undefined;
+    }
+    setExportScope(exportScope);
+    return () => setExportScope(null);
+  }, [exportScope, focused, mode, setExportScope]);
   const propertyKeys = useMemo(
     () => discoverPropertyKeys(allSources, view.properties),
     [allSources, view.properties],
@@ -536,14 +546,16 @@ export function LibraryWorkspace({
                 <button
                   type="button"
                   disabled={bibliographyExport.status === "exporting"}
-                  onClick={bibliographyExport.run}
+                  onClick={() => bibliographyExport.runFor(exportScope)}
                 >
                   {bibliographyExport.status === "exporting"
                     ? t({
-                        message: "Preparing bibliography…",
+                        message: "Preparing citations…",
                         context: "LibraryWorkspace interface",
                       })
-                    : t({ message: "Export bibliography", context: "LibraryWorkspace interface" })}
+                    : selectedSources.length > 0
+                      ? t`Export citations (${String(selectedSources.length)} selected)`
+                      : t`Export citations (${String(sources.length)} in this view)`}
                 </button>
                 <button
                   type="button"
@@ -701,7 +713,12 @@ export function LibraryWorkspace({
                 scrollRef={resultsRef}
                 onOpen={onOpenSource}
                 onOpenBeside={onOpenBeside}
-                onExport={bibliographyExport.runFor}
+                // The E key exports the selection when the row is part of it.
+                onExport={(rows) =>
+                  bibliographyExport.runFor(
+                    rows.some(({ id }) => visibleSelection.ids.has(id)) ? selectedSources : rows,
+                  )
+                }
                 {...(onRemoveSource ? { onRemove: onRemoveSource } : {})}
                 {...(changeStatus ? { onChangeStatus: changeStatus } : {})}
                 {...(writes.saveField

@@ -345,7 +345,6 @@ function rowMenuActions(
     onOpen: props.onOpen,
     onOpenBeside: props.onOpenBeside,
     ...(props.onChangeStatus ? { onChangeStatus: props.onChangeStatus } : {}),
-    ...(props.onExport ? { onExport: props.onExport } : {}),
     ...(props.onRemove ? { onRemove: props.onRemove } : {}),
     ...(props.onEditField && props.layout.columns.includes("title") ? { onRename: rename } : {}),
   };

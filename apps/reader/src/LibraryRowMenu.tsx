@@ -31,7 +31,6 @@ export interface LibraryRowMenuActions {
   readonly onOpenBeside: (id: SourceId) => void;
   readonly onChangeStatus?: (source: SourceSummary, status: ReadingStatus) => void;
   readonly onRename?: (source: SourceSummary) => void;
-  readonly onExport?: (sources: readonly SourceSummary[]) => void;
   /** Opens chapter creation for a PDF or EPUB book; absent when chapter creation is off. */
   readonly onCreateChapters?: (source: SourceSummary) => void;
   /** Opens the removal confirmation; nothing is deleted from the menu itself. */
@@ -103,11 +102,6 @@ export function LibraryRowMenu({
           onClick={run(() => void navigator.clipboard.writeText(`@${citekey}`))}
         >
           <CopyCitekeyLabel value={citekey} />
-        </button>
-      ) : null}
-      {actions.onExport ? (
-        <button type="button" role="menuitem" onClick={run(() => actions.onExport?.([source]))}>
-          <Trans>Export citation</Trans>
         </button>
       ) : null}
       {actions.onCreateChapters && supportsChapterCreation(source) ? (

@@ -1,7 +1,7 @@
 import { plural, t } from "@lingui/core/macro";
 import { signalMdbaseMark } from "@mdbase-dev/ui/mark-activity";
 import { buildCslBibliography } from "@mdbase-reader/core";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { readerErrorMessage } from "./errors.js";
 
@@ -15,9 +15,12 @@ export interface BibliographyExportController {
   readonly problemSummary: string | null;
   readonly status: BibliographyExportStatus;
   readonly message: string | null;
+  /** Exports the sources in scope: a library tab's selection or view, else the whole library. */
   readonly run: () => void;
-  /** Exports only these sources, e.g. a library selection. */
+  /** Exports only these sources. */
   readonly runFor: (sources: readonly SourceSummary[]) => void;
+  /** The library tab in front says what `run` exports; null hands it back to the whole library. */
+  readonly setScope: (sources: readonly SourceSummary[] | null) => void;
 }
 
 export function useBibliographyExport(
@@ -63,11 +66,18 @@ export function useBibliographyExport(
     },
     [fail, saveFile],
   );
-  const run = useCallback((): void => save(bibliography.items), [bibliography, save]);
+  const scope = useRef<readonly SourceSummary[] | null>(null);
   const runFor = useCallback(
     (selected: readonly SourceSummary[]): void => save(buildCslBibliography(selected).items),
     [save],
   );
+  const run = useCallback(
+    (): void => (scope.current ? runFor(scope.current) : save(bibliography.items)),
+    [bibliography, runFor, save],
+  );
+  const setScope = useCallback((sources: readonly SourceSummary[] | null): void => {
+    scope.current = sources;
+  }, []);
 
   return {
     itemCount: bibliography.items.length,
@@ -76,6 +86,7 @@ export function useBibliographyExport(
     ...state,
     run,
     runFor,
+    setScope,
   };
 }
 

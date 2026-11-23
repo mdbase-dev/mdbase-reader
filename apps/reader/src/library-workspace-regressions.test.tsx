@@ -95,6 +95,7 @@ async function renderLibrary(
             message: null,
             run: vi.fn(),
             runFor: vi.fn(),
+            setScope: vi.fn(),
           }}
           focused
           onOpenView={vi.fn()}
