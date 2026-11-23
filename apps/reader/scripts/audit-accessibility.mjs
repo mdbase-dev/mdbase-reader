@@ -58,7 +58,10 @@ try {
   );
   await audit(desktop, "bulk selection");
   await desktop.getByRole("button", { name: "Annotations", exact: true }).click();
-  await desktop.getByRole("grid", { name: "Annotations" }).waitFor();
+  await desktop
+    .locator(".library-annotations")
+    .getByRole("list", { name: "Annotations" })
+    .waitFor();
   await audit(desktop, "annotations view");
   await desktop.getByRole("button", { name: "Sources", exact: true }).click();
   await desktop.locator('.library-table[aria-label="Sources"]').waitFor();

@@ -8,9 +8,15 @@ import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
 import { useId } from "react";
 
-import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
-import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
+import {
+  BackIcon,
+  CollectionIcon,
+  LeftPaneIcon,
+  ReadingModeIcon,
+  RightPaneIcon,
+  SearchIcon,
+} from "./icons.js";
 import { ReaderCollectionSwitcher, useReaderMdbase } from "./reader-collections.js";
 import { ReaderSaveStatus } from "./ReaderSaveStatus.js";
 
@@ -83,6 +89,23 @@ function HeaderDisplayMenu({
   );
 }
 
+/**
+ * The collection's name, where there is no mdbase session to switch collections with: the
+ * interface preview and the browser audits. With a session the shared switcher takes its place.
+ */
+function CollectionName({ name }: { readonly name: string }): JSX.Element {
+  const { t } = useLingui();
+  return (
+    <span className="collection-context" title={t`Collection: ${name}`}>
+      <CollectionIcon />
+      <span className="sr-only">
+        <Trans>Collection: </Trans>
+      </span>
+      <span className="collection-context-name">{name}</span>
+    </span>
+  );
+}
+
 /** The full header, for the library and for every pane arrangement wider than a phone. */
 function LibraryHeader({
   readingMode = false,
@@ -126,10 +149,7 @@ function LibraryHeader({
         {mdbase ? (
           <ReaderCollectionSwitcher mdbase={mdbase} beforeSwitch={beforeCollectionSwitch} />
         ) : (
-          <CollectionPicker
-            name={collectionName}
-            {...(beforeCollectionSwitch ? { beforeSwitch: beforeCollectionSwitch } : {})}
-          />
+          <CollectionName name={collectionName} />
         )}
         <ConnectionState state={connectionState} />
         <ReaderSaveStatus mdbase={mdbase} online={navigator.onLine} />
