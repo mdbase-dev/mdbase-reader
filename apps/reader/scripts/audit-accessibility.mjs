@@ -9,7 +9,7 @@ if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
   throw new Error("Accessibility audits only run against an explicit loopback origin.");
 }
 const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js");
-// Dockview names pane regions after their active tab; an inactive group can be left unnamed.
+// Pane regions are named after their active tab; an inactive pane can be left unnamed.
 const knownLibraryIssues = new Set(["landmark-unique"]);
 
 const browser = await chromium.launch({ headless: true });
@@ -58,7 +58,10 @@ try {
   );
   await audit(desktop, "bulk selection");
   await desktop.getByRole("button", { name: "Annotations", exact: true }).click();
-  await desktop.getByRole("grid", { name: "Annotations" }).waitFor();
+  await desktop
+    .locator(".library-annotations")
+    .getByRole("list", { name: "Annotations" })
+    .waitFor();
   await audit(desktop, "annotations view");
   await desktop.getByRole("button", { name: "Sources", exact: true }).click();
   await desktop.locator('.library-table[aria-label="Sources"]').waitFor();

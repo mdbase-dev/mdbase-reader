@@ -6,8 +6,8 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 import { auditPdf, auditEpub } from "./reader-audit-documents.mjs";
-import { auditDockview } from "./audit-dockview.mjs";
-import { auditDockviewMigration } from "./audit-dockview-migration.mjs";
+import { auditPanelRegions } from "./audit-panel-regions.mjs";
+import { auditPanelWorkspace } from "./audit-panel-workspace.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
 import { auditAnnotationFormats } from "./audit-annotation-formats.mjs";
@@ -15,11 +15,7 @@ import { auditAnnotationSelection } from "./audit-annotation-selection.mjs";
 import { auditPdfTouchWorkspace } from "./audit-pdf-touch-workspace.mjs";
 import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
-import { auditSidebarLayout } from "./audit-sidebar-layout.mjs";
-import { auditEdgeGroupApi } from "./audit-edge-group-api.mjs";
 import { auditReadingWorkspace } from "./audit-reading-workspace.mjs";
-import { auditResponsiveWorkspace } from "./audit-responsive-workspace.mjs";
-import { chooseOption } from "./audit-select.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
@@ -27,8 +23,7 @@ const readingAudit = process.env.READER_AUDIT_READING_ONLY === "1";
 const formatsAudit = process.env.READER_AUDIT_FORMATS_ONLY === "1";
 const selectionAudit = process.env.READER_AUDIT_SELECTION_ONLY === "1";
 const pdfTouchAudit = process.env.READER_AUDIT_PDF_TOUCH_ONLY === "1";
-const responsiveAudit = process.env.READER_AUDIT_RESPONSIVE_ONLY === "1";
-const sidebarComparison = responsiveAudit || process.env.READER_AUDIT_SIDEBARS_ONLY === "1";
+const workspaceAudit = process.env.READER_AUDIT_WORKSPACE_ONLY === "1";
 if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
   throw new Error("Reader audits only run against an explicit loopback origin.");
 }
@@ -44,18 +39,6 @@ const context = await browser.newContext(
     : { viewport: { width: 1440, height: 1000 } },
 );
 await installLocalPdfium(context);
-// These audits exercise docking with the sidebar open throughout; the reading audit covers the
-// default, which hides it while a document has focus.
-await context.addInitScript(() => {
-  const key = "mdbase-reader:shell:v1:test-reader-audit";
-  try {
-    if (!sessionStorage.getItem("reader-audit-reading") && !localStorage.getItem(key)) {
-      localStorage.setItem(key, JSON.stringify({ sidebarWhileReading: "keep" }));
-    }
-  } catch {
-    // Sandboxed and opaque-origin documents have no storage and need no preference.
-  }
-});
 const page = await context.newPage();
 page.on("dialog", (dialog) => void dialog.accept());
 const errors = [];
@@ -219,7 +202,6 @@ try {
     completed.push(...(await auditAnnotationSelection(page, { open: openSource, screenshot })));
   }
   if (readingAudit) {
-    await page.evaluate(() => sessionStorage.setItem("reader-audit-reading", "1"));
     completed.push(...(await auditReadingWorkspace(page, { screenshot })));
   }
   if (sharedEditingAudit) {
@@ -233,20 +215,9 @@ try {
       })),
     );
   }
-  if (sidebarComparison) {
-    completed.push(...(await auditSidebarLayout(page, { screenshot, measurements })));
-    measurements.edgeApi = await auditEdgeGroupApi(context, origin);
-    if (responsiveAudit) {
-      expect(Object.values(measurements.sidebars.acceptance).every(Boolean)).toBe(true);
-      completed.push(
-        ...(await auditResponsiveWorkspace(page, {
-          screenshot,
-          blockWrites: (value) => {
-            writesBlocked = value;
-          },
-        })),
-      );
-    }
+  if (workspaceAudit) {
+    completed.push(...(await auditPanelWorkspace(page, { screenshot })));
+    completed.push(...(await auditPanelRegions(page, { screenshot })));
   }
   if (
     !formatsAudit &&
@@ -254,7 +225,7 @@ try {
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
-    !sidebarComparison &&
+    !workspaceAudit &&
     process.env.READER_AUDIT_ANNOTATIONS_ONLY !== "1"
   ) {
     await expect(page.locator('.library-table[aria-label="Sources"]')).toBeVisible();
@@ -365,31 +336,28 @@ try {
       .getByRole("navigation", { name: "Library views and sources" })
       .getByRole("button", { name: "All sources", exact: true })
       .click();
-    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "notes");
     await page.getByRole("textbox", { name: "Search this view" }).fill("Unsaved draft survives");
     await expect(
-      page.getByRole("region", { name: "Text search results" }).locator("mark"),
+      page.getByRole("region", { name: "In notes and annotations" }).locator("mark"),
     ).toHaveText("Unsaved draft survives");
     await screenshot("passage-search");
-    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "documents");
-    await page.getByRole("textbox", { name: "Search this view" }).fill("patient attention");
-    await expect(page.getByRole("region", { name: "Text search results" })).toContainText(
-      "Saved HTML pages up to 256 KiB are indexed on this device",
-    );
-    await expect(
-      page.getByRole("region", { name: "Text search results" }).locator("mark").first(),
-    ).toHaveText("patient attention", { timeout: 20000 });
-    completed.push(
-      "Notes and library/loaded-document search: snippets, highlighted matches, explicit coverage",
-    );
+    await page.getByRole("textbox", { name: "Search this view" }).fill("");
+    completed.push("Library search finds note text and shows the matching snippet");
 
+    // Density is in Settings, which the display menu links to; the menu holds reading options.
     const display = page.getByLabel("Display settings", { exact: true });
-    await display.click();
+    const openSettings = async () => {
+      await display.click();
+      await expect(page.getByRole("button", { name: "Compact", exact: true })).toHaveCount(0);
+      await page.getByRole("button", { name: "Settings…", exact: true }).click();
+    };
+    await openSettings();
     await page.getByRole("button", { name: "Compact", exact: true }).click();
+    await page.keyboard.press("Escape");
     await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
     await page.reload();
     await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
-    await display.click();
+    await openSettings();
     await page.getByRole("button", { name: "Comfortable", exact: true }).click();
     await page.keyboard.press("Escape");
     await page.setViewportSize({ width: 390, height: 844 });
@@ -511,15 +479,7 @@ try {
         completed.push("EPUB page controls work with pointer and keyboard, persisting location");
       }
     }
-    completed.push(
-      ...(await auditDockview(page, {
-        screenshot,
-        blockWrites: (value) => {
-          writesBlocked = value;
-        },
-      })),
-    );
-    completed.push(...(await auditDockviewMigration(page)));
+    completed.push(...(await auditPanelWorkspace(page, { screenshot })));
   }
   if (
     !formatsAudit &&
@@ -527,7 +487,7 @@ try {
     !pdfTouchAudit &&
     !readingAudit &&
     !sharedEditingAudit &&
-    !sidebarComparison
+    !workspaceAudit
   ) {
     completed.push(
       ...(await auditAnnotations(page, {
@@ -580,7 +540,7 @@ try {
     stack: error.stack,
     workspace: await page
       .evaluate(() => ({
-        saved: localStorage.getItem("mdbase-reader:dockview:v1:test-reader-audit"),
+        saved: sessionStorage.getItem("mdbase-reader:panels:v1:test-reader-audit"),
         mobileOptions: Array.from(
           globalThis.document.querySelectorAll(".mobile-workspace-navigation option"),
         ).map((option) => ({ value: option.value, title: option.textContent })),

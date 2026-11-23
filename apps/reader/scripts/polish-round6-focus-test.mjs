@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { after, test } from "node:test";
 import { chromium, expect } from "@playwright/test";
-import { chooseOption } from "./audit-select.mjs";
 
 const browser = await chromium.launch({ headless: true });
 const origin = "http://127.0.0.1:5193/?preview=1";
@@ -47,22 +46,6 @@ test("Escape then immediate A never changes status (20 real keyboard trials)", a
   }
 });
 
-test("Skip to sources reaches cards in Visual library", async () => {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  try {
-    await page.goto(origin);
-    await page
-      .getByRole("navigation", { name: "Library views and sources" })
-      .getByRole("button", { name: "Visual library", exact: true })
-      .click();
-    const card = page.locator(".library-card-hit-target").first();
-    await expect(card).toBeVisible();
-    await skipToSources(page, card);
-  } finally {
-    await page.close();
-  }
-});
-
 test("row context menus stay open without outer-pane scrolling (12 pointer trials)", async () => {
   for (let attempt = 0; attempt < 12; attempt++) {
     const page = await browser.newPage({ viewport: { width: 1042, height: 662 } });
@@ -96,15 +79,6 @@ test("Skip to sources reaches the results region for empty Table, Cards and text
     await search.fill("no-source-matches-this-query");
     await expect(page.getByText("No sources match", { exact: true })).toBeVisible();
     const results = page.locator(".workspace-pane.is-focused .library-workspace-results");
-    await skipToSources(page, results);
-    await page.locator('summary[aria-label="Display"]').click();
-    await page.getByRole("button", { name: "Cards", exact: true }).click();
-    await page.keyboard.press("Escape");
-    await skipToSources(page, results);
-    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "notes");
-    await search.fill("attention");
-    await expect(page.locator(".library-text-search")).toBeVisible();
-    await expect(page.locator(".search-passage-list button")).toHaveCount(0);
     await skipToSources(page, results);
   } finally {
     await page.close();

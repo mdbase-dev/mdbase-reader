@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { matchTextQuote, textQuoteAt, textQuoteMatcher } from "./text-quote-match.js";
+import {
+  matchTextQuote,
+  resolveSearchQuote,
+  textQuoteAt,
+  textQuoteMatcher,
+} from "./text-quote-match.js";
 
 function matched(text: string, quote: Parameters<typeof matchTextQuote>[1]): string | null {
   const match = matchTextQuote(text, quote);
@@ -89,5 +94,25 @@ describe("textQuoteAt", () => {
     });
     expect(textQuoteAt("x".repeat(100) + "quote", 100, 105).prefix).toHaveLength(64);
     expect(textQuoteAt("quote", 0, 5)).toEqual({ exact: "quote" });
+  });
+});
+
+describe("resolveSearchQuote", () => {
+  it("refuses ambiguous and approximate matches, but resolves context-proven repeats", () => {
+    expect(
+      resolveSearchQuote("repeated phrase repeated phrase", { exact: "repeated phrase" }),
+    ).toBeNull();
+    expect(
+      resolveSearchQuote("This changed distinctive passage", {
+        exact: "This original distinctive passage",
+      }),
+    ).toBeNull();
+    expect(
+      resolveSearchQuote("First repeated phrase. Second repeated phrase.", {
+        exact: "repeated phrase",
+        prefix: "Second ",
+        suffix: ".",
+      })?.start,
+    ).toBe(30);
   });
 });

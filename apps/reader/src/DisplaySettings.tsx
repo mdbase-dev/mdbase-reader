@@ -15,37 +15,25 @@ import type { ReadingTypography } from "@mdbase-reader/reading-surface";
 import type { JSX } from "react";
 
 /**
- * Text, theme and layout choices for this device: behind the header's "Aa" button, and in the
- * Settings page's "This device" section.
+ * How a document reads on this device: text size, line length, typeface and theme. Behind the
+ * header's "Aa" button, and nowhere else. Everything else about this device is in Settings.
  */
 export function DisplaySettings({
   theme,
   onChangeTheme,
   typography,
   onChangeTypography,
-  density,
-  onChangeDensity,
-  sidebarWhileReading,
-  onChangeSidebarWhileReading,
   onOpenSettings,
 }: {
   readonly theme: ThemePreference;
   readonly onChangeTheme: (theme: ThemePreference) => void;
   readonly typography?: ReadingTypography;
   readonly onChangeTypography?: (typography: ReadingTypography) => void;
-  readonly density: "comfortable" | "compact";
-  readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
-  readonly sidebarWhileReading: "hide" | "keep";
-  readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
-  /** Opens the Settings page; absent on that page itself. */
   readonly onOpenSettings?: () => void;
 }): JSX.Element {
   useLocale();
-  const highlightOnSelect = useHighlightOnSelect();
-  const annotationOwner = useAnnotationOwnerPreference();
   return (
     <>
-      <ReaderLanguageSetting />
       {typography && onChangeTypography ? (
         <TypographyControls value={typography} onChange={onChangeTypography} />
       ) : null}
@@ -55,28 +43,44 @@ export function DisplaySettings({
         options={themePreferences.map((value) => ({ value, label: capitalize(value) }))}
         onChange={onChangeTheme}
       />
-      {onChangeDensity ? (
-        <DisplayChoice
-          legend={translate({ message: "Density" })}
-          value={density}
-          options={[
-            { value: "comfortable", label: translate({ message: "Comfortable" }) },
-            { value: "compact", label: translate({ message: "Compact" }) },
-          ]}
-          onChange={onChangeDensity}
-        />
+      {onOpenSettings ? (
+        <>
+          <hr />
+          <button type="button" onClick={onOpenSettings}>
+            <Trans>Settings…</Trans>
+          </button>
+        </>
       ) : null}
-      {onChangeSidebarWhileReading ? (
-        <DisplayChoice
-          legend={translate({ message: "Sidebar while reading" })}
-          value={sidebarWhileReading}
-          options={[
-            { value: "hide", label: translate({ message: "Hide" }) },
-            { value: "keep", label: translate({ message: "Keep open" }) },
-          ]}
-          onChange={onChangeSidebarWhileReading}
-        />
-      ) : null}
+    </>
+  );
+}
+
+/**
+ * This device's other choices, in the Settings page's "This device" section: language, density
+ * and how annotating behaves. None of them is in the display menu.
+ */
+export function DeviceSettings({
+  density,
+  onChangeDensity,
+}: {
+  readonly density: "comfortable" | "compact";
+  readonly onChangeDensity: (density: "comfortable" | "compact") => void;
+}): JSX.Element {
+  useLocale();
+  const highlightOnSelect = useHighlightOnSelect();
+  const annotationOwner = useAnnotationOwnerPreference();
+  return (
+    <>
+      <ReaderLanguageSetting />
+      <DisplayChoice
+        legend={translate({ message: "Density" })}
+        value={density}
+        options={[
+          { value: "comfortable", label: translate({ message: "Comfortable" }) },
+          { value: "compact", label: translate({ message: "Compact" }) },
+        ]}
+        onChange={onChangeDensity}
+      />
       <DisplayChoice
         legend={translate({ message: "Annotations made inside a chapter belong to" })}
         value={annotationOwner}
@@ -95,14 +99,6 @@ export function DisplaySettings({
         ]}
         onChange={setHighlightOnSelect}
       />
-      {onOpenSettings ? (
-        <>
-          <hr />
-          <button type="button" onClick={onOpenSettings}>
-            <Trans>Settings…</Trans>
-          </button>
-        </>
-      ) : null}
     </>
   );
 }

@@ -107,7 +107,6 @@ spelled it.
   - `recordPathById` uses `where id == …` (`packages/connect/src/repository-client.ts:151-186`);
   - annotations for a source use `types: ["reader-annotation"]` plus
     `linksTo("source", path)` (`packages/connect/src/annotation-query.ts:68-91`);
-  - the annotation view uses `this.file.path` equality (`apps/reader/src/mdbase-annotation-views.ts:197`);
   - other `file.path ==` filters are exact paths taken from records.
 - Other apps: mdbase Writer reads Reader records through `dev.mdbase.reader.*`
   contracts. Its `annotations/` and `sources/` paths appear only in tests, benchmarks and

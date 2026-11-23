@@ -1,5 +1,4 @@
 import { AnnotationPlugin } from "@embedpdf/plugin-annotation";
-import { SearchPlugin } from "@embedpdf/plugin-search";
 import { SelectionPlugin } from "@embedpdf/plugin-selection";
 import {
   CapturePlugin,
@@ -18,18 +17,12 @@ import {
 } from "./embedpdf-annotation-activation.js";
 import { createPdfDecorationController } from "./pdf-decoration-controller.js";
 import { createPdfPageNavigation } from "./pdf-page-navigation.js";
-import { createPdfSearch } from "./pdf-search.js";
 import { observePdfSelection, type PdfSelectionAdjustment } from "./pdf-selection-publication.js";
 import { createPdfViewportLocator, type PdfPageRect } from "./pdf-viewport-rect.js";
 
-import type { PdfDocumentObject, PdfEngine } from "@embedpdf/models";
+import type { PdfDocumentObject } from "@embedpdf/models";
 import type { CaptureAreaEvent } from "@embedpdf/plugin-capture";
-import type {
-  Annotation,
-  AnnotationId,
-  SearchTextSegment,
-  SearchDestination,
-} from "@mdbase-reader/core";
+import type { Annotation, AnnotationId } from "@mdbase-reader/core";
 import type {
   AreaSelectionDraft,
   EventSource,
@@ -59,12 +52,6 @@ export interface EmbedPdfRuntime {
   /** Where the highlight activated last sits on screen, when the viewer can say. */
   activationRect?(): ViewportRect | null;
   clearTextSelection(): void;
-  extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
-  extractSearchSegments?(options?: {
-    readonly signal?: AbortSignal;
-  }): Promise<readonly SearchTextSegment[]>;
-  goToSearchDestination?(destination: SearchDestination): Promise<boolean>;
-  clearSearch?(): void;
   setAnnotations(annotations: readonly Annotation[]): void;
   setActiveAnnotation(annotation: Annotation | null): void;
   destroy(): void;
@@ -114,16 +101,8 @@ export function createEmbedPdfRuntime(
   const decorations = createPdfDecorationController(annotationCapability, annotationActivations);
   const subscriptions = new Set<Unsubscribe>();
   subscriptions.add(observePagePresses(host?.(), annotationActivations));
-  const getDocument = (signal?: AbortSignal): Promise<PdfDocumentObject> =>
-    registryPdfDocument(registry, signal);
+  const getDocument = (): Promise<PdfDocumentObject> => registryPdfDocument(registry);
   const navigation = createPdfPageNavigation(registry, scroll, getDocument);
-
-  const searchRuntime = createPdfSearch({
-    engine: registry.getEngine(),
-    document: getDocument,
-    search: registry.getPlugin<SearchPlugin>(SearchPlugin.id)?.provides(),
-    scroll,
-  });
 
   return {
     currentPageIndex: () => Math.max(0, scroll.getCurrentPage() - 1),
@@ -192,16 +171,10 @@ export function createEmbedPdfRuntime(
     },
     ...activationRect(annotationActivations, locate),
     clearTextSelection: () => selection.clear(),
-    async extractText(options) {
-      const document = await getDocument(options?.signal);
-      return extractPdfDocumentText(registry.getEngine(), document, options?.signal);
-    },
-    ...searchRuntime,
     setAnnotations: (annotations) => decorations.setAnnotations(annotations),
     setActiveAnnotation: (annotation) => decorations.setActiveAnnotation(annotation),
     destroy() {
       navigation.destroy();
-      searchRuntime.clearSearch();
       decorations.destroy();
       annotationActivations.destroy();
       for (const unsubscribe of subscriptions) {
@@ -220,24 +193,17 @@ function trackSubscription(subscriptions: Set<Unsubscribe>, stop: Unsubscribe): 
   };
 }
 
-function registryPdfDocument(
-  registry: PluginRegistry,
-  signal?: AbortSignal,
-): Promise<PdfDocumentObject> {
+function registryPdfDocument(registry: PluginRegistry): Promise<PdfDocumentObject> {
   const manager = registry.getPlugin<DocumentManagerPlugin>(DocumentManagerPlugin.id);
   if (!manager) {
     return Promise.reject(new Error("EmbedPDF did not initialize its document manager."));
   }
-  return activePdfDocument(manager.provides(), signal);
+  return activePdfDocument(manager.provides());
 }
 
 type DocumentManagerCapability = ReturnType<DocumentManagerPlugin["provides"]>;
 
-async function activePdfDocument(
-  documents: DocumentManagerCapability,
-  signal?: AbortSignal,
-): Promise<PdfDocumentObject> {
-  signal?.throwIfAborted();
+async function activePdfDocument(documents: DocumentManagerCapability): Promise<PdfDocumentObject> {
   const active = documents.getActiveDocument();
   if (active) {
     return active;
@@ -245,11 +211,9 @@ async function activePdfDocument(
   return new Promise((resolve, reject) => {
     let unsubscribeOpened = (): void => undefined;
     let unsubscribeError = (): void => undefined;
-    const aborted = (): void => finish(() => reject(abortReason(signal)));
     const finish = (settle: () => void): void => {
       unsubscribeOpened();
       unsubscribeError();
-      signal?.removeEventListener("abort", aborted);
       settle();
     };
     unsubscribeOpened = documents.onDocumentOpened(({ document }) => {
@@ -260,56 +224,11 @@ async function activePdfDocument(
     unsubscribeError = documents.onDocumentError(({ message }) => {
       finish(() => reject(new Error(message)));
     });
-    signal?.addEventListener("abort", aborted, { once: true });
-    if (signal?.aborted) {
-      aborted();
-      return;
-    }
     const openedWhileSubscribing = documents.getActiveDocument();
     if (openedWhileSubscribing) {
       finish(() => resolve(openedWhileSubscribing));
     }
   });
-}
-
-export async function extractPdfDocumentText(
-  engine: PdfEngine,
-  document: PdfDocumentObject,
-  signal?: AbortSignal,
-  batchSize = 16,
-): Promise<string> {
-  const parts: string[] = [];
-  for (let start = 0; start < document.pageCount; start += batchSize) {
-    signal?.throwIfAborted();
-    const count = Math.min(batchSize, document.pageCount - start);
-    const pages = Array.from({ length: count }, (_value, index) => start + index);
-    parts.push(await engine.extractText(document, pages).toPromise());
-    await yieldToBrowser(signal);
-  }
-  return parts.join("\n");
-}
-
-function yieldToBrowser(signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const complete = (): void => {
-      signal?.removeEventListener("abort", aborted);
-      resolve();
-    };
-    const aborted = (): void => {
-      clearTimeout(timer);
-      reject(abortReason(signal));
-    };
-    const timer = setTimeout(complete, 0);
-    signal?.addEventListener("abort", aborted, { once: true });
-  });
-}
-
-function abortError(): DOMException {
-  return new DOMException(t({ message: "PDF text extraction was cancelled." }), "AbortError");
-}
-
-function abortReason(signal?: AbortSignal): Error {
-  return signal?.reason instanceof Error ? signal.reason : abortError();
 }
 
 /** Measures the highlight activated last, when the viewer can be measured at all. */

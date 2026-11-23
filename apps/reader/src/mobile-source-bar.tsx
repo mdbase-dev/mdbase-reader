@@ -1,6 +1,5 @@
 import { t as translate } from "@lingui/core/macro";
 
-import { panelTab } from "./dockview-workspace-state.js";
 import { DocumentContextualToolbar } from "./DocumentContextualToolbar.js";
 import { CloseIcon } from "./icons.js";
 import {
@@ -22,14 +21,11 @@ export function mobileSourceBar(
 ): ReaderHeaderSourceBar | undefined {
   const { sourceWorkspace: workspace, composer } = model;
   const dock = workspace.dock;
-  const tab = mobileSourceActive(dock) ? panelTab(dock.api?.activePanel) : null;
+  const tab = mobileSourceActive(dock) ? dock.activeTab() : null;
   if (tab?.kind !== "source") {
     return undefined;
   }
   const source = model.library.sources.find(({ id }) => id === tab.sourceId);
-  const pane =
-    workspace.layout.panes.find((candidate) => candidate.tabs.some(({ id }) => id === tab.id)) ??
-    workspace.activePane;
   return {
     onBack: () => backToLibrary(dock),
     switcher: <WorkspaceTabSwitcher dock={dock} />,
@@ -39,7 +35,6 @@ export function mobileSourceBar(
           <DocumentContextualToolbar
             source={source}
             sources={model.library.sources}
-            pane={pane}
             workspace={workspace}
             focusMode={model.focusMode}
             readingResume={model.readingResume}

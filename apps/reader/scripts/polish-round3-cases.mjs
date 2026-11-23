@@ -88,12 +88,12 @@ export async function libraryDetails(page) {
   if (!visible) await page.keyboard.press("Control+Backslash");
   await expect(sidebar).toBeVisible();
   const views = sidebar.locator(".navigator-view-section > div > button");
-  const tabs = await page.locator(".dv-tab").count();
+  const tabs = await page.locator(".mp-tab").count();
   for (const index of [1, 0]) {
     await views.nth(index).focus();
     await page.keyboard.press("Enter");
     await expect(views.nth(index)).toHaveAttribute("aria-current", "page");
-    await expect(page.locator(".dv-tab")).toHaveCount(tabs);
+    await expect(page.locator(".mp-tab")).toHaveCount(tabs);
   }
   if (!visible) await page.keyboard.press("Control+Backslash");
 }
@@ -194,7 +194,7 @@ export async function sampleAction(page, action, selector, shadow = false) {
         const root = shadow ? element?.shadowRoot : globalThis.document;
         const animations = root?.getAnimations() ?? [];
         const notes = globalThis.document.querySelector(
-          '.dv-render-overlay:has([data-reader-edge="right"])',
+          '.mp-panel:has([data-reader-edge="right"])',
         );
         samples.push({
           time: performance.now() - start,

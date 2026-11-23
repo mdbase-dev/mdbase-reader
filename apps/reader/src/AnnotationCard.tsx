@@ -51,7 +51,8 @@ interface AnnotationCardProps {
     ((annotation: Annotation, color: HighlightColorKey) => Promise<void>) | undefined;
   readonly editing: boolean;
   readonly active: boolean;
-  readonly transclusion: AnnotationTransclusionController;
+  /** Inserts the annotation into the open source's note; absent where no one source is open. */
+  readonly transclusion?: AnnotationTransclusionController | undefined;
   readonly onEdit: () => void;
   readonly onCancel: () => void;
   readonly onSave: (annotation: Annotation, body: string) => Promise<Annotation>;
@@ -190,7 +191,7 @@ function AnnotationCardView({
       ) : null}
       <AnnotationSourceLine annotation={annotation} sources={owners} showSource={showSource} />
       <AnnotationMoveStatus state={move} />
-      {transclusion.problemId === annotation.id ? (
+      {transclusion?.problemId === annotation.id ? (
         <p className="annotation-card-problem" role="alert">
           {transclusion.problem}
         </p>
@@ -381,6 +382,38 @@ function AnnotationColorChoice({
   );
 }
 
+function InsertIntoNoteButton({
+  annotation,
+  transclusion,
+}: {
+  readonly annotation: Annotation;
+  readonly transclusion: AnnotationTransclusionController;
+}): JSX.Element {
+  const { t } = useLingui();
+  const embedded = transclusion.isEmbedded(annotation);
+  return (
+    <button
+      type="button"
+      disabled={transclusion.busyId !== null || embedded}
+      title={
+        embedded
+          ? translate({ message: "Already included in the source note" })
+          : translate({ message: "Insert this annotation in the source note" })
+      }
+      onClick={(event) => {
+        event.stopPropagation();
+        transclusion.insert(annotation);
+      }}
+    >
+      {transclusion.busyId === annotation.id
+        ? t({ message: "Inserting…", context: "AnnotationCard interface" })
+        : embedded
+          ? translate({ message: "In source note" })
+          : translate({ message: "Insert into source note" })}
+    </button>
+  );
+}
+
 function AnnotationCardActions({
   annotation,
   transclusion,
@@ -394,7 +427,7 @@ function AnnotationCardActions({
   recolor,
 }: {
   readonly annotation: Annotation;
-  readonly transclusion: AnnotationTransclusionController;
+  readonly transclusion: AnnotationTransclusionController | undefined;
   readonly onEdit: (() => void) | null;
   readonly onOpen: () => void;
   readonly resume: boolean;
@@ -426,25 +459,9 @@ function AnnotationCardActions({
             ? t({ message: "Resume edits", context: "AnnotationCard interface" })
             : t({ message: "Edit", context: "AnnotationCard interface" })}
       </button>
-      <button
-        type="button"
-        disabled={transclusion.busyId !== null || transclusion.isEmbedded(annotation)}
-        title={
-          transclusion.isEmbedded(annotation)
-            ? translate({ message: "Already included in the source note" })
-            : translate({ message: "Insert this annotation in the source note" })
-        }
-        onClick={(event) => {
-          event.stopPropagation();
-          transclusion.insert(annotation);
-        }}
-      >
-        {transclusion.busyId === annotation.id
-          ? t({ message: "Inserting…", context: "AnnotationCard interface" })
-          : transclusion.isEmbedded(annotation)
-            ? translate({ message: "In source note" })
-            : translate({ message: "Insert into source note" })}
-      </button>
+      {transclusion ? (
+        <InsertIntoNoteButton annotation={annotation} transclusion={transclusion} />
+      ) : null}
       {hasPassageAnchor(annotation.target) ? (
         <button
           className="icon-button"

@@ -290,17 +290,6 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
         filter: { ...defaultLibraryViewConfiguration.filter, status: "reading" },
       },
     },
-    {
-      ...defaultLibraryView,
-      key: "preview/cards.md::visual-library",
-      path: "preview/cards.md",
-      revision: "preview-view-2",
-      viewId: "visual-library",
-      name: "Visual library",
-      writable: true,
-      owned: true,
-      configuration: { ...defaultLibraryViewConfiguration, presentation: "cards" },
-    },
   ];
 
   library(): Promise<ReaderLibrarySnapshot> {
@@ -336,16 +325,9 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
       owned: true,
       properties: [],
       configuration: request.configuration,
-      ...(request.annotations ? { annotations: request.annotations } : {}),
     };
     this.#views = [...this.#views.filter(({ key }) => key !== saved.key), saved];
     return Promise.resolve(saved);
-  }
-  #sourceAnnotationsView = false;
-  ensureSourceAnnotationsView(): Promise<{ readonly path: string; readonly created: boolean }> {
-    const created = !this.#sourceAnnotationsView;
-    this.#sourceAnnotationsView = true;
-    return Promise.resolve({ path: "views/annotations-for-this-source.md", created });
   }
   source(id: SourceId): Promise<Source | null> {
     return Promise.resolve(this.#sources.find((source) => source.id === id) ?? null);

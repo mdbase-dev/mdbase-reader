@@ -22,6 +22,8 @@ interface LibraryNavigatorProps {
   /** The library tab already shows what to continue, so the rail need not repeat it. */
   readonly hideRecent?: boolean;
   readonly onOpenView: (view: MdbaseLibraryView) => void;
+  /** Opens a view in a tab of its own, leaving the library tab in use as it is. */
+  readonly onOpenViewInTab?: (view: MdbaseLibraryView) => void;
   readonly onPreviewSource: (id: SourceId) => void;
   readonly onOpenSource: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
@@ -41,6 +43,7 @@ export function LibraryNavigator({
   addingSource,
   hideRecent = false,
   onOpenView,
+  onOpenViewInTab,
   onPreviewSource,
   onOpenSource,
   onOpenBeside,
@@ -67,6 +70,7 @@ export function LibraryNavigator({
           viewsLoading={viewsLoading}
           problem={problem}
           onOpenView={onOpenView}
+          {...(onOpenViewInTab ? { onOpenViewInTab } : {})}
           activeView={activeView}
         />
         {openSources.length > 0 ? (
@@ -95,11 +99,13 @@ function NavigatorViews({
   viewsLoading,
   problem,
   onOpenView,
+  onOpenViewInTab,
   activeView,
 }: Pick<
   LibraryNavigatorProps,
-  "views" | "viewsLoading" | "problem" | "onOpenView" | "activeView"
+  "views" | "viewsLoading" | "problem" | "onOpenView" | "onOpenViewInTab" | "activeView"
 >): JSX.Element {
+  const { t } = useLingui();
   return (
     <section className="navigator-view-section">
       {viewsLoading ? (
@@ -113,9 +119,23 @@ function NavigatorViews({
             key={view.key}
             type="button"
             aria-current={activeView === view.key ? "page" : undefined}
-            onClick={() => onOpenView(view)}
+            title={
+              onOpenViewInTab
+                ? t({ message: "Ctrl-click or middle-click opens in a new tab" })
+                : undefined
+            }
+            onClick={(event) =>
+              (event.ctrlKey || event.metaKey) && onOpenViewInTab
+                ? onOpenViewInTab(view)
+                : onOpenView(view)
+            }
+            onAuxClick={(event) => {
+              if (event.button === 1) {
+                onOpenViewInTab?.(view);
+              }
+            }}
           >
-            <ViewGlyph presentation={view.configuration.presentation} />
+            <ViewGlyph />
             <span>{view.name}</span>
           </button>
         ))}
@@ -156,15 +176,8 @@ function NavigatorEmptySources({
   );
 }
 
-function ViewGlyph({ presentation }: { readonly presentation: "table" | "cards" }): JSX.Element {
-  return presentation === "cards" ? (
-    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <rect x="2" y="2" width="5" height="5" />
-      <rect x="9" y="2" width="5" height="5" />
-      <rect x="2" y="9" width="5" height="5" />
-      <rect x="9" y="9" width="5" height="5" />
-    </svg>
-  ) : (
+function ViewGlyph(): JSX.Element {
+  return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
       <path d="M2 3h12M2 8h12M2 13h12M6 3v10" />
     </svg>

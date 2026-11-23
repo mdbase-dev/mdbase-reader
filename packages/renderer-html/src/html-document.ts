@@ -25,19 +25,14 @@ const blockedElements = [
 const unwrappedElements = ["form", "button"] as const;
 
 /**
- * Set on page text outside the article while a highlight or search result in it is shown:
+ * Set on page text outside the article while a highlight in it is shown:
  * `all` on the block holding it, `path` on the hidden elements around that block.
  */
 export const outsideArticleRevealedAttribute = "data-reader-revealed";
 
 const urlAttributes = ["href", "src", "poster", "action", "formaction", "xlink:href"] as const;
 
-/** Shared with background indexing: omit exactly the renderer's blocked content. */
-export function extractArchivedHtmlText(source: string): string {
-  return htmlDocumentText(parseHtmlDocument(source));
-}
-
-/** The article's text, for search: page text kept outside the article is left out. */
+/** The article's text: page text kept outside the article is left out. */
 export function htmlDocumentText(document: Document): string {
   if (!document.body.querySelector(`[${outsideArticleAttribute}]`)) {
     return document.body.textContent;
@@ -161,7 +156,6 @@ function readerStyle(document: Document): HTMLStyleElement {
     blockquote { margin-inline: 0; padding-left: 1.4rem; border-left: 2px solid #3ba5d8; color: color-mix(in srgb, currentColor 72%, transparent); }
     pre { overflow: auto; padding: 1rem; background: rgba(0,0,0,.06); }
     ::selection { background: var(--reader-selection); }
-    ::highlight(reader-search-passage) { background: Highlight; color: HighlightText; text-decoration: underline; }
     /* One highlight per palette colour, with light and dark washes (html-css-highlights.ts). */
     ${annotationHighlightCss()}
     mark[data-reader-annotation] { background: ${highlightPalette.yellow.light.wash}; color: inherit; }

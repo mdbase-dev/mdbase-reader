@@ -66,9 +66,8 @@ action, and one stylesheet section for each redesigned component.
 
 ## Reading workspace (third pass)
 
-- **Reading comes first.** Opening a document hides the Sources sidebar, and returning to a
-  library tab restores it, but only when Reader hid it (Display → _Sidebar while reading_
-  turns this off). **Maximize document** is a header button and `mod+.`; it expands the
+- **Reading comes first.** The Sources sidebar stays where the reader left it: nothing hides
+  it when a document opens, and there is no setting for that. **Maximize document** is a header button and `mod+.`; it expands the
   document pane without promising to hide application controls. Escape restores the panes.
   `mod+\` toggles the sidebar and `mod+shift+\` the
   Notes panel. A side panel alone in its group has no close button, and its pane menu appears
@@ -81,9 +80,11 @@ action, and one stylesheet section for each redesigned component.
 - **Text settings.** The `typography` surface capability (`ReadingTypography`: scale, measure,
   face) is implemented by the HTML renderer (an injected stylesheet) and the EPUB renderer
   (Readium preferences). PDFs keep their layout. The Display menu sets text size, line length
-  and typeface, stored with the other shell preferences. Its "Settings…" item opens the
-  Settings page, which repeats this device's choices and holds the collection's settings
-  (`docs/design/app-settings.md`).
+  and typeface, stored with the other shell preferences, and the theme: the reading options,
+  and only those (`DisplaySettings`). Its "Settings…" item opens the Settings page, which
+  holds this device's other choices (`DeviceSettings`: language, density, who owns an
+  annotation made inside a chapter, what selecting text does, the default highlight colour)
+  and the collection's settings (`docs/design/app-settings.md`). No option is in both.
 - **Highlights and cards.** Saved pages and EPUBs draw a margin marker beside each highlight,
   darker when it carries a note; clicking one selects its card. Both use `MarginMarkers`
   (`reading-surface`), which locates the quotation with `locateTextQuote`, places the bar beside
@@ -163,35 +164,21 @@ action, and one stylesheet section for each redesigned component.
   patches with its revision. `id`, `type`, `documents` and the whole `csl` and `reading`
   objects are not editable (`isEditableSourceField`); nested values inside them are.
 - **Annotations view.** The library's _Sources / Annotations_ switch lists every annotation in
-  the collection, with its passage, source, type, tags and place. Search covers quotes, notes,
-  source titles, creators and tags; the filter menu narrows by type, tag, and field conditions
-  on the annotation's source (the same conditions as the Sources view). Enter or double-click
-  opens the annotation in its document, reusing a tab already showing it; Ctrl/⌘+Enter opens it
-  beside. _Copy as Markdown_ copies the selection grouped by source, as blockquotes with a
-  wikilink back to each record. `AnnotationRepository.listAll` lists paths with a
-  contract query limited to `reader-annotation`, then reads each record with the bulk read
-  concurrency: semantic contract views reject `includeBody` and every field but `types`,
-  `timezone`, pagination, `frontmatterMode` and `contract`. Nothing is written from this view.
-- **Annotation columns.** The annotations table has the sources table's columns: headers sort
-  (Created, Source, Type), resize by drag or arrow keys, move, hide, and come back from the add
-  menu (`annotation-columns.ts`). Columns, widths and sort are remembered per view on this
-  device until saved (`use-layout-draft.ts`, shared with the sources table).
-- **Saved annotation views.** _Save as new view…_ writes an ordinary mdbase view record with
-  `query.types: [reader-annotation]` and `readerViewKind: annotations` in Reader's presentation
-  options (`mdbase-annotation-views.ts`). Conditions on the source are written through the
-  annotation's `source` link, e.g. `source.asFile() != null && source.asFile().course…`, using
-  the links profile's `asFile()`; sorting by source orders by a `source_title` projection. So
-  Obsidian, the CLI and agents run the same view. Opening a saved view runs it through mdbase
-  (`executeAnnotationView`) until its filter changes, then Reader filters locally; if mdbase
-  cannot run it, Reader filters locally and says so. On the 1,486-source test collection, 13
-  filters (scalar, list, nested, hyphenated and numeric fields, `is-not`, empty, and type with a
-  source condition) selected identical annotations locally and in mdbase.
-- **"Annotations for this source".** The annotations view options can add one view record whose
-  named view binds `this` to a `reader-source` (`on_missing: error`) and selects
-  `source.asFile().file.path == this.file.path`. It is for other tools, where it runs against a
-  source note; Reader does not list it as a library view.
+  the collection in the same list the Notes panel shows for one source (`AnnotationList` with
+  `collection`, mounted by `CollectionAnnotations.tsx`): the same cards, search and Filter menu,
+  with each card naming its source and the Source filter listing the sources that have
+  annotations. Search also covers source titles and creators; document order groups by source
+  title. Clicking a card opens the annotation in its document. _Copy as Markdown_, at the end of
+  the Filter menu in both places, copies the listed annotations grouped by source, as
+  blockquotes with a wikilink back to each record. `AnnotationRepository.listAll` lists paths
+  with a contract query limited to `reader-annotation`, then reads each record with the bulk
+  read concurrency: semantic contract views reject `includeBody` and every field but `types`,
+  `timezone`, pagination, `frontmatterMode` and `contract`. There is no annotations table, no
+  saved annotation views and no "Annotations for this source" view record; view records an
+  earlier build wrote with `readerViewKind: annotations` are not listed as library views
+  (`isReaderSourcesView`).
 - TanStack Table v9 is used headlessly for column sizing and resizing only
-  (`use-table-columns.ts`, shared by both tables; `TableHeadRow.tsx` renders either header).
+  (`use-table-columns.ts`; `TableHeadRow.tsx` renders the header).
   Filtering and sorting remain Reader's own (`applyLibraryViewConfiguration`,
   `sortAnnotationEntries`), matching each saved view's `order_by`.
 
@@ -224,14 +211,13 @@ buttons, selects and inputs now inherit the interface font.
   annotation filter menu).
 
 - Third pass: `READER_AUDIT_READING_ONLY=1 pnpm --filter @mdbase-reader/app test:browser` runs
-  `scripts/audit-reading-workspace.mjs` (sidebar hiding and restoring, typography, reading
-  mode and panel shortcuts from inside the page, margin markers, annotation counts). The other
-  audits pin _Sidebar while reading_ to _Keep open_, because they test docking with the
-  sidebar present.
+  `scripts/audit-reading-workspace.mjs` (the Sources sidebar staying until toggled,
+  typography, reading mode and panel shortcuts from inside the page, margin markers,
+  annotation counts).
 
 - `pnpm --filter @mdbase-reader/app test:a11y` runs axe-core over the preview's library, bulk
   selection, add-column menu, reading view with Notes, command palette and phone library, and
-  fails on any violation except Dockview's unnamed inactive pane region (`landmark-unique`).
+  fails on any violation except an unnamed inactive pane region (`landmark-unique`).
   The pass that added it fixed: `aria-controls` pointing at an unmounted panel, two low-contrast
   labels, `role="group"` on annotation `<article>`s, and a close button nested in each tab
   (tabs now close by Delete, their context menu or a pointer-only icon).

@@ -12,10 +12,10 @@ import {
   workspaceTabSourceId,
 } from "./source-workspace-layout.js";
 
-it("keeps source identity distinct from a Dockview session and group identity", () => {
+it("keeps source identity distinct from a session and pane identity", () => {
   const source = sourceId("source-one");
   const tab = { ...createWorkspaceTab(source), id: "reader:session:one" };
-  const pane = createPane("arbitrary-dockview-group", tab);
+  const pane = createPane("arbitrary-pane", tab);
   const layout = { ...createSourceWorkspaceLayout(null), panes: [pane], focusedPaneId: pane.id };
   expect(focusedPane(layout)).toBe(pane);
   expect(activeTab(pane)).toBe(tab);
@@ -34,7 +34,7 @@ it("lists each source once even when multiple independent sessions are open", ()
   expect(sourceIdsInWorkspace(layout)).toEqual([source]);
   expect(workspaceTabSourceId(createLibraryWorkspaceTab())).toBeNull();
 });
-it("provides a safe empty projection while Dockview initializes or all panels close", () => {
+it("provides a safe empty projection while the workspace starts or all panels close", () => {
   const layout = createSourceWorkspaceLayout(null);
   expect(activeTab(focusedPane(layout))).toBeNull();
   expect(sourceIdsInWorkspace(layout)).toEqual([]);

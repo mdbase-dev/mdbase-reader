@@ -76,7 +76,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   const pane = (id) => page.locator(`[data-session-id="${id}"]`);
   // A document's actions sit in the tab strip of the pane that shows it.
   const documentActions = (id) =>
-    page.locator(`.dv-groupview:has(.reader-dock-tab[data-panel-id="${id}"]) .dock-pane-actions`);
+    page.locator(`.mp-stack:has(.reader-dock-tab[data-panel-id="${id}"]) .dock-pane-actions`);
   const idOf = (editor) =>
     editor.evaluate((element) => element.closest("[data-session-id]").dataset.sessionId);
   const duplicate = async (id) => {
@@ -117,7 +117,7 @@ export async function auditSharedEditing(page, { screenshot, blockWrites, measur
   await expect(pane(first).getByText("Saved locally", { exact: true })).toBeVisible();
   const dialogs = [];
   page.on("dialog", (dialog) => dialogs.push(dialog.message()));
-  await tab(first).locator(".dv-default-tab-action").click();
+  await tab(first).locator(".reader-tab-close").click();
   await expect(notes).toHaveCount(1);
   expect(dialogs).toEqual([]);
   await expect(notes).toHaveText("[test] Shared offline recovery");

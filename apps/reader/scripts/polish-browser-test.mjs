@@ -165,7 +165,7 @@ async function desktopPanes(page, output, name, reducedMotion) {
   console.log(`${name}: resized`);
   await expect.poll(async () => (await inspector.boundingBox()).width).toBe(365);
   const widths = () =>
-    page.locator(".dv-groupview-edge").evaluateAll((elements) =>
+    page.locator(".mp-stack:has(.reader-dock-tab.is-side)").evaluateAll((elements) =>
       elements.map((element) => ({
         name: element.getAttribute("aria-label"),
         width: element.getBoundingClientRect().width,
@@ -178,7 +178,7 @@ async function desktopPanes(page, output, name, reducedMotion) {
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect.poll(widths).toEqual(before);
   console.log(`${name}: desktop layout restored`);
-  await inspector.getByRole("tab", { name: "Citation", exact: true }).click();
+  await page.getByRole("tab", { name: "Citation", exact: true }).click();
   await inspector.getByRole("button", { name: "Fix details", exact: true }).click();
   console.log(`${name}: citation edit`);
   const bounds = await inspector.boundingBox();

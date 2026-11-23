@@ -26,8 +26,6 @@ function settings(onOpenSettings?: () => void): React.JSX.Element {
     <DisplaySettings
       theme="system"
       onChangeTheme={() => undefined}
-      density="comfortable"
-      sidebarWhileReading="hide"
       {...(onOpenSettings ? { onOpenSettings } : {})}
     />
   );

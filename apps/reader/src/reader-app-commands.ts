@@ -31,9 +31,14 @@ export function libraryCommands(input: ReaderCommandInput): readonly ReaderComma
       },
     },
     {
-      id: "export-bibliography",
-      label: translate({ message: "Export bibliography" }),
+      id: "export-citations",
+      label: translate({ message: "Export citations" }),
+      detail: translate({
+        message: "The selected sources, or the library view in front",
+        context: "Reader command detail",
+      }),
       group: "Library",
+      keywords: "bibliography csl json",
       run: input.bibliographyExport.run,
     },
   ];
@@ -60,7 +65,7 @@ export function displayCommands(input: ReaderCommandInput): readonly ReaderComma
       id: "settings",
       label: translate({ message: "Settings" }),
       group: "Display",
-      keywords: "preferences text display typography language appearance",
+      keywords: "preferences language density highlight colours file names connection",
       run: input.openSettings,
     },
     ...themes,

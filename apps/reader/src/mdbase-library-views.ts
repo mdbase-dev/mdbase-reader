@@ -22,13 +22,11 @@ import {
   type FieldShape,
 } from "./library-conditions.js";
 
-import type { AnnotationViewConfiguration } from "./mdbase-annotation-views.js";
 import type { JsonObject } from "@mdbase-reader/connect";
 
 export { columnLabel };
 export type { LibraryColumn };
 
-export type LibraryPresentation = "table" | "cards";
 export type LibrarySortField =
   "title" | "creator" | "published" | "status" | "saved" | "opened" | PropertyLibraryColumn;
 export type LibrarySortDirection = "asc" | "desc";
@@ -43,7 +41,6 @@ export interface LibraryViewFilter {
 }
 
 export interface LibraryViewConfiguration {
-  readonly presentation: LibraryPresentation;
   readonly columns: readonly LibraryColumn[];
   /** Pixel widths by column, for columns the reader has resized. */
   readonly columnWidths: Readonly<Record<string, number>>;
@@ -62,8 +59,6 @@ export interface MdbaseLibraryView {
   readonly owned: boolean;
   readonly properties: readonly { readonly key: string; readonly label?: string }[];
   readonly configuration: LibraryViewConfiguration;
-  /** Present when the view lists annotations rather than sources. */
-  readonly annotations?: AnnotationViewConfiguration;
 }
 
 export interface ExecutedLibraryView {
@@ -78,12 +73,9 @@ export interface LibraryViewSaveRequest {
   /** Whether each condition's field holds lists, which decides its CEL; default scalar. */
   readonly fieldShapes?: Readonly<Record<string, FieldShape>>;
   readonly existing?: MdbaseLibraryView;
-  /** Saves an annotations view instead; its source conditions take their shapes from `fieldShapes`. */
-  readonly annotations?: AnnotationViewConfiguration;
 }
 
 export const defaultLibraryViewConfiguration: LibraryViewConfiguration = {
-  presentation: "table",
   columns: ["title", "published", "annotations", "opened", "status"],
   columnWidths: {},
   sortField: "title",
@@ -116,8 +108,20 @@ export function parseLibraryViewKey(
   return separator > 0 ? { path: key.slice(0, separator), viewId: key.slice(separator + 2) } : null;
 }
 
+/**
+ * Whether a view is one of Reader's own views of sources. Views are shared across apps, so
+ * only presentations Reader marked count. Earlier versions also saved views of annotations
+ * under the same mark; those name another kind and are left alone.
+ */
+export function isReaderSourcesView(presentation: unknown): boolean {
+  const options = objectValue(objectValue(presentation)["options"]);
+  const kind = options["readerViewKind"];
+  return (
+    options["readerViewVersion"] === 1 && kind !== "annotations" && kind !== "source-annotations"
+  );
+}
+
 export function libraryViewConfiguration(presentation: unknown): LibraryViewConfiguration {
-  const type = objectValue(presentation)["type"];
   const options = objectValue(objectValue(presentation)["options"]);
   const columns = Array.isArray(options["columns"])
     ? options["columns"].filter(isLibraryColumn)
@@ -128,7 +132,6 @@ export function libraryViewConfiguration(presentation: unknown): LibraryViewConf
   const sortDirection = options["sortDirection"] === "asc" ? "asc" : "desc";
   const filter = objectValue(options["filter"]);
   return {
-    presentation: type === "cards" ? "cards" : "table",
     columns: columns.length > 0 ? columns : defaultLibraryViewConfiguration.columns,
     columnWidths: parseColumnWidths(options["columnWidths"]),
     sortField,
@@ -168,8 +171,7 @@ export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
         select: storedColumns(configuration.columns).map(columnSelection),
         order_by: [orderBy(configuration.sortField, configuration.sortDirection)],
         presentation: {
-          type: configuration.presentation,
-          fallback: "table",
+          type: "table",
           mappings: {
             title: "title",
             creator: "authors",

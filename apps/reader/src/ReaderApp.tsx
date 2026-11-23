@@ -10,9 +10,6 @@ import {
   describeConnectionProblem,
   libraryLoadFallback,
 } from "./connection-recovery.js";
-import { inspectorPanelId } from "./dockview-panel-ids.js";
-import { panelTab } from "./dockview-workspace-state.js";
-import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
   useDocumentSurfaceTiming,
   useReaderAnnotationComposer as useComposer,
@@ -85,18 +82,16 @@ export function ReaderApp({
     return <ReaderBoot />;
   }
   return (
-    <LibraryDocumentIndex library={workspace.library.value} gateway={gateway}>
-      <OpenedReaderApp
-        gateway={gateway}
-        initialSourceId={initialSourceId}
-        initialAnnotation={initialAnnotation}
-        workspace={workspace}
-        library={workspace.library.value}
-        {...(renderDocument ? { renderDocument } : {})}
-        {...(pickSourceFile ? { pickSourceFile } : {})}
-        {...(saveFile ? { saveFile } : {})}
-      />
-    </LibraryDocumentIndex>
+    <OpenedReaderApp
+      gateway={gateway}
+      initialSourceId={initialSourceId}
+      initialAnnotation={initialAnnotation}
+      workspace={workspace}
+      library={workspace.library.value}
+      {...(renderDocument ? { renderDocument } : {})}
+      {...(pickSourceFile ? { pickSourceFile } : {})}
+      {...(saveFile ? { saveFile } : {})}
+    />
   );
 }
 
@@ -165,17 +160,7 @@ function OpenedReaderApp({
     citationSources: library.sources,
     saveFile,
   });
-  const sourceRemoval = useSourceRemoval(workspace, (id) => {
-    const activeTab = panelTab(sourceWorkspace.dock.api?.activePanel);
-    if (
-      activeTab?.kind === "source" &&
-      activeTab.sourceId === id &&
-      sourceWorkspace.dock.isSideVisible(inspectorPanelId)
-    ) {
-      sourceWorkspace.dock.toggleSidebar("right");
-    }
-    sourceWorkspace.close(id);
-  });
+  const sourceRemoval = useSourceRemoval(workspace, sourceWorkspace.close);
   const sourceStatus = useSourceStatus(gateway, workspace.reconcileSource);
 
   useReaderShortcuts({

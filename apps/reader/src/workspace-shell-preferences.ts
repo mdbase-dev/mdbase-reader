@@ -1,31 +1,13 @@
 import { defaultReadingTypography, type ReadingTypography } from "@mdbase-reader/reading-surface";
 
-export type InspectorDock = "right" | "bottom";
-export type LibraryPresentation = "compact" | "bibliography" | "grid";
-
 export interface WorkspaceShellPreferences {
   readonly density: "comfortable" | "compact";
-  readonly libraryWidth: number;
-  readonly inspectorWidth: number;
-  readonly inspectorHeight: number;
-  readonly inspectorDock: InspectorDock;
-  readonly inspectorTab: "annotations" | "note" | "citation";
-  readonly libraryPresentation: LibraryPresentation;
   readonly typography: ReadingTypography;
-  /** Hide the Sources sidebar while a document has focus, and bring it back for the library. */
-  readonly sidebarWhileReading: "hide" | "keep";
 }
 
 const defaults: WorkspaceShellPreferences = {
   density: "comfortable",
-  libraryWidth: 272,
-  inspectorWidth: 340,
-  inspectorHeight: 320,
-  inspectorDock: "right",
-  inspectorTab: "annotations",
-  libraryPresentation: "compact",
   typography: defaultReadingTypography,
-  sidebarWhileReading: "hide",
 };
 
 export function defaultShellPreferences(): WorkspaceShellPreferences {
@@ -39,20 +21,7 @@ export function parseShellPreferences(value: unknown): WorkspaceShellPreferences
   const candidate = value as Partial<WorkspaceShellPreferences>;
   return {
     density: candidate.density === "compact" ? "compact" : "comfortable",
-    libraryWidth: clamp(candidate.libraryWidth, 220, 420, defaults.libraryWidth),
-    inspectorWidth: clamp(candidate.inspectorWidth, 280, 560, defaults.inspectorWidth),
-    inspectorHeight: clamp(candidate.inspectorHeight, 220, 520, defaults.inspectorHeight),
-    inspectorDock: candidate.inspectorDock === "bottom" ? "bottom" : "right",
-    inspectorTab: ["annotations", "note", "citation"].includes(candidate.inspectorTab ?? "")
-      ? (candidate.inspectorTab ?? defaults.inspectorTab)
-      : defaults.inspectorTab,
-    libraryPresentation: ["compact", "bibliography", "grid"].includes(
-      candidate.libraryPresentation ?? "",
-    )
-      ? (candidate.libraryPresentation ?? defaults.libraryPresentation)
-      : defaults.libraryPresentation,
     typography: parseTypography(candidate.typography),
-    sidebarWhileReading: candidate.sidebarWhileReading === "keep" ? "keep" : "hide",
   };
 }
 
@@ -70,19 +39,6 @@ function parseTypography(value: unknown): ReadingTypography {
         ? candidate.measure
         : "standard",
     face: candidate.face === "sans" ? "sans" : "serif",
-  };
-}
-
-export function snapPanelSize(value: number, points: readonly number[], threshold = 14): number {
-  return points.find((point) => Math.abs(point - value) <= threshold) ?? value;
-}
-
-export function workspaceShellStyle(
-  preferences: WorkspaceShellPreferences,
-): Record<string, string> {
-  return {
-    "--reader-library-width": `${String(preferences.libraryWidth)}px`,
-    "--reader-inspector-width": `${String(preferences.inspectorWidth)}px`,
   };
 }
 

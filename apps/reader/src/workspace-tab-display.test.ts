@@ -1,10 +1,10 @@
 import { readerI18n } from "@mdbase-reader/i18n";
 import { describe, expect, it } from "vitest";
 
-import { navigatorPanelId, inspectorPanelId } from "./dockview-panel-ids.js";
-import { sidePanelTitle } from "./dockview-side-panels.js";
+import { navigatorPanel, notesPanel } from "./panel-workspace-state.js";
 import { createLibraryWorkspaceTab, createWorkspaceTab } from "./source-workspace-layout.js";
 import {
+  sidePanelTitle,
   workspaceTabAccessibleTitle,
   workspaceTabLabel,
   workspaceTabTitle,
@@ -29,11 +29,11 @@ describe("workspace tab display", () => {
     try {
       await readerI18n.selectLocale("de");
       expect(workspaceTabAccessibleTitle(library, null)).toBe("Alle Quellen");
-      expect(sidePanelTitle(navigatorPanelId)).toBe("Quellen");
-      expect(sidePanelTitle(inspectorPanelId)).toBe("Notizen");
+      expect(sidePanelTitle(navigatorPanel())).toBe("Quellen");
+      expect(sidePanelTitle(notesPanel("note"))).toBe("Literaturnotiz");
       await readerI18n.selectLocale("ja");
       expect(workspaceTabAccessibleTitle(library, null)).toBe("すべての資料");
-      expect(sidePanelTitle(navigatorPanelId)).toBe("資料");
+      expect(sidePanelTitle(navigatorPanel())).toBe("資料");
       expect(workspaceTabAccessibleTitle(saved, null)).toBe("My reading");
       expect(workspaceTabTitle(createWorkspaceTab(source.id), source)).toBe(source.title);
     } finally {

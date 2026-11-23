@@ -2,7 +2,7 @@ import { t as translate } from "@lingui/core/macro";
 
 import { isEpub, isHtml, isPdf } from "./document-media.js";
 
-import type { Annotation, DocumentDescriptor, SearchDestination } from "@mdbase-reader/core";
+import type { Annotation } from "@mdbase-reader/core";
 
 /** Stored locators may be old file links, URLs or renderer addresses, not human labels. */
 export function humanPassageLabel(value: string | undefined): string | undefined {
@@ -72,18 +72,4 @@ function documentFormatLabel(mediaType: string, file: string): string | undefine
     return "EPUB";
   }
   return isHtml(mediaType, file) ? translate({ message: "Web page" }) : undefined;
-}
-
-export function documentPassageLabel(
-  document: DocumentDescriptor | undefined,
-  destination: SearchDestination | undefined,
-  file: string | undefined,
-): string {
-  const path = file ?? document?.file ?? "";
-  const mediaType = document?.mediaType ?? "";
-  const format = documentFormatLabel(mediaType, path) ?? translate`Document`;
-  const title = humanPassageLabel(document?.title) ?? format;
-  return destination?.location.kind === "pdf"
-    ? translate`${title} · p. ${String(destination.location.pageIndex + 1)}`
-    : title;
 }

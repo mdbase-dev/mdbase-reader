@@ -10,7 +10,6 @@ function runtimeFixture(): {
   readonly runtime: ReadiumRuntime;
   readonly setAnnotations: ReturnType<typeof vi.fn>;
   readonly setActiveAnnotation: ReturnType<typeof vi.fn>;
-  readonly extractText: ReturnType<typeof vi.fn>;
   emitLocation(locator: Readonly<Record<string, unknown>>): void;
   emitSelection(selection: TextSelectionDraft): void;
   emitActivation(id: ReturnType<typeof annotationId>): void;
@@ -20,14 +19,12 @@ function runtimeFixture(): {
   let activationListener: ((id: ReturnType<typeof annotationId>) => void) | undefined;
   const setAnnotations = vi.fn();
   const setActiveAnnotation = vi.fn();
-  const extractText = vi.fn().mockResolvedValue("Extracted EPUB text");
   return {
     runtime: {
       currentLocator: () => ({ href: "chapter-1.xhtml", locations: { progression: 0.1 } }),
       goTo: (locator) => Promise.resolve(locator["href"] !== "missing.xhtml"),
       clearSelection: vi.fn(),
       setTypography: () => Promise.resolve(),
-      extractText,
       onLocationChanged: (listener) => {
         locationListener = listener;
         return () => {
@@ -52,7 +49,6 @@ function runtimeFixture(): {
     },
     setAnnotations,
     setActiveAnnotation,
-    extractText,
     emitLocation: (locator) => locationListener?.(locator),
     emitSelection: (selection) => selectionListener?.(selection),
     emitActivation: (id) => activationListener?.(id),
@@ -156,17 +152,6 @@ describe("ReadiumEpubSurface", () => {
     const surface = new ReadiumEpubSurface(document, fixture.runtime);
 
     await expect(surface.goTo({ kind: "pdf", pageIndex: 1 })).resolves.toBe(false);
-  });
-
-  it("exposes publication text extraction through the surface capability", async () => {
-    const fixture = runtimeFixture();
-    const surface = new ReadiumEpubSurface(document, fixture.runtime);
-    const controller = new AbortController();
-
-    await expect(
-      surface.capabilities.textExtraction?.extractText({ signal: controller.signal }),
-    ).resolves.toBe("Extracted EPUB text");
-    expect(fixture.extractText).toHaveBeenCalledWith({ signal: controller.signal });
   });
 
   it("passes only exact-document annotations to Readium decorations", async () => {

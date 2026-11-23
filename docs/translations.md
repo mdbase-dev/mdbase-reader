@@ -6,7 +6,7 @@ Reader uses Lingui 6.9 with generated IDs from English source and semantic conte
 
 Supported languages: English, French, German, Spanish, Japanese, Korean, Brazilian Portuguese (`pt`), Russian, Simplified Chinese (`zh`) and Italian (`it`, endonym “Italiano”). The TaskNotes plugin explicitly identifies its Portuguese variant as Brazilian Portuguese.
 
-The **Display settings** menu contains the language picker. The default is the best supported browser/OS locale, otherwise English. A successful explicit selection persists. English is synchronous with no fetch; target catalogues are lazy chunks from Reader's own deployment. A failed chunk leaves the current language and previous persisted choice intact. The real provider and non-React helpers share one injected Lingui singleton; `html.lang` follows activation. This does not imply collection access works offline.
+The Settings page's **This device** section contains the language picker. The default is the best supported browser/OS locale, otherwise English. A successful explicit selection persists. English is synchronous with no fetch; target catalogues are lazy chunks from Reader's own deployment. A failed chunk leaves the current language and previous persisted choice intact. The real provider and non-React helpers share one injected Lingui singleton; `html.lang` follows activation. This does not imply collection access works offline.
 
 ## Local authoring and checks
 
@@ -45,13 +45,13 @@ Publisher tests compare every installed UI member against `scripts/tests/fixture
 
 npm installation is **not native publisher/release qualification**: the live native guard still requires an independently approved file intake. Historical approved UI archives and protected hashes remain unchanged; tests use them only in disposable historical fixtures. No publication or deployment is authorized by this dependency swap.
 
-Italian also appears in the separate citation-output locale picker. The citation-js bundled locale subset has no Italian data, so `src/locales/csl-it-IT.xml` supplies pinned, attributed CSL data (see its adjacent README), loaded lazily from Reader’s own deployment. Citation output language remains an explicit choice, separate from interface language; source metadata is never rewritten.
+Italian also appears in the separate citation-output locale picker. The citation-js bundled locale subset has no Italian data, so `packages/ui/src/locales/csl-it-IT.xml` supplies pinned, attributed CSL data (see its adjacent README), loaded lazily from Reader’s own deployment. Citation output language remains an explicit choice, separate from interface language; source metadata is never rewritten.
 
 All shells were audited: web and Capacitor share the renderer’s ten-locale runtime; Electron validates through the kit and copies every compiled locale; extension pages/worker share kit validation and the Chrome map emits `it` assets. Zotero exporter has no locale list or locale-negotiation system; its standalone UI remains outside this catalogue scope.
 
 ## Reviewed identical terms
 
-`allowIdentical` lists only reviewed message IDs: CSL/DOI, PDF/EPUB and Web format labels, the Tab key, GiB units, placeholder-only punctuation, Spanish “No”, technical `citekey` labels, and legitimate German/Portuguese cognates (for example Format, Status, Software, Layout, German Organisation and Portuguese Volume). German “in” and “Tag(s)” are deliberate contextual translations, not placeholders. Italian additionally retains reviewed Circa, FILE, Password, Post, Software, Standard, Tag, Volume, No and the preposition “in”; its 27 allowlisted IDs contain only Italian words, established loanwords, technical terms and argument-only punctuation. These are legitimate invariant terms, not fallback prose. No empty target or arbitrary English sentence is permitted by the check.
+`allowIdentical` lists only reviewed message IDs: CSL/DOI, PDF/EPUB and Web format labels, the Tab key, GiB units, placeholder-only punctuation, Spanish “No”, technical `citekey` labels, and legitimate German/Portuguese cognates (for example Format, Status, Software, Layout, German Organisation and Portuguese Volume). German “in” and “Tag(s)” are deliberate contextual translations, not placeholders. French “# source / # sources” (the count beside matches in notes) is the French word, not a placeholder. Italian additionally retains reviewed Circa, FILE, Password, Post, Software, Standard, Tag, Volume, No and the preposition “in”; its 27 allowlisted IDs contain only Italian words, established loanwords, technical terms and argument-only punctuation. These are legitimate invariant terms, not fallback prose. No empty target or arbitrary English sentence is permitted by the check.
 
 ## Italian review
 

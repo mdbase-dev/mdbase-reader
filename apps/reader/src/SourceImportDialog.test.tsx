@@ -10,10 +10,7 @@ import type { SourceImportProgress } from "@mdbase-reader/core";
 it("reads an HTML title on the first form render and focuses a plain unknown-outcome error", () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   const host = document.createElement("div");
-  const live = document.createElement("div");
-  live.className = "dv-live-region";
-  live.textContent = "Opening stale source";
-  document.body.append(host, live);
+  document.body.append(host);
   const root = createRoot(host);
   const file = {
     name: "download.html",
@@ -50,7 +47,6 @@ it("reads an HTML title on the first form render and focuses a plain unknown-out
       "Couldn’t confirm this file was added",
     );
     expect(host.querySelector('[role="alert"] details')?.textContent).toContain("outcome_unknown");
-    expect(live.textContent).toBe("");
     expect(host.querySelector('[role="alert"]')?.textContent).not.toContain("Reconnect");
     render("the hosted boundary outcome is unknown", true);
     expect(host.querySelector('[role="alert"] > p')?.textContent).toContain(
@@ -69,7 +65,6 @@ it("reads an HTML title on the first form render and focuses a plain unknown-out
   } finally {
     act(() => root.unmount());
     host.remove();
-    live.remove();
     vi.unstubAllGlobals();
   }
 });

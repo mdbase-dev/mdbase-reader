@@ -1,11 +1,10 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 
-import { panelTab } from "./dockview-workspace-state.js";
 import { CitationIcon, HighlightIcon, NoteIcon, ReadingModeIcon } from "./icons.js";
 import { SelectionActionBar } from "./SelectionToolbar.js";
 
-import type { ReaderDockWorkspace } from "./dockview-workspace.js";
+import type { ReaderPanelWorkspace } from "./panel-workspace.js";
 import type { SourceWorkspaceView } from "./source-workspace-layout.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
@@ -52,14 +51,13 @@ export function MobileSourceViews({
   sources,
   composer,
 }: {
-  readonly dock: ReaderDockWorkspace;
+  readonly dock: ReaderPanelWorkspace;
   readonly workspace: SourceWorkspaceController;
   readonly sources: readonly SourceSummary[];
   readonly composer: AnnotationComposerController;
 }): JSX.Element | null {
   const { t } = useLingui();
-  const active = dock.mobile ? dock.api?.activePanel : undefined;
-  const tab = active ? panelTab(active) : undefined;
+  const tab = dock.mobile ? dock.activeTab() : null;
   if (tab?.kind !== "source") {
     return null;
   }

@@ -19,7 +19,7 @@ export function createTextQuoteLocator(root: Element): (quote: TextQuote) => Ran
   };
 }
 
-/** Strict search uses the same DOM range machinery without fuzzy annotation reanchoring. */
+/** The same DOM range machinery, without fuzzy annotation reanchoring. */
 export function locateSearchQuote(root: Element, quote: TextQuote): Range | null {
   const index = textIndex(root);
   const match = resolveSearchQuote(index.text, quote);

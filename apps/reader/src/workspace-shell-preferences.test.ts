@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { parseShellPreferences, snapPanelSize } from "./workspace-shell-preferences.js";
+import { parseShellPreferences } from "./workspace-shell-preferences.js";
 
 describe("workspace shell preferences", () => {
-  it("clamps stored dimensions and validates dock choices", () => {
+  it("keeps only what Reader still stores, and clamps the text scale", () => {
     expect(
-      parseShellPreferences({ libraryWidth: 900, inspectorHeight: 20, inspectorDock: "left" }),
-    ).toMatchObject({ libraryWidth: 420, inspectorHeight: 220, inspectorDock: "right" });
-  });
-
-  it("snaps near common panel sizes without making free resize sticky", () => {
-    expect(snapPanelSize(281, [272, 320])).toBe(272);
-    expect(snapPanelSize(294, [272, 320])).toBe(294);
+      parseShellPreferences({
+        density: "compact",
+        sidebarWhileReading: "keep",
+        libraryWidth: 900,
+        typography: { scale: 9, measure: "wide", face: "sans" },
+      }),
+    ).toEqual({
+      density: "compact",
+      typography: { scale: 1.6, measure: "wide", face: "sans" },
+    });
   });
 });

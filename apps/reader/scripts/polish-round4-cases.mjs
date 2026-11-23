@@ -27,9 +27,9 @@ export async function retainedCitation(page) {
   await editor.evaluate((element) => {
     element.dataset.retentionProbe = "retained";
   });
-  await inspector.getByRole("tab", { name: /^Annotations/u }).click();
+  await page.getByRole("tab", { name: /^Annotations/u }).click();
   await expect(editor).toBeHidden();
-  await inspector.getByRole("tab", { name: "Citation", exact: true }).click();
+  await page.getByRole("tab", { name: "Citation", exact: true }).click();
   await expect(editor).toHaveAttribute("data-retention-probe", "retained");
   await expect(editor).toBeVisible();
 }

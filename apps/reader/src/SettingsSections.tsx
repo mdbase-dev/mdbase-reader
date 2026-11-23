@@ -5,7 +5,7 @@ import { highlightPalette } from "@mdbase-reader/core";
 import { useCallback, useId, useState, type JSX } from "react";
 
 import { BrowserExtensionLink } from "./BrowserExtensionHelp.js";
-import { DisplayChoice, DisplaySettings } from "./DisplaySettings.js";
+import { DeviceSettings, DisplayChoice } from "./DisplaySettings.js";
 import { FileNameSettings } from "./FileNameSettings.js";
 import {
   setLastHighlightColor,
@@ -21,7 +21,7 @@ import type { ReaderSettingsStore } from "@mdbase-reader/connect";
 import type { Annotation, SourceSummary } from "@mdbase-reader/core";
 
 export interface SettingsSectionsProps {
-  readonly display: Parameters<typeof DisplaySettings>[0];
+  readonly device: Parameters<typeof DeviceSettings>[0];
   readonly gateway: ReaderWorkspaceGateway;
   readonly library: readonly SourceSummary[];
   readonly openSources: readonly SourceSummary[];
@@ -37,7 +37,7 @@ const previewCount = 3;
 
 /** The Settings page's sections: this device, this collection, and the connection. */
 export function SettingsSections({
-  display,
+  device,
   gateway,
   library,
   openSources,
@@ -68,7 +68,7 @@ export function SettingsSections({
           <Trans>These apply only to Reader in this browser.</Trans>
         </p>
         <div className="settings-device">
-          <DisplaySettings {...display} />
+          <DeviceSettings {...device} />
           <DefaultHighlightColor />
         </div>
       </section>

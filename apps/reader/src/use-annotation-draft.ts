@@ -2,7 +2,7 @@ import { useEffect, useSyncExternalStore } from "react";
 
 import { hasUnsavedAnnotationEdits, subscribeAnnotationEdits } from "./unsaved-annotation-edits.js";
 
-import type { ReaderDockWorkspace } from "./dockview-workspace.js";
+import type { ReaderPanelWorkspace } from "./panel-workspace.js";
 import type { WorkspaceTab } from "./source-workspace-layout.js";
 import type { SourceSummary } from "@mdbase-reader/core";
 
@@ -11,7 +11,7 @@ export function useAnnotationDraftDirty(collection: string, source: string): boo
   return useSyncExternalStore(subscribeAnnotationEdits, dirty, dirty);
 }
 export function useDocumentAnnotationDirty(
-  dock: ReaderDockWorkspace,
+  dock: ReaderPanelWorkspace,
   tab: WorkspaceTab,
   source: SourceSummary | null | undefined,
 ): void {

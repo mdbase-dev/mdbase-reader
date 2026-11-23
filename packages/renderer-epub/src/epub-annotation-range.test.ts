@@ -50,7 +50,6 @@ function fixture(): {
     currentLocator: () => ({ href: "OPS/z.xhtml" }),
     goTo,
     clearSelection: () => undefined,
-    extractText: () => Promise.resolve(""),
     onLocationChanged: () => () => undefined,
     onTextSelected: () => () => undefined,
     onAnnotationActivated: () => () => undefined,

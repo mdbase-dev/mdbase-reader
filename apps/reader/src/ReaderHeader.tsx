@@ -8,9 +8,15 @@ import { FeedbackButton } from "@mdbase-dev/ui/feedback";
 import { useMdbaseMarkBusy } from "@mdbase-dev/ui/mark-activity";
 import { useId } from "react";
 
-import { CollectionPicker } from "./CollectionPicker.js";
 import { DisplayMenu } from "./DisplayMenu.js";
-import { BackIcon, LeftPaneIcon, ReadingModeIcon, RightPaneIcon, SearchIcon } from "./icons.js";
+import {
+  BackIcon,
+  CollectionIcon,
+  LeftPaneIcon,
+  ReadingModeIcon,
+  RightPaneIcon,
+  SearchIcon,
+} from "./icons.js";
 import { ReaderCollectionSwitcher, useReaderMdbase } from "./reader-collections.js";
 import { ReaderSaveStatus } from "./ReaderSaveStatus.js";
 
@@ -31,13 +37,9 @@ export interface ReaderHeaderSourceBar {
 interface ReaderHeaderProps {
   readonly typography?: ReadingTypography;
   readonly onChangeTypography?: (typography: ReadingTypography) => void;
-  readonly sidebarWhileReading?: "hide" | "keep";
-  readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
   readonly readingMode?: boolean;
   readonly readingModeAvailable?: boolean;
   readonly onToggleReadingMode?: () => void;
-  readonly density?: "comfortable" | "compact";
-  readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
   readonly beforeCollectionSwitch?: () => boolean | Promise<boolean>;
   readonly connectionState: ReaderConnectionState;
@@ -73,10 +75,6 @@ export function ReaderHeader(props: ReaderHeaderProps): JSX.Element {
 function HeaderDisplayMenu({
   typography,
   onChangeTypography,
-  sidebarWhileReading = "hide",
-  onChangeSidebarWhileReading,
-  density = "comfortable",
-  onChangeDensity,
   theme,
   onChangeTheme,
   onOpenSettings,
@@ -85,13 +83,26 @@ function HeaderDisplayMenu({
     <DisplayMenu
       theme={theme}
       onChangeTheme={onChangeTheme}
-      density={density}
-      sidebarWhileReading={sidebarWhileReading}
       {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
-      {...(onChangeDensity ? { onChangeDensity } : {})}
-      {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
       {...(onOpenSettings ? { onOpenSettings } : {})}
     />
+  );
+}
+
+/**
+ * The collection's name, where there is no mdbase session to switch collections with: the
+ * interface preview and the browser audits. With a session the shared switcher takes its place.
+ */
+function CollectionName({ name }: { readonly name: string }): JSX.Element {
+  const { t } = useLingui();
+  return (
+    <span className="collection-context" title={t`Collection: ${name}`}>
+      <CollectionIcon />
+      <span className="sr-only">
+        <Trans>Collection: </Trans>
+      </span>
+      <span className="collection-context-name">{name}</span>
+    </span>
   );
 }
 
@@ -138,10 +149,7 @@ function LibraryHeader({
         {mdbase ? (
           <ReaderCollectionSwitcher mdbase={mdbase} beforeSwitch={beforeCollectionSwitch} />
         ) : (
-          <CollectionPicker
-            name={collectionName}
-            {...(beforeCollectionSwitch ? { beforeSwitch: beforeCollectionSwitch } : {})}
-          />
+          <CollectionName name={collectionName} />
         )}
         <ConnectionState state={connectionState} />
         <ReaderSaveStatus mdbase={mdbase} online={navigator.onLine} />

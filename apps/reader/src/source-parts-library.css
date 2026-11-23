@@ -2,9 +2,7 @@
   width: 34px;
   flex-shrink: 0;
 }
-.library-card .library-part-spacer {
-  display: none;
-}
+
 @media (max-width: 680px) {
   .library-part-spacer {
     display: none;

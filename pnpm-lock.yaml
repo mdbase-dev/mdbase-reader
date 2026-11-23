@@ -214,6 +214,9 @@ importers:
       '@mdbase-dev/i18n':
         specifier: 0.1.18
         version: 0.1.18(@lingui/core@6.10.1(@babel/core@8.0.9))(@lingui/react@6.10.1(@babel/core@8.0.9)(react@19.3.1))(react@19.3.1)(rolldown@1.2.15)
+      '@mdbase-dev/panels':
+        specifier: file:../../vendor/mdbase-dev-panels-0.3.1.tgz
+        version: file:vendor/mdbase-dev-panels-0.3.1.tgz(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@mdbase-dev/sdk':
         specifier: 0.1.41
         version: 0.1.41
@@ -277,9 +280,6 @@ importers:
       '@zip.js/zip.js':
         specifier: ^2.24.0
         version: 2.24.0
-      dockview-react:
-        specifier: 8.4.1
-        version: 8.4.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -1660,6 +1660,18 @@ packages:
     resolution: {integrity: sha512-WZGLINmc6S/ocmCEdBYThorvLSkAQO4oGWcm9ElAzWfPQkYpCqAtvQUFmtpDLIcqAo9S4TtCCTM/1nyVoVWzmA==}
     engines: {node: '>=20'}
 
+  '@mdbase-dev/panels@file:vendor/mdbase-dev-panels-0.3.1.tgz':
+    resolution: {integrity: sha512-dhIFSOWTh/ZctTjNdRX2rFkKOyT4LAFHU5Z4Mfki5LDZJNwjk0A/3k1CtFWjWwoBggh8mhMsHlgpNEPwSrsKEQ==, tarball: file:vendor/mdbase-dev-panels-0.3.1.tgz}
+    version: 0.3.1
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
   '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz':
     resolution: {integrity: sha512-Tc/R1WhEBNDc2ODSWSOkmw35Fr+EhKGogdfECBgNS9R1gawItPaMiqA96D1S2/vlh01+CH2X8H0e9fG1alUXRw==, tarball: file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz}
     version: 0.1.0-beta.188
@@ -2638,18 +2650,6 @@ packages:
 
   devalue@5.9.4:
     resolution: {integrity: sha512-sPAT4pztbu6586/hrhOnMKS17IJrvg12mXiSPSS3W5qDeN2RGgvZ0diZCm31dBbnevfVmujNO3IM2wrS4Y2Rhg==}
-
-  dockview-core@8.8.0:
-    resolution: {integrity: sha512-wGAP4FSjaVK6a4qhjwVSJCQgGkPBzR6Q1Xl804hvMEcbGni/lXAaRMx9lzxUN6IdFILRgm459ifxW0T6ZXLurw==}
-
-  dockview-react@8.4.1:
-    resolution: {integrity: sha512-6C5FV5Y0n0S3IljnKNn9stLm45SkbzZzlLnV2286sm1W2cnZXPmqDuZOWq3wWj9tZ2MvuV1q0c9hLT9NT6H+NQ==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
-  dockview@8.8.0:
-    resolution: {integrity: sha512-1qey+qO1O1xzp5IR5E+5bNs0sdkf6icfaV3XcBeF96/o69ZxXxSS4ladnGnrkoeUTc80PV90vh3WX4Z3Rq1KmA==}
 
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
@@ -5768,6 +5768,11 @@ snapshots:
 
   '@mdbase-dev/mdbase@0.5.0': {}
 
+  '@mdbase-dev/panels@file:vendor/mdbase-dev-panels-0.3.1.tgz(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    optionalDependencies:
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+
   '@mdbase-dev/sdk-lab@file:packages/connect/vendor/sdk-e8ffb806-lab-beta188.tgz':
     dependencies:
       '@noble/ciphers': 2.4.0
@@ -6694,18 +6699,6 @@ snapshots:
   detect-libc@2.1.2: {}
 
   devalue@5.9.4: {}
-
-  dockview-core@8.8.0: {}
-
-  dockview-react@8.4.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
-    dependencies:
-      dockview: 8.8.0
-      react: 19.3.1
-      react-dom: 19.3.1(react@19.3.1)
-
-  dockview@8.8.0:
-    dependencies:
-      dockview-core: 8.8.0
 
   dom-serializer@2.0.0:
     dependencies:

@@ -6,12 +6,9 @@ import { useMemo } from "react";
 import {
   AreaIcon,
   BookmarkIcon,
-  CitationIcon,
   DownloadIcon,
-  HighlightIcon,
   ListIcon,
   MoreIcon,
-  NoteIcon,
   ReadingModeIcon,
   TrashIcon,
 } from "./icons.js";
@@ -21,7 +18,6 @@ import { useSourcePartCreation } from "./SourcePartCreation.js";
 import { ChapterReadingChip } from "./SourceReadingBoundary.js";
 import { DocumentStatus } from "./WorkspacePaneSupport.js";
 
-import type { SourceWorkspacePane } from "./source-workspace-layout.js";
 import type { ReadingResumeState } from "./use-reading-resume.js";
 import type { SourceExportController } from "./use-source-export.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
@@ -33,7 +29,6 @@ export interface DocumentContextualToolbarProps {
   readonly source: SourceSummary;
   /** The library's sources, so a chapter can name its book and next part. */
   readonly sources: readonly SourceSummary[];
-  readonly pane: SourceWorkspacePane;
   readonly workspace: SourceWorkspaceController;
   readonly focusMode: boolean;
   readonly readingResume: ReadingResumeState;
@@ -57,7 +52,6 @@ export interface DocumentContextualToolbarProps {
 export function DocumentContextualToolbar({
   source,
   sources,
-  pane,
   workspace,
   focusMode,
   readingResume,
@@ -138,21 +132,6 @@ export function DocumentContextualToolbar({
         {canBookmark && compact ? (
           <BookmarkItem bookmarking={bookmarking} onBookmark={onBookmark} />
         ) : null}
-        <button type="button" onClick={() => workspace.openView(source.id, "annotations", pane.id)}>
-          <HighlightIcon />
-          <Trans> Annotations</Trans>
-        </button>
-        <button type="button" onClick={() => workspace.openView(source.id, "note", pane.id)}>
-          <NoteIcon /> <Trans>Source note</Trans>
-        </button>
-        <button type="button" onClick={() => workspace.openView(source.id, "citation", pane.id)}>
-          <CitationIcon />
-          <Trans> Citation</Trans>
-        </button>
-        <hr />
-        <button type="button" onClick={() => workspace.openBeside(source.id, "note")}>
-          <NoteIcon /> <Trans>Open source note beside</Trans>
-        </button>
         <button
           type="button"
           className={focusMode ? "is-active" : undefined}

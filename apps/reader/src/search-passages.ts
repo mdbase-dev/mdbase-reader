@@ -19,8 +19,7 @@ export function searchExcerpt(
   if (!needle) {
     return null;
   }
-  // Match the original text, preserving line breaks until display cleanup. Quotation
-  // evidence is built separately from this same unmodified text by searchQuote.
+  // Match the original text, preserving line breaks until display cleanup.
   const escaped = needle.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&").replace(/ /gu, "\\s+");
   const match = new RegExp(escaped, "iu").exec(text);
   if (!match) {

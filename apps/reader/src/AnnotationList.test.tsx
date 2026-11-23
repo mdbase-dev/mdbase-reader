@@ -5,6 +5,7 @@ import {
   dateTime,
   sourceId,
   type Annotation,
+  type SourceSummary,
 } from "@mdbase-reader/core";
 import { act, type JSX } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -567,5 +568,72 @@ describe("annotation Filter menu colours and order", () => {
       await Promise.resolve();
     });
     expect(onChange).toHaveBeenCalledWith(true);
+  });
+});
+
+describe("annotation list for the whole collection", () => {
+  const source = (id: string, title: string): SourceSummary => ({
+    collectionId: collectionId("reading"),
+    id: sourceId(id),
+    path: `sources/${id}.md`,
+    title,
+    creators: [],
+    tags: [],
+    documents: [],
+    properties: {},
+  });
+  const sources = [source("zola", "Germinal"), source("austen", "Emma"), source("empty", "Unread")];
+  const across: Annotation[] = [
+    { ...annotations[0]!, id: annotationId("z"), sourceId: sourceId("zola"), body: "Mine" },
+    { ...annotations[1]!, id: annotationId("a"), sourceId: sourceId("austen"), body: "Match" },
+  ];
+  const renderCollection = (): Promise<HTMLElement> =>
+    mount(
+      <AnnotationList
+        {...props}
+        collection
+        transclusion={undefined}
+        annotations={{ status: "ready", value: across }}
+        owners={sources}
+      />,
+    );
+
+  it("orders by source title, searches source titles and offers only annotated sources", async () => {
+    const element = await renderCollection();
+    const ids = (): (string | undefined)[] =>
+      [...element.querySelectorAll<HTMLElement>("[data-annotation-id]")].map(
+        (card) => card.dataset["annotationId"],
+      );
+    expect(ids()).toEqual(["a", "z"]);
+    expect(switchNamed(element, "Follow reading position")).toBeUndefined();
+    const options = [...element.querySelectorAll(".annotation-filter-panel select option")].map(
+      (option) => option.textContent,
+    );
+    expect(options).toContain("Emma");
+    expect(options).not.toContain("Unread");
+    const search = element.querySelector<HTMLInputElement>('input[type="search"]')!;
+    await act(async () => {
+      const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      set.call(search, "germinal");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+      await Promise.resolve();
+    });
+    expect(ids()).toEqual(["z"]);
+  });
+
+  it("copies the listed annotations as Markdown grouped by source", async () => {
+    const writeText = vi.fn(() => Promise.resolve());
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const element = await renderCollection();
+    await act(async () => {
+      [...element.querySelectorAll("button")]
+        .find((button) => button.textContent === "Copy 2 annotations as Markdown")!
+        .click();
+      await Promise.resolve();
+    });
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("## Emma"));
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("## Germinal"));
+    expect(element.textContent).toContain("Copied 2 annotations as Markdown.");
+    vi.unstubAllGlobals();
   });
 });

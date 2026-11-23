@@ -4,9 +4,12 @@ import type { SourceId } from "@mdbase-reader/core";
 
 export const sourceWorkspaceViews = ["document", "note", "annotations", "citation"] as const;
 export type SourceWorkspaceView = (typeof sourceWorkspaceViews)[number];
+/** A source's tools: what a Notes panel shows about the source the reader is working on. */
+export const notesViews = ["annotations", "note", "citation"] as const;
+export type NotesView = (typeof notesViews)[number];
 export const workspaceViews = ["library", ...sourceWorkspaceViews] as const;
 export type WorkspaceView = (typeof workspaceViews)[number];
-/** Dockview group identity; legacy layouts used only primary/secondary. */
+/** Pane identity: an opaque string the panel workspace assigns. */
 export type WorkspacePaneId = string;
 export type WorkspaceSplitDirection = "horizontal" | "vertical";
 export type WorkspaceTabId = string;
@@ -24,6 +27,11 @@ export interface SourceWorkspaceTab extends WorkspaceTabBase {
   readonly libraryViewId?: undefined;
   readonly title?: undefined;
   readonly view: SourceWorkspaceView;
+  /**
+   * A pinned tab that was a Notes panel until it was pinned to this source. Unpinning it lets
+   * it follow the source the reader is working on again.
+   */
+  readonly follow?: boolean;
 }
 
 export interface LibraryWorkspaceTab extends WorkspaceTabBase {

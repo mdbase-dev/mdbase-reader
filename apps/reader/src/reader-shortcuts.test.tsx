@@ -48,9 +48,6 @@ beforeEach(() => {
                 <button data-row-action>More</button>
               </div>
             </div>
-            <div className="library-card-grid">
-              <button data-card>Cards</button>
-            </div>
           </div>
         </div>
         <select aria-label="Language">
@@ -108,7 +105,7 @@ it("keeps the sidebar shortcut available outside the library", () => {
   expect(actions.toggleSidebar).toHaveBeenCalledOnce();
 });
 
-it.each([".library-table-row", "[data-card]", "[data-toolbar]", ".workspace-pane", "body"])(
+it.each([".library-table-row", "[data-toolbar]", ".workspace-pane", "body"])(
   "keeps list commands available from %s",
   (selector) => {
     const target = selector === "body" ? document.body : host.querySelector<HTMLElement>(selector)!;

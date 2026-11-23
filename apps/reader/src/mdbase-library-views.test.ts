@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  isReaderSourcesView,
   applyLibraryViewConfiguration,
   buildLibraryView,
   defaultLibraryViewConfiguration,
@@ -15,7 +16,6 @@ describe("mdbase library views", () => {
       name: "Reading queue",
       configuration: {
         ...defaultLibraryViewConfiguration,
-        presentation: "cards",
         sortField: "published",
         sortDirection: "desc",
         filter: {
@@ -39,8 +39,7 @@ describe("mdbase library views", () => {
           where:
             'record.?reading.?status.orValue("inbox") == "reading" && record.?documents.orValue([]).exists(document, document.?media_type.orValue("").contains("pdf")) && record.?tags.orValue([]).contains("study")',
           presentation: {
-            type: "cards",
-            fallback: "table",
+            type: "table",
             options: { readerViewVersion: 1 },
           },
         },
@@ -81,7 +80,7 @@ describe("mdbase library views", () => {
 
   it("round-trips Reader presentation options", () => {
     const configuration = libraryViewConfiguration({
-      type: "cards",
+      type: "table",
       options: {
         columns: ["title", "creator", "tags"],
         sortField: "creator",
@@ -96,7 +95,6 @@ describe("mdbase library views", () => {
       },
     });
     expect(configuration).toEqual({
-      presentation: "cards",
       columns: ["title", "creator", "tags"],
       columnWidths: {},
       sortField: "creator",
@@ -157,3 +155,18 @@ function source(
     ],
   };
 }
+
+describe("Reader-marked views", () => {
+  it("lists only Reader's own views of sources", () => {
+    const marked = (kind?: string): unknown => ({
+      options: { readerViewVersion: 1, ...(kind ? { readerViewKind: kind } : {}) },
+    });
+    expect(isReaderSourcesView(marked())).toBe(true);
+    expect(isReaderSourcesView(marked("sources"))).toBe(true);
+    // Annotation views an earlier build saved, and views other apps own, are left alone.
+    expect(isReaderSourcesView(marked("annotations"))).toBe(false);
+    expect(isReaderSourcesView(marked("source-annotations"))).toBe(false);
+    expect(isReaderSourcesView({ options: {} })).toBe(false);
+    expect(isReaderSourcesView(undefined)).toBe(false);
+  });
+});

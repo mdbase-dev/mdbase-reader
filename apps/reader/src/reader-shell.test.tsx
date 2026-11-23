@@ -8,7 +8,7 @@ import {
 } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { DisplaySettings } from "./DisplaySettings.js";
+import { DeviceSettings, DisplaySettings } from "./DisplaySettings.js";
 import {
   readerCommands,
   type ReaderCommand,
@@ -94,6 +94,7 @@ describe("command palette", () => {
         layout: { panes: [{ id: "primary", tabs: [tab] }], focusedPaneId: "primary" },
         activeTab: null,
         openSourceIds: [open.id],
+        dock: { canUndo: true, canRedo: false },
       },
       sourceExport: { run: () => undefined },
       bibliographyExport: { run: () => undefined },
@@ -127,15 +128,22 @@ describe("command palette", () => {
     const themes = commands.filter(({ id }) => id.startsWith("theme:")).map(({ id }) => id);
     expect(themes).toEqual(["theme:system", "theme:light"]);
     const active = readerCommands({ ...input, activeSource: open });
-    expect(active.find(({ id }) => id === "note")?.label).toBe("Open source note");
-    expect(active.find(({ id }) => id === "citation")?.label).toBe("Open citation details");
+    // A source's note, annotations and citation are the Notes panels: nothing opens them as tabs.
+    for (const id of ["note", "annotations", "citation"]) {
+      expect(active.some((command) => command.id === id)).toBe(false);
+    }
     expect(active.find(({ id }) => id === "split-right")?.label).toBe("Open beside");
     expect(active.find(({ id }) => id === "split-below")?.label).toBe("Open below");
+    expect(commands.find(({ id }) => id === "show-all-tabs")?.label).toBe("Show all tabs at once");
+    expect(commands.some(({ id }) => id === "undo-arrangement")).toBe(true);
+    // Resetting and rearranging panes are in the pane and tab menus, not the palette.
+    expect(commands.some(({ id }) => id === "reset-panes")).toBe(false);
+    expect(commands.some(({ id }) => id === "redo-arrangement")).toBe(false);
     for (const [query, id] of [
-      ["literature note", "note"],
-      ["owner", "annotations"],
-      ["citekey", "citation"],
-      ["field sources", "citation"],
+      ["literature note", "show-notes-note"],
+      ["owner", "show-notes-annotations"],
+      ["citekey", "show-notes-citation"],
+      ["field sources", "show-notes-citation"],
       ["duplicate", "split-right"],
       ["duplicate", "split-below"],
       ["left sidebar", "toggle-library"],
@@ -154,7 +162,6 @@ describe("header", () => {
         connectionState={connectionState}
         theme="light"
         onChangeTheme={() => undefined}
-        onChangeDensity={() => undefined}
         onOpenCommands={() => undefined}
         onToggleLibrary={() => undefined}
         onToggleInspector={() => undefined}
@@ -176,17 +183,26 @@ describe("header", () => {
     expect(markup).not.toContain(">Comfortable</button>");
   });
 
-  it("loaded settings offer explicit theme and density choices with the current one pressed", () => {
-    const markup = renderToStaticMarkup(
+  it("keeps reading options in the display menu and everything else in Settings", () => {
+    const menu = renderToStaticMarkup(
       <DisplaySettings
         theme="light"
         onChangeTheme={vi.fn()}
-        density="comfortable"
-        onChangeDensity={vi.fn()}
-        sidebarWhileReading="hide"
+        typography={{ scale: 1, measure: "standard", face: "serif" }}
+        onChangeTypography={vi.fn()}
       />,
     );
-    expect(markup).toContain('aria-pressed="true">Light</button>');
-    expect(markup).toContain('aria-pressed="true">Comfortable</button>');
+    const device = renderToStaticMarkup(
+      <DeviceSettings density="comfortable" onChangeDensity={vi.fn()} />,
+    );
+    expect(menu).toContain('aria-pressed="true">Light</button>');
+    expect(device).toContain('aria-pressed="true">Comfortable</button>');
+    const legends = (markup: string): string[] =>
+      [...markup.matchAll(/<legend>(.*?)<\/legend>/gu)].map(([, legend]) => legend ?? "");
+    expect(legends(menu)).toEqual(["Text size", "Line length", "Typeface", "Theme"]);
+    // Nothing is offered in both places.
+    expect(legends(device).filter((legend) => legends(menu).includes(legend))).toEqual([]);
+    expect(legends(device)).toContain("Density");
+    expect(legends(device)).toContain("Selecting text");
   });
 });

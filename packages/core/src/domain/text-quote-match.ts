@@ -67,6 +67,15 @@ export function matchTextQuote(text: string, quote: TextQuote): TextQuoteMatch |
   return textQuoteMatcher(text)(quote);
 }
 
+/** Like {@link matchTextQuote}, but refuses ambiguous and approximate matches. */
+export function resolveSearchQuote(
+  text: string,
+  quote: TextQuote,
+): { start: number; end: number } | null {
+  const match = matchTextQuote(text, quote);
+  return match && !match.ambiguous && !match.approximate ? match : null;
+}
+
 /** Prepares `text` once for locating many quotations in it. */
 export function textQuoteMatcher(text: string): (quote: TextQuote) => TextQuoteMatch | null {
   const haystack = normalize(text);

@@ -1,0 +1,341 @@
+.reader-main.reader-dock-main {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: clip;
+}
+.reader-dock-main > .reader-dock {
+  flex: 1;
+}
+
+.reader-dock {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  color-scheme: inherit;
+}
+.reader-dock-engine {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.reader-dock .mp-workspace {
+  /* Two planes: tab strips sit on the chrome canvas; the visible tab joins its
+     pane on the content surface. */
+  --mp-bg: var(--canvas);
+  --mp-surface: var(--paper);
+  --mp-header-bg: var(--canvas);
+  --mp-border: var(--line);
+  --mp-text: var(--ink);
+  --mp-muted: var(--muted);
+  --mp-accent: var(--accent);
+  --mp-tab-hover: var(--hover);
+  --mp-drop: color-mix(in oklch, var(--accent) 18%, transparent);
+  --mp-shadow: var(--e-2);
+  --mp-tab-max-width: 260px;
+  color-scheme: inherit;
+}
+.reader-dock .mp-menu {
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--surface-raised);
+}
+.reader-dock .mp-menu-item {
+  padding: 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.reader-dock .mp-tab {
+  min-width: 70px;
+  padding: 0 6px 0 10px;
+  font-size: var(--text-sm);
+}
+.reader-dock .mp-tab[data-mp-active] {
+  color: var(--ink);
+}
+.reader-dock .mp-stack:not([data-mp-focused]) .mp-tab[data-mp-active] {
+  color: var(--ink-soft);
+}
+.reader-dock .mp-stack[data-mp-focused] .mp-tab[data-mp-active] {
+  background: var(--selected);
+}
+.reader-dock .mp-tab:focus-visible,
+.reader-dock [role="separator"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.reader-dock-sidebar {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+.reader-dock .mp-empty .dock-empty {
+  max-width: 28rem;
+  padding: 24px;
+  text-align: center;
+}
+/* The overview shows each tab as it was left. A tab that has not been opened since the
+   workspace was restored has nothing loaded yet, and stays a blank page. */
+.reader-dock .mp-workspace[data-mp-mode="overview"] .mp-panel {
+  background: var(--paper);
+}
+.reader-dock .mp-workspace[data-mp-mode="overview"] .document-session {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: none;
+}
+.reader-dock .mp-card-label {
+  color: var(--ink);
+}
+.reader-dock .library-pane,
+.reader-dock .inspector-pane {
+  display: grid;
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  max-width: none;
+  min-width: 0;
+  transform: none;
+  visibility: inherit;
+  opacity: 1;
+  border: 0;
+  box-shadow: none;
+  z-index: auto;
+}
+.reader-dock .workspace-pane {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+}
+.reader-dock .document-canvas {
+  flex: 1;
+  min-height: 0;
+}
+.reader-dock .document-session-deck {
+  flex: 1;
+  min-height: 0;
+}
+.reader-dock-tab {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+  gap: 4px;
+}
+.reader-tab-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* How many annotations the source being worked on has, on the Annotations panel's tab. */
+.reader-tab-count {
+  flex: 0 0 auto;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--hover);
+  font-size: var(--ui-meta);
+  text-align: center;
+}
+.reader-dock-tab.is-preview .reader-tab-title {
+  font-style: italic;
+}
+/* Reader's own close affordance: pointer-only, since a tab is one control. */
+.reader-tab-close {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 3px;
+  color: inherit;
+  cursor: pointer;
+  visibility: hidden;
+}
+.reader-tab-close svg {
+  width: 14px;
+  height: 14px;
+}
+.reader-tab-close:hover {
+  background-color: var(--hover);
+}
+.mp-tab[data-mp-active] .reader-tab-close,
+.mp-tab:hover .reader-tab-close {
+  visibility: visible;
+}
+@media (hover: none) {
+  .reader-tab-close {
+    visibility: visible;
+  }
+}
+@media (pointer: coarse) {
+  .reader-tab-close {
+    width: 32px;
+    height: 32px;
+  }
+}
+.dock-tab-marker {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  color: var(--muted);
+}
+.dock-tab-marker svg {
+  width: 14px;
+  height: 14px;
+}
+.dock-tab-marker.is-dirty {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+/* Several side panels sharing a region are narrow tabs: each names one tool, so they keep room
+   for their names instead of a close button. The tab menu closes one; the header's button hides
+   the region. */
+.reader-dock .mp-stack[data-mp-edge]:has(.mp-tab + .mp-tab) .mp-tab:has(.reader-dock-tab.is-side) {
+  padding: 0 9px;
+}
+.reader-dock
+  .mp-stack[data-mp-edge]:has(.mp-tab + .mp-tab)
+  .reader-dock-tab.is-side
+  .reader-tab-close {
+  display: none;
+}
+/* Sources or Notes alone in its group reads as a quiet heading: the header's buttons show and
+   hide it, so its close button and pane menu wait for the pointer. */
+.reader-dock
+  .mp-stack:has(.reader-dock-tab.is-side):not(:has(.mp-tab + .mp-tab))
+  .mp-tab:not(:hover)
+  .reader-tab-close {
+  visibility: hidden;
+}
+.reader-dock .mp-stack:has(.reader-dock-tab.is-side):not(:has(.mp-tab + .mp-tab)) .mp-tab {
+  border-right: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-weight: 600;
+}
+.reader-dock .mp-stack:has(.reader-dock-tab.is-side):not(:has(.mp-tab + .mp-tab)) .mp-header {
+  border-bottom-color: var(--reader-hairline);
+}
+.reader-dock
+  .mp-stack:has(.reader-dock-tab.is-side):not(:has(.mp-tab + .mp-tab))
+  .dock-pane-menu
+  > button {
+  opacity: 0;
+  transition: opacity var(--motion-quick) var(--ease-out);
+}
+.reader-dock
+  .mp-stack:has(.reader-dock-tab.is-side):not(:has(.mp-tab + .mp-tab))
+  .mp-header:is(:hover, :focus-within)
+  .dock-pane-menu
+  > button,
+.reader-dock .dock-pane-menu > button[aria-expanded="true"] {
+  opacity: 1;
+}
+@media (hover: none) {
+  .reader-dock .dock-pane-menu > button {
+    opacity: 1 !important;
+  }
+}
+/* A document's actions share its pane's tab strip, ahead of the pane menu, so nothing floats
+   over the page. */
+.dock-pane-actions {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+}
+.reader-dock .dock-pane-actions .document-toolbar {
+  position: static;
+  height: 100%;
+  gap: 2px;
+  padding: 0;
+  pointer-events: auto;
+}
+.reader-dock .dock-pane-actions .document-toolbar :is(.icon-button, .document-area-action),
+.reader-dock .dock-pane-actions .document-toolbar .reader-menu > summary {
+  width: 36px;
+  height: 36px;
+  color: var(--ink-soft);
+}
+.reader-dock .dock-pane-actions .document-toolbar svg {
+  width: 16px;
+  height: 16px;
+}
+.dock-pane-menu {
+  position: relative;
+  color: var(--muted);
+  font-size: 12px;
+}
+.dock-pane-menu > button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--ink-soft);
+}
+.dock-pane-menu > button:hover,
+.dock-pane-menu > button:focus-visible {
+  color: var(--ink);
+  background: var(--hover);
+}
+.dock-pane-menu > button svg {
+  width: 16px;
+  height: 16px;
+}
+.dock-pane-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 245px;
+  padding: 5px;
+  border: 0;
+  background: var(--surface-raised);
+  border-radius: var(--r-lg);
+  box-shadow: var(--e-2);
+}
+.dock-pane-popover:popover-open {
+  display: grid;
+}
+.dock-pane-popover button {
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.dock-pane-popover button:hover:not(:disabled) {
+  background: var(--hover);
+}
+.dock-pane-popover button:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+.dock-pane-popover button.is-separated {
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+}

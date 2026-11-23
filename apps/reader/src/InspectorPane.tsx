@@ -8,11 +8,11 @@ import { AnnotationList } from "./AnnotationList.js";
 import { useAnnotationPanelActions } from "./AnnotationPanelActions.js";
 import { preloadCitations } from "./citation-renderer.js";
 import { requestConfirmation } from "./confirmation.js";
-import { CitationIcon, HighlightIcon, NoteIcon, PanelIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { publishSharedAnnotation } from "./shared-annotation-resource.js";
 
 import type { AnnotationFileReader } from "./AnnotationImage.js";
+import type { NotesView } from "./source-workspace-layout.js";
 import type { AnnotationComposerController } from "./use-annotation-composer.js";
 import type { ReaderSourceWorkspaceController } from "./use-reader-workspace.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -33,73 +33,62 @@ export function preloadInspectorTools(): void {
   preloadCitations();
 }
 
-export type InspectorTab = "note" | "annotations" | "citation";
+export type InspectorTab = NotesView;
 
 export interface InspectorPaneProps {
-  readonly open: boolean;
+  /** Which of the source's tools this panel shows. */
   readonly tab: InspectorTab;
+  /** Whether the panel is on screen: the active tab of its pane, in a region that is open. */
+  readonly visible: boolean;
   readonly source: SourceSummary | null;
   readonly paneLabel: string;
   readonly workspace: ReaderSourceWorkspaceController;
   readonly composer: AnnotationComposerController;
   readonly gateway: ReaderWorkspaceGateway;
+  /** The pane holding this source's own tab for the same tool, when that tab owns its editing. */
   readonly workbenchOwner?: {
-    readonly tab: InspectorTab;
     readonly paneLabel: string;
     readonly onOpen: () => void;
   } | null;
-  readonly onTabChange: (tab: InspectorTab) => void;
-  readonly onPromote: (tab: InspectorTab) => void;
   readonly onOpenSourceView?: (sourceId: SourceId, view: "document" | "citation") => void;
 }
 
+/**
+ * A Notes panel: the annotations, note or citation of whichever source the reader is working
+ * on. Its tab names the tool, so the panel starts by naming the source.
+ */
 export function InspectorPane({
-  open,
   tab,
+  visible,
   source,
   paneLabel,
   workspace,
   composer,
   gateway,
   workbenchOwner,
-  onTabChange,
-  onPromote,
   onOpenSourceView,
-}: InspectorPaneProps): JSX.Element {
+}: InspectorPaneProps): JSX.Element | null {
   const { t } = useLingui();
+  // A citation form keeps what has been typed into it while another tab is in front.
+  const [opened, setOpened] = useState(visible);
+  if (visible && !opened) {
+    setOpened(true);
+  }
+  if (!visible && !(tab === "citation" && opened)) {
+    return null;
+  }
   return (
     <aside
-      id="reader-source-tools"
-      className={open ? "inspector-pane" : "inspector-pane is-mobile-closed"}
+      className="inspector-pane"
       aria-label={t({ message: "Source workspace", context: "InspectorPane interface" })}
-      aria-hidden={!open}
-      inert={!open}
     >
-      {/* The dock tab above names the source; this row only switches its tools. */}
       <div className="inspector-context">
-        <h2 className="sr-only">
-          {paneLabel}: {source?.title ?? t({ message: "No source in this pane" })}
+        <h2 className="inspector-source" title={source?.title}>
+          <span className="sr-only">{paneLabel}: </span>
+          {source?.title ?? t({ message: "No source in this pane" })}
         </h2>
-        <InspectorTabs
-          tab={tab}
-          enabled={source !== null}
-          annotationCount={
-            workspace.annotations.status === "ready" ? workspace.annotations.value.length : null
-          }
-          onChange={onTabChange}
-        />
-        <button
-          type="button"
-          className="icon-button inspector-promote"
-          disabled={!source}
-          aria-label={t`Open ${tab} in workbench`}
-          title={t({ message: "Keep open as a workbench tab" })}
-          onClick={() => onPromote(tab)}
-        >
-          <PanelIcon />
-        </button>
       </div>
-      {source && workbenchOwner?.tab === tab ? (
+      {source && workbenchOwner ? (
         <div className="inspector-status inspector-workbench-owner">
           <strong>
             <Trans>
@@ -110,7 +99,7 @@ export function InspectorPane({
             <Trans>Reader keeps one writable editor for each source record.</Trans>
           </span>
           <button type="button" onClick={workbenchOwner.onOpen}>
-            <Trans>Go to workbench</Trans>
+            <Trans>Go to it</Trans>
           </button>
         </div>
       ) : source ? (
@@ -134,75 +123,6 @@ export function InspectorPane({
         </div>
       )}
     </aside>
-  );
-}
-
-function InspectorTabs({
-  tab,
-  enabled,
-  annotationCount,
-  onChange,
-}: {
-  readonly tab: InspectorTab;
-  readonly enabled: boolean;
-  readonly annotationCount: number | null;
-  readonly onChange: (tab: InspectorTab) => void;
-}): JSX.Element {
-  const { t } = useLingui();
-  return (
-    <div className="inspector-tabs" role="tablist">
-      <button
-        type="button"
-        role="tab"
-        disabled={!enabled}
-        aria-selected={tab === "annotations"}
-        title={t({ message: "Annotations", context: "InspectorPane interface" })}
-        onClick={() => onChange("annotations")}
-      >
-        <HighlightIcon />{" "}
-        <span className="inspector-tab-label">
-          <Trans>Annotations</Trans>
-        </span>{" "}
-        <span
-          className="inspector-tab-count"
-          aria-label={
-            annotationCount === null && enabled ? t`Annotation count not yet known` : undefined
-          }
-        >
-          {annotationCount === null ? (enabled ? "…" : "—") : annotationCount || "—"}
-        </span>
-      </button>
-      <button
-        type="button"
-        role="tab"
-        disabled={!enabled}
-        aria-selected={tab === "note"}
-        title={translate({ message: "Source note" })}
-        onPointerEnter={SourceNoteEditor.preload}
-        onFocus={SourceNoteEditor.preload}
-        onClick={() => onChange("note")}
-      >
-        <NoteIcon />{" "}
-        <span className="inspector-tab-label">
-          <Trans>Source note</Trans>
-        </span>
-      </button>
-      <button
-        type="button"
-        role="tab"
-        disabled={!enabled}
-        aria-selected={tab === "citation"}
-        title={translate({ message: "Citation", context: "InspectorPane status or action" })}
-        onPointerEnter={CitationEditor.preload}
-        onFocus={CitationEditor.preload}
-        onClick={() => onChange("citation")}
-      >
-        <CitationIcon />{" "}
-        <span className="inspector-tab-label">
-          <Trans>Citation</Trans>
-        </span>
-      </button>
-    </div>
   );
 }
 

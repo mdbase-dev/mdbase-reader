@@ -14,7 +14,6 @@ import { DocumentEmpty } from "./WorkspacePaneSupport.js";
 
 import type {
   LibraryWorkspaceTab,
-  SourceWorkspacePane,
   SourceWorkspaceTab,
   WorkspacePaneId,
   WorkspaceTab,
@@ -56,7 +55,7 @@ export interface DocumentWorkspaceProps {
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
 }
 
-/** One stable Dockview panel. Moving it never changes its React/session identity. */
+/** One workspace panel. Moving it never changes its React/session identity. */
 export function DocumentWorkspace({
   props,
   tab,
@@ -86,8 +85,10 @@ export function DocumentWorkspace({
   useEffect(() => {
     if (focused && visible) {
       const frame = requestAnimationFrame(() => {
-        // Activation by a click or Tab inside the pane leaves focus on that control.
-        if (!host.current?.contains(host.current.ownerDocument.activeElement)) {
+        const active = host.current?.ownerDocument.activeElement;
+        // Activation by a click or Tab inside the pane leaves focus on that control. So does a
+        // menu opened by the same press: taking focus into a document's frame would close it.
+        if (!host.current?.contains(active ?? null) && !active?.closest('[role="menu"]')) {
           if (host.current) {
             if (tab.kind === "library" && !host.current.querySelector("[data-active-row]")) {
               host.current.focus({ preventScroll: true });
@@ -183,13 +184,11 @@ function DocumentOverlays({
 export function DocumentToolbar({
   props,
   source,
-  pane,
   tabId,
   focused,
 }: {
   readonly props: DocumentWorkspaceProps;
   readonly source: SourceSummary;
-  readonly pane: SourceWorkspacePane;
   readonly tabId: string;
   readonly focused: boolean;
 }): JSX.Element {
@@ -199,7 +198,6 @@ export function DocumentToolbar({
     <DocumentContextualToolbar
       source={source}
       sources={props.sources}
-      pane={pane}
       workspace={props.sourceWorkspace}
       focusMode={props.focusMode}
       readingResume={props.readingResume}

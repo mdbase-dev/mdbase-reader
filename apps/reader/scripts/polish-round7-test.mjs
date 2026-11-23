@@ -239,39 +239,6 @@ try {
         assert.ok(result.close.bottom <= page.viewportSize().height);
         assert.equal(result.close.hit, true);
         await close.click();
-        const scope = page.getByRole("combobox", { name: "Search scope", exact: true });
-        result.selectCurve = await page
-          .locator(".library-search-scope, .library-search-scope .mdbase-select-chevron")
-          .evaluateAll((elements) =>
-            elements.map(
-              (element) => globalThis.getComputedStyle(element).transitionTimingFunction,
-            ),
-          );
-        if (reducedMotion === "no-preference") {
-          assert.ok(
-            result.selectCurve.every((curve) =>
-              curve
-                .split(", cubic")
-                .every((value) => value.includes("0.22") && value.includes("0.36")),
-            ),
-          );
-        }
-        await scope.click();
-        result.chevronEffects = await page
-          .locator(".library-search-scope .mdbase-select-chevron")
-          .evaluateAll((elements) =>
-            elements.flatMap((element) =>
-              element.getAnimations().map((animation) => animation.effect.getTiming()),
-            ),
-          );
-        if (reducedMotion === "no-preference") {
-          assert.ok(
-            result.chevronEffects.some(
-              (effect) => effect.easing === "cubic-bezier(0.22, 1, 0.36, 1)",
-            ),
-          );
-        }
-        await page.keyboard.press("Escape");
         if (width === 390) {
           const longTitle =
             "[test] A very long source title about careful reading and sustained attention across a collection of research notes and documentary sources";
@@ -315,13 +282,13 @@ try {
           await rows.first().focus();
           await page.keyboard.press("Enter");
           await page
-            .locator(".dv-tab")
+            .locator(".mp-tab")
             .filter({ hasText: "All sources" })
             .first()
             .click({ button: "right" });
           await page.getByText("Move to new pane right", { exact: true }).click();
           const library = await page.locator(".library-table-frame").boundingBox();
-          const divider = await page.locator(".dv-sash.dv-enabled").last().boundingBox();
+          const divider = await page.locator(".mp-splitter").last().boundingBox();
           assert.ok(library && divider);
           const dividerX = divider.x + divider.width / 2;
           const targetX = dividerX + (dividerX > library.x + 4 ? 1 : -1) * (750 - library.width);

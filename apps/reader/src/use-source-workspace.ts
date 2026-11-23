@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
-import { dockWorkspaceActions } from "./dockview-workspace-actions.js";
-import { ReaderDockWorkspace } from "./dockview-workspace.js";
+import { panelWorkspaceActions } from "./panel-workspace-actions.js";
+import { ReaderPanelWorkspace } from "./panel-workspace.js";
 import {
   activeTab,
   focusedPane,
@@ -26,7 +26,7 @@ export interface SourceWorkspaceOptions {
   readonly confirmDiscard?: (tab: WorkspaceTab) => boolean | Promise<boolean>;
 }
 export interface SourceWorkspaceController extends SourceWorkspaceActions {
-  readonly dock: ReaderDockWorkspace;
+  readonly dock: ReaderPanelWorkspace;
   readonly layout: SourceWorkspaceLayout;
   readonly activePane: SourceWorkspacePane;
   readonly activeTab: WorkspaceTab | null;
@@ -36,11 +36,12 @@ export interface SourceWorkspaceController extends SourceWorkspaceActions {
 export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorkspaceController {
   const [dock] = useState(
     () =>
-      new ReaderDockWorkspace(
+      new ReaderPanelWorkspace(
         options.collectionKey,
         browserStorage(),
         new Set(options.sourceIds),
         options.sourceIndexComplete ?? true,
+        browserStorage("window"),
       ),
   );
   const { confirmDiscard, selectSource } = options;
@@ -56,7 +57,7 @@ export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorks
       selectSource(sourceId);
     }
   }, [sourceId, selectSource]);
-  const actions = useMemo(() => dockWorkspaceActions(dock), [dock]);
+  const actions = useMemo(() => panelWorkspaceActions(dock), [dock]);
   return {
     dock,
     layout,
@@ -67,9 +68,10 @@ export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorks
     ...actions,
   };
 }
-function browserStorage(): Storage | null {
+/** What every window of this browser shares, or what only this one keeps. */
+function browserStorage(scope: "shared" | "window" = "shared"): Storage | null {
   try {
-    return globalThis.localStorage;
+    return scope === "shared" ? globalThis.localStorage : globalThis.sessionStorage;
   } catch {
     return null;
   }

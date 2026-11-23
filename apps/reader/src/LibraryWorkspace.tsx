@@ -15,6 +15,7 @@ import {
 
 import { BrowserExtensionDiscovery } from "./BrowserExtensionHelp.js";
 import { CitationQualitySummary } from "./CitationQualitySummary.js";
+import { CollectionAnnotations } from "./CollectionAnnotations.js";
 import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
 import { FilterIcon, MoreIcon, LibraryIcon, PlusIcon, SearchIcon } from "./icons.js";
@@ -32,13 +33,11 @@ import {
   type RowSelection,
 } from "./library-row-selection.js";
 import { librarySourceParts } from "./library-source-parts.js";
-import { LibraryAnnotations } from "./LibraryAnnotations.js";
 import { LibraryBulkBar } from "./LibraryBulkBar.js";
-import { LibraryCards } from "./LibraryCards.js";
 import { countLabel, readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
 import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
+import { LibraryNoteMatches, useNoteSearch } from "./LibraryNoteMatches.js";
 import { LibraryTable } from "./LibraryTable.js";
-import { LibraryTextSearch, type LibrarySearchScope } from "./LibraryTextSearch.js";
 import { LibraryViewSaveDialog } from "./LibraryViewSaveDialog.js";
 import {
   applyLibraryViewConfiguration,
@@ -62,10 +61,8 @@ import type {
   ReadingStatus,
   Source,
   SourceId,
-  SearchDestination,
   SourceSummary,
 } from "@mdbase-reader/core";
-import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export function LibraryWorkspace({
   view,
@@ -81,7 +78,6 @@ export function LibraryWorkspace({
   onInspectSource,
   onAddSource,
   onOpenSourceView,
-  surfaces,
   bibliographyExport,
   onSourceChanged,
   changeStatus,
@@ -97,12 +93,7 @@ export function LibraryWorkspace({
   readonly bibliographyExport: BibliographyExportController;
   readonly onSourceChanged?: (source: Source) => void;
   readonly changeStatus?: ((source: SourceSummary, status: ReadingStatus) => void) | undefined;
-  readonly surfaces?: ReadonlyMap<string, ReadingSurface>;
-  readonly onOpenSourceView?: (
-    id: SourceId,
-    view: "document" | "note" | "annotations",
-    destination?: SearchDestination,
-  ) => void;
+  readonly onOpenSourceView?: (id: SourceId, view: "document" | "note" | "annotations") => void;
   readonly view: MdbaseLibraryView;
   readonly availableViews: readonly MdbaseLibraryView[];
   readonly allSources: readonly SourceSummary[];
@@ -126,13 +117,8 @@ export function LibraryWorkspace({
     () => ({ ...layout, filter }),
     [layout, filter],
   );
-  const [searchScope, setSearchScope] = useState<LibrarySearchScope>("sources");
-  // A saved annotations view opens on its annotations; any view can switch between the two.
-  const [mode, setMode] = useState<"sources" | "annotations">(
-    view.annotations ? "annotations" : "sources",
-  );
-  const [contentQuery, setContentQuery] = useState("");
-  const [annotationToolbar, setAnnotationToolbar] = useState<HTMLDivElement | null>(null);
+  // Any view can switch to the collection's annotations and back.
+  const [mode, setMode] = useState<"sources" | "annotations">("sources");
   const [selection, setSelection] = useState<RowSelection>(emptyRowSelection);
   // Remounts the table after a reset, since it reads column widths from the layout once.
   const [layoutResets, setLayoutResets] = useState(0);
@@ -140,16 +126,13 @@ export function LibraryWorkspace({
   const [valuesByPath, setValuesByPath] = useState<
     ReadonlyMap<string, Readonly<Record<string, unknown>>>
   >(() => new Map());
-  const [loading, setLoading] = useState(Boolean(view.path && !view.annotations));
+  const [loading, setLoading] = useState(Boolean(view.path));
   const [problem, setProblem] = useState<string | null>(null);
-  // Stable per gateway, so Continue reading's thumbnails do not reload on every render.
-  const readThumbnailFile = useMemo(() => gateway.readFile.bind(gateway), [gateway]);
   const [saving, setSaving] = useState(false);
   const executionFamily = `reader-library-view:${useId()}`;
 
   useEffect(() => {
-    // Annotation mode owns its execution and hydration in LibraryAnnotations.
-    if (mode !== "sources" || view.annotations) {
+    if (mode !== "sources") {
       return undefined;
     }
     const controller = new AbortController();
@@ -194,7 +177,7 @@ export function LibraryWorkspace({
   }, [allSources, executedSources]);
   // A changed filter searches the whole library; layout changes keep the view's own results.
   const filterChanged = JSON.stringify(filter) !== JSON.stringify(view.configuration.filter);
-  const baseSources = filterChanged || view.annotations ? allSources : freshSources;
+  const baseSources = filterChanged ? allSources : freshSources;
   const { sortField, sortDirection } = layout;
   const matches = useMemo(
     () =>
@@ -204,11 +187,32 @@ export function LibraryWorkspace({
           ...view.configuration,
           sortField,
           sortDirection,
-          filter: searchScope === "sources" ? filter : { ...filter, query: "" },
+          filter,
         },
         allSources,
       ),
-    [baseSources, filter, searchScope, sortDirection, sortField, view.configuration, allSources],
+    [baseSources, filter, sortDirection, sortField, view.configuration, allSources],
+  );
+  // The same search also looks in notes and annotations, among the sources the other filters allow.
+  const noteSearch = useNoteSearch(gateway, mode === "sources" ? filter.query : "");
+  const noteCandidates = useMemo(
+    () =>
+      noteSearch.matches.size === 0
+        ? []
+        : applyLibraryViewConfiguration(
+            baseSources,
+            { ...view.configuration, sortField, sortDirection, filter: { ...filter, query: "" } },
+            allSources,
+          ).filter(({ id }) => noteSearch.matches.has(id)),
+    [
+      allSources,
+      baseSources,
+      filter,
+      noteSearch.matches,
+      sortDirection,
+      sortField,
+      view.configuration,
+    ],
   );
   const [collapsed, setCollapsed] = useState<ReadonlySet<SourceId>>(() => new Set());
   const [flatParts, setFlatParts] = useState(false);
@@ -218,10 +222,10 @@ export function LibraryWorkspace({
         matches,
         allSources,
         collapsed,
-        layout.presentation === "cards" || flatParts || Boolean(filter.query.trim()),
+        flatParts || Boolean(filter.query.trim()),
         !indexLoading,
       ),
-    [matches, allSources, collapsed, layout.presentation, flatParts, filter.query, indexLoading],
+    [matches, allSources, collapsed, flatParts, filter.query, indexLoading],
   );
   const sources = parts.sources;
   const togglePart = (id: SourceId): void =>
@@ -252,6 +256,16 @@ export function LibraryWorkspace({
     focused && mode === "sources",
     onInspectSource,
   );
+  // "Export citations" takes the selection, or every source in this view.
+  const exportScope = selectedSources.length > 0 ? selectedSources : sources;
+  const { setScope: setExportScope } = bibliographyExport;
+  useEffect(() => {
+    if (!focused || mode !== "sources") {
+      return undefined;
+    }
+    setExportScope(exportScope);
+    return () => setExportScope(null);
+  }, [exportScope, focused, mode, setExportScope]);
   const propertyKeys = useMemo(
     () => discoverPropertyKeys(allSources, view.properties),
     [allSources, view.properties],
@@ -280,12 +294,10 @@ export function LibraryWorkspace({
     shapeOf,
   );
   const resultsRef = useRef<HTMLDivElement>(null);
+  // The table scrolls itself, so `resultsRef` is not always this element.
+  const resultsAreaRef = useRef<HTMLDivElement>(null);
   const emptySources = sources.length === 0 && !loading && !(indexLoading && !view.path);
-  const rendersSourceTable =
-    mode === "sources" &&
-    searchScope === "sources" &&
-    !emptySources &&
-    configuration.presentation === "table";
+  const rendersSourceTable = mode === "sources" && !emptySources;
   const restoredScroll = useRef(false);
   useLayoutEffect(() => {
     // Returning to a view keeps its place once its rows exist to scroll to.
@@ -364,9 +376,6 @@ export function LibraryWorkspace({
             </button>
           ))}
         </div>
-        {mode === "annotations" ? (
-          <div ref={setAnnotationToolbar} className="library-annotation-toolbar-host" />
-        ) : null}
         {mode === "sources" ? (
           <>
             <div className="library-workspace-search">
@@ -374,48 +383,24 @@ export function LibraryWorkspace({
               <label className="library-search-field">
                 <span className="sr-only">{t({ message: "Search this view" })}</span>
                 <input
-                  value={searchScope === "sources" ? configuration.filter.query : contentQuery}
-                  placeholder={
-                    searchScope === "sources"
-                      ? t({ message: "Title, author or tag" })
-                      : searchScope === "notes"
-                        ? t({ message: "Search notes and annotations" })
-                        : t({ message: "Search open documents" })
-                  }
-                  onChange={(event) =>
-                    searchScope === "sources"
-                      ? updateFilter({ query: event.target.value })
-                      : setContentQuery(event.target.value)
-                  }
+                  value={configuration.filter.query}
+                  placeholder={t({ message: "Search titles, authors, tags and notes" })}
+                  onChange={(event) => updateFilter({ query: event.target.value })}
                   onKeyDown={(event) => {
                     if (event.key === "Escape" && event.currentTarget.value) {
                       event.preventDefault();
-                      if (searchScope === "sources") {
-                        updateFilter({ query: "" });
-                      } else {
-                        setContentQuery("");
-                      }
+                      updateFilter({ query: "" });
                     } else if (event.key === "ArrowDown" || event.key === "Escape") {
                       event.preventDefault();
-                      resultsRef.current
+                      resultsAreaRef.current
                         ?.querySelector<HTMLElement>(
-                          '.library-table-row:not(.is-header)[tabindex="0"], .search-passage-list button',
+                          '.search-passage-list button, .library-table-row:not(.is-header)[tabindex="0"]',
                         )
                         ?.focus();
                     }
                   }}
                 />
               </label>
-              <span className="library-search-scope-label" aria-hidden="true">
-                <Trans>in</Trans>
-              </span>
-              <Select
-                aria-label={t({ message: "Search scope", context: "LibraryWorkspace interface" })}
-                className="library-search-scope is-quiet"
-                value={searchScope}
-                options={searchScopeOptions(view.name)}
-                onChange={setSearchScope}
-              />
             </div>
             <div
               ref={trailingControls}
@@ -423,14 +408,12 @@ export function LibraryWorkspace({
               role="toolbar"
               aria-label={t`Library actions`}
             >
-              {searchScope === "sources" ? (
-                <span className="library-result-count" role="status">
-                  {loading
-                    ? t({ message: "Loading…", context: "LibraryWorkspace interface" })
-                    : `${countLabel(matches.length, "source")}${indexLoading && !view.path ? t({ message: " · Loading more…" }) : ""}`}
-                </span>
-              ) : null}
-              {dirty && view.owned && view.writable && !view.annotations ? (
+              <span className="library-result-count" role="status">
+                {loading
+                  ? t({ message: "Loading…", context: "LibraryWorkspace interface" })
+                  : `${countLabel(matches.length, "source")}${indexLoading && !view.path ? t({ message: " · Loading more…" }) : ""}`}
+              </span>
+              {dirty && view.owned && view.writable ? (
                 <button
                   className="library-save-button"
                   type="button"
@@ -537,29 +520,6 @@ export function LibraryWorkspace({
                       {configuration.sortDirection === "asc" ? "↑" : "↓"}
                     </button>
                   </div>
-                  <span className="menu-label">
-                    <Trans>Layout</Trans>
-                  </span>
-                  <div
-                    className="segmented-control"
-                    aria-label={t({
-                      message: "Library presentation",
-                      context: "LibraryWorkspace interface",
-                    })}
-                  >
-                    {(["table", "cards"] as const).map((presentation) => (
-                      <button
-                        key={presentation}
-                        type="button"
-                        aria-pressed={configuration.presentation === presentation}
-                        onClick={() => update({ presentation })}
-                      >
-                        {presentation === "table"
-                          ? t({ message: "Table", context: "LibraryWorkspace interface" })
-                          : t({ message: "Cards", context: "LibraryWorkspace interface" })}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </Menu>
               <Menu className="library-actions" label={t`Library actions`} trigger={<MoreIcon />}>
@@ -571,7 +531,7 @@ export function LibraryWorkspace({
                     setLayoutResets((count) => count + 1);
                   }}
                 >
-                  <Trans>Reset columns and layout</Trans>
+                  <Trans>Reset columns</Trans>
                 </button>
                 <button type="button" onClick={() => setSaving(true)}>
                   <Trans>Save as new view…</Trans>
@@ -579,14 +539,16 @@ export function LibraryWorkspace({
                 <button
                   type="button"
                   disabled={bibliographyExport.status === "exporting"}
-                  onClick={bibliographyExport.run}
+                  onClick={() => bibliographyExport.runFor(exportScope)}
                 >
                   {bibliographyExport.status === "exporting"
                     ? t({
-                        message: "Preparing bibliography…",
+                        message: "Preparing citations…",
                         context: "LibraryWorkspace interface",
                       })
-                    : t({ message: "Export bibliography", context: "LibraryWorkspace interface" })}
+                    : selectedSources.length > 0
+                      ? t`Export citations (${String(selectedSources.length)} selected)`
+                      : t`Export citations (${String(sources.length)} in this view)`}
                 </button>
                 <button
                   type="button"
@@ -640,7 +602,12 @@ export function LibraryWorkspace({
         </p>
       ) : null}
       <div
-        ref={rendersSourceTable ? undefined : resultsRef}
+        ref={(element) => {
+          resultsAreaRef.current = element;
+          if (!rendersSourceTable) {
+            resultsRef.current = element;
+          }
+        }}
         id={focused ? "reader-library-results" : undefined}
         tabIndex={-1}
         className="library-workspace-results"
@@ -651,43 +618,28 @@ export function LibraryWorkspace({
         }}
       >
         {mode === "annotations" ? (
-          <LibraryAnnotations
-            toolbarHost={annotationToolbar}
+          <CollectionAnnotations
             gateway={gateway}
-            view={view}
-            controller={controller}
-            collectionKey={collectionKey}
-            onOpenView={onOpenView}
             sources={allSources}
-            propertyKeys={propertyKeys}
-            focused={focused}
-            scrollRef={resultsRef}
-            onOpenAnnotation={
-              onOpenAnnotation ?? ((annotation) => onOpenSource(annotation.sourceId))
+            onOpenAnnotation={(annotation) =>
+              onOpenAnnotation
+                ? onOpenAnnotation(annotation, false)
+                : onOpenSource(annotation.sourceId)
             }
           />
         ) : (
           <>
-            {searchScope === "sources" && !configuration.filter.query && !view.path ? (
-              <ContinueReading
-                sources={allSources}
-                onOpen={onOpenSource}
-                readFile={readThumbnailFile}
-              />
+            {!configuration.filter.query && !view.path ? (
+              <ContinueReading sources={allSources} onOpen={onOpenSource} />
             ) : null}
-            {searchScope !== "sources" ? (
-              <LibraryTextSearch
-                key={searchScope}
-                scope={searchScope}
-                query={contentQuery}
-                sources={sources}
-                gateway={gateway}
-                surfaces={surfaces}
-                onOpen={(id, view, destination) =>
-                  onOpenSourceView ? onOpenSourceView(id, view, destination) : onOpenSource(id)
-                }
-              />
-            ) : emptySources ? (
+            <LibraryNoteMatches
+              search={noteSearch}
+              sources={noteCandidates}
+              onOpen={(id, view) =>
+                onOpenSourceView ? onOpenSourceView(id, view) : onOpenSource(id)
+              }
+            />
+            {emptySources && noteCandidates.length > 0 ? null : emptySources ? (
               <div className="library-workspace-empty">
                 <LibraryIcon />
                 {allSources.length === 0 ? (
@@ -748,7 +700,12 @@ export function LibraryWorkspace({
                 scrollRef={resultsRef}
                 onOpen={onOpenSource}
                 onOpenBeside={onOpenBeside}
-                onExport={bibliographyExport.runFor}
+                // The E key exports the selection when the row is part of it.
+                onExport={(rows) =>
+                  bibliographyExport.runFor(
+                    rows.some(({ id }) => visibleSelection.ids.has(id)) ? selectedSources : rows,
+                  )
+                }
                 {...(onRemoveSource ? { onRemove: onRemoveSource } : {})}
                 {...(changeStatus ? { onChangeStatus: changeStatus } : {})}
                 {...(writes.saveField
@@ -761,16 +718,7 @@ export function LibraryWorkspace({
                     }
                   : {})}
               />
-            ) : (
-              <LibraryCards
-                sources={sources}
-                partRows={parts.rows}
-                selection={visibleSelection}
-                onSelectionChange={setSelection}
-                onOpen={onOpenSource}
-                scrollRef={resultsRef}
-              />
-            )}
+            ) : null}
           </>
         )}
       </div>
@@ -795,7 +743,7 @@ export function LibraryWorkspace({
       <OverlayPresence open={saving}>
         <LibraryViewSaveDialog
           description={t({
-            message: "The filters, sort, columns and layout are saved in your collection.",
+            message: "The filters, sort and columns are saved in your collection.",
           })}
           placeholder={t({ message: "e.g. Reading this month" })}
           saving={controller.saving}
@@ -808,29 +756,6 @@ export function LibraryWorkspace({
 }
 
 const noCounts: ReadonlyMap<SourceId, number> = new Map();
-
-function searchScopeOptions(view: string): SelectItems<LibrarySearchScope> {
-  return [
-    {
-      value: "sources",
-      label: view,
-    },
-    {
-      value: "notes",
-      label: translate({
-        message: "Notes & annotations",
-        context: "LibraryWorkspace searchScopeOptions",
-      }),
-    },
-    {
-      value: "documents",
-      label: translate({
-        message: "Open documents",
-        context: "LibraryWorkspace searchScopeOptions",
-      }),
-    },
-  ];
-}
 
 function statusFilterOptions(): SelectItems<LibraryViewConfiguration["filter"]["status"]> {
   return [

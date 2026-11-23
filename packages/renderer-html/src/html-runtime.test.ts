@@ -101,10 +101,9 @@ describe("HtmlDocumentRuntime page text outside the article", () => {
     reader.destroy();
   });
 
-  it("leaves hidden headings out of the contents and hidden text out of extracted text", () => {
+  it("leaves hidden headings out of the contents", () => {
     const { runtime: reader } = runtime();
     expect(reader.contents().map((entry) => entry.title)).toEqual(["Essay", "Method"]);
-    expect(reader.extractText()).not.toContain("sidebar");
     reader.destroy();
   });
 });

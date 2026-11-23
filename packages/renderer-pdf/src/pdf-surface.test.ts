@@ -12,7 +12,6 @@ function runtimeFixture(): {
   readonly goToPage: ReturnType<typeof vi.fn>;
   readonly setAnnotations: ReturnType<typeof vi.fn>;
   readonly setActiveAnnotation: ReturnType<typeof vi.fn>;
-  readonly extractText: ReturnType<typeof vi.fn>;
   emitArea(selection: AreaSelectionDraft): void;
   emitText(selection: TextSelectionDraft): void;
   emitPage(pageIndex: number): void;
@@ -26,7 +25,6 @@ function runtimeFixture(): {
   const cancelAreaSelection = vi.fn();
   const setAnnotations = vi.fn();
   const setActiveAnnotation = vi.fn();
-  const extractText = vi.fn().mockResolvedValue("Extracted PDF text");
   return {
     runtime: {
       currentPageIndex: () => 2,
@@ -35,7 +33,6 @@ function runtimeFixture(): {
       beginAreaSelection: vi.fn(),
       cancelAreaSelection,
       clearTextSelection: vi.fn(),
-      extractText,
       setAnnotations,
       setActiveAnnotation,
       onAreaSelected: (listener) => {
@@ -68,7 +65,6 @@ function runtimeFixture(): {
     goToPage,
     setAnnotations,
     setActiveAnnotation,
-    extractText,
     emitArea: (selection) => areaListener?.(selection),
     emitText: (selection) => textListener?.(selection),
     emitPage: (pageIndex) => pageListener?.(pageIndex),
@@ -262,17 +258,6 @@ describe("EmbedPdfSurface", () => {
     expect(fixture.setActiveAnnotation).toHaveBeenLastCalledWith(previousRevision);
     await surface.capabilities.decorations?.setActiveAnnotation(otherFile);
     expect(fixture.setActiveAnnotation).toHaveBeenLastCalledWith(null);
-  });
-
-  it("exposes bounded renderer text extraction through the surface capability", async () => {
-    const fixture = runtimeFixture();
-    const surface = new EmbedPdfSurface(document, fixture.runtime);
-    const controller = new AbortController();
-
-    await expect(
-      surface.capabilities.textExtraction?.extractText({ signal: controller.signal }),
-    ).resolves.toBe("Extracted PDF text");
-    expect(fixture.extractText).toHaveBeenCalledWith({ signal: controller.signal });
   });
 
   it("rejects incompatible locators and releases runtime subscriptions", async () => {
