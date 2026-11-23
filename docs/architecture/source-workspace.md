@@ -52,7 +52,8 @@ no tabs is not drawn.
 - Side panels sharing a region are narrow tabs without a close button; the tab menu closes
   one.
 - One thing is saved per region: whether the reader wants it (`visible`), with its width.
-  Whether it is drawn right now is worked out each time from the room available, the
+  The width belongs to the arrangement; whether it is wanted belongs to the window (see
+  [Persistence](#persistence)). Whether it is drawn right now is worked out each time from the room available, the
   hide-while-reading preference, a maximized pane and the phone layout, and is never
   written back. A region that made way returns by itself when the reason goes.
 - When the window has room for only one region, the one asked for last stays.
@@ -69,9 +70,26 @@ whichever source is being worked on, and names the source at its top. They are n
 exactly like Sources.
 
 The source being worked on is the library's _leader_: the last focused panel that leads.
-Notes panels and Sources never lead, so working in them, or moving them, does not change
-which source they show. A library tab leads with its selected source. With no leader a
-Notes panel says so instead of showing a stale source.
+A Notes panel is a _follower_ (`follows` on its descriptor), and Sources is marked as not
+leading, so working in them, or moving them, does not change which source they show. A
+library tab leads with its selected source. With no leader a Notes panel says so instead
+of showing a stale source.
+
+A follower follows one of two things:
+
+- **the active document** (`follows: "leader"`), which is how every Notes panel starts;
+- **one pane** (`follows: { pane }`), chosen from the panel's tab menu ("Follow the pane
+  showing …"). It then shows the source of the tab leading that pane, whatever the reader
+  is working on elsewhere, so two documents side by side can each have their notes beside
+  them. Its tab names the source. A pane's leading tab is its tab in front, or the last
+  one that was when a Notes panel sits in front of it. When the pane goes, the panel
+  follows the active document again; "Follow the active document" in its menu does the
+  same, and so does a reset.
+
+Which panel leads and what each follower is about are the library's business
+(`subjectOf`). Reader adds only what a library tab's subject is (its selected source).
+The Notes panels that follow the active document share one set of loaded tools; one that
+follows a pane loads the tools of its own source (`PaneNotes`).
 
 Following is a property of the tab, and the rule is **unpinned follows, pinned stays**:
 
@@ -110,15 +128,31 @@ Switching to the canvas leaves every pane where it was. A pane is moved by the g
 the start of its tab strip and resized from its sides and corners; a tab dropped on open
 ground gets a pane of its own; "Open beside" places the new pane where it covers nothing.
 The wheel pans, Ctrl or Cmd with the wheel (a trackpad pinch) zooms, and the controls in
-the corner zoom, return to actual size, or show every pane. Frames and the camera are
-saved with the arrangement.
+the corner zoom, return to actual size, or show every pane. Frames are saved with
+the arrangement, and the camera with the window.
 
-Panes are **live at actual size only**. At any other zoom, and for every pane but the
-focused one, the content is covered: a click picks a pane, a double click brings it to
-actual size, and the wheel moves the canvas. Renderers and annotation overlays measure
-themselves in screen pixels, so they are never asked to work through a scale. A zoom that
-reaches 100% settles there. `useDockPanelFocus` forwards a Ctrl/Cmd wheel from inside a
-document frame, where the workspace would otherwise never see it.
+The pane in use is **live at any zoom**. Every other pane is covered: a click picks a
+pane, a double click brings it to actual size, and the wheel moves the canvas. A zoom
+that reaches 100% settles there. `useDockPanelFocus` forwards a Ctrl/Cmd wheel from inside
+a document frame, where the workspace would otherwise never see it.
+
+How a pane is shown at another zoom depends on what is in it (`panelZoom` in
+`PanelWorkspace.tsx`, the library's `zoom` prop):
+
+- A **document** draws itself at the zoom (`native`). Renderers and annotation overlays
+  measure themselves in screen pixels, so they are never asked to work through a scale:
+  the pane is laid out at the size it has on screen, and the document is told the zoom
+  through `ReadingTypography.zoom`. A saved page is zoomed as a whole inside its own
+  frame, an EPUB sets its text larger or smaller (within Readium's limits, 0.7 to 4 times
+  its default size), and a PDF fits its page to the pane as it does anywhere. What Reader
+  draws around the document (the PDF viewer's bar, a selection toolbar) keeps its size,
+  and behaves as it does in a pane of that width: in a narrow one the selection toolbar
+  docks at the foot.
+- **Everything else** (the library, Sources, Notes, a source's tool tabs) is drawn through
+  the canvas's scale (`scaled`): simply larger or smaller, and usable.
+
+A document is laid out for a new zoom when the zoom gesture settles; during the gesture
+it is a picture.
 
 ## Stable sessions, not pane-scoped renderers
 
@@ -178,11 +212,32 @@ left out of the restored arrangement.
 
 ## Persistence
 
-Layouts are stored per collection under `mdbase-reader:panels:v1:<collection>` as a
-version 1 envelope: the library's snapshot, plus Reader navigation metadata (recent
-sources, history, and recently closed sessions) and the focused panel. They do not hold
-editor text, dirty flags, authentication data, or downloaded document bytes. Source-note
-drafts keep their independent durable store; pending annotation edits remain memory-only.
+A workspace is kept in two halves, per collection:
+
+- The **arrangement** (`mdbase-reader:workspace:v2:<collection>`, in `localStorage`): what
+  is open and where it sits. Panels, the pane tree, the side regions and their widths,
+  the view, and each pane's frame on the canvas. It does not change when the reader only
+  looks around.
+- The **window state** (`mdbase-reader:workspace:v2:<collection>:window`, in
+  `sessionStorage`): how this window is looking at it. The focused pane, the tab in front
+  in each pane, the leader, a maximized pane, which side regions are open, where the
+  canvas is panned and zoomed to, and Reader's navigation metadata (recent sources,
+  history, recently closed sessions). A copy is kept in `localStorage` so that a new
+  window starts like the one used last.
+
+Neither holds editor text, dirty flags, authentication data, or downloaded document bytes.
+Source-note drafts keep their independent durable store; pending annotation edits remain
+memory-only.
+
+Two windows on the same collection **share the arrangement**: a tab opened, moved or
+closed in one appears so in the other (through the browser's `storage` event), without
+taking focus there or changing the tab in front. A tab with unsaved changes stays open in
+its own window when another window closes it. Taking up another window's arrangement
+clears this window's undo history. A change made in the 200 ms before another window's
+arrangement arrives can be lost to it.
+
+The workspace as it was saved before it had two halves
+(`mdbase-reader:panels:v1:<collection>`) is still read when there is no newer one.
 
 Layouts saved by the Dockview workspace (`mdbase-reader:dockview:v1:…`) and the two-pane
 workspace before it are not read or migrated. They are left in storage untouched, and the
@@ -199,7 +254,8 @@ prevent opening Reader.
   or redo an arrangement change. The same commands are in the command palette. F6 cycles
   panes, including side regions. Existing Reader tab and history shortcuts remain available.
 - Maximizing a reading pane hides the side regions and restores them on exit.
-- Floating windows and popouts are not implemented.
+- Floating windows and popouts are not implemented. A second browser window on the same
+  collection shows the whole arrangement (see [Persistence](#persistence)).
 
 ## Verification
 
@@ -210,7 +266,10 @@ the columns and fit-to-window views, the overview, undo, reload, a phone-width v
 reset. `READER_AUDIT_WORKSPACE_ONLY=1` runs only that part, followed by
 `scripts/audit-panel-canvas.mjs` (which the full audit does not run): side regions giving
 way and coming back, Sources dragged into a pane and brought home, library views opened
-as tabs, the Notes tabs (following, pinned to a source, moved into a pane), and the canvas (seeding, zoom, covered panes, moving a pane, a selection toolbar in a moved
-pane, reload). They are not an authenticated Connect acceptance test. `panel-workspace.test.ts` covers restoration, identity, preview
-replacement, tool reuse, close guards, library tabs, side regions, Notes panels, the canvas, undo and
+as tabs, the Notes tabs (following the active document or one pane, pinned to a source,
+moved into a pane), the canvas (seeding, zoom, a double click to actual size, moving a
+pane, a selection toolbar in a moved pane and in a zoomed one, a PDF and an EPUB at
+another zoom, reload), and a second window sharing the arrangement. They are not an authenticated Connect acceptance test. `panel-workspace.test.ts` covers restoration, identity, preview
+replacement, tool reuse, close guards, library tabs, side regions, Notes panels and what
+they follow, the two halves of what is saved, a second window, the canvas, undo and
 reset; the library has its own tests, including property tests of its operations.

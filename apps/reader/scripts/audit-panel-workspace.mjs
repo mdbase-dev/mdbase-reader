@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 
 import { searchSources } from "./audit-source-search.mjs";
 
-const storageKey = "mdbase-reader:panels:v1:test-reader-audit";
+const storageKey = "mdbase-reader:workspace:v2:test-reader-audit";
 
 /** Real pointer gestures against the panel workspace, not calls to its store. */
 export async function auditPanelWorkspace(page, { screenshot }) {
@@ -124,7 +124,7 @@ export async function auditPanelWorkspace(page, { screenshot }) {
 
   await page.waitForTimeout(400);
   const stored = await saved();
-  expect(stored.version).toBe(1);
+  expect(stored.version).toBe(2);
   expect(JSON.stringify(stored)).not.toContain("dirty");
   await page.reload();
   await expect(panes).toHaveCount(5, { timeout: 30000 });

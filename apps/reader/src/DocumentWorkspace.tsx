@@ -26,7 +26,7 @@ import type { SourceExportController } from "./use-source-export.js";
 import type { SourceRemovalController } from "./use-source-removal.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { SourceSummary } from "@mdbase-reader/core";
-import type { ReadingSurface } from "@mdbase-reader/reading-surface";
+import type { ReadingSurface, ReadingTypography } from "@mdbase-reader/reading-surface";
 
 export interface DocumentWorkspaceProps {
   readonly sources: readonly SourceSummary[];
@@ -54,6 +54,25 @@ export interface DocumentWorkspaceProps {
   readonly documentAttachment?: DocumentAttachmentController | null;
   readonly onToggleFocus: () => void;
   readonly surfaces: ReadonlyMap<string, ReadingSurface>;
+  /** The reader's type settings, which every open reflowable document is kept on. */
+  readonly typography: ReadingTypography;
+}
+
+/**
+ * Keeps a reflowable document on the reader's type settings, drawn at the zoom of the pane it
+ * is in. A document that is not reflowable (a PDF) fits its pane by itself.
+ */
+function useSurfaceTypography(
+  surface: ReadingSurface | undefined,
+  typography: ReadingTypography,
+  zoom = 1,
+): void {
+  const capability = surface?.capabilities.typography;
+  useEffect(() => {
+    void capability
+      ?.setTypography(zoom === 1 ? typography : { ...typography, zoom })
+      .catch(() => undefined);
+  }, [capability, typography, zoom]);
 }
 
 /** One workspace panel. Moving it never changes its React/session identity. */
@@ -63,12 +82,15 @@ export function DocumentWorkspace({
   paneId,
   visible,
   hydrated,
+  zoom,
 }: {
   readonly props: DocumentWorkspaceProps;
   readonly tab: WorkspaceTab;
   readonly paneId: string;
   readonly visible: boolean;
   readonly hydrated: ReadonlySet<string>;
+  /** The zoom of the canvas this panel is on, when its content is to draw itself at it. */
+  readonly zoom?: number;
 }): JSX.Element {
   const { t } = useLingui();
   const host = useRef<HTMLElement>(null);
@@ -83,6 +105,7 @@ export function DocumentWorkspace({
   const resident = visible || hydrated.has(workspaceSessionKey(paneId, tab.id));
   const document = tab.view === "document";
   const surface = props.surfaces.get(tab.id);
+  useSurfaceTypography(surface, props.typography, zoom);
   useEffect(() => {
     if (focused && visible) {
       const frame = requestAnimationFrame(() => {

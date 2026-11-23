@@ -3839,6 +3839,14 @@ msgstr "閲覧位置に追従"
 msgid "Follow the active document"
 msgstr "アクティブな文書に追従"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the pane showing {title}"
+msgstr "{title} を表示しているペインに追従"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Follow this pane"
+msgstr "このペインに追従"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "保存が遅い・失敗する場合の報告用です。有効にすると、パネルで接続の所要時間を記録してダウンロードできます。パネルで開始するまで何も記録されません。"

@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import {
   Workspace,
   type PanelInfo,
+  type PanelZoom,
   type StackInfo,
   type TabInfo,
   type WorkspaceProps,
@@ -26,7 +27,7 @@ import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { PaneActions } from "./PaneActions.js";
 import { navigatorPanelId } from "./panel-ids.js";
 import { tabMenu } from "./panel-menus.js";
-import { isSidePanel, notesView } from "./panel-workspace-state.js";
+import { followedPane, isSidePanel, notesView, panelTab } from "./panel-workspace-state.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { sidePanelTitle, workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
 
@@ -141,11 +142,16 @@ function usePanelTitles(
   );
   const titleOf = (panel: PanelDescriptor): string => {
     const tab = dock.tab(panel.id);
-    return tab
-      ? workspaceTabAccessibleTitle(tab, sourceOf(panel))
-      : isSidePanel(panel)
-        ? sidePanelTitle(panel)
-        : t({ message: "Source", context: "DockviewWorkspace status or action" });
+    if (tab) {
+      return workspaceTabAccessibleTitle(tab, sourceOf(panel));
+    }
+    if (!isSidePanel(panel)) {
+      return t({ message: "Source", context: "DockviewWorkspace status or action" });
+    }
+    // A Notes panel that follows a pane says whose notes it is showing, as a source's own tab does.
+    const followed = followedPane(panel) ? dock.sourceOf(panel.id) : null;
+    const source = followed ? sources.find(({ id }) => id === followed) : null;
+    return source ? `${sidePanelTitle(panel)} — ${source.title}` : sidePanelTitle(panel);
   };
   useEffect(() => {
     for (const panel of Object.values(dock.store.state.panels)) {
@@ -223,6 +229,15 @@ function useHydratedTabs(
   return useProgressiveWorkspaceTabs(visible);
 }
 
+/**
+ * What a pane does on a zoomed canvas. A document draws itself at the zoom, because what is
+ * drawn over it (a selection, its toolbar, an annotation) is measured on screen. Everything
+ * else is simply shown larger or smaller.
+ */
+function panelZoom(panel: PanelDescriptor): PanelZoom {
+  return panelTab(panel)?.view === "document" ? "native" : "scaled";
+}
+
 export function PanelWorkspace({
   navigator,
   renderNotes,
@@ -230,8 +245,8 @@ export function PanelWorkspace({
   ...document
 }: DocumentWorkspaceProps & {
   readonly navigator: ReactNode;
-  /** A Notes panel's content: one tool of the source the reader is working on. */
-  readonly renderNotes: (view: NotesView, visible: boolean) => ReactNode;
+  /** A Notes panel's content: one tool of the source it is about. */
+  readonly renderNotes: (panel: PanelDescriptor, view: NotesView, visible: boolean) => ReactNode;
   /** How many annotations that source has, once known. */
   readonly annotationCount?: number | null;
 }): JSX.Element {
@@ -252,6 +267,7 @@ export function PanelWorkspace({
           paneId={info.stack}
           visible={info.visible && info.mode !== "overview"}
           hydrated={hydrated}
+          zoom={info.zoom}
         />
       );
     }
@@ -264,7 +280,11 @@ export function PanelWorkspace({
         data-visible={info.visible}
         aria-hidden={!info.visible}
       >
-        {panel.id === navigatorPanelId ? navigator : view ? renderNotes(view, info.visible) : null}
+        {panel.id === navigatorPanelId
+          ? navigator
+          : view
+            ? renderNotes(panel, view, info.visible)
+            : null}
       </div>
     );
   };
@@ -273,7 +293,7 @@ export function PanelWorkspace({
       dock={dock}
       panel={panel}
       title={titleOf(panel)}
-      count={notesView(panel) === "annotations" ? annotationCount : null}
+      count={notesView(panel) === "annotations" && !followedPane(panel) ? annotationCount : null}
       close={info.close}
     />
   );
@@ -310,6 +330,7 @@ export function PanelWorkspace({
           store={dock.store}
           layout={dock.layoutOptions()}
           renderPanel={renderPanel}
+          zoom={panelZoom}
           renderTab={renderTab}
           renderStackActions={renderStackActions}
           renderEmpty={() => (

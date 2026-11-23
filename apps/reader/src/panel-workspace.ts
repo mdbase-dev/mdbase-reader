@@ -1,14 +1,18 @@
 import { t } from "@lingui/core/macro";
 import {
+  apply,
   computeLayout,
   edgeOfStack,
   findStack,
   keepPanels,
   mainStacks,
+  parseArrangement,
   seedFrames,
   stackOfPanel,
+  windowOf,
   WorkspaceStore,
   type EdgeSide,
+  type Follow,
   type LayoutOptions,
   type Operation,
   type PanelDescriptor,
@@ -21,10 +25,16 @@ import {
 } from "@mdbase-dev/panels";
 
 import { focusReadingPane } from "./focus-reading-pane.js";
-import { restoreWorkspace, sessionId, withSidePanels } from "./panel-workspace-restore.js";
+import {
+  restoreWorkspace,
+  sessionId,
+  withoutInvalid,
+  withSidePanels,
+} from "./panel-workspace-restore.js";
 import {
   activePanel,
   canFollow,
+  followedPane,
   homeOf,
   initialLayoutSnapshot,
   isSidePanel,
@@ -39,10 +49,12 @@ import {
   panelStorageKey,
   panelTab,
   projectLayout,
+  subjectTab,
   tabData,
   tabPanel,
   tabPanelKind,
   tabPanels,
+  windowStorageKey,
   type WorkspaceStorage,
 } from "./panel-workspace-state.js";
 import {
@@ -71,6 +83,10 @@ const skip = { history: "skip" } as const;
  *
  * A side region saves one thing: whether the reader wants it open. Whether it is on screen now
  * also depends on room, reading and the phone layout, and none of that is written back.
+ *
+ * What is open and where is shared by every window on the collection, and a window is told
+ * when another one changes it. Focus, the tab in front, open sides, the canvas position and
+ * history are each window's own.
  */
 export class ReaderPanelWorkspace {
   readonly store: WorkspaceStore;
@@ -92,8 +108,11 @@ export class ReaderPanelWorkspace {
   private hidden: readonly EdgeSide[] = [];
   /** The side asked for last: when there is not room for both, the other one gives way. */
   private asked: EdgeSide | null = null;
-  /** The source the Notes panels show. */
-  private followed: SourceId | null = null;
+  /** The source picked in the library: what a Notes panel shows while a library tab leads. */
+  private selected: SourceId | null = null;
+  private readonly collection: string;
+  private readonly storage: WorkspaceStorage | null;
+  private readonly session: WorkspaceStorage | null;
   private overviewOpen = false;
   private chromeHidden = false;
   private coarse = false;
@@ -104,9 +123,15 @@ export class ReaderPanelWorkspace {
     storage: WorkspaceStorage | null,
     knownSources: ReadonlySet<SourceId>,
     sourceIndexComplete = true,
+    /** This window's own storage. Tests, and browsers without one, share `storage`. */
+    session: WorkspaceStorage | null = storage,
   ) {
+    this.collection = collection;
+    this.storage = storage;
+    this.session = session;
     const restored = restoreWorkspace({
       storage,
+      session,
       collection,
       knownSources,
       sourceIndexComplete,
@@ -115,18 +140,19 @@ export class ReaderPanelWorkspace {
     const initial = withSidePanels(restored.state, restored.fresh ?? false);
     this.store = new WorkspaceStore({
       initial,
-      storage: {
-        load: () => undefined,
-        save: (snapshot) =>
-          storage?.setItem(
-            panelStorageKey(collection),
-            JSON.stringify({
-              version: 1,
-              workspace: snapshot,
-              navigation: this.navigation.toJSON(),
-              focusedPanel: this.focusedPanel,
-            }),
-          ),
+      shared: {
+        arrangement: {
+          load: () => undefined,
+          save: (arrangement) => {
+            storage?.setItem(
+              panelStorageKey(collection),
+              JSON.stringify({ version: 2, arrangement }),
+            );
+            // History changes with what is open, even when the window state itself does not.
+            this.saveWindow();
+          },
+        },
+        window: { load: () => undefined, save: () => this.saveWindow() },
       },
     });
     this.focusedPanel =
@@ -151,13 +177,73 @@ export class ReaderPanelWorkspace {
     return () => this.listeners.delete(listener);
   };
   getSnapshot = (): SourceWorkspaceLayout => this.projection;
-  /** Save when the page goes away, and once more when the workspace is taken down. */
+  /**
+   * Save when the page goes away, and once more when the workspace is taken down. While
+   * attached, an arrangement saved by another window on the collection is taken up here.
+   */
   attach(): () => void {
+    const key = panelStorageKey(this.collection);
+    const told = (event: StorageEvent): void => {
+      if (event.key === key && event.newValue) {
+        this.adopt(event.newValue);
+      }
+    };
     globalThis.addEventListener("pagehide", this.store.flush);
+    globalThis.addEventListener("storage", told);
     return () => {
       globalThis.removeEventListener("pagehide", this.store.flush);
+      globalThis.removeEventListener("storage", told);
       this.store.flush();
     };
+  }
+  /** How this window is looking at the workspace, and its history. */
+  private saveWindow(): void {
+    const text = JSON.stringify({
+      version: 2,
+      window: windowOf(this.state),
+      navigation: this.navigation.toJSON(),
+      focusedPanel: this.focusedPanel,
+    });
+    const key = windowStorageKey(this.collection);
+    this.session?.setItem(key, text);
+    if (this.storage !== this.session) {
+      // A copy where a new window finds it, so that it starts like the one used last.
+      this.storage?.setItem(key, text);
+    }
+  }
+  /**
+   * Take up the arrangement another window saved, keeping this window's own view of it. A tab
+   * with unsaved changes here stays open even if the other window closed it.
+   */
+  adopt(saved: string): void {
+    try {
+      const envelope = JSON.parse(saved) as { version?: unknown; arrangement?: unknown };
+      if (envelope.version !== 2) {
+        return;
+      }
+      const before = this.state;
+      this.store.adopt(parseArrangement(envelope.arrangement), (arrived) => {
+        let next = withoutInvalid(arrived, null);
+        for (const id of this.dirty) {
+          const panel = before.panels[id];
+          if (panel && !next.panels[id]) {
+            const stack = stackOfPanel(before, id);
+            next = apply(next, {
+              type: "add",
+              panel,
+              target:
+                stack && findStack(next, stack.id)
+                  ? { at: "stack", stack: stack.id }
+                  : { at: "focus" },
+              activate: false,
+            });
+          }
+        }
+        return next;
+      });
+    } catch {
+      // Something else wrote under this key, or it is not readable: this window keeps its own.
+    }
   }
 
   private get state(): WorkspaceState {
@@ -410,15 +496,19 @@ export class ReaderPanelWorkspace {
       this.notify();
     }
   }
-  /** The tab the Notes panels are about: the last one the reader used. */
+  /** The tab the Notes panels are about unless they follow a pane: the last one the reader used. */
   leaderTab = (): WorkspaceTab | null => this.tab(this.state.leader);
-  /** The source the Notes panels show, or null when there is none. */
-  get followedSource(): SourceId | null {
-    return this.followed;
-  }
-  setFollowed(sourceId: SourceId | null): void {
-    if (this.followed !== sourceId) {
-      this.followed = sourceId;
+  /** The tab one Notes panel is about: the leader, or the tab leading the pane it follows. */
+  subjectTab = (id: string): WorkspaceTab | null => subjectTab(this.state, id);
+  /** The source a Notes panel shows, or null when there is none. */
+  sourceOf = (id: string): SourceId | null => {
+    const tab = this.subjectTab(id);
+    // A library tab has no source of its own: its Notes are about the source picked in it.
+    return tab?.kind === "source" ? tab.sourceId : tab ? this.selected : null;
+  };
+  setSelected(sourceId: SourceId | null): void {
+    if (this.selected !== sourceId) {
+      this.selected = sourceId;
       this.notify();
     }
   }
@@ -429,19 +519,34 @@ export class ReaderPanelWorkspace {
    */
   hold(id: string): void {
     const view = notesView(this.state.panels[id]);
-    const sourceId = this.followed;
+    const sourceId = this.sourceOf(id);
     if (!view || !sourceId) {
       return;
     }
     const tab = { ...createWorkspaceTab(sourceId, view), id, pinned: true, follow: true };
     this.store.dispatch(
       {
-        type: "update",
-        panel: id,
-        changes: { kind: tabPanelKind, data: tabData(tab), leads: true },
+        type: "batch",
+        operations: [
+          {
+            type: "update",
+            panel: id,
+            changes: { kind: tabPanelKind, data: tabData(tab), leads: true },
+          },
+          { type: "follow", panel: id, follows: null },
+        ],
       },
       { ...skip, animate: false },
     );
+  }
+  /**
+   * Say whom a Notes panel is about: the tab the reader last used, or the one leading a pane,
+   * so that two documents side by side can each have their notes beside them.
+   */
+  setFollows(id: string, follows: Follow): void {
+    if (notesView(this.state.panels[id])) {
+      this.store.dispatch({ type: "follow", panel: id, follows }, { ...skip, animate: false });
+    }
   }
   /**
    * Let a note, annotations or citation tab show whichever source the reader is working on: it
@@ -471,8 +576,9 @@ export class ReaderPanelWorkspace {
           {
             type: "update",
             panel: id,
-            changes: { kind: notesPanelKind, data: { view: tab.view }, leads: false },
+            changes: { kind: notesPanelKind, data: { view: tab.view } },
           },
+          { type: "follow", panel: id, follows: "leader" },
           ...(heir && leading ? [{ type: "lead" as const, panel: heir }] : []),
         ],
       },
@@ -791,7 +897,7 @@ export class ReaderPanelWorkspace {
     const target: Target = { at: "edge", side };
     const existing =
       side === "right"
-        ? this.notesPanels()
+        ? this.notesPanels().filter((panel) => !followedPane(panel))
         : [this.state.panels[navigatorPanelId]].filter((panel) => panel !== undefined);
     const missing =
       side === "right"
@@ -863,7 +969,10 @@ export class ReaderPanelWorkspace {
   }
   /** Go to the Notes panel for one of a source's tools. One that was closed comes back. */
   showNotes(view: NotesView, activate = true): void {
-    const existing = this.notesPanels().find((panel) => notesView(panel) === view);
+    // One that follows a pane was put there for that pane; this is the one for everything else.
+    const existing = this.notesPanels().find(
+      (panel) => notesView(panel) === view && !followedPane(panel),
+    );
     if (existing) {
       this.show(existing.id, activate);
       return;
@@ -937,6 +1046,12 @@ export class ReaderPanelWorkspace {
     }
     // The Notes panels go back to the right, and ones that were closed come back with them.
     const notes = this.notesPanels();
+    // With every tab in one pane there is no pane to tell apart from the rest.
+    operations.push(
+      ...notes
+        .filter((panel) => followedPane(panel))
+        .map((panel) => ({ type: "follow" as const, panel: panel.id, follows: "leader" as const })),
+    );
     const strays = notes.filter((panel) => away(panel, "right"));
     const closed = notesViews.filter((view) => !notes.some((panel) => notesView(panel) === view));
     operations.push(

@@ -557,7 +557,8 @@ try {
     stack: error.stack,
     workspace: await page
       .evaluate(() => ({
-        saved: localStorage.getItem("mdbase-reader:panels:v1:test-reader-audit"),
+        saved: localStorage.getItem("mdbase-reader:workspace:v2:test-reader-audit"),
+        window: sessionStorage.getItem("mdbase-reader:workspace:v2:test-reader-audit:window"),
         mobileOptions: Array.from(
           globalThis.document.querySelectorAll(".mobile-workspace-navigation option"),
         ).map((option) => ({ value: option.value, title: option.textContent })),

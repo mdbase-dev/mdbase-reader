@@ -3838,6 +3838,14 @@ msgstr "Segui posizione di lettura"
 msgid "Follow the active document"
 msgstr "Segui il documento attivo"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the pane showing {title}"
+msgstr "Segui il riquadro che mostra {title}"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Follow this pane"
+msgstr "Segui questo riquadro"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "Per segnalare salvataggi lenti o non riusciti. Il pannello può registrare i tempi di connessione e scaricarli; non viene registrato nulla finché non avvii la registrazione nel pannello."

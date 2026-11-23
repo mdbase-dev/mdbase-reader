@@ -41,6 +41,7 @@ export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorks
         browserStorage(),
         new Set(options.sourceIds),
         options.sourceIndexComplete ?? true,
+        browserStorage("window"),
       ),
   );
   const { confirmDiscard, selectSource } = options;
@@ -67,9 +68,10 @@ export function useSourceWorkspace(options: SourceWorkspaceOptions): SourceWorks
     ...actions,
   };
 }
-function browserStorage(): Storage | null {
+/** What every window of this browser shares, or what only this one keeps. */
+function browserStorage(scope: "shared" | "window" = "shared"): Storage | null {
   try {
-    return globalThis.localStorage;
+    return scope === "shared" ? globalThis.localStorage : globalThis.sessionStorage;
   } catch {
     return null;
   }

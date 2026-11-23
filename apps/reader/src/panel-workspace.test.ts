@@ -1,8 +1,20 @@
-import { computeLayout, edgeOfStack, mainStacks, stackOfPanel } from "@mdbase-dev/panels";
+import {
+  computeLayout,
+  edgeOfStack,
+  mainStacks,
+  stackOfPanel,
+  toSnapshot,
+} from "@mdbase-dev/panels";
 import { describe, expect, it, vi } from "vitest";
 
 import { navigatorPanelId } from "./panel-ids.js";
-import { notesView, panelStorageKey } from "./panel-workspace-state.js";
+import {
+  followedPane,
+  legacyPanelStorageKey,
+  notesView,
+  panelStorageKey,
+  windowStorageKey,
+} from "./panel-workspace-state.js";
 import { ReaderPanelWorkspace } from "./panel-workspace.js";
 import { createWorkspaceTab, type NotesView } from "./source-workspace-layout.js";
 
@@ -211,6 +223,94 @@ describe("what is saved", () => {
   });
 });
 
+describe("two windows on one collection", () => {
+  /** A second window: the same local storage, and session storage of its own. */
+  const windows = (): {
+    storage: ReturnType<typeof memory>;
+    first: ReaderPanelWorkspace;
+    second: () => ReaderPanelWorkspace;
+    tell: (to: ReaderPanelWorkspace) => void;
+  } => {
+    const storage = memory();
+    const first = new ReaderPanelWorkspace("preview", storage, known, true, memory());
+    sized(first, 1400);
+    return {
+      storage,
+      first,
+      second: () => new ReaderPanelWorkspace("preview", storage, known, true, memory()),
+      // What the browser's storage event does for a window that is open.
+      tell: (to) => to.adopt(storage.getItem(panelStorageKey("preview")) ?? ""),
+    };
+  };
+  it("keeps the arrangement apart from how a window looks at it", () => {
+    const { storage, first } = windows();
+    first.open(one);
+    first.store.flush();
+    const arrangement = storage.getItem(panelStorageKey("preview")) ?? "";
+    expect(JSON.parse(arrangement)).toMatchObject({ version: 2 });
+    expect(arrangement).not.toContain('"focus"');
+    expect(arrangement).not.toContain('"camera"');
+    expect(JSON.parse(storage.getItem(windowStorageKey("preview")) ?? "")).toMatchObject({
+      version: 2,
+      window: { focus: expect.any(String) },
+    });
+    // Using a tab changes only the window's half.
+    first.activate(first.contentPanels()[0]?.id ?? "");
+    first.store.flush();
+    expect(storage.getItem(panelStorageKey("preview"))).toBe(arrangement);
+  });
+  it("shares tabs and panes, and leaves each window on the tab it was using", () => {
+    const { first, second, tell } = windows();
+    first.open(one);
+    first.store.flush();
+    const other = second();
+    sized(other, 1400);
+    expect(titles(other)).toEqual(["library", `${one}:document`]);
+    other.activate(other.contentPanels()[0]?.id ?? "");
+    first.open(two);
+    first.split(idOf(first, two), "horizontal");
+    first.store.flush();
+    tell(other);
+    expect(titles(other)).toEqual(["library", `${one}:document`, `${two}:document`]);
+    expect(mainStacks(other.store.state)).toHaveLength(2);
+    // The other window opened a document; this one is still where the reader left it.
+    expect(other.activeTab()?.kind).toBe("library");
+    expect(first.activeTab()).toMatchObject({ sourceId: two });
+  });
+  it("keeps a tab with unsaved changes that another window closed", async () => {
+    const { first, second, tell } = windows();
+    first.open(one, "citation");
+    first.store.flush();
+    const other = second();
+    sized(other, 1400);
+    const form = idOf(other, one, "citation");
+    other.patch(form, { dirty: true });
+    first.close(idOf(first, one, "citation"));
+    await Promise.resolve();
+    first.store.flush();
+    tell(other);
+    expect(other.tab(form)).toMatchObject({ view: "citation", dirty: true });
+    // Anything unreadable under the key leaves a window as it was.
+    other.adopt("{broken");
+    other.adopt(JSON.stringify({ version: 3, arrangement: {} }));
+    expect(other.tab(form)?.dirty).toBe(true);
+  });
+  it("reads the workspace as it was saved before it had two halves", () => {
+    const storage = memory();
+    const before = new ReaderPanelWorkspace("preview", null, known);
+    sized(before, 1400);
+    before.open(one);
+    before.open(two);
+    storage.setItem(
+      legacyPanelStorageKey("preview"),
+      JSON.stringify({ version: 1, workspace: toSnapshot(before.store.state) }),
+    );
+    const restored = new ReaderPanelWorkspace("preview", storage, known);
+    expect(titles(restored)).toEqual(["library", `${one}:document`, `${two}:document`]);
+    expect(restored.notesPanels().every(({ follows }) => follows === "leader")).toBe(true);
+  });
+});
+
 describe("side panels", () => {
   it("closes a side panel by hiding its side, and brings it back on the next toggle", async () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
@@ -375,7 +475,7 @@ describe("Notes panels and the source they show", () => {
     workspace.hold(panel);
     expect(workspace.tab(panel)).toBeNull();
     workspace.open(one);
-    workspace.setFollowed(one);
+    workspace.setSelected(one);
     workspace.hold(panel);
     expect(workspace.tab(panel)).toMatchObject({
       kind: "source",
@@ -388,7 +488,7 @@ describe("Notes panels and the source they show", () => {
     expect(sideOfPanel(workspace, panel)).toBe("right");
     // Pinned, it is a tab about its own source, as any note tab is.
     workspace.open(two);
-    workspace.setFollowed(two);
+    workspace.setSelected(two);
     expect(workspace.tab(panel)?.sourceId).toBe(one);
     workspace.activate(panel);
     expect(workspace.leaderTab()?.id).toBe(panel);
@@ -396,7 +496,7 @@ describe("Notes panels and the source they show", () => {
     workspace.patch(panel, { pinned: false });
     expect(workspace.tab(panel)).toBeNull();
     expect(notesView(workspace.panel(panel))).toBe("note");
-    expect(workspace.panel(panel)?.leads).toBe(false);
+    expect(workspace.panel(panel)?.follows).toBe("leader");
   });
   it("turns a source's own tab into a Notes panel, once its changes are saved", () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
@@ -422,18 +522,47 @@ describe("Notes panels and the source they show", () => {
     const workspace = new ReaderPanelWorkspace("preview", storage, known);
     sized(workspace, 1400);
     workspace.open(one);
-    workspace.setFollowed(one);
+    workspace.setSelected(one);
     const panel = notes(workspace, "annotations");
     workspace.hold(panel);
     workspace.store.flush();
     const restored = new ReaderPanelWorkspace("preview", storage, known);
     expect(restored.tab(panel)).toMatchObject({ follow: true, pinned: true, sourceId: one });
     expect(notesViewsOf(restored)).toEqual(["note", "citation"]);
-    expect(restored.notesPanels().every(({ leads }) => leads === false)).toBe(true);
+    expect(restored.notesPanels().every(({ follows }) => follows === "leader")).toBe(true);
     // Its source deleted, the pinned tab goes; the panels that follow stay.
     const without = new ReaderPanelWorkspace("preview", storage, new Set([two]));
     expect(without.panel(panel)).toBeUndefined();
     expect(notesViewsOf(without)).toEqual(["note", "citation"]);
+  });
+  it("follows one pane, so two documents side by side each have their notes", () => {
+    const workspace = new ReaderPanelWorkspace("preview", null, known);
+    sized(workspace, 1400);
+    workspace.open(one);
+    workspace.open(two);
+    workspace.split(idOf(workspace, two), "horizontal");
+    const pane = (source: SourceId): string =>
+      stackOfPanel(workspace.store.state, idOf(workspace, source))?.id ?? "";
+    const panel = notes(workspace, "annotations");
+    expect(workspace.sourceOf(panel)).toBe(two);
+    workspace.setFollows(panel, { pane: pane(one) });
+    expect(followedPane(workspace.panel(panel))).toBe(pane(one));
+    expect(workspace.sourceOf(panel)).toBe(one);
+    // Working in the other pane moves the panels that follow the reader, not this one.
+    workspace.activate(idOf(workspace, two));
+    expect(workspace.sourceOf(notes(workspace, "note"))).toBe(two);
+    expect(workspace.sourceOf(panel)).toBe(one);
+    // It shows whatever its pane shows, and a note tab there is about the same source.
+    workspace.open(three, "document", pane(one));
+    expect(workspace.sourceOf(panel)).toBe(three);
+    // Pinned, it is the tab of the source its pane was showing.
+    workspace.hold(panel);
+    expect(workspace.tab(panel)).toMatchObject({ sourceId: three, pinned: true });
+    workspace.patch(panel, { pinned: false });
+    expect(workspace.panel(panel)?.follows).toBe("leader");
+    workspace.setFollows(panel, { pane: pane(one) });
+    workspace.reset();
+    expect(workspace.panel(panel)?.follows).toBe("leader");
   });
 });
 

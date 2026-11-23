@@ -2,6 +2,7 @@ import {
   allStacks,
   findStack,
   stackOfPanel,
+  subjectOf,
   type PanelDescriptor,
   type WorkspaceState,
   type PanelData,
@@ -38,16 +39,26 @@ export interface WorkspaceStorage {
 export const tabPanelKind = "workspace";
 export const navigatorPanelKind = "navigator";
 export const notesPanelKind = "notes";
+/**
+ * Where a collection's workspace is kept, in two halves. The arrangement (what is open and
+ * where) is shared by every window on the collection. The window state (focus, the tab in
+ * front, open sides, history) is each window's own, under `windowStorageKey`.
+ */
 export const panelStorageKey = (collection: string): string =>
+  `mdbase-reader:workspace:v2:${collection}`;
+export const windowStorageKey = (collection: string): string =>
+  `${panelStorageKey(collection)}:window`;
+/** The single blob both halves were kept in before; read once, never written. */
+export const legacyPanelStorageKey = (collection: string): string =>
   `mdbase-reader:panels:v1:${collection}`;
 
 export const navigatorWidth = 260;
 export const notesWidth = 340;
-const about = { app: "reader", minWidth: 180, minHeight: 120, leads: false } as const;
+const side = { app: "reader", minWidth: 180, minHeight: 120 } as const;
 
 export function navigatorPanel(): PanelDescriptor {
   // Sources is about other tabs, so using it does not change which tab the Notes panels show.
-  return { id: navigatorPanelId, kind: navigatorPanelKind, ...about };
+  return { id: navigatorPanelId, kind: navigatorPanelKind, ...side, leads: false };
 }
 
 /** A new Notes panel. Its id is a tab's, so pinning it to a source keeps it the same panel. */
@@ -55,8 +66,21 @@ export function notesPanel(view: NotesView): PanelDescriptor {
   return notesPanelFor(`reader:session:${crypto.randomUUID()}`, view);
 }
 
+/** A Notes panel follows: it is about the tab the reader last used, or the one leading a pane. */
 export function notesPanelFor(id: string, view: NotesView): PanelDescriptor {
-  return { id, kind: notesPanelKind, data: { view }, ...about };
+  return { id, kind: notesPanelKind, data: { view }, ...side, follows: "leader" };
+}
+
+/** The pane a Notes panel follows, or null when it follows the tab the reader last used. */
+export function followedPane(panel: PanelDescriptor | null | undefined): string | null {
+  const follows = panel?.follows;
+  return follows !== undefined && follows !== "leader" ? follows.pane : null;
+}
+
+/** The tab a Notes panel is about right now. */
+export function subjectTab(state: WorkspaceState, panel: string): WorkspaceTab | null {
+  const subject = subjectOf(state, panel);
+  return subject ? panelTab(state.panels[subject]) : null;
 }
 
 /** Which of a source's tools a Notes panel shows, or null for any other panel. */

@@ -19,6 +19,9 @@ export function applyHtmlTypography(document: Document, typography: ReadingTypog
   }
   const scale = Math.max(0.8, Math.min(1.6, typography.scale));
   const measure = readingMeasureCharacters[typography.measure];
-  style.textContent = `body { font-size: ${String(18 * scale)}px; font-family: ${faces[typography.face]}; max-width: calc(${String(measure)}ch + 6rem); }
-    @media (max-width: 640px) { body { font-size: ${String(17 * scale)}px; } }`;
+  // The page as a whole is zoomed, pictures and margins too, so that it lays out as it does at
+  // full size. The narrow-window rule is about the pane's size before that zoom.
+  const zoom = Math.max(0.1, Math.min(4, typography.zoom ?? 1));
+  style.textContent = `${zoom === 1 ? "" : `html { zoom: ${String(zoom)}; }\n    `}body { font-size: ${String(18 * scale)}px; font-family: ${faces[typography.face]}; max-width: calc(${String(measure)}ch + 6rem); }
+    @media (max-width: ${String(Math.round(640 * zoom))}px) { body { font-size: ${String(17 * scale)}px; } }`;
 }

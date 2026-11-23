@@ -3839,6 +3839,14 @@ msgstr "跟随阅读位置"
 msgid "Follow the active document"
 msgstr "跟随当前文档"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the pane showing {title}"
+msgstr "跟随显示 {title} 的窗格"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Follow this pane"
+msgstr "跟随此窗格"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "用于报告缓慢或失败的保存。面板随后可以记录连接耗时并下载；在你于面板中启动之前，不会记录任何内容。"

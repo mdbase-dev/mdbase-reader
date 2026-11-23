@@ -3839,6 +3839,14 @@ msgstr "Следовать за местом чтения"
 msgid "Follow the active document"
 msgstr "Следовать за активным документом"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the pane showing {title}"
+msgstr "Следовать за панелью, где открыт {title}"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Follow this pane"
+msgstr "Следовать за этой панелью"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "Для отчётов о медленном или неудачном сохранении. Панель сможет записывать время подключения и скачивать его; запись начнётся только после запуска на панели."

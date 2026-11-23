@@ -3839,6 +3839,14 @@ msgstr "읽기 위치 따라가기"
 msgid "Follow the active document"
 msgstr "활성 문서 따라가기"
 
+#: apps/reader/src/panel-menus.ts
+msgid "Follow the pane showing {title}"
+msgstr "{title}을(를) 표시하는 패널 따라가기"
+
+#: apps/reader/src/panel-menus.ts
+msgid "Follow this pane"
+msgstr "이 패널 따라가기"
+
 #: apps/extension/src/OptionsApp.tsx
 msgid "For reporting slow or failed saves. The panel can then record connection timings and download them; nothing is recorded until you start it there."
 msgstr "느린 저장이나 실패한 저장을 보고하기 위한 설정입니다. 패널에서 연결 시간을 기록하고 다운로드할 수 있으며, 패널에서 시작하기 전에는 아무것도 기록되지 않습니다."

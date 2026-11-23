@@ -24,8 +24,8 @@ one arrangement; what changes is how much of it is shown.
 
 ## Persistence
 
-Whether the reader wants each side region, and its width, are part of the saved
-arrangement. What is drawn at a given width is never saved, nor is the phone
+Each side region's width is part of the saved arrangement, and whether the reader wants
+it is saved with the window. What is drawn at a given width is never saved, nor is the phone
 presentation, so a workspace last used on a phone opens on a desktop with its desktop
 arrangement.
 

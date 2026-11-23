@@ -127,6 +127,11 @@ export interface ReadingTypography {
   readonly scale: number;
   readonly measure: "narrow" | "standard" | "wide";
   readonly face: "serif" | "sans";
+  /**
+   * How much larger or smaller than those settings to draw the document, when the pane it is in
+   * is itself shown larger or smaller (a workspace canvas that is zoomed). Defaults to 1.
+   */
+  readonly zoom?: number;
 }
 
 export interface TypographyCapability {

@@ -1,6 +1,14 @@
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useCallback, useEffect, useMemo, useRef, type JSX, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type JSX,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
 import { useShellNotices } from "./CreateFollowThroughNotice.js";
@@ -13,7 +21,9 @@ import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { OverlayPresence } from "./OverlayPresence.js";
+import { followedPane, notesView } from "./panel-workspace-state.js";
 import { PanelWorkspace } from "./PanelWorkspace.js";
+import { PaneNotes } from "./PaneNotes.js";
 import { useReaderMdbase } from "./reader-collections.js";
 import { readerCommandGroupLabel, readerCommands } from "./reader-command-list.js";
 import { ReaderCommandPalette as CommandPalette } from "./ReaderCommandPalette.js";
@@ -38,6 +48,7 @@ import { whenIdle } from "./when-idle.js";
 import { annotationDocumentTarget } from "./workspace-annotation-navigation.js";
 import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
+import type { ReaderPanelWorkspace } from "./panel-workspace.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type {
   NotesView,
@@ -58,10 +69,11 @@ import type { SourceRemovalController } from "./use-source-removal.js";
 import type { useSourceStatus } from "./use-source-status.js";
 import type { SourceWorkspaceController } from "./use-source-workspace.js";
 import type { ReaderLibrarySnapshot, ReaderWorkspaceGateway } from "./workspace-model.js";
+import type { PanelDescriptor } from "@mdbase-dev/panels";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { Annotation, SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
-import type { ReadingSurface, ReadingTypography } from "@mdbase-reader/reading-surface";
+import type { ReadingSurface } from "@mdbase-reader/reading-surface";
 
 export interface ReaderWorkspaceViewModel {
   readonly library: ReaderLibrarySnapshot;
@@ -263,6 +275,7 @@ export function ReaderWorkspaceView({
           sources={library.sources}
           documentAttachment={model.documentAttachment}
           surfaces={model.surfaces}
+          typography={shell.value.typography}
           sourceWorkspace={sourceWorkspace}
           focusMode={model.focusMode}
           readingResume={model.readingResume}
@@ -372,44 +385,29 @@ export function ReaderWorkspaceView({
               ? workspace.annotations.value.length
               : null
           }
-          renderNotes={(view, visible) => {
-            const owner = findWorkbenchOwner(
-              sourceWorkspace.layout,
-              inspectorSource?.id ?? null,
-              view,
-            );
-            return (
-              <InspectorPane
-                tab={view}
-                visible={visible}
-                source={inspectorSource}
-                paneLabel={paneLabel(sourceWorkspace.activePane.id)}
-                workspace={workspace}
-                composer={composer}
-                gateway={model.gateway}
-                workbenchOwner={
-                  owner
-                    ? {
-                        paneLabel: paneLabel(owner.pane.id),
-                        onOpen: () => sourceWorkspace.activateTab(owner.tab.id, owner.pane.id),
-                      }
-                    : null
-                }
-                onPromote={() => {
-                  if (inspectorSource) {
-                    sourceWorkspace.openView(
-                      inspectorSource.id,
-                      view,
-                      sourceWorkspace.activePane.id,
-                    );
+          renderNotes={(panel, view, visible) =>
+            renderNotesPanel(
+              {
+                model,
+                composer,
+                inspectorSource,
+                paneLabel,
+                openAnnotation: (annotation, sourceId, paneId) => {
+                  const target = annotationDocumentTarget(sourceWorkspace.layout, sourceId, paneId);
+                  pendingAnnotationRef.current = { annotation, paneId: target.paneId, sourceId };
+                  if (target.tabId) {
+                    sourceWorkspace.activateTab(target.tabId, target.paneId);
+                  } else {
+                    sourceWorkspace.openView(sourceId, "document", target.paneId);
                   }
-                }}
-                onOpenSourceView={(sourceId, sourceView) =>
-                  sourceWorkspace.openView(sourceId, sourceView, sourceWorkspace.activePane.id)
-                }
-              />
-            );
-          }}
+                  sourceWorkspace.focus(target.paneId);
+                },
+              },
+              panel,
+              view,
+              visible,
+            )
+          }
         />
       </main>
       <SourceAdditionOverlays
@@ -476,16 +474,110 @@ function useLeaderSource(model: ReaderWorkspaceViewModel): SourceSummary | null 
     leaderTab?.kind === "source"
       ? (library.sources.find(({ id }) => id === leaderTab.sourceId) ?? null)
       : null;
-  const followedSourceId =
-    leaderTab?.kind === "source"
-      ? leaderTab.sourceId
-      : leaderTab
-        ? (workspace.selectedSource?.id ?? null)
-        : null;
+  // A library tab has no source of its own: Notes about it show the source picked in it.
+  const selectedSourceId = workspace.selectedSource?.id ?? null;
   useEffect(() => {
-    dock.setFollowed(followedSourceId);
-  }, [dock, followedSourceId]);
+    dock.setSelected(selectedSourceId);
+  }, [dock, selectedSourceId]);
   return inspectorSourceForTab(leaderTab, leaderSource, workspace.selectedSource);
+}
+
+/**
+ * A Notes panel's content. One that follows the tab the reader last used shares the tools
+ * Reader has loaded for that source. One that follows a pane loads its own.
+ */
+function renderNotesPanel(
+  context: {
+    readonly model: ReaderWorkspaceViewModel;
+    readonly composer: ReaderWorkspaceViewModel["composer"];
+    readonly inspectorSource: SourceSummary | null;
+    readonly paneLabel: (id: WorkspacePaneId) => string;
+    readonly openAnnotation: (
+      annotation: Annotation,
+      sourceId: SourceId,
+      paneId: WorkspacePaneId,
+    ) => void;
+  },
+  panel: PanelDescriptor,
+  view: NotesView,
+  visible: boolean,
+): ReactNode {
+  const { model, composer, inspectorSource, paneLabel } = context;
+  const { library, sourceWorkspace, workspace } = model;
+  const dock = sourceWorkspace.dock;
+  const pane = followedPane(panel);
+  const followedId = pane ? dock.sourceOf(panel.id) : null;
+  const source = pane
+    ? (library.sources.find(({ id }) => id === followedId) ?? null)
+    : inspectorSource;
+  const tabOwner = findWorkbenchOwner(sourceWorkspace.layout, source?.id ?? null, view);
+  // The same citation in a panel that follows a pane: this one makes way for it too.
+  const panelOwner = pane ? undefined : findCitationPanel(dock, source?.id ?? null, view);
+  const workbenchOwner = tabOwner
+    ? {
+        paneLabel: paneLabel(tabOwner.pane.id),
+        onOpen: () => sourceWorkspace.activateTab(tabOwner.tab.id, tabOwner.pane.id),
+      }
+    : panelOwner
+      ? { paneLabel: paneLabel(panelOwner.pane), onOpen: () => dock.activate(panelOwner.id) }
+      : null;
+  const openSourceView = (sourceId: SourceId, sourceView: "document" | "citation"): void =>
+    sourceWorkspace.openView(sourceId, sourceView, pane ?? sourceWorkspace.activePane.id);
+  const inspector = (
+    <InspectorPane
+      tab={view}
+      visible={visible}
+      source={pane ? null : inspectorSource}
+      paneLabel={paneLabel(pane ?? sourceWorkspace.activePane.id)}
+      workspace={workspace}
+      composer={composer}
+      gateway={model.gateway}
+      workbenchOwner={workbenchOwner}
+      onPromote={() => {
+        if (inspectorSource) {
+          sourceWorkspace.openView(inspectorSource.id, view, sourceWorkspace.activePane.id);
+        }
+      }}
+      onOpenSourceView={openSourceView}
+    />
+  );
+  if (!pane) {
+    return inspector;
+  }
+  return (
+    <PaneNotes
+      tab={view}
+      visible={visible}
+      source={source}
+      empty={inspector}
+      paneLabel={paneLabel(pane)}
+      composer={composer}
+      gateway={model.gateway}
+      reconcileSource={workspace.reconcileSource}
+      workbenchOwner={workbenchOwner}
+      onOpenAnnotation={(annotation, owner) => context.openAnnotation(annotation, owner.id, pane)}
+      onPromote={(owner) => sourceWorkspace.openView(owner.id, view, pane)}
+      onOpenSourceView={openSourceView}
+    />
+  );
+}
+
+/** A citation panel that follows a pane and is showing this source: it owns the form. */
+function findCitationPanel(
+  dock: ReaderPanelWorkspace,
+  sourceId: SourceId | null,
+  view: NotesView,
+): { readonly id: string; readonly pane: string } | undefined {
+  if (!sourceId || view !== "citation") {
+    return undefined;
+  }
+  for (const panel of dock.notesPanels()) {
+    const pane = followedPane(panel);
+    if (pane && notesView(panel) === view && dock.sourceOf(panel.id) === sourceId) {
+      return { id: panel.id, pane };
+    }
+  }
+  return undefined;
 }
 
 function useReadingPreferences(
@@ -503,7 +595,6 @@ function useReadingPreferences(
 > {
   const { typography, sidebarWhileReading } = shell.value;
   const activeTab = model.sourceWorkspace.activeTab;
-  useApplyTypography(model.surfaces, typography);
   const dock = model.sourceWorkspace.dock;
   useEffect(() => {
     dock.setHideWhileReading(sidebarWhileReading === "hide");
@@ -562,18 +653,6 @@ export function useLibraryAnnotationCounts(
     const ownedCount = loaded.value.filter((annotation) => annotation.sourceId === sourceId).length;
     return (known ?? new Map()).set(sourceId, ownedCount);
   }, [counts, loaded, sourceId, model.library.sources]);
-}
-
-/** Keeps every open reflowable document on the reader's chosen type settings. */
-function useApplyTypography(
-  surfaces: ReadonlyMap<string, ReadingSurface>,
-  typography: ReadingTypography,
-): void {
-  useEffect(() => {
-    for (const surface of surfaces.values()) {
-      void surface.capabilities.typography?.setTypography(typography).catch(() => undefined);
-    }
-  }, [surfaces, typography]);
 }
 
 function findWorkbenchOwner(
