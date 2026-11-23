@@ -308,7 +308,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
             keywords: "duplicate right split",
             detail: input.activeSource.title,
             group: "Workspace",
-            run: () => input.workspace.openBeside(sourceId, "document", "horizontal"),
+            run: () => input.workspace.openBeside(sourceId, "horizontal"),
           },
           {
             id: "split-below",
@@ -316,7 +316,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
             keywords: "duplicate below split",
             detail: input.activeSource.title,
             group: "Workspace",
-            run: () => input.workspace.openBeside(sourceId, "document", "vertical"),
+            run: () => input.workspace.openBeside(sourceId, "vertical"),
           },
         ] satisfies readonly ReaderCommand[])
       : []),
@@ -350,39 +350,6 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
     },
     ...annotationCommands(input),
     ...chapterCommands(input),
-    {
-      id: "annotations",
-      label: translate({ message: "Open annotations", context: "reader command list" }),
-      keywords: "owner ownership annotation source",
-      group: "Current source",
-      run: () => input.workspace.openView(sourceId, "annotations"),
-      alternate: {
-        label: translate({ message: "Open beside", context: "reader command list" }),
-        run: () => input.workspace.openBeside(sourceId, "annotations"),
-      },
-    },
-    {
-      id: "note",
-      label: translate({ message: "Open source note" }),
-      group: "Current source",
-      keywords: "write notes source note literature note",
-      run: () => input.workspace.openView(sourceId, "note"),
-      alternate: {
-        label: translate({ message: "Open beside", context: "reader command list" }),
-        run: () => input.workspace.openBeside(sourceId, "note"),
-      },
-    },
-    {
-      id: "citation",
-      label: translate({ message: "Open citation details" }),
-      group: "Current source",
-      keywords: "bibliography csl metadata citekey citation key field sources field evidence",
-      run: () => input.workspace.openView(sourceId, "citation"),
-      alternate: {
-        label: translate({ message: "Open beside", context: "reader command list" }),
-        run: () => input.workspace.openBeside(sourceId, "citation"),
-      },
-    },
     ...(removeSource
       ? [
           {
@@ -459,21 +426,22 @@ function notesCommands(input: ReaderCommandInput): ReaderCommand[] {
     {
       id: "show-notes-annotations",
       label: translate({ message: "Show Annotations panel" }),
-      keywords: "notes highlights comments right sidebar",
+      keywords: "notes highlights comments right sidebar owner ownership annotation source",
       group: "Workspace",
       run: () => dock.showNotes("annotations"),
     },
     {
       id: "show-notes-note",
       label: translate({ message: "Show Source note panel" }),
-      keywords: "notes literature note right sidebar",
+      keywords: "notes write source note literature note right sidebar",
       group: "Workspace",
       run: () => dock.showNotes("note"),
     },
     {
       id: "show-notes-citation",
       label: translate({ message: "Show Citation panel" }),
-      keywords: "notes reference bibliography right sidebar",
+      keywords:
+        "notes reference bibliography csl metadata citekey citation key field sources field evidence right sidebar",
       group: "Workspace",
       run: () => dock.showNotes("citation"),
     },

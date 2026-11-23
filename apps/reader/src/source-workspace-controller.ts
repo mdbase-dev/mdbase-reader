@@ -10,6 +10,10 @@ import type { SourceId } from "@mdbase-reader/core";
 export interface SourceWorkspaceActions {
   readonly preview: (sourceId: SourceId, paneId?: WorkspacePaneId) => void;
   readonly open: (sourceId: SourceId, paneId?: WorkspacePaneId) => void;
+  /**
+   * Go to one of a source's views. Its note, annotations and citation are the Notes panels, so
+   * those open the source and show the matching panel; a phone shows them in the source's tab.
+   */
   readonly openView: (
     sourceId: SourceId,
     view: SourceWorkspaceView,
@@ -38,11 +42,7 @@ export interface SourceWorkspaceActions {
   readonly switchRelative: (direction: -1 | 1) => void;
   readonly focus: (paneId: WorkspacePaneId) => void;
   readonly focusNextPane: () => void;
-  readonly openBeside: (
-    sourceId: SourceId,
-    view?: SourceWorkspaceView,
-    direction?: WorkspaceSplitDirection,
-  ) => void;
+  readonly openBeside: (sourceId: SourceId, direction?: WorkspaceSplitDirection) => void;
   readonly splitTab: (
     tabId: WorkspaceTabId,
     paneId: WorkspacePaneId,

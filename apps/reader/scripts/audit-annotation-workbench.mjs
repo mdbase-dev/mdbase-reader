@@ -12,14 +12,19 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
   const annotationId = await tools
     .locator(".annotation-card.is-editing")
     .getAttribute("data-annotation-id");
-  await tools.getByRole("button", { name: "Open annotations in workbench", exact: true }).click();
+  // Pinned, the Annotations panel becomes this source's own annotations tab.
+  await page
+    .locator(".reader-dock-tab.is-side")
+    .filter({ has: page.locator(".reader-tab-title", { hasText: /^Annotations$/u }) })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Pin tab", exact: true }).click();
   const tab = page
     .locator(".reader-dock-tab:not(.is-side)")
     .filter({ has: page.locator(".reader-tab-title", { hasText: "Annotations —" }) });
   const panelId = await tab.getAttribute("data-panel-id");
   const workbench = page.locator(`[data-session-id="${panelId}"]`);
-  // Promotion hides the retained sidebar. Explicitly transfer its editor lease
-  // to the workbench; the same unsaved buffer must survive that transfer.
+  // Pinning leaves no Annotations panel behind. Explicitly transfer the editor lease
+  // to the pinned tab; the same unsaved buffer must survive that transfer.
   await expect(tools).toHaveCount(0);
   await workbench
     .locator(`[data-annotation-id="${annotationId}"]`)
@@ -46,9 +51,12 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
     .getByText("[test] Research 0000", { exact: true })
     .click();
   await tab.click();
-  if (!(await tools.isVisible()))
-    await page.getByRole("button", { name: "Toggle Notes panel" }).click();
-  // Reopening the retained sidebar does not steal the workbench's lease.
+  // A new Annotations panel beside the pinned tab does not steal the tab's lease.
+  await page.getByRole("button", { name: /^Search and commands/u }).click();
+  await page
+    .getByRole("combobox", { name: "Search sources and commands", exact: true })
+    .fill("Show Annotations panel");
+  await page.getByRole("option", { name: /^Show Annotations panel/u }).click();
   await expect(otherEditor).toHaveValue(/Dock-safe annotation draft/u);
   await tools
     .locator(`[data-annotation-id="${annotationId}"]`)
@@ -103,7 +111,7 @@ export async function auditAnnotationWorkbench(page, { screenshot, open, blockWr
   await page.reload();
   await expect(tools.locator(".annotation-card")).toHaveCount(1);
   return [
-    "Annotation promotion preserves an uncommitted buffer while the sidebar is hidden; Edit here transfers the single editor after docking",
+    "Pinning the Annotations panel preserves an uncommitted buffer; Edit here transfers the single editor between the pinned tab and a panel",
     "Linked note insertion, deletion warning, cancellation, and deletion persistence work",
   ];
 }

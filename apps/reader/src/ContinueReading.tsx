@@ -2,7 +2,6 @@ import { t, t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 
-
 import { publicationDateLabel } from "./library-publication-date.js";
 import {
   readingLocationLabel,

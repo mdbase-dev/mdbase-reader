@@ -142,23 +142,6 @@ export async function auditPanelRegions(page, { screenshot }) {
   await expect(panel(note)).toHaveClass(/is-side/u);
   await expect(showing(note)).toContainText(name(2));
 
-  // A source's own note tab can be told to follow, which makes it one more Notes panel.
-  await page.getByRole("button", { name: /^Search and commands/u }).click();
-  await page
-    .getByRole("combobox", { name: "Search sources and commands", exact: true })
-    .fill("Open source note");
-  await page.getByRole("option", { name: /^Open source note/u }).click();
-  const ownTab = tabs.filter({ hasText: "Source note" });
-  await expect(ownTab).toHaveCount(1);
-  const own = await ownTab.getAttribute("data-panel-id");
-  await menu(panel(own), "Follow the active document");
-  await expect(panel(own)).toHaveClass(/is-side/u);
-  // The document it was about takes over as the one being worked on.
-  await expect(showing(own)).toContainText(name(2));
-  await expect(showing(note)).toContainText(name(2));
-  await menu(panel(own), "Close");
-  await expect(panel(own)).toHaveCount(0);
-
   // Like any tab it can leave its region, and it keeps following from wherever it is put.
   await menu(panel(note), "Move to new pane right");
   await expect(panes).toHaveCount(2);

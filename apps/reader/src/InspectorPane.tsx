@@ -8,7 +8,6 @@ import { AnnotationList } from "./AnnotationList.js";
 import { useAnnotationPanelActions } from "./AnnotationPanelActions.js";
 import { preloadCitations } from "./citation-renderer.js";
 import { requestConfirmation } from "./confirmation.js";
-import { PanelIcon } from "./icons.js";
 import { lazyFeature } from "./lazy-feature.js";
 import { publishSharedAnnotation } from "./shared-annotation-resource.js";
 
@@ -51,7 +50,6 @@ export interface InspectorPaneProps {
     readonly paneLabel: string;
     readonly onOpen: () => void;
   } | null;
-  readonly onPromote: () => void;
   readonly onOpenSourceView?: (sourceId: SourceId, view: "document" | "citation") => void;
 }
 
@@ -68,7 +66,6 @@ export function InspectorPane({
   composer,
   gateway,
   workbenchOwner,
-  onPromote,
   onOpenSourceView,
 }: InspectorPaneProps): JSX.Element | null {
   const { t } = useLingui();
@@ -90,16 +87,6 @@ export function InspectorPane({
           <span className="sr-only">{paneLabel}: </span>
           {source?.title ?? t({ message: "No source in this pane" })}
         </h2>
-        <button
-          type="button"
-          className="icon-button inspector-promote"
-          disabled={!source}
-          aria-label={t`Open ${tab} in workbench`}
-          title={t({ message: "Keep open as a workbench tab" })}
-          onClick={onPromote}
-        >
-          <PanelIcon />
-        </button>
       </div>
       {source && workbenchOwner ? (
         <div className="inspector-status inspector-workbench-owner">
@@ -112,7 +99,7 @@ export function InspectorPane({
             <Trans>Reader keeps one writable editor for each source record.</Trans>
           </span>
           <button type="button" onClick={workbenchOwner.onOpen}>
-            <Trans>Go to workbench</Trans>
+            <Trans>Go to it</Trans>
           </button>
         </div>
       ) : source ? (

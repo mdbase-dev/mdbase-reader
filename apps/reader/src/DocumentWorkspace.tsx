@@ -14,7 +14,6 @@ import { DocumentEmpty } from "./WorkspacePaneSupport.js";
 
 import type {
   LibraryWorkspaceTab,
-  SourceWorkspacePane,
   SourceWorkspaceTab,
   WorkspacePaneId,
   WorkspaceTab,
@@ -185,13 +184,11 @@ function DocumentOverlays({
 export function DocumentToolbar({
   props,
   source,
-  pane,
   tabId,
   focused,
 }: {
   readonly props: DocumentWorkspaceProps;
   readonly source: SourceSummary;
-  readonly pane: SourceWorkspacePane;
   readonly tabId: string;
   readonly focused: boolean;
 }): JSX.Element {
@@ -201,7 +198,6 @@ export function DocumentToolbar({
     <DocumentContextualToolbar
       source={source}
       sources={props.sources}
-      pane={pane}
       workspace={props.sourceWorkspace}
       focusMode={props.focusMode}
       readingResume={props.readingResume}

@@ -353,7 +353,7 @@ export function ReaderWorkspaceView({
                   const sourceId = annotation.sourceId;
                   if (beside) {
                     pendingAnnotationRef.current = { annotation, paneId: null, sourceId };
-                    sourceWorkspace.openBeside(sourceId, "document");
+                    sourceWorkspace.openBeside(sourceId);
                     return;
                   }
                   const target = annotationDocumentTarget(
@@ -527,11 +527,6 @@ function renderNotesPanel(
       composer={composer}
       gateway={model.gateway}
       workbenchOwner={workbenchOwner}
-      onPromote={() => {
-        if (inspectorSource) {
-          sourceWorkspace.openView(inspectorSource.id, view, sourceWorkspace.activePane.id);
-        }
-      }}
       onOpenSourceView={openSourceView}
     />
   );
@@ -550,7 +545,6 @@ function renderNotesPanel(
       reconcileSource={workspace.reconcileSource}
       workbenchOwner={workbenchOwner}
       onOpenAnnotation={(annotation, owner) => context.openAnnotation(annotation, owner.id, pane)}
-      onPromote={(owner) => sourceWorkspace.openView(owner.id, view, pane)}
       onOpenSourceView={openSourceView}
     />
   );

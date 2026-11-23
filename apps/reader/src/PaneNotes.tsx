@@ -11,7 +11,6 @@ type Shared = Pick<
 > & {
   readonly reconcileSource: (source: Source) => void;
   readonly onOpenAnnotation: (annotation: Annotation, source: SourceSummary) => void;
-  readonly onPromote: (source: SourceSummary) => void;
 };
 
 /**
@@ -56,7 +55,6 @@ function FollowedSource({
   source,
   reconcileSource,
   onOpenAnnotation,
-  onPromote,
   onDirtyChange,
   composer,
   ...pane
@@ -80,7 +78,6 @@ function FollowedSource({
         open: (annotation) => onOpenAnnotation(annotation, source),
         editingAnnotationId: null,
       }}
-      onPromote={() => onPromote(source)}
     />
   );
 }

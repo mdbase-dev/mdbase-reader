@@ -91,10 +91,18 @@ Following is a property of the tab, and the rule is **unpinned follows, pinned s
   showing (a `source` tab with `follow: true`). It keeps its id and its place, and from
   then on it is that source's own note, annotations or citation tab.
 - **Unpin tab** on such a tab turns it back into a Notes panel.
-- **Follow the active document** on any source's note, annotations or citation tab does
-  the same for a tab that was opened the ordinary way. The source's document tab, if
-  open, takes over as the leader. A tab with unsaved changes stays as it is until they
-  are saved.
+- **Follow the active document** on a source's note, annotations or citation tab that
+  was opened on a phone (below) does the same. The source's document tab, if open, takes
+  over as the leader. A tab with unsaved changes stays as it is until they are saved.
+
+The Notes panels are the one way to reach a source's note, annotations and citation. There
+are no "Open source note", "Open annotations" or "Open citation details" commands, no
+"beside" variants and no entries for them in the document's menu. Anything that goes to one
+of those views (`openView`: a match in notes from the library search, a citation link in a
+note, "Open source note" on a source without a document) opens the source's document and
+shows the matching Notes panel. To have one in a pane, drag its tab there; to keep one for
+a source, pin it. A phone has no room for panels beside a document, so there `openView`
+still opens the view as a screen of the source's tab (`MobileSourceViews`).
 
 A source still has one writable editor per record: when a source's own tab is open for
 the tool a Notes panel shows, the panel points to that tab instead of opening a second
@@ -143,8 +151,8 @@ independent of the layout engine.
 ## Source tools and close policy
 
 The Notes panels show the source being worked on (the leader, above). Focusing or moving
-Sources or a Notes panel does not replace the source context. Source-bound workbench notes
-share live text and save state with the inspector. Annotation comments keep keystrokes
+Sources or a Notes panel does not replace the source context. A source's pinned note tab
+shares live text and save state with the Notes panel. Annotation comments keep keystrokes
 local to one editor; Edit here transfers ownership and its pending buffer between panes.
 Citation forms redirect to their existing writable owner.
 See [shared editing](../shared-editing.md).
@@ -155,7 +163,7 @@ operation untouched. Pinned tabs are protected from preview replacement and “c
 unpinned tabs.” Reset arrangement moves existing panels without closing them, reloading
 renderers, or replacing drafts.
 
-Pending annotation text is held in memory across inspector/workbench views. Existing
+Pending annotation text is held in memory across the Notes panels and pinned tabs. Existing
 edits are keyed by collection/source/annotation; new selections and crop Blobs are cached
 by collection/source/exact document target. Existing comments save after one idle second,
 without disabling typing; newer text survives older responses. New annotations still

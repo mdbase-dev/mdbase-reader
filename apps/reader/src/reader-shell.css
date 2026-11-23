@@ -1713,8 +1713,8 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 0 6px 0 14px;
+  min-height: 28px;
+  padding: 0 14px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -1728,21 +1728,6 @@
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.inspector-context .icon-button {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border-radius: 5px;
-  color: var(--muted);
-}
-
-.inspector-context .icon-button svg {
-  width: 16px;
-  height: 16px;
 }
 
 .library-source-link {

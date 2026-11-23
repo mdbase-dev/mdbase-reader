@@ -8,6 +8,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 import { navigatorPanelId } from "./panel-ids.js";
+import { panelWorkspaceActions } from "./panel-workspace-actions.js";
 import { followedPane, notesView, panelStorageKey } from "./panel-workspace-state.js";
 import { ReaderPanelWorkspace } from "./panel-workspace.js";
 import { createWorkspaceTab, type NotesView } from "./source-workspace-layout.js";
@@ -558,5 +559,28 @@ describe("arrangement", () => {
     workspace.beside(createWorkspaceTab(three), "vertical");
     expect(mainStacks(workspace.store.state)).toHaveLength(3);
     expect(stackOfPanel(workspace.store.state, idOf(workspace, three))?.panels).toHaveLength(1);
+  });
+});
+
+describe("a source's note, annotations and citation", () => {
+  it("open as the Notes panels beside the source's document, not as tabs", () => {
+    const workspace = new ReaderPanelWorkspace("preview", null, known);
+    sized(workspace, 1400);
+    const actions = panelWorkspaceActions(workspace);
+    actions.openView(one, "note");
+    expect(titles(workspace)).toEqual(["library", `${one}:document`]);
+    expect(workspace.isSidebarVisible("right")).toBe(true);
+    const panel = notes(workspace, "note");
+    expect(stackOfPanel(workspace.store.state, panel)?.active).toBe(panel);
+    actions.openView(two, "citation");
+    expect(titles(workspace)).toEqual(["library", `${one}:document`, `${two}:document`]);
+    expect(workspace.sourceOf(notes(workspace, "citation"))).toBe(two);
+  });
+  it("stay screens of the source's tab on a phone", () => {
+    const workspace = new ReaderPanelWorkspace("preview", null, known);
+    sized(workspace, 400);
+    expect(workspace.mobile).toBe(true);
+    panelWorkspaceActions(workspace).openView(one, "note");
+    expect(titles(workspace)).toContain(`${one}:note`);
   });
 });

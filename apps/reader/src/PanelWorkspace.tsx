@@ -284,14 +284,12 @@ export function PanelWorkspace({
   const renderStackActions = (info: StackInfo): ReactNode => {
     const tab = info.active ? dock.tab(info.active.id) : null;
     const source = tab?.view === "document" && info.active ? sourceOf(info.active) : null;
-    const pane = layout.panes.find(({ id }) => id === info.stack.id);
     return (
       <div className="dock-pane-actions">
-        {tab && source?.documents.length && pane ? (
+        {tab && source?.documents.length ? (
           <DocumentToolbar
             props={document}
             source={source}
-            pane={pane}
             tabId={tab.id}
             focused={document.sourceWorkspace.activePane.activeTabId === tab.id}
           />

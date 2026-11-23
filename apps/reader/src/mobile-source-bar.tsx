@@ -26,9 +26,6 @@ export function mobileSourceBar(
     return undefined;
   }
   const source = model.library.sources.find(({ id }) => id === tab.sourceId);
-  const pane =
-    workspace.layout.panes.find((candidate) => candidate.tabs.some(({ id }) => id === tab.id)) ??
-    workspace.activePane;
   return {
     onBack: () => backToLibrary(dock),
     switcher: <WorkspaceTabSwitcher dock={dock} />,
@@ -38,7 +35,6 @@ export function mobileSourceBar(
           <DocumentContextualToolbar
             source={source}
             sources={model.library.sources}
-            pane={pane}
             workspace={workspace}
             focusMode={model.focusMode}
             readingResume={model.readingResume}
