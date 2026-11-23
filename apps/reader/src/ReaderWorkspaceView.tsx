@@ -436,8 +436,6 @@ export function ReaderWorkspaceView({
             onChangeTypography: (typography) => shell.update({ typography }),
             density: shell.value.density,
             onChangeDensity: (density) => shell.update({ density }),
-            sidebarWhileReading: shell.value.sidebarWhileReading,
-            onChangeSidebarWhileReading: (value) => shell.update({ sidebarWhileReading: value }),
           }}
           gateway={model.gateway}
           library={library.sources}
@@ -575,24 +573,16 @@ function useReadingPreferences(
   Parameters<typeof ReaderHeader>[0],
   | "typography"
   | "onChangeTypography"
-  | "sidebarWhileReading"
-  | "onChangeSidebarWhileReading"
   | "readingMode"
   | "readingModeAvailable"
   | "onToggleReadingMode"
 > {
-  const { typography, sidebarWhileReading } = shell.value;
+  const { typography } = shell.value;
   const activeTab = model.sourceWorkspace.activeTab;
   useApplyTypography(model.surfaces, typography);
-  const dock = model.sourceWorkspace.dock;
-  useEffect(() => {
-    dock.setHideWhileReading(sidebarWhileReading === "hide");
-  }, [dock, sidebarWhileReading]);
   return {
     typography,
     onChangeTypography: (next) => shell.update({ typography: next }),
-    sidebarWhileReading,
-    onChangeSidebarWhileReading: (next) => shell.update({ sidebarWhileReading: next }),
     readingMode: model.focusMode,
     readingModeAvailable: activeTab?.kind === "source" && activeTab.view === "document",
     onToggleReadingMode: () => model.setFocusMode((value) => !value),

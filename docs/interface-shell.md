@@ -66,9 +66,8 @@ action, and one stylesheet section for each redesigned component.
 
 ## Reading workspace (third pass)
 
-- **Reading comes first.** Opening a document hides the Sources sidebar, and returning to a
-  library tab restores it, but only when Reader hid it (Display → _Sidebar while reading_
-  turns this off). **Maximize document** is a header button and `mod+.`; it expands the
+- **Reading comes first.** The Sources sidebar stays where the reader left it: nothing hides
+  it when a document opens, and there is no setting for that. **Maximize document** is a header button and `mod+.`; it expands the
   document pane without promising to hide application controls. Escape restores the panes.
   `mod+\` toggles the sidebar and `mod+shift+\` the
   Notes panel. A side panel alone in its group has no close button, and its pane menu appears
@@ -210,10 +209,9 @@ buttons, selects and inputs now inherit the interface font.
   annotation filter menu).
 
 - Third pass: `READER_AUDIT_READING_ONLY=1 pnpm --filter @mdbase-reader/app test:browser` runs
-  `scripts/audit-reading-workspace.mjs` (sidebar hiding and restoring, typography, reading
-  mode and panel shortcuts from inside the page, margin markers, annotation counts). The other
-  audits pin _Sidebar while reading_ to _Keep open_, because they test docking with the
-  sidebar present.
+  `scripts/audit-reading-workspace.mjs` (the Sources sidebar staying until toggled,
+  typography, reading mode and panel shortcuts from inside the page, margin markers,
+  annotation counts).
 
 - `pnpm --filter @mdbase-reader/app test:a11y` runs axe-core over the preview's library, bulk
   selection, add-column menu, reading view with Notes, command palette and phone library, and

@@ -88,13 +88,6 @@ export class ReaderPanelWorkspace {
   private computed: { key: unknown[]; layout: WorkspaceLayout } | null = null;
   private options: { key: unknown[]; value: LayoutOptions } | null = null;
   private singlePane = false;
-  /** The reader's preference: Sources makes way while a document is on screen. */
-  private hideWhileReading = false;
-  private reading = false;
-  /** Sides opened while they were making way for reading; they stay until reading starts or ends. */
-  private readonly peeked = new Set<EdgeSide>();
-  /** Side regions kept off screen for now. Derived, and never saved. */
-  private hidden: readonly EdgeSide[] = [];
   /** The side asked for last: when there is not room for both, the other one gives way. */
   private asked: EdgeSide | null = null;
   /** The source picked in the library: what a Notes panel shows while a library tab leads. */
@@ -140,7 +133,6 @@ export class ReaderPanelWorkspace {
     if (tab) {
       this.navigation.visit(tab);
     }
-    this.refreshReading();
     this.project();
     this.store.subscribe(this.changed);
   }
@@ -201,43 +193,8 @@ export class ReaderPanelWorkspace {
     } else if (this.focusedPanel && !panelTab(change.state.panels[this.focusedPanel])) {
       this.focusedPanel = tabPanels(change.state)[0]?.id ?? null;
     }
-    this.refreshReading();
     this.notify();
   };
-  /**
-   * Reading is a document on screen in the main area with no library beside it. It is read
-   * from what is showing, not from where focus is, so using the Notes panel does not end it.
-   */
-  private refreshReading(): void {
-    const showing = mainStacks(this.state).map(({ active }) => this.tab(active));
-    const reading =
-      this.hideWhileReading &&
-      showing.some((tab) => tab?.kind === "source" && tab.view === "document") &&
-      !showing.some((tab) => tab?.kind === "library");
-    if (reading !== this.reading) {
-      this.reading = reading;
-      this.peeked.clear();
-    }
-    const side = this.readingSide();
-    const hidden = side && !this.peeked.has(side) ? [side] : [];
-    if (hidden.join() !== this.hidden.join()) {
-      this.hidden = hidden;
-    }
-  }
-  /** The side region that makes way for reading: the one Sources is in, wherever that is. */
-  private readingSide(): EdgeSide | null {
-    const stack = this.reading ? stackOfPanel(this.state, navigatorPanelId) : undefined;
-    return stack ? edgeOfStack(this.state, stack.id) : null;
-  }
-  /** Whether the Sources region makes way while a document is on screen. */
-  setHideWhileReading(hide: boolean): void {
-    if (this.hideWhileReading !== hide) {
-      this.hideWhileReading = hide;
-      this.refreshReading();
-      this.settleFocus();
-      this.notify();
-    }
-  }
 
   /** The reader tab in a panel, with its unsaved-changes flag. */
   tab = (id: string | null | undefined): WorkspaceTab | null =>
@@ -654,7 +611,7 @@ export class ReaderPanelWorkspace {
 
   /** Options for laying the workspace out, shared by the view and by visibility checks. */
   layoutOptions = (): LayoutOptions => {
-    const key = [this.overviewOpen, this.chromeHidden, this.coarse, this.hidden, this.asked];
+    const key = [this.overviewOpen, this.chromeHidden, this.coarse, this.asked];
     if (!this.options || key.some((value, index) => value !== this.options?.key[index])) {
       this.options = {
         key,
@@ -664,7 +621,6 @@ export class ReaderPanelWorkspace {
           compactHeaderHeight: 0,
           minMainWidth: 360,
           overview: this.overviewOpen,
-          hiddenEdges: this.hidden,
           preferEdge: this.asked,
         },
       };
@@ -738,12 +694,7 @@ export class ReaderPanelWorkspace {
     return (
       this.layout()?.stacks.some((stack) => stack.edge === position) ??
       // Before the first layout: a side with something in it, wanted and not covered.
-      Boolean(
-        edge?.visible &&
-        edge.stack.panels.length &&
-        !this.state.maximized &&
-        !this.hidden.includes(position),
-      )
+      Boolean(edge?.visible && edge.stack.panels.length && !this.state.maximized)
     );
   };
   /**
@@ -787,22 +738,10 @@ export class ReaderPanelWorkspace {
       },
       skip,
     );
-    if (this.readingSide() === position) {
-      // Asked for while reading: it shows until reading starts or ends.
-      this.peeked.add(position);
-    }
-    this.refreshReading();
     this.notify();
   }
   /** Take a side region off screen. */
   private hide(position: EdgeSide): void {
-    if (this.peeked.delete(position) && this.readingSide() === position) {
-      // It was only showing as an exception to reading, so the reader still wants it otherwise.
-      this.refreshReading();
-      this.settleFocus();
-      this.notify();
-      return;
-    }
     this.store.dispatch({ type: "batch", operations: this.hideOperations(position) }, skip);
   }
   private hideOperations(side: EdgeSide): Operation[] {
@@ -949,7 +888,6 @@ export class ReaderPanelWorkspace {
       this.openLibrary();
     }
     const focused = this.focusedPanel;
-    this.peeked.clear();
     this.asked = null;
     const operations: Operation[] = [{ type: "maximize", stack: null }, { type: "flatten" }];
     const away = (panel: PanelDescriptor, side: EdgeSide): boolean => {

@@ -3,8 +3,9 @@ import { expect } from "@playwright/test";
 
 const shellKey = "mdbase-reader:shell:v1:test-reader-audit";
 
-/** The default reading workspace: sidebar hides while reading, type settings reach the page,
- * reading mode and panel shortcuts work from inside the document, and highlights get markers. */
+/** The default reading workspace: the Sources sidebar stays until the reader closes it, type
+ * settings reach the page, reading mode and panel shortcuts work from inside the document, and
+ * highlights get markers. */
 export async function auditReadingWorkspace(page, { screenshot }) {
   const completed = [];
   await page.evaluate((key) => localStorage.removeItem(key), shellKey);
@@ -17,12 +18,17 @@ export async function auditReadingWorkspace(page, { screenshot }) {
   await expect(page.locator(".mdbase-command-palette")).toBeHidden();
   const frame = page.frameLocator("iframe.html-viewer:visible");
   await expect(frame.locator("#p0")).toBeVisible({ timeout: 30000 });
+  // Nothing hides the sidebar for the reader: it goes and comes back only when asked to.
+  await expect(navigator).toBeVisible();
+  const sourcesButton = page.getByRole("button", { name: "Toggle Sources sidebar" });
+  await sourcesButton.click();
   await expect(navigator).toBeHidden();
   await page.getByRole("tab", { name: "All sources" }).click();
-  await expect(navigator).toBeVisible();
-  await page.getByRole("tab", { name: "[test] Research 0001", exact: true }).click();
   await expect(navigator).toBeHidden();
-  completed.push("Sources sidebar hides while reading and returns with the library");
+  await page.getByRole("tab", { name: "[test] Research 0001", exact: true }).click();
+  await sourcesButton.click();
+  await expect(navigator).toBeVisible();
+  completed.push("Sources sidebar stays while reading and only the reader opens or closes it");
 
   const size = () =>
     frame

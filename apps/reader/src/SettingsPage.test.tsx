@@ -74,7 +74,6 @@ function Workspace({
             theme: "system",
             onChangeTheme: () => undefined,
             density: "comfortable",
-            sidebarWhileReading: "hide",
           }}
           gateway={gateway}
           library={[]}

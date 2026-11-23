@@ -31,8 +31,6 @@ export interface ReaderHeaderSourceBar {
 interface ReaderHeaderProps {
   readonly typography?: ReadingTypography;
   readonly onChangeTypography?: (typography: ReadingTypography) => void;
-  readonly sidebarWhileReading?: "hide" | "keep";
-  readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
   readonly readingMode?: boolean;
   readonly readingModeAvailable?: boolean;
   readonly onToggleReadingMode?: () => void;
@@ -73,8 +71,6 @@ export function ReaderHeader(props: ReaderHeaderProps): JSX.Element {
 function HeaderDisplayMenu({
   typography,
   onChangeTypography,
-  sidebarWhileReading = "hide",
-  onChangeSidebarWhileReading,
   density = "comfortable",
   onChangeDensity,
   theme,
@@ -86,10 +82,8 @@ function HeaderDisplayMenu({
       theme={theme}
       onChangeTheme={onChangeTheme}
       density={density}
-      sidebarWhileReading={sidebarWhileReading}
       {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
       {...(onChangeDensity ? { onChangeDensity } : {})}
-      {...(onChangeSidebarWhileReading ? { onChangeSidebarWhileReading } : {})}
       {...(onOpenSettings ? { onOpenSettings } : {})}
     />
   );

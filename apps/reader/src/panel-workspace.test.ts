@@ -328,32 +328,6 @@ describe("side panels", () => {
     expect(workspace.isSidebarVisible("right")).toBe(false);
     expect(workspace.activeTab()?.sourceId).toBe(one);
   });
-  it("makes way for a document on screen without forgetting that the reader wants Sources", () => {
-    const workspace = new ReaderPanelWorkspace("preview", null, known);
-    sized(workspace, 1400);
-    workspace.setHideWhileReading(true);
-    expect(workspace.isSidebarVisible("left")).toBe(true);
-    workspace.open(one);
-    expect(workspace.isSidebarVisible("left")).toBe(false);
-    expect(wanted(workspace).left).toBe(true);
-    // Working in a Notes panel is still reading.
-    workspace.showNotes("annotations");
-    expect(workspace.isSidebarVisible("left")).toBe(false);
-    // The reader can look at Sources anyway, and put it away again, without changing the rule.
-    workspace.toggleSidebar("left");
-    expect(workspace.isSidebarVisible("left")).toBe(true);
-    workspace.toggleSidebar("left");
-    expect(workspace.isSidebarVisible("left")).toBe(false);
-    expect(wanted(workspace).left).toBe(true);
-    const library = workspace
-      .contentPanels()
-      .find(({ id }) => workspace.tab(id)?.kind === "library");
-    workspace.activate(library?.id ?? "");
-    expect(workspace.isSidebarVisible("left")).toBe(true);
-    workspace.setHideWhileReading(false);
-    workspace.activate(idOf(workspace, one));
-    expect(workspace.isSidebarVisible("left")).toBe(true);
-  });
 });
 
 describe("side panels away from home", () => {

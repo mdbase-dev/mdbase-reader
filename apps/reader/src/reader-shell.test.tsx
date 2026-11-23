@@ -191,7 +191,6 @@ describe("header", () => {
         onChangeTheme={vi.fn()}
         density="comfortable"
         onChangeDensity={vi.fn()}
-        sidebarWhileReading="hide"
       />,
     );
     expect(markup).toContain('aria-pressed="true">Light</button>');

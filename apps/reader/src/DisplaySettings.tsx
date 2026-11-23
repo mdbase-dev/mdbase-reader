@@ -25,8 +25,6 @@ export function DisplaySettings({
   onChangeTypography,
   density,
   onChangeDensity,
-  sidebarWhileReading,
-  onChangeSidebarWhileReading,
   onOpenSettings,
 }: {
   readonly theme: ThemePreference;
@@ -35,8 +33,6 @@ export function DisplaySettings({
   readonly onChangeTypography?: (typography: ReadingTypography) => void;
   readonly density: "comfortable" | "compact";
   readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
-  readonly sidebarWhileReading: "hide" | "keep";
-  readonly onChangeSidebarWhileReading?: (value: "hide" | "keep") => void;
   /** Opens the Settings page; absent on that page itself. */
   readonly onOpenSettings?: () => void;
 }): JSX.Element {
@@ -64,17 +60,6 @@ export function DisplaySettings({
             { value: "compact", label: translate({ message: "Compact" }) },
           ]}
           onChange={onChangeDensity}
-        />
-      ) : null}
-      {onChangeSidebarWhileReading ? (
-        <DisplayChoice
-          legend={translate({ message: "Sidebar while reading" })}
-          value={sidebarWhileReading}
-          options={[
-            { value: "hide", label: translate({ message: "Hide" }) },
-            { value: "keep", label: translate({ message: "Keep open" }) },
-          ]}
-          onChange={onChangeSidebarWhileReading}
         />
       ) : null}
       <DisplayChoice

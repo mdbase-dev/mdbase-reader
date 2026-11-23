@@ -15,11 +15,6 @@ export async function auditAnnotations(page, { screenshot, blockWrites }) {
     ) {
       globalThis.window.name = "annotation-reset-done";
       localStorage.clear();
-      // Keep the sidebar open while reading, as the docking checks below expect.
-      localStorage.setItem(
-        "mdbase-reader:shell:v1:test-reader-audit",
-        JSON.stringify({ sidebarWhileReading: "keep" }),
-      );
       globalThis.history.replaceState(null, "", globalThis.location.pathname);
     }
   });

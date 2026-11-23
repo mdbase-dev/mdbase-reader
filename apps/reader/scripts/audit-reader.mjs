@@ -39,18 +39,6 @@ const context = await browser.newContext(
     : { viewport: { width: 1440, height: 1000 } },
 );
 await installLocalPdfium(context);
-// These audits exercise docking with the sidebar open throughout; the reading audit covers the
-// default, which hides it while a document has focus.
-await context.addInitScript(() => {
-  const key = "mdbase-reader:shell:v1:test-reader-audit";
-  try {
-    if (!sessionStorage.getItem("reader-audit-reading") && !localStorage.getItem(key)) {
-      localStorage.setItem(key, JSON.stringify({ sidebarWhileReading: "keep" }));
-    }
-  } catch {
-    // Sandboxed and opaque-origin documents have no storage and need no preference.
-  }
-});
 const page = await context.newPage();
 page.on("dialog", (dialog) => void dialog.accept());
 const errors = [];
@@ -214,7 +202,6 @@ try {
     completed.push(...(await auditAnnotationSelection(page, { open: openSource, screenshot })));
   }
   if (readingAudit) {
-    await page.evaluate(() => sessionStorage.setItem("reader-audit-reading", "1"));
     completed.push(...(await auditReadingWorkspace(page, { screenshot })));
   }
   if (sharedEditingAudit) {
