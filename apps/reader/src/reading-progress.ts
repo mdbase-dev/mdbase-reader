@@ -26,19 +26,11 @@ export function readingStatusOf(source: SourceSummary): ReadingStatus {
   return source.reading?.status ?? source.readingStatus ?? "inbox";
 }
 
-/**
- * Where the reader stopped, in words: "Page 42 of 300", an EPUB chapter's title, then the
- * percentage. The page count is known only once the PDF has been opened for its thumbnail.
- */
-export function readingLocationLabel(source: SourceSummary, pageCount?: number): string {
+/** Where the reader stopped, in words: "Page 42", an EPUB chapter's title, then the percentage. */
+export function readingLocationLabel(source: SourceSummary): string {
   const position = source.reading?.position;
   const progress = readingProgressValue(source);
-  const page =
-    position?.kind === "pdf"
-      ? pageCount !== undefined && pageCount > position.pageIndex
-        ? translate`Page ${position.pageIndex + 1} of ${pageCount}`
-        : translate`Page ${position.pageIndex + 1}`
-      : null;
+  const page = position?.kind === "pdf" ? translate`Page ${position.pageIndex + 1}` : null;
   const chapter =
     position?.kind === "epub" ? textAt(position.locator, "title")?.slice(0, 80) : undefined;
   return [page, chapter, progress === null ? null : `${String(progress)}%`]

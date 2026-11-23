@@ -101,12 +101,6 @@ export async function round5Library(page) {
       .evaluate((element) => ({ width: element.clientWidth, content: element.scrollWidth }));
     assert.ok(readingLabel.width >= readingLabel.content, "Phone Reading label stays complete");
   }
-  await libraryView(page, "Visual library");
-  const tiles = page.locator(".library-card-bookplate");
-  await expect(tiles.first()).toBeVisible();
-  await expect(tiles.locator("strong")).toHaveCount(0);
-  assert.ok((await tiles.allTextContents()).every((text) => text.trim() && text.trim() !== "—"));
-  await libraryView(page, "All sources");
   await round5AnnotationAlignment(page);
   await page.reload();
   await page.locator('.library-table[aria-label="Sources"]').waitFor();
@@ -316,15 +310,4 @@ async function command(page, query) {
   );
   await page.keyboard.press("Enter");
   await expect(page.locator(".mdbase-command-palette")).toBeHidden();
-}
-
-async function libraryView(page, name) {
-  const sidebar = page.getByRole("button", { name: "Toggle Sources sidebar", exact: true });
-  if ((await sidebar.getAttribute("aria-expanded")) === "false") {
-    await sidebar.click();
-  }
-  await page
-    .locator("#reader-library-navigator")
-    .getByRole("button", { name, exact: true })
-    .click();
 }

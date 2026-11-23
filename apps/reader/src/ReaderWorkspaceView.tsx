@@ -741,7 +741,7 @@ function focusLibraryResults(shell: HTMLElement | null): void {
     ".workspace-pane.is-focused .library-workspace-results",
   );
   const firstResult = results?.querySelector<HTMLElement>(
-    '[data-row-index][tabindex="0"], .library-card-hit-target, .search-passage-list button',
+    '[data-row-index][tabindex="0"], .search-passage-list button',
   );
   (firstResult ?? results)?.focus();
 }

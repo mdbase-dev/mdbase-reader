@@ -1240,8 +1240,7 @@
   font-weight: 600;
 }
 
-.library-table-row:not(.is-header),
-.library-card-hit-target {
+.library-table-row:not(.is-header) {
   cursor: default;
   user-select: none;
   /* A long press selects; iOS would otherwise open its link callout. */
@@ -2164,9 +2163,6 @@
 
 /* Command palette ------------------------------------------------------------ */
 
-@media (max-width: 680px) {
-}
-
 /* Mobile workspace navigation ------------------------------------------------ */
 
 /* A phone switches one source between its document and tools from the bottom edge. */
@@ -2413,36 +2409,6 @@
 }
 
 /* Library cards and save dialog --------------------------------------------- */
-
-.library-card-bookplate {
-  font-family: inherit;
-}
-
-.library-card-bookplate span {
-  font: 600 10px/1 var(--mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.library-card-copy > span {
-  font-size: var(--ui-meta);
-}
-
-.library-card-copy > div {
-  align-items: end;
-  gap: 12px;
-  font-size: var(--ui-meta);
-}
-
-.library-card-copy > div .library-status {
-  width: auto;
-  justify-items: end;
-  font-size: var(--ui-meta);
-}
-
-.library-card-copy p {
-  font-size: var(--ui-meta);
-}
 
 .library-save-dialog h2 {
   font-size: var(--ui-heading);
@@ -3183,31 +3149,6 @@
 }
 
 /* Cards: one virtualized row of equal-height cards at a time. */
-
-.library-card-grid.is-virtual {
-  position: relative;
-  display: block;
-  padding: 0;
-}
-
-.library-card-row {
-  position: absolute;
-  top: 0;
-  right: 24px;
-  left: 24px;
-  display: grid;
-  gap: 16px;
-}
-
-.library-card-row > .library-card {
-  height: 270px;
-  min-height: 0;
-}
-
-.library-card.is-selected {
-  border-color: color-mix(in oklch, var(--accent) 55%, var(--line));
-  box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 55%, transparent);
-}
 
 /* Field conditions in the library filter menu: field, comparison, value, remove. */
 

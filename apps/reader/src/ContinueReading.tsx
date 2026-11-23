@@ -1,11 +1,9 @@
 import { t, t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { useRef, type JSX, type Ref } from "react";
+import type { JSX } from "react";
 
 import { publicationDateLabel } from "./library-publication-date.js";
-import { shortFormatLabel } from "./LibraryCells.js";
-import { sourceFormat } from "./mdbase-library-views.js";
 import {
   readingLocationLabel,
   readingPassage,
@@ -13,9 +11,7 @@ import {
   readingStatusOf,
 } from "./reading-progress.js";
 import { sourceCreatorsText, sourcesById } from "./source-creators.js";
-import { useSourceThumbnail } from "./use-source-thumbnail.js";
 
-import type { SourceThumbnail, ThumbnailFileReader } from "./source-thumbnail.js";
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
 
 const continueLimit = 3;
@@ -54,18 +50,13 @@ export function continueReadingSource(sources: readonly SourceSummary[]): Source
   return continueReadingSources(sources, 1)[0] ?? null;
 }
 
-/**
- * Up to three sources to pick up again, each shown as the object: a first-page render or
- * cover when one can be read cheaply, else its title. `readFile` enables thumbnails.
- */
+/** Up to three sources to pick up again, with where each was left. */
 export function ContinueReading({
   sources,
   onOpen,
-  readFile,
 }: {
   readonly sources: readonly SourceSummary[];
   readonly onOpen: (id: SourceId) => void;
-  readonly readFile?: ThumbnailFileReader;
 }): JSX.Element | null {
   const resumable = continueReadingSources(sources);
   if (resumable.length === 0) {
@@ -83,7 +74,6 @@ export function ContinueReading({
             <ContinueReadingCard
               source={source}
               creators={sourceCreatorsText(source, library)}
-              readFile={readFile}
               onOpen={onOpen}
             />
           </li>
@@ -96,30 +86,24 @@ export function ContinueReading({
 function ContinueReadingCard({
   source,
   creators,
-  readFile,
   onOpen,
 }: {
   readonly source: SourceSummary;
   readonly creators: string;
-  readonly readFile: ThumbnailFileReader | undefined;
   readonly onOpen: (id: SourceId) => void;
 }): JSX.Element {
   useLocale();
-  const thumbnailRef = useRef<HTMLButtonElement>(null);
-  const thumbnail = useSourceThumbnail(source, readFile, thumbnailRef);
   const progress = readingProgressValue(source);
-  const location = readingLocationLabel(source, thumbnail?.pageCount);
+  const location = readingLocationLabel(source);
   const passage = readingPassage(source);
   const byline = [creators, publicationDateLabel(source.published)].filter(Boolean).join(" · ");
   return (
     <button
-      ref={thumbnailRef}
       className="continue-reading-card"
       type="button"
       title={source.title}
       onClick={() => onOpen(source.id)}
     >
-      {thumbnail ? <SourceThumbnailView source={source} thumbnail={thumbnail} /> : null}
       <span className="continue-reading-copy">
         <span className="continue-reading-title">
           <span className="sr-only">{t`Continue reading ${source.title}`}</span>
@@ -137,38 +121,5 @@ function ContinueReadingCard({
         </span>
       </span>
     </button>
-  );
-}
-
-/**
- * The source as an object. A rendered page or cover when one has loaded; otherwise its title
- * set like a title page, with its format underneath.
- */
-export function SourceThumbnailView({
-  ref,
-  source,
-  thumbnail,
-}: {
-  readonly ref?: Ref<HTMLSpanElement>;
-  readonly source: SourceSummary;
-  readonly thumbnail: SourceThumbnail | null;
-}): JSX.Element {
-  return (
-    <span
-      ref={ref}
-      className={`source-thumbnail is-${sourceFormat(source)}${thumbnail ? " has-image" : ""}`}
-      aria-hidden="true"
-    >
-      {thumbnail ? (
-        <img src={thumbnail.url} alt="" decoding="async" draggable={false} />
-      ) : (
-        <>
-          <span className="source-thumbnail-title" aria-hidden="true">
-            {source.title.trim().charAt(0).toLocaleUpperCase()}
-          </span>
-          <span className="source-thumbnail-format">{shortFormatLabel(source)}</span>
-        </>
-      )}
-    </span>
   );
 }

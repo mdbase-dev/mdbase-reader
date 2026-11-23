@@ -290,17 +290,6 @@ export class PreviewGateway implements ReaderWorkspaceGateway {
         filter: { ...defaultLibraryViewConfiguration.filter, status: "reading" },
       },
     },
-    {
-      ...defaultLibraryView,
-      key: "preview/cards.md::visual-library",
-      path: "preview/cards.md",
-      revision: "preview-view-2",
-      viewId: "visual-library",
-      name: "Visual library",
-      writable: true,
-      owned: true,
-      configuration: { ...defaultLibraryViewConfiguration, presentation: "cards" },
-    },
   ];
 
   library(): Promise<ReaderLibrarySnapshot> {

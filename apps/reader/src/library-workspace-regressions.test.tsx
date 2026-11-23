@@ -28,15 +28,6 @@ vi.mock("./LibraryTable.js", () => ({
     </div>
   ),
 }));
-vi.mock("./LibraryCards.js", () => ({
-  LibraryCards: ({ sources }: { sources: readonly SourceSummary[] }) => (
-    <div data-cards>
-      {sources.map((source) => (
-        <p key={source.id}>{source.title}</p>
-      ))}
-    </div>
-  ),
-}));
 
 let root: ReturnType<typeof createRoot>;
 let host: HTMLDivElement;
@@ -158,23 +149,6 @@ it("saves and undoes a displayed row absent from the progressive global index", 
   await clickText("Undo");
   expect(save).toHaveBeenLastCalledWith(source.id, "queued");
   expect(host.querySelector("[data-table]")?.textContent).toContain("Queued");
-});
-
-it("shows every chapter in Cards without losing Table's collapse state", async () => {
-  const sources = [
-    partSource("Book"),
-    partSource("Chapter", "Book"),
-    partSource("Section", "Chapter"),
-  ];
-  await renderLibrary(sources, sources);
-  await clickText("Toggle Book");
-  expect(host.querySelector("[data-table]")?.textContent).not.toContain("Chapter");
-  await clickText("Cards");
-  expect(
-    [...host.querySelectorAll("[data-cards] p")].map((element) => element.textContent),
-  ).toEqual(["Book", "Chapter", "Section"]);
-  await clickText("Table");
-  expect(host.querySelector("[data-table]")?.textContent).not.toContain("Chapter");
 });
 
 it("focuses matching notes from search when the saved presentation is Table", async () => {

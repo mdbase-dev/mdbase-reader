@@ -28,7 +28,6 @@ import type { JsonObject } from "@mdbase-reader/connect";
 export { columnLabel };
 export type { LibraryColumn };
 
-export type LibraryPresentation = "table" | "cards";
 export type LibrarySortField =
   "title" | "creator" | "published" | "status" | "saved" | "opened" | PropertyLibraryColumn;
 export type LibrarySortDirection = "asc" | "desc";
@@ -43,7 +42,6 @@ export interface LibraryViewFilter {
 }
 
 export interface LibraryViewConfiguration {
-  readonly presentation: LibraryPresentation;
   readonly columns: readonly LibraryColumn[];
   /** Pixel widths by column, for columns the reader has resized. */
   readonly columnWidths: Readonly<Record<string, number>>;
@@ -83,7 +81,6 @@ export interface LibraryViewSaveRequest {
 }
 
 export const defaultLibraryViewConfiguration: LibraryViewConfiguration = {
-  presentation: "table",
   columns: ["title", "published", "annotations", "opened", "status"],
   columnWidths: {},
   sortField: "title",
@@ -117,7 +114,6 @@ export function parseLibraryViewKey(
 }
 
 export function libraryViewConfiguration(presentation: unknown): LibraryViewConfiguration {
-  const type = objectValue(presentation)["type"];
   const options = objectValue(objectValue(presentation)["options"]);
   const columns = Array.isArray(options["columns"])
     ? options["columns"].filter(isLibraryColumn)
@@ -128,7 +124,6 @@ export function libraryViewConfiguration(presentation: unknown): LibraryViewConf
   const sortDirection = options["sortDirection"] === "asc" ? "asc" : "desc";
   const filter = objectValue(options["filter"]);
   return {
-    presentation: type === "cards" ? "cards" : "table",
     columns: columns.length > 0 ? columns : defaultLibraryViewConfiguration.columns,
     columnWidths: parseColumnWidths(options["columnWidths"]),
     sortField,
@@ -168,8 +163,7 @@ export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
         select: storedColumns(configuration.columns).map(columnSelection),
         order_by: [orderBy(configuration.sortField, configuration.sortDirection)],
         presentation: {
-          type: configuration.presentation,
-          fallback: "table",
+          type: "table",
           mappings: {
             title: "title",
             creator: "authors",

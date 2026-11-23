@@ -34,7 +34,6 @@ import {
 import { librarySourceParts } from "./library-source-parts.js";
 import { LibraryAnnotations } from "./LibraryAnnotations.js";
 import { LibraryBulkBar } from "./LibraryBulkBar.js";
-import { LibraryCards } from "./LibraryCards.js";
 import { countLabel, readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
 import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
 import { LibraryTable } from "./LibraryTable.js";
@@ -142,8 +141,6 @@ export function LibraryWorkspace({
   >(() => new Map());
   const [loading, setLoading] = useState(Boolean(view.path && !view.annotations));
   const [problem, setProblem] = useState<string | null>(null);
-  // Stable per gateway, so Continue reading's thumbnails do not reload on every render.
-  const readThumbnailFile = useMemo(() => gateway.readFile.bind(gateway), [gateway]);
   const [saving, setSaving] = useState(false);
   const executionFamily = `reader-library-view:${useId()}`;
 
@@ -218,10 +215,10 @@ export function LibraryWorkspace({
         matches,
         allSources,
         collapsed,
-        layout.presentation === "cards" || flatParts || Boolean(filter.query.trim()),
+        flatParts || Boolean(filter.query.trim()),
         !indexLoading,
       ),
-    [matches, allSources, collapsed, layout.presentation, flatParts, filter.query, indexLoading],
+    [matches, allSources, collapsed, flatParts, filter.query, indexLoading],
   );
   const sources = parts.sources;
   const togglePart = (id: SourceId): void =>
@@ -281,11 +278,7 @@ export function LibraryWorkspace({
   );
   const resultsRef = useRef<HTMLDivElement>(null);
   const emptySources = sources.length === 0 && !loading && !(indexLoading && !view.path);
-  const rendersSourceTable =
-    mode === "sources" &&
-    searchScope === "sources" &&
-    !emptySources &&
-    configuration.presentation === "table";
+  const rendersSourceTable = mode === "sources" && searchScope === "sources" && !emptySources;
   const restoredScroll = useRef(false);
   useLayoutEffect(() => {
     // Returning to a view keeps its place once its rows exist to scroll to.
@@ -537,29 +530,6 @@ export function LibraryWorkspace({
                       {configuration.sortDirection === "asc" ? "↑" : "↓"}
                     </button>
                   </div>
-                  <span className="menu-label">
-                    <Trans>Layout</Trans>
-                  </span>
-                  <div
-                    className="segmented-control"
-                    aria-label={t({
-                      message: "Library presentation",
-                      context: "LibraryWorkspace interface",
-                    })}
-                  >
-                    {(["table", "cards"] as const).map((presentation) => (
-                      <button
-                        key={presentation}
-                        type="button"
-                        aria-pressed={configuration.presentation === presentation}
-                        onClick={() => update({ presentation })}
-                      >
-                        {presentation === "table"
-                          ? t({ message: "Table", context: "LibraryWorkspace interface" })
-                          : t({ message: "Cards", context: "LibraryWorkspace interface" })}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </Menu>
               <Menu className="library-actions" label={t`Library actions`} trigger={<MoreIcon />}>
@@ -571,7 +541,7 @@ export function LibraryWorkspace({
                     setLayoutResets((count) => count + 1);
                   }}
                 >
-                  <Trans>Reset columns and layout</Trans>
+                  <Trans>Reset columns</Trans>
                 </button>
                 <button type="button" onClick={() => setSaving(true)}>
                   <Trans>Save as new view…</Trans>
@@ -669,11 +639,7 @@ export function LibraryWorkspace({
         ) : (
           <>
             {searchScope === "sources" && !configuration.filter.query && !view.path ? (
-              <ContinueReading
-                sources={allSources}
-                onOpen={onOpenSource}
-                readFile={readThumbnailFile}
-              />
+              <ContinueReading sources={allSources} onOpen={onOpenSource} />
             ) : null}
             {searchScope !== "sources" ? (
               <LibraryTextSearch
@@ -761,16 +727,7 @@ export function LibraryWorkspace({
                     }
                   : {})}
               />
-            ) : (
-              <LibraryCards
-                sources={sources}
-                partRows={parts.rows}
-                selection={visibleSelection}
-                onSelectionChange={setSelection}
-                onOpen={onOpenSource}
-                scrollRef={resultsRef}
-              />
-            )}
+            ) : null}
           </>
         )}
       </div>
@@ -795,7 +752,7 @@ export function LibraryWorkspace({
       <OverlayPresence open={saving}>
         <LibraryViewSaveDialog
           description={t({
-            message: "The filters, sort, columns and layout are saved in your collection.",
+            message: "The filters, sort and columns are saved in your collection.",
           })}
           placeholder={t({ message: "e.g. Reading this month" })}
           saving={controller.saving}

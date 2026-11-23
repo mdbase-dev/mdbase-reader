@@ -88,7 +88,6 @@ describe("Reader saved-view discovery", () => {
       writable: true,
       owned: true,
       properties: [{ key: "title", label: "Title" }],
-      configuration: { presentation: "cards" },
     });
     expect(views.list).toHaveBeenCalledExactlyOnceWith(options);
     expect(views.execute).not.toHaveBeenCalled();

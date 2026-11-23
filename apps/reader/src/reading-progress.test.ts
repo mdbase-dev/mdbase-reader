@@ -32,10 +32,9 @@ describe("reading progress", () => {
     expect(readingProgressValue(base)).toBeNull();
   });
 
-  it("names a PDF page with its page count once known, and an EPUB chapter by title", () => {
+  it("names a PDF page by number and an EPUB chapter by title", () => {
     const pdf = at({ status: "reading", position: { kind: "pdf", pageIndex: 6 } });
     expect(readingLocationLabel(pdf)).toBe("Page 7");
-    expect(readingLocationLabel(pdf, 11)).toBe("Page 7 of 11");
     expect(
       readingLocationLabel(
         at({

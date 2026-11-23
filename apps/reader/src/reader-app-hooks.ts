@@ -202,11 +202,7 @@ function focusedLibraryList(target: EventTarget | null): HTMLElement | null {
   if (target !== document.body && !(target instanceof Node && pane?.contains(target))) {
     return null;
   }
-  return (
-    pane?.querySelector<HTMLElement>(
-      ".library-workspace .library-table, .library-workspace .library-card-grid",
-    ) ?? null
-  );
+  return pane?.querySelector<HTMLElement>(".library-workspace .library-table") ?? null;
 }
 
 function forwardLibraryRowKey(list: HTMLElement, event: KeyboardEvent): void {

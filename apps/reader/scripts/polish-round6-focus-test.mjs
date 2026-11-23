@@ -47,22 +47,6 @@ test("Escape then immediate A never changes status (20 real keyboard trials)", a
   }
 });
 
-test("Skip to sources reaches cards in Visual library", async () => {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  try {
-    await page.goto(origin);
-    await page
-      .getByRole("navigation", { name: "Library views and sources" })
-      .getByRole("button", { name: "Visual library", exact: true })
-      .click();
-    const card = page.locator(".library-card-hit-target").first();
-    await expect(card).toBeVisible();
-    await skipToSources(page, card);
-  } finally {
-    await page.close();
-  }
-});
-
 test("row context menus stay open without outer-pane scrolling (12 pointer trials)", async () => {
   for (let attempt = 0; attempt < 12; attempt++) {
     const page = await browser.newPage({ viewport: { width: 1042, height: 662 } });
