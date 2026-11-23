@@ -156,7 +156,9 @@ export function AnnotationList({
           activeId={activeId}
           following={following}
           onFollowingChange={setFollowing}
-          renderHeading={(position) => groupTitle(headings[position], results[position])}
+          renderHeading={(position) =>
+            groupTitle(headings[position], results[position], collection ? "h2" : "h3")
+          }
           renderCard={(annotation) => (
             <AnnotationCard
               annotation={annotation}
@@ -189,12 +191,14 @@ export function AnnotationList({
   );
 }
 
+/** A group's heading. Under a Notes panel's source it is a third level; in the library, a second. */
 function groupTitle(
   heading: AnnotationGroupHeading | null | undefined,
   annotation: Annotation | undefined,
+  level: "h2" | "h3",
 ): JSX.Element | null {
   return heading && annotation ? (
-    <AnnotationGroupTitle heading={heading} annotation={annotation} />
+    <AnnotationGroupTitle heading={heading} annotation={annotation} level={level} />
   ) : null;
 }
 
@@ -395,12 +399,14 @@ function AnnotationFilterStatus({
 function AnnotationGroupTitle({
   heading,
   annotation,
+  level: Level,
 }: {
   readonly heading: AnnotationGroupHeading;
   readonly annotation: Annotation;
+  readonly level: "h2" | "h3";
 }): JSX.Element {
   return (
-    <h3 className="annotation-group">
+    <Level className="annotation-group">
       <span>{heading.label}</span>
       {heading.outsideChapter ? <small>{outsideChapterGroupNote()}</small> : null}
       {heading.source ? (
@@ -414,7 +420,7 @@ function AnnotationGroupTitle({
           )}
         </small>
       ) : null}
-    </h3>
+    </Level>
   );
 }
 
