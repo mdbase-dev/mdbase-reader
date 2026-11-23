@@ -239,19 +239,8 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
   const paneLabel = String(
     panes.findIndex(({ id }) => id === input.workspace.layout.focusedPaneId) + 1,
   );
-  const otherPaneId =
-    panes.find(({ id }) => id !== input.workspace.layout.focusedPaneId)?.id ??
-    input.workspace.layout.focusedPaneId;
-  const otherPaneLabel = String(panes.findIndex(({ id }) => id === otherPaneId) + 1);
   const activeTab = input.workspace.activeTab;
   return [
-    {
-      id: "reset-panes",
-      label: translate({ message: "Reset pane arrangement" }),
-      detail: translate({ message: "Keeps all tabs open" }),
-      group: "Workspace",
-      run: () => input.workspace.dock.reset(),
-    },
     ...arrangementCommands(input.workspace.dock),
     {
       id: "toggle-focus",
@@ -289,7 +278,7 @@ function workspaceCommands(input: ReaderCommandInput): readonly ReaderCommand[] 
       shortcut: "mod+shift+t",
       run: input.workspace.reopenClosed,
     },
-    ...(split ? paneCommands(input, paneLabel, otherPaneId, otherPaneLabel) : []),
+    ...(split ? paneCommands(input, paneLabel) : []),
     ...(activeTab
       ? ([
           {
@@ -366,13 +355,8 @@ function sourceCommands(input: ReaderCommandInput): readonly ReaderCommand[] {
   ];
 }
 
-function paneCommands(
-  input: ReaderCommandInput,
-  paneLabel: string,
-  otherPaneId: string,
-  otherPaneLabel: string,
-): readonly ReaderCommand[] {
-  const activeTab = input.workspace.activeTab;
+/** With more than one pane: going to the next, and closing the one in use. */
+function paneCommands(input: ReaderCommandInput, paneLabel: string): readonly ReaderCommand[] {
   return [
     {
       id: "focus-next-pane",
@@ -381,33 +365,6 @@ function paneCommands(
       group: "Workspace",
       shortcut: "F6",
       run: input.workspace.focusNextPane,
-    },
-    ...(activeTab
-      ? [
-          {
-            id: "move-active-tab-other-pane",
-            label: translate`Move active tab to pane ${otherPaneLabel}`,
-            group: "Workspace" as const,
-            run: () =>
-              input.workspace.moveTab(
-                activeTab.id,
-                input.workspace.layout.focusedPaneId,
-                otherPaneId,
-              ),
-          },
-        ]
-      : []),
-    {
-      id: "arrange-side-by-side",
-      label: translate({ message: "Arrange panes side by side" }),
-      group: "Workspace",
-      run: () => input.workspace.setSplitDirection("horizontal"),
-    },
-    {
-      id: "arrange-top-bottom",
-      label: translate({ message: "Stack panes top and bottom" }),
-      group: "Workspace",
-      run: () => input.workspace.setSplitDirection("vertical"),
     },
     {
       id: "close-focused-pane",

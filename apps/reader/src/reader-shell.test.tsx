@@ -136,6 +136,8 @@ describe("command palette", () => {
     expect(active.find(({ id }) => id === "split-below")?.label).toBe("Open below");
     expect(commands.find(({ id }) => id === "show-all-tabs")?.label).toBe("Show all tabs at once");
     expect(commands.some(({ id }) => id === "undo-arrangement")).toBe(true);
+    // Resetting and rearranging panes are in the pane and tab menus, not the palette.
+    expect(commands.some(({ id }) => id === "reset-panes")).toBe(false);
     expect(commands.some(({ id }) => id === "redo-arrangement")).toBe(false);
     for (const [query, id] of [
       ["literature note", "show-notes-note"],
