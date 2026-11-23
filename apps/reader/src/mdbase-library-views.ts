@@ -115,7 +115,10 @@ export function parseLibraryViewKey(
  */
 export function isReaderSourcesView(presentation: unknown): boolean {
   const options = objectValue(objectValue(presentation)["options"]);
-  return options["readerViewVersion"] === 1 && options["readerViewKind"] === undefined;
+  const kind = options["readerViewKind"];
+  return (
+    options["readerViewVersion"] === 1 && kind !== "annotations" && kind !== "source-annotations"
+  );
 }
 
 export function libraryViewConfiguration(presentation: unknown): LibraryViewConfiguration {
