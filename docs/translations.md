@@ -6,7 +6,7 @@ Reader uses Lingui 6.9 with generated IDs from English source and semantic conte
 
 Supported languages: English, French, German, Spanish, Japanese, Korean, Brazilian Portuguese (`pt`), Russian, Simplified Chinese (`zh`) and Italian (`it`, endonym “Italiano”). The TaskNotes plugin explicitly identifies its Portuguese variant as Brazilian Portuguese.
 
-The **Display settings** menu contains the language picker. The default is the best supported browser/OS locale, otherwise English. A successful explicit selection persists. English is synchronous with no fetch; target catalogues are lazy chunks from Reader's own deployment. A failed chunk leaves the current language and previous persisted choice intact. The real provider and non-React helpers share one injected Lingui singleton; `html.lang` follows activation. This does not imply collection access works offline.
+The Settings page's **This device** section contains the language picker. The default is the best supported browser/OS locale, otherwise English. A successful explicit selection persists. English is synchronous with no fetch; target catalogues are lazy chunks from Reader's own deployment. A failed chunk leaves the current language and previous persisted choice intact. The real provider and non-React helpers share one injected Lingui singleton; `html.lang` follows activation. This does not imply collection access works offline.
 
 ## Local authoring and checks
 

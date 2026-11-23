@@ -344,13 +344,20 @@ try {
     await page.getByRole("textbox", { name: "Search this view" }).fill("");
     completed.push("Library search finds note text and shows the matching snippet");
 
+    // Density is in Settings, which the display menu links to; the menu holds reading options.
     const display = page.getByLabel("Display settings", { exact: true });
-    await display.click();
+    const openSettings = async () => {
+      await display.click();
+      await expect(page.getByRole("button", { name: "Compact", exact: true })).toHaveCount(0);
+      await page.getByRole("button", { name: "Settings…", exact: true }).click();
+    };
+    await openSettings();
     await page.getByRole("button", { name: "Compact", exact: true }).click();
+    await page.keyboard.press("Escape");
     await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
     await page.reload();
     await expect(page.locator(".reader-shell")).toHaveAttribute("data-density", "compact");
-    await display.click();
+    await openSettings();
     await page.getByRole("button", { name: "Comfortable", exact: true }).click();
     await page.keyboard.press("Escape");
     await page.setViewportSize({ width: 390, height: 844 });

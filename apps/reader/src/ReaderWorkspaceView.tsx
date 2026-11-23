@@ -227,8 +227,6 @@ export function ReaderWorkspaceView({
       {model.focusMode ? <div className="reading-chrome-reveal" aria-hidden="true" /> : null}
       <ReaderHeader
         {...reading}
-        density={shell.value.density}
-        onChangeDensity={(density) => shell.update({ density })}
         collectionName={library.collectionName}
         beforeCollectionSwitch={beforeCollectionSwitch}
         connectionState={connectionState}
@@ -428,12 +426,7 @@ export function ReaderWorkspaceView({
       {workspaceShell}
       <OverlayPresence open={settingsPage.open}>
         <SettingsPage
-          density={shell.value.density}
-          display={{
-            theme: model.theme,
-            onChangeTheme: model.changeTheme,
-            typography: shell.value.typography,
-            onChangeTypography: (typography) => shell.update({ typography }),
+          device={{
             density: shell.value.density,
             onChangeDensity: (density) => shell.update({ density }),
           }}

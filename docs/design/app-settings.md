@@ -195,8 +195,9 @@ Collection settings are edited on the Settings page (`SettingsPage.tsx`), opened
   (`SettingsSections.tsx`) load on demand, with a loading line inside the page. Focus
   goes to the "Settings" heading, and Back returns it to the display menu's trigger.
   Workspace shortcuts don't act while the page is open.
-- **Sections.** "This device" has the display menu's choices and the default highlight
-  colour. "This collection" has Highlight colours and File names, each with its own
+- **Sections.** "This device" has what the display menu does not: language, density, who
+  owns an annotation made inside a chapter, what selecting text does, and the default
+  highlight colour. Text size, line length, typeface and theme are only in the display menu. "This collection" has Highlight colours and File names, each with its own
   Save. When the collection has no settings support (no settings store), the section
   says so instead. "Connection" names the open collection and its state, and offers the
   shared collection menu, which switches collections, manages access and signs out.

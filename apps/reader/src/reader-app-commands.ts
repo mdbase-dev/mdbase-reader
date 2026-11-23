@@ -65,7 +65,7 @@ export function displayCommands(input: ReaderCommandInput): readonly ReaderComma
       id: "settings",
       label: translate({ message: "Settings" }),
       group: "Display",
-      keywords: "preferences text display typography language appearance",
+      keywords: "preferences language density highlight colours file names connection",
       run: input.openSettings,
     },
     ...themes,

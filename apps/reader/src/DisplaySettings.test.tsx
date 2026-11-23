@@ -26,7 +26,6 @@ function settings(onOpenSettings?: () => void): React.JSX.Element {
     <DisplaySettings
       theme="system"
       onChangeTheme={() => undefined}
-      density="comfortable"
       {...(onOpenSettings ? { onOpenSettings } : {})}
     />
   );

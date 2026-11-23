@@ -34,8 +34,6 @@ interface ReaderHeaderProps {
   readonly readingMode?: boolean;
   readonly readingModeAvailable?: boolean;
   readonly onToggleReadingMode?: () => void;
-  readonly density?: "comfortable" | "compact";
-  readonly onChangeDensity?: (density: "comfortable" | "compact") => void;
   readonly collectionName: string;
   readonly beforeCollectionSwitch?: () => boolean | Promise<boolean>;
   readonly connectionState: ReaderConnectionState;
@@ -71,8 +69,6 @@ export function ReaderHeader(props: ReaderHeaderProps): JSX.Element {
 function HeaderDisplayMenu({
   typography,
   onChangeTypography,
-  density = "comfortable",
-  onChangeDensity,
   theme,
   onChangeTheme,
   onOpenSettings,
@@ -81,9 +77,7 @@ function HeaderDisplayMenu({
     <DisplayMenu
       theme={theme}
       onChangeTheme={onChangeTheme}
-      density={density}
       {...(typography && onChangeTypography ? { typography, onChangeTypography } : {})}
-      {...(onChangeDensity ? { onChangeDensity } : {})}
       {...(onOpenSettings ? { onOpenSettings } : {})}
     />
   );

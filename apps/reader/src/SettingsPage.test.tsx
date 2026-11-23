@@ -69,12 +69,7 @@ function Workspace({
       </div>
       {page.open ? (
         <SettingsPage
-          density="comfortable"
-          display={{
-            theme: "system",
-            onChangeTheme: () => undefined,
-            density: "comfortable",
-          }}
+          device={{ density: "comfortable", onChangeDensity: () => undefined }}
           gateway={gateway}
           library={[]}
           openSources={[]}

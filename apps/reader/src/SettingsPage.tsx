@@ -43,11 +43,9 @@ export function useSettingsPage(): {
  * behind it moves. Leaving with unsaved collection settings asks first.
  */
 export function SettingsPage({
-  density,
   onClose,
   ...sections
 }: Omit<SettingsSectionsProps, "onDirtyChange" | "beforeLeave"> & {
-  readonly density: "comfortable" | "compact";
   readonly onClose: () => void;
 }): JSX.Element {
   useLocale();
@@ -82,7 +80,7 @@ export function SettingsPage({
   return (
     <ModalDialog
       className="settings-page"
-      density={density}
+      density={sections.device.density}
       labelledBy={headingId}
       initialFocus={heading}
       onDismiss={() => {

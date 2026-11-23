@@ -8,7 +8,7 @@ import {
 } from "@mdbase-reader/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { DisplaySettings } from "./DisplaySettings.js";
+import { DeviceSettings, DisplaySettings } from "./DisplaySettings.js";
 import {
   readerCommands,
   type ReaderCommand,
@@ -162,7 +162,6 @@ describe("header", () => {
         connectionState={connectionState}
         theme="light"
         onChangeTheme={() => undefined}
-        onChangeDensity={() => undefined}
         onOpenCommands={() => undefined}
         onToggleLibrary={() => undefined}
         onToggleInspector={() => undefined}
@@ -184,16 +183,26 @@ describe("header", () => {
     expect(markup).not.toContain(">Comfortable</button>");
   });
 
-  it("loaded settings offer explicit theme and density choices with the current one pressed", () => {
-    const markup = renderToStaticMarkup(
+  it("keeps reading options in the display menu and everything else in Settings", () => {
+    const menu = renderToStaticMarkup(
       <DisplaySettings
         theme="light"
         onChangeTheme={vi.fn()}
-        density="comfortable"
-        onChangeDensity={vi.fn()}
+        typography={{ scale: 1, measure: "standard", face: "serif" }}
+        onChangeTypography={vi.fn()}
       />,
     );
-    expect(markup).toContain('aria-pressed="true">Light</button>');
-    expect(markup).toContain('aria-pressed="true">Comfortable</button>');
+    const device = renderToStaticMarkup(
+      <DeviceSettings density="comfortable" onChangeDensity={vi.fn()} />,
+    );
+    expect(menu).toContain('aria-pressed="true">Light</button>');
+    expect(device).toContain('aria-pressed="true">Comfortable</button>');
+    const legends = (markup: string): string[] =>
+      [...markup.matchAll(/<legend>(.*?)<\/legend>/gu)].map(([, legend]) => legend ?? "");
+    expect(legends(menu)).toEqual(["Text size", "Line length", "Typeface", "Theme"]);
+    // Nothing is offered in both places.
+    expect(legends(device).filter((legend) => legends(menu).includes(legend))).toEqual([]);
+    expect(legends(device)).toContain("Density");
+    expect(legends(device)).toContain("Selecting text");
   });
 });
