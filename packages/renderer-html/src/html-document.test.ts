@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { extractArchivedHtmlText, htmlDocumentText, prepareHtmlDocument } from "./html-document.js";
+import { htmlDocumentText, prepareHtmlDocument } from "./html-document.js";
 
 describe("prepareHtmlDocument", () => {
   it("retains the embedded SVG image from the production import fixture", () => {
@@ -16,13 +16,6 @@ describe("prepareHtmlDocument", () => {
     expect(rendered.querySelector("td")?.textContent).toBe("Alpha");
     expect(rendered.querySelector("code")?.textContent).toBe("const example = 42;");
     expect(rendered.body.textContent).toContain("Unicode: café 漢字 🐨");
-  });
-  it("shares background index text with the rendered document, without executing markup", () => {
-    const source =
-      "<head><title>Not body text</title><style>secret style</style></head><body><form><p>CAFÉ 世界文学</p><button>definition</button></form><script>secret script</script><textarea>secret input</textarea></body>";
-    const rendered = new DOMParser().parseFromString(prepareHtmlDocument(source), "text/html");
-    expect(extractArchivedHtmlText(source)).toBe(rendered.body.textContent);
-    expect(extractArchivedHtmlText(source)).toBe("CAFÉ 世界文学definition");
   });
   it("removes executable and network-bearing content while retaining readable markup", () => {
     const prepared = prepareHtmlDocument(`<!doctype html><html><head>
@@ -63,7 +56,7 @@ describe("page text outside the article", () => {
     <article><h1>Essay</h1><p>The article itself.</p></article>
     <footer data-reader-outside=""><h2>Comments</h2><p>A comment worth keeping.</p></footer></body>`;
 
-  it("is hidden by Reader's stylesheet and left out of search text, but kept in the document", () => {
+  it("is hidden by Reader's stylesheet and left out of article text, but kept in the document", () => {
     const prepared = prepareHtmlDocument(source);
     const rendered = new DOMParser().parseFromString(prepared, "text/html");
     expect(rendered.querySelector("button")).toBeNull();
@@ -71,7 +64,6 @@ describe("page text outside the article", () => {
       [...rendered.querySelectorAll("[data-reader-outside]")].map((element) => element.textContent),
     ).toEqual(["MenuSections", "Menu", "CommentsA comment worth keeping."]);
     expect(rendered.body.textContent).toContain("A comment worth keeping.");
-    expect(extractArchivedHtmlText(source).trim()).toBe("EssayThe article itself.");
     expect(htmlDocumentText(rendered).replace(/\s+/gu, "")).toBe("EssayThearticleitself.");
     expect(prepared).toContain(
       "[data-reader-outside]:not([data-reader-revealed]) { display: none; }",

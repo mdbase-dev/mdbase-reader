@@ -1,8 +1,4 @@
-import {
-  parseDocumentRange,
-  sameDocument,
-  searchDestinationMatchesDocument,
-} from "@mdbase-reader/core";
+import { parseDocumentRange, sameDocument } from "@mdbase-reader/core";
 import { createEventEmitter, scrollMotionTracker } from "@mdbase-reader/reading-surface";
 
 import type { EmbedPdfRuntime } from "./embedpdf-runtime.js";
@@ -107,18 +103,6 @@ export class EmbedPdfSurface implements ReadingSurface {
         selections: this.#areaSelections,
         beginAreaSelection: () => runtime.beginAreaSelection(),
         cancelAreaSelection: () => runtime.cancelAreaSelection(),
-      },
-      textExtraction: {
-        extractText: (options) => runtime.extractText(options),
-        extractSearchSegments: (options) =>
-          runtime.extractSearchSegments?.(options) ?? Promise.resolve([]),
-      },
-      searchNavigation: {
-        goToDestination: (destination) =>
-          searchDestinationMatchesDocument(destination, this.document.document)
-            ? (runtime.goToSearchDestination?.(destination) ?? Promise.resolve(false))
-            : Promise.resolve(false),
-        clear: () => runtime.clearSearch?.(),
       },
       decorations: {
         setAnnotations: (annotations) => {

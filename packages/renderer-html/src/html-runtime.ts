@@ -3,7 +3,6 @@ import { outsideArticleAttribute } from "@mdbase-reader/core";
 import {
   MarginMarkers,
   forwardApplicationShortcut,
-  locateSearchQuote,
   scrollMotionTracker,
   selectionRangeKey,
   watchSettledSelection,
@@ -15,7 +14,7 @@ import {
   setAnnotationHighlights,
   setCssHighlight,
 } from "./html-css-highlights.js";
-import { htmlDocumentText, outsideArticleRevealedAttribute } from "./html-document.js";
+import { outsideArticleRevealedAttribute } from "./html-document.js";
 import { followEmbedderPalette } from "./html-palette.js";
 import { HtmlTargetLocator, htmlLocator, htmlSelectionDraft } from "./html-range.js";
 import {
@@ -31,7 +30,6 @@ import type {
   AnnotationId,
   AnnotationTarget,
   DocumentRange,
-  QuoteSelector,
 } from "@mdbase-reader/core";
 import type {
   ContentsEntry,
@@ -90,9 +88,8 @@ export class HtmlDocumentRuntime {
   readonly #stopPalette: Unsubscribe;
   #destroyed = false;
   #annotationRanges: readonly { readonly annotation: Annotation; readonly range: Range }[] = [];
-  /** Ranges whose page text outside the article is shown, and the current search result. */
+  /** Ranges whose page text outside the article is shown. */
   #revealed: readonly Range[] = [];
-  #searchRange: Range | null = null;
 
   public constructor(frame: HTMLIFrameElement, href: string) {
     const document = frame.contentDocument;
@@ -259,38 +256,7 @@ export class HtmlDocumentRuntime {
     this.#reportedRange = null;
   }
 
-  public clearSearch(): void {
-    setCssHighlight(this.#view, "reader-search-passage", []);
-    if (this.#searchRange) {
-      this.#searchRange = null;
-      this.#showRevealed();
-    }
-  }
-
-  public goToSearchQuote(quote: QuoteSelector): boolean {
-    this.clearSearch();
-    const range = locateSearchQuote(this.#document.body, quote);
-    if (!range) {
-      return false;
-    }
-    setCssHighlight(this.#view, "reader-search-passage", [range]);
-    this.#searchRange = range;
-    this.#showRevealed();
-    const element = parentElement(range.startContainer);
-    if (!element) {
-      return false;
-    }
-    this.#motion.settle("jump");
-    const bounds = range.getBoundingClientRect();
-    this.#view.scrollTo({
-      top: Math.max(0, this.#view.scrollY + bounds.top - this.#view.innerHeight / 2),
-      behavior: "instant",
-    });
-    this.#frame.focus();
-    return true;
-  }
-
-  /** Shows page text outside the article that a highlight or search result sits in. */
+  /** Shows page text outside the article that a highlight sits in. */
   #reveal(range: Range): void {
     if (!this.#revealed.includes(range)) {
       this.#revealed = [...this.#revealed, range];
@@ -304,7 +270,7 @@ export class HtmlDocumentRuntime {
    */
   #showRevealed(): void {
     const shown = new Map<Element, "path" | "all">();
-    for (const range of [...this.#revealed, ...(this.#searchRange ? [this.#searchRange] : [])]) {
+    for (const range of this.#revealed) {
       let block = parentElement(range.commonAncestorContainer);
       while (block?.parentElement && inlineElement(block)) {
         block = block.parentElement;
@@ -336,10 +302,6 @@ export class HtmlDocumentRuntime {
     this.#markers.layout();
   }
 
-  public extractText(): string {
-    return htmlDocumentText(this.#document);
-  }
-
   public destroy(): void {
     if (this.#destroyed) {
       return;
@@ -354,8 +316,6 @@ export class HtmlDocumentRuntime {
     this.#reflow?.disconnect();
     this.#markers.destroy();
     this.#targets.destroy();
-    this.#searchRange = null;
-    this.clearSearch();
     clearCssHighlights(this.#view);
     this.#locationListeners.clear();
     this.#selectionListeners.clear();

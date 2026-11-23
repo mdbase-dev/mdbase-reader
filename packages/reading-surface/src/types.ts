@@ -5,8 +5,6 @@ import type {
   AnnotationTarget,
   DocumentTarget,
   DocumentRange,
-  SearchDestination,
-  SearchTextSegment,
 } from "@mdbase-reader/core";
 
 export type SurfaceKind = "pdf" | "epub" | "html";
@@ -133,13 +131,6 @@ export interface TypographyCapability {
   setTypography(typography: ReadingTypography): Promise<void>;
 }
 
-export interface TextExtractionCapability {
-  extractText(options?: { readonly signal?: AbortSignal }): Promise<string>;
-  extractSearchSegments?(options?: {
-    readonly signal?: AbortSignal;
-  }): Promise<readonly SearchTextSegment[]>;
-}
-
 /**
  * Which way the reader is moving through the document, so surrounding chrome can make way:
  * "forward" as they read on, "backward" as they return, and "start" at the top.
@@ -161,12 +152,6 @@ export interface ReadingSurfaceCapabilities {
   readonly decorations?: DecorationCapability;
   readonly annotationNavigation?: AnnotationNavigationCapability;
   readonly annotationActivation?: AnnotationActivationCapability;
-  readonly textExtraction?: TextExtractionCapability;
-  /** Verifies exact revision and quotation before scrolling; never creates an annotation. */
-  readonly searchNavigation?: {
-    goToDestination(destination: SearchDestination): Promise<boolean>;
-    clear(): void;
-  };
   readonly contents?: ContentsCapability;
   readonly typography?: TypographyCapability;
 }

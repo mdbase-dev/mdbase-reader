@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  annotationLocationLabel,
-  documentPassageLabel,
-  humanPassageLabel,
-} from "./passage-labels.js";
+import { annotationLocationLabel, humanPassageLabel } from "./passage-labels.js";
 
-import type { Annotation, DocumentDescriptor, SearchDestination } from "@mdbase-reader/core";
+import type { Annotation } from "@mdbase-reader/core";
 
 const annotation = (value: Partial<Annotation>): Annotation =>
   ({
@@ -84,22 +80,5 @@ describe("human passage locations", () => {
         }),
       ),
     ).toBe("p. 9");
-  });
-
-  it.each([
-    ["application/pdf", "[[files/paper.pdf]]", "PDF"],
-    ["application/epub+zip", "[[files/book.epub]]", "EPUB"],
-    ["text/html", "[[files/page.html]]", "Web page"],
-  ])("labels document results by format (%s), not file path", (mediaType, file, label) => {
-    const document = { mediaType, file } as DocumentDescriptor;
-    expect(documentPassageLabel(document, undefined, file)).toBe(label);
-    expect(documentPassageLabel({ ...document, title: "Full text" }, undefined, file)).toBe(
-      "Full text",
-    );
-  });
-
-  it("includes the page of a PDF match, including the first page", () => {
-    const destination = { location: { kind: "pdf", pageIndex: 0 } } as SearchDestination;
-    expect(documentPassageLabel(undefined, destination, "[[files/paper.pdf]]")).toBe("PDF · p. 1");
   });
 });

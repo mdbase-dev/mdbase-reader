@@ -1,4 +1,4 @@
-import { sameDocument, searchDestinationMatchesDocument } from "@mdbase-reader/core";
+import { sameDocument } from "@mdbase-reader/core";
 import { createEventEmitter } from "@mdbase-reader/reading-surface";
 
 import type { HtmlDocumentRuntime } from "./html-runtime.js";
@@ -70,20 +70,6 @@ export class HtmlReadingSurface implements ReadingSurface {
       annotationActivation: {
         activations: this.#annotationActivations,
         activationRect: () => runtime.activationRect(),
-      },
-      textExtraction: {
-        extractText: () => Promise.resolve(runtime.extractText()),
-        extractSearchSegments: () =>
-          Promise.resolve([{ location: { kind: "html" }, text: runtime.extractText() }]),
-      },
-      searchNavigation: {
-        goToDestination: (destination) =>
-          Promise.resolve(
-            destination.location.kind === "html" &&
-              searchDestinationMatchesDocument(destination, this.document.document) &&
-              runtime.goToSearchQuote(destination.quote),
-          ),
-        clear: () => runtime.clearSearch(),
       },
       typography: {
         setTypography: (typography) => {

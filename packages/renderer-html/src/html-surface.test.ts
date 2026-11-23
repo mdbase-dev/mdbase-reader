@@ -23,7 +23,6 @@ describe("HtmlReadingSurface", () => {
       setActiveAnnotation: vi.fn(),
       goToAnnotation: () => true,
       clearSelection: vi.fn(),
-      extractText: () => "Essay",
       contents: () => [],
       goToContents: () => false,
       destroy: vi.fn(),
