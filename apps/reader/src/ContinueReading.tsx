@@ -1,7 +1,7 @@
 import { t, t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import type { JSX } from "react";
+
 
 import { publicationDateLabel } from "./library-publication-date.js";
 import {
@@ -13,6 +13,7 @@ import {
 import { sourceCreatorsText, sourcesById } from "./source-creators.js";
 
 import type { SourceId, SourceSummary } from "@mdbase-reader/core";
+import type { JSX } from "react";
 
 const continueLimit = 3;
 

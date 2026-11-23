@@ -15,7 +15,7 @@ import { readerBuildEnvironment } from "./build-environment.js";
 import { ConfirmProvider } from "./ConfirmProvider.js";
 import { EnvironmentBadge } from "./EnvironmentBadge.js";
 import { FeedbackRoot } from "./FeedbackRoot.js";
-import { forgetOfflineCopies } from "./forget-offline-copies.js";
+import { forgetRetiredData } from "./forget-retired-data.js";
 import { completeAppGrantCallback } from "./grant-callback.js";
 import { ReaderI18nProvider } from "./i18n.js";
 import { importService } from "./import-navigation.js";
@@ -61,7 +61,7 @@ const root = document.querySelector<HTMLElement>("#root");
 if (!root) {
   throw new Error("Reader root element is missing.");
 }
-forgetOfflineCopies(globalThis.indexedDB);
+forgetRetiredData(globalThis.indexedDB);
 keepFocusedFieldInView(window);
 const migrationService = importService(location.pathname);
 // The in-memory interface preview is the one page that needs no environment.

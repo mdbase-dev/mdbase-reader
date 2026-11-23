@@ -10,7 +10,6 @@ import {
   describeConnectionProblem,
   libraryLoadFallback,
 } from "./connection-recovery.js";
-import { LibraryDocumentIndex } from "./LibraryDocumentIndex.js";
 import {
   useDocumentSurfaceTiming,
   useReaderAnnotationComposer as useComposer,
@@ -83,18 +82,16 @@ export function ReaderApp({
     return <ReaderBoot />;
   }
   return (
-    <LibraryDocumentIndex library={workspace.library.value} gateway={gateway}>
-      <OpenedReaderApp
-        gateway={gateway}
-        initialSourceId={initialSourceId}
-        initialAnnotation={initialAnnotation}
-        workspace={workspace}
-        library={workspace.library.value}
-        {...(renderDocument ? { renderDocument } : {})}
-        {...(pickSourceFile ? { pickSourceFile } : {})}
-        {...(saveFile ? { saveFile } : {})}
-      />
-    </LibraryDocumentIndex>
+    <OpenedReaderApp
+      gateway={gateway}
+      initialSourceId={initialSourceId}
+      initialAnnotation={initialAnnotation}
+      workspace={workspace}
+      library={workspace.library.value}
+      {...(renderDocument ? { renderDocument } : {})}
+      {...(pickSourceFile ? { pickSourceFile } : {})}
+      {...(saveFile ? { saveFile } : {})}
+    />
   );
 }
 

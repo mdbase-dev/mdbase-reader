@@ -16,7 +16,6 @@ import { auditPdfTouchWorkspace } from "./audit-pdf-touch-workspace.mjs";
 import { installLocalPdfium } from "./audit-local-pdfium.mjs";
 import { auditSharedEditing } from "./audit-shared-editing.mjs";
 import { auditReadingWorkspace } from "./audit-reading-workspace.mjs";
-import { chooseOption } from "./audit-select.mjs";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5193";
 const sharedEditingAudit = process.env.READER_AUDIT_SHARED_EDITING_ONLY === "1";
@@ -350,23 +349,13 @@ try {
       .getByRole("navigation", { name: "Library views and sources" })
       .getByRole("button", { name: "All sources", exact: true })
       .click();
-    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "notes");
     await page.getByRole("textbox", { name: "Search this view" }).fill("Unsaved draft survives");
     await expect(
-      page.getByRole("region", { name: "Text search results" }).locator("mark"),
+      page.getByRole("region", { name: "In notes and annotations" }).locator("mark"),
     ).toHaveText("Unsaved draft survives");
     await screenshot("passage-search");
-    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "documents");
-    await page.getByRole("textbox", { name: "Search this view" }).fill("patient attention");
-    await expect(page.getByRole("region", { name: "Text search results" })).toContainText(
-      "Saved HTML pages up to 256 KiB are indexed on this device",
-    );
-    await expect(
-      page.getByRole("region", { name: "Text search results" }).locator("mark").first(),
-    ).toHaveText("patient attention", { timeout: 20000 });
-    completed.push(
-      "Notes and library/loaded-document search: snippets, highlighted matches, explicit coverage",
-    );
+    await page.getByRole("textbox", { name: "Search this view" }).fill("");
+    completed.push("Library search finds note text and shows the matching snippet");
 
     const display = page.getByLabel("Display settings", { exact: true });
     await display.click();

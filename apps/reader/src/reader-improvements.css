@@ -234,40 +234,7 @@
   cursor: pointer;
   min-height: 36px;
 }
-.library-text-search {
-  padding: 16px 24px;
-  max-width: 1000px;
-}
-.search-coverage {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
-}
-.search-details summary {
-  cursor: pointer;
-  min-height: 36px;
-  display: list-item;
-  align-content: center;
-}
-.search-details button {
-  color: var(--ink);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 5px 9px;
-  min-height: 36px;
-  font: inherit;
-  cursor: pointer;
-}
-.search-details button:hover {
-  background: var(--hover);
-}
-@media (pointer: coarse) {
-  .search-details summary,
-  .search-details button {
-    min-height: 44px;
-  }
-}
+
 .search-passage-list {
   padding: 0;
   list-style: none;
@@ -355,11 +322,7 @@
   outline-offset: 2px;
   box-shadow: var(--focus-ring);
 }
-@media (max-width: 680px) {
-  .library-text-search {
-    padding: 12px;
-  }
-}
+
 @media (prefers-reduced-motion: reduce) {
   .reader-shell *,
   .reader-shell *::before,

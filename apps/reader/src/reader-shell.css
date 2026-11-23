@@ -927,29 +927,6 @@
   color: var(--muted);
 }
 
-/* "in Sources ▾": the scope reads as part of the query, not a second filter. */
-.library-search-scope-label {
-  flex: 0 0 auto;
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-  margin: 4px 0;
-  padding-left: 9px;
-  border-left: 1px solid var(--line);
-  color: var(--muted);
-  font-size: var(--ui-control);
-}
-
-.library-search-scope.mdbase-select {
-  max-width: 170px;
-  flex: 0 0 auto;
-  min-height: calc(var(--ui-control-height) - 8px);
-  padding: 0 4px 0 6px;
-  border-radius: 4px;
-  color: var(--ink-soft);
-  font-weight: 550;
-}
-
 .library-header-trailing {
   display: flex;
   align-items: center;
@@ -1641,23 +1618,8 @@
   }
 
   /* The scope reads from its menu alone, leaving the query room for its placeholder. */
-  .library-search-scope-label {
-    display: none;
-  }
 
   /* Without "in", a divider and a visible chevron keep the scope from reading as the query. */
-  .library-search-scope.mdbase-select {
-    max-width: 112px;
-    margin-block: 4px;
-    border-left: 1px solid var(--line);
-    border-radius: 0;
-    color: var(--muted);
-    font-weight: 400;
-  }
-
-  .library-search-scope .mdbase-select-chevron {
-    opacity: 1 !important;
-  }
 
   /* A percentage cap against a content-sized status would cut the word short. */
   .library-table-row .library-status .mdbase-select {
@@ -1844,10 +1806,6 @@
 
   .library-workspace-search {
     height: 44px;
-  }
-
-  .library-search-scope.mdbase-select {
-    margin-block: 0;
   }
 }
 

@@ -430,3 +430,75 @@
     content: none;
   }
 }
+
+/* Matches in notes and annotations sit above the sources the same search finds by title. */
+
+.library-workspace-results > .library-note-matches,
+.library-workspace-results > .library-note-matches-problem {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 45%;
+  overflow: auto;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+/* With no title matches below, the list has the whole pane. */
+.library-workspace-results > .library-note-matches:last-child {
+  max-height: none;
+  border-bottom: 0;
+}
+
+.library-note-matches > header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+
+.library-note-matches h2 {
+  margin: 0;
+  color: var(--text-2);
+  font-size: inherit;
+  font-weight: var(--weight-medium);
+}
+
+.library-note-matches > header > span {
+  color: var(--text-3);
+}
+
+.library-note-matches .search-passage-list {
+  margin: var(--sp-1) 0 0;
+}
+
+.library-note-matches .search-passage-list button {
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-1);
+}
+
+.library-note-matches .search-passage-list li:last-child {
+  border-bottom: 0;
+}
+
+.library-note-matches-more {
+  margin-top: var(--sp-1);
+  padding: var(--sp-1) var(--sp-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.library-note-matches-more:hover {
+  background: var(--hover);
+}
+
+.library-note-matches-problem {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}

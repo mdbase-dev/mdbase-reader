@@ -151,31 +151,33 @@ it("saves and undoes a displayed row absent from the progressive global index", 
   expect(host.querySelector("[data-table]")?.textContent).toContain("Queued");
 });
 
-it("focuses matching notes from search when the saved presentation is Table", async () => {
+it("lists note and annotation matches above the table and focuses them first", async () => {
   const source = partSource("Attention");
-  await renderLibrary([source], [source]);
-  const scope = host.querySelector<HTMLButtonElement>('[aria-label="Search scope"]')!;
-  act(() => scope.click());
-  await clickText("Notes & annotations");
+  const other = partSource("Other");
+  await renderLibrary([source, other], [source, other]);
   const search = host.querySelector<HTMLInputElement>(".library-search-field input")!;
-  act(() => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(
-      search,
-      "Attention",
-    );
-    search.dispatchEvent(new Event("input", { bubbles: true }));
-  });
+  const type = (text: string): void =>
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(search, text);
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  type("Other");
   await act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
   });
+  // The note that matches belongs to a source the title search leaves out.
   const match = host.querySelector<HTMLButtonElement>(".search-passage-list button");
-  expect(match).not.toBeNull();
-  expect(host.querySelector("[data-table]")).toBeNull();
+  expect(match?.textContent).toContain("Attention");
+  expect(host.querySelector(".library-note-matches")?.textContent).toContain("1 source");
+  expect(host.querySelector("[data-table]")?.textContent).toContain("Other");
+  expect(host.querySelector('[aria-label="Search scope"]')).toBeNull();
   search.focus();
   act(() => {
     search.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
   });
   expect(document.activeElement).toBe(match);
+  type("");
+  expect(host.querySelector(".library-note-matches")).toBeNull();
 });
 
 it("closes status and returns focus to its row before any animation frame", () => {

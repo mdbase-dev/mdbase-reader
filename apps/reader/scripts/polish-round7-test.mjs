@@ -239,39 +239,6 @@ try {
         assert.ok(result.close.bottom <= page.viewportSize().height);
         assert.equal(result.close.hit, true);
         await close.click();
-        const scope = page.getByRole("combobox", { name: "Search scope", exact: true });
-        result.selectCurve = await page
-          .locator(".library-search-scope, .library-search-scope .mdbase-select-chevron")
-          .evaluateAll((elements) =>
-            elements.map(
-              (element) => globalThis.getComputedStyle(element).transitionTimingFunction,
-            ),
-          );
-        if (reducedMotion === "no-preference") {
-          assert.ok(
-            result.selectCurve.every((curve) =>
-              curve
-                .split(", cubic")
-                .every((value) => value.includes("0.22") && value.includes("0.36")),
-            ),
-          );
-        }
-        await scope.click();
-        result.chevronEffects = await page
-          .locator(".library-search-scope .mdbase-select-chevron")
-          .evaluateAll((elements) =>
-            elements.flatMap((element) =>
-              element.getAnimations().map((animation) => animation.effect.getTiming()),
-            ),
-          );
-        if (reducedMotion === "no-preference") {
-          assert.ok(
-            result.chevronEffects.some(
-              (effect) => effect.easing === "cubic-bezier(0.22, 1, 0.36, 1)",
-            ),
-          );
-        }
-        await page.keyboard.press("Escape");
         if (width === 390) {
           const longTitle =
             "[test] A very long source title about careful reading and sustained attention across a collection of research notes and documentary sources";

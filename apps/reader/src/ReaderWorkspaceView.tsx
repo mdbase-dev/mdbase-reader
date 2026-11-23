@@ -30,7 +30,6 @@ import { ReaderCommandPalette as CommandPalette } from "./ReaderCommandPalette.j
 import { ReaderHeader } from "./ReaderHeader.js";
 import { RenderedSourceDocument } from "./RenderedSourceDocument.js";
 import { useSdkConnectionState } from "./sdk-connection-state.js";
-import { SearchPassageStatus } from "./SearchPassageStatus.js";
 import { SettingsPage, useSettingsPage } from "./SettingsPage.js";
 import { SourceAdditionOverlays } from "./SourceAdditionOverlays.js";
 import { useSourcePartCreation } from "./SourcePartCreation.js";
@@ -39,7 +38,6 @@ import { useAnnotationCounts } from "./use-annotation-counts.js";
 import { useFileDrop } from "./use-file-drop.js";
 import { useMediaQuery } from "./use-media-query.js";
 import { useReadingChrome } from "./use-reading-chrome.js";
-import { useSearchNavigation } from "./use-search-navigation.js";
 import {
   useWorkspaceShellPreferences,
   type WorkspaceShellPreferencesController,
@@ -130,7 +128,6 @@ export function ReaderWorkspaceView({
   );
   const dock = sourceWorkspace.dock;
   const pendingAnnotationRef = useRef<PendingWorkspaceAnnotation | null>(null);
-  const searchNavigation = useSearchNavigation(sourceWorkspace, model.surfaces);
   const fileDrop = useFileDrop((file) => void sourceAddition.addFile(file));
   const routedEditingIdRef = useRef(composer.editingAnnotationId);
   const settingsPage = useSettingsPage();
@@ -247,7 +244,6 @@ export function ReaderWorkspaceView({
         onOpenSettings={settingsPage.show}
       />
       <main className="reader-main reader-dock-main">
-        <SearchPassageStatus message={searchNavigation.message} />
         <PanelWorkspace
           navigator={
             <LibraryNavigator
@@ -337,8 +333,7 @@ export function ReaderWorkspaceView({
                 allSources={library.sources}
                 indexLoading={library.sourceIndex?.complete === false}
                 gateway={model.gateway}
-                surfaces={model.surfaces}
-                onOpenSourceView={searchNavigation.open}
+                onOpenSourceView={(id, view) => sourceWorkspace.openView(id, view)}
                 controller={model.libraryViews}
                 focused={focused}
                 // A tab's own view switcher changes that tab, even one pinned to its view.

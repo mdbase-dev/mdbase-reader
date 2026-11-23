@@ -1,9 +1,5 @@
-import { resolveSearchQuote, searchQuote } from "@mdbase-reader/core";
-import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it } from "vitest";
 
-import { LibraryTextIndex } from "./library-text-index.js";
-import { LibraryTextStore } from "./library-text-store.js";
 import { searchExcerpt } from "./search-passages.js";
 import { snippetText } from "./snippet-text.js";
 
@@ -27,7 +23,7 @@ describe("snippet display text", () => {
     expect(snippetText("می‌خواهم 👩‍💻")).toBe("می‌خواهم 👩‍💻");
   });
 
-  it("cleans context and highlights without rewriting navigation evidence", () => {
+  it("cleans context and highlights", () => {
     const text = "Before mo-\nments with ﬁne context. MATCH mo\u00adments after.";
     expect(searchExcerpt(text, "match")).toEqual({
       before: "Before moments with fine context. ",
@@ -36,10 +32,6 @@ describe("snippet display text", () => {
     });
     const query = "MATCH mo\u00adments";
     expect(searchExcerpt(text, query)?.match).toBe("MATCH moments");
-    const quote = searchQuote(text, query)!;
-    expect(quote.exact).toBe("MATCH mo\u00adments");
-    const range = resolveSearchQuote(text, quote)!;
-    expect(text.slice(range.start, range.end)).toBe(quote.exact);
   });
 
   it("hides Markdown block markers in note snippets without moving the match", () => {
@@ -57,32 +49,11 @@ describe("snippet display text", () => {
     // Context cut mid-line can start with a marker character that is not a marker.
     const cut = `xxxxx> ${"b".repeat(88)}match`;
     expect(searchExcerpt(cut, "match", { markdown: true })?.before).toBe(`…> ${"b".repeat(88)}`);
-    const range = resolveSearchQuote(note, searchQuote(note, "adam")!)!;
-    expect(note.slice(range.start, range.end)).toBe("Adam");
   });
 
   it("keeps literal query syntax and whitespace matching", () => {
     expect(searchExcerpt("Before [ﬁle]\n match after", "[ﬁle] match")?.match).toBe("[file] match");
     expect(searchExcerpt("İSTANBUL MATCH", "match")?.match).toBe("MATCH");
     expect(searchExcerpt("nothing", "[a-z]")).toBeNull();
-  });
-
-  it("cleans worker snippets while preserving original Unicode quotes and their positions", async () => {
-    const store = new LibraryTextStore(new IDBFactory());
-    const index = new LibraryTextIndex("collection", store);
-    const text = "Before ﬁne mo\u00adments with a ﬂower after.";
-    await index.put({ path: "html", revision: "r1" }, text);
-    const hit = index.search("mo\u00adments")[0]!;
-    expect(hit.excerpt).toEqual({
-      before: "Before fine ",
-      match: "moments",
-      after: " with a flower after.",
-    });
-    expect(hit.quote.exact).toBe("mo\u00adments");
-    const range = resolveSearchQuote(text, hit.quote)!;
-    expect(text.slice(range.start, range.end)).toBe("mo\u00adments");
-    const reopened = new LibraryTextIndex("collection", store);
-    await reopened.load();
-    expect(reopened.search("with")[0]?.excerpt.before).toBe("Before fine moments ");
   });
 });

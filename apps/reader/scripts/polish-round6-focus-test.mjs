@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { after, test } from "node:test";
 import { chromium, expect } from "@playwright/test";
-import { chooseOption } from "./audit-select.mjs";
 
 const browser = await chromium.launch({ headless: true });
 const origin = "http://127.0.0.1:5193/?preview=1";
@@ -80,15 +79,6 @@ test("Skip to sources reaches the results region for empty Table, Cards and text
     await search.fill("no-source-matches-this-query");
     await expect(page.getByText("No sources match", { exact: true })).toBeVisible();
     const results = page.locator(".workspace-pane.is-focused .library-workspace-results");
-    await skipToSources(page, results);
-    await page.locator('summary[aria-label="Display"]').click();
-    await page.getByRole("button", { name: "Cards", exact: true }).click();
-    await page.keyboard.press("Escape");
-    await skipToSources(page, results);
-    await chooseOption(page.getByRole("combobox", { name: "Search scope" }), "notes");
-    await search.fill("attention");
-    await expect(page.locator(".library-text-search")).toBeVisible();
-    await expect(page.locator(".search-passage-list button")).toHaveCount(0);
     await skipToSources(page, results);
   } finally {
     await page.close();
