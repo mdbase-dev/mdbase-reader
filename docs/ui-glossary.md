@@ -1,6 +1,6 @@
 # UI terminology glossary
 
-The table below has been applied to Reader and Markdown editor user-visible copy. Based on `PRODUCT.md`,
+The table below has been applied to Reader and Markdown editor user-visible copy. Based on
 [Interface shell](interface-shell.md), [Annotation UX audit](annotation-ux-audit.md),
 [Reader improvement audit](reader-improvement-audit.md), and current UI strings.
 Historical audits describe earlier states; code establishes current behaviour.
@@ -37,7 +37,7 @@ are unchanged. The table prioritises ambiguity and safety before polish.
 - **Source note** — The source record’s user-authored Markdown body.
   Avoid “Literature note” (`R/InspectorPane.tsx:152`) and “Source literature note”
   (`R/SourceNoteEditor.tsx:112`). This deliberately changes dominant UI wording:
-  `PRODUCT.md` uses source note, as do current failure/removal messages, and it
+  current failure/removal messages use source note, and the term
   describes the record relationship without assuming a literature-review workflow.
 - **Sources sidebar** — Navigation through views and sources.
   Avoid “Library navigator” (`R/LibraryNavigator.tsx:69`) and “left sidebar”
