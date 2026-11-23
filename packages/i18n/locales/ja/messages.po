@@ -655,11 +655,6 @@ msgstr "アクセス日"
 msgid "Actions for {0}"
 msgstr "{0}の操作"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Actual size"
-msgstr "実際のサイズ"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1178,11 +1173,6 @@ msgstr "領域のキャプチャ"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "領域のキャプチャ"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Arrange panes on a canvas"
-msgstr "ペインをキャンバスに配置"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3533,10 +3523,6 @@ msgstr "イベントのタイトル"
 msgid "Every column is shown."
 msgstr "すべての列が表示されています。"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Every pane shares the window"
-msgstr "すべてのペインがウィンドウを分け合います"
-
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
 msgstr "コレクションへの書き込み前にすべてのデータのチェックサムを検証します。現在はChromeなど、フォルダー選択に対応したブラウザーが必要です。"
@@ -3793,11 +3779,6 @@ msgstr "追加を完了中…"
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
 msgstr "最初の参照ノート番号"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Fit panes to the window"
-msgstr "ペインをウィンドウに合わせる"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
@@ -5150,11 +5131,6 @@ msgstr "下へ移動"
 msgid "Move left"
 msgstr "左へ移動"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Move pane"
-msgstr "ペインを移動"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "右へ移動"
@@ -6170,10 +6146,6 @@ msgctxt "DockPaneActions interface"
 msgid "Pane actions"
 msgstr "ペインの操作"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Panes keep a readable width and scroll sideways"
-msgstr "ペインは読みやすい幅を保ち、横にスクロールします"
-
 #: apps/reader/src/library-source-parts.ts
 msgid "Parent not indexed — coverage is partial"
 msgstr "親が索引化されていません — 対象範囲は一部のみ"
@@ -6336,10 +6308,6 @@ msgstr "固定済み"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "場所"
-
-#: apps/reader/src/reader-command-list.ts
-msgid "Place panes anywhere, at any size, and zoom out to see them"
-msgstr "ペインを好きな場所に好きな大きさで置き、縮小して全体を見渡せます"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -7743,19 +7711,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
 msgstr "脚本家"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgid "Scroll between panes"
-msgstr "ペイン間をスクロール"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
 msgstr "スクロール表示"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Scroll panes as columns"
-msgstr "ペインを列としてスクロール"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
@@ -8036,11 +7995,6 @@ msgstr "注釈パネルを表示"
 #: apps/reader/src/reader-command-list.ts
 msgid "Show Citation panel"
 msgstr "引用パネルを表示"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Show every pane"
-msgstr "すべてのペインを表示"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
@@ -10098,11 +10052,6 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "拡大・縮小の操作"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom in"
-msgstr "拡大"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10117,11 +10066,6 @@ msgstr "拡大率（{level}%）"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "拡大・縮小メニュー"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom out"
-msgstr "縮小"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

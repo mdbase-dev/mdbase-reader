@@ -194,42 +194,11 @@ function viewLabel(view: string): string {
         : translate({ message: "Document", context: "reader command list" });
 }
 
-/** How the panes are laid out: fitted or scrolling, all at once, and stepping back. */
+/** Looking at every tab at once, and stepping an arrangement back. */
 function arrangementCommands(
   dock: ReaderCommandInput["workspace"]["dock"],
 ): readonly ReaderCommand[] {
-  // One command per arrangement, leaving out the one in use.
-  const views: readonly (ReaderCommand & { readonly view: typeof dock.view })[] = [
-    {
-      view: "tiling",
-      id: "fit-panes",
-      label: translate({ message: "Fit panes to the window" }),
-      detail: translate({ message: "Every pane shares the window" }),
-      group: "Workspace",
-      keywords: "tiling layout split",
-      run: () => dock.setView("tiling"),
-    },
-    {
-      view: "columns",
-      id: "scroll-pane-columns",
-      label: translate({ message: "Scroll panes as columns" }),
-      detail: translate({ message: "Panes keep a readable width and scroll sideways" }),
-      group: "Workspace",
-      keywords: "columns layout scroll",
-      run: () => dock.setView("columns"),
-    },
-    {
-      view: "canvas",
-      id: "arrange-panes-on-canvas",
-      label: translate({ message: "Arrange panes on a canvas" }),
-      detail: translate({ message: "Place panes anywhere, at any size, and zoom out to see them" }),
-      group: "Workspace",
-      keywords: "canvas infinite freeform board zoom pan layout",
-      run: () => dock.setView("canvas"),
-    },
-  ];
   return [
-    ...views.filter(({ view }) => view !== dock.view).map(({ view: _view, ...command }) => command),
     {
       id: "show-all-tabs",
       label: translate({ message: "Show all tabs at once" }),

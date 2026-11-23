@@ -20,7 +20,7 @@ function input(
       layout: { panes: [{ id: "primary", tabs: [] }], focusedPaneId: "primary" },
       openSourceIds: [],
       activeTab: null,
-      dock: { view: "columns", canUndo: false, canRedo: false },
+      dock: { canUndo: false, canRedo: false },
     },
     sourceExport: { run: vi.fn() },
     bibliographyExport: { run: vi.fn() },

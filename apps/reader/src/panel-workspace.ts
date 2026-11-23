@@ -1,15 +1,11 @@
 import { t } from "@lingui/core/macro";
 import {
-  apply,
   computeLayout,
   edgeOfStack,
   findStack,
   keepPanels,
   mainStacks,
-  parseArrangement,
-  seedFrames,
   stackOfPanel,
-  windowOf,
   WorkspaceStore,
   type EdgeSide,
   type Follow,
@@ -25,12 +21,7 @@ import {
 } from "@mdbase-dev/panels";
 
 import { focusReadingPane } from "./focus-reading-pane.js";
-import {
-  restoreWorkspace,
-  sessionId,
-  withoutInvalid,
-  withSidePanels,
-} from "./panel-workspace-restore.js";
+import { restoreWorkspace, sessionId, withSidePanels } from "./panel-workspace-restore.js";
 import {
   activePanel,
   canFollow,
@@ -54,7 +45,6 @@ import {
   tabPanel,
   tabPanelKind,
   tabPanels,
-  windowStorageKey,
   type WorkspaceStorage,
 } from "./panel-workspace-state.js";
 import {
@@ -84,9 +74,8 @@ const skip = { history: "skip" } as const;
  * A side region saves one thing: whether the reader wants it open. Whether it is on screen now
  * also depends on room, reading and the phone layout, and none of that is written back.
  *
- * What is open and where is shared by every window on the collection, and a window is told
- * when another one changes it. Focus, the tab in front, open sides, the canvas position and
- * history are each window's own.
+ * Each window has its own workspace. Reloading a window brings its own back, and a new window
+ * starts from the one saved last. Windows do not follow each other.
  */
 export class ReaderPanelWorkspace {
   readonly store: WorkspaceStore;
@@ -140,20 +129,7 @@ export class ReaderPanelWorkspace {
     const initial = withSidePanels(restored.state, restored.fresh ?? false);
     this.store = new WorkspaceStore({
       initial,
-      shared: {
-        arrangement: {
-          load: () => undefined,
-          save: (arrangement) => {
-            storage?.setItem(
-              panelStorageKey(collection),
-              JSON.stringify({ version: 2, arrangement }),
-            );
-            // History changes with what is open, even when the window state itself does not.
-            this.saveWindow();
-          },
-        },
-        window: { load: () => undefined, save: () => this.saveWindow() },
-      },
+      storage: { load: () => undefined, save: (snapshot) => this.save(snapshot) },
     });
     this.focusedPanel =
       restored.focusedPanel ??
@@ -177,72 +153,25 @@ export class ReaderPanelWorkspace {
     return () => this.listeners.delete(listener);
   };
   getSnapshot = (): SourceWorkspaceLayout => this.projection;
-  /**
-   * Save when the page goes away, and once more when the workspace is taken down. While
-   * attached, an arrangement saved by another window on the collection is taken up here.
-   */
+  /** Save when the page goes away, and once more when the workspace is taken down. */
   attach(): () => void {
-    const key = panelStorageKey(this.collection);
-    const told = (event: StorageEvent): void => {
-      if (event.key === key && event.newValue) {
-        this.adopt(event.newValue);
-      }
-    };
     globalThis.addEventListener("pagehide", this.store.flush);
-    globalThis.addEventListener("storage", told);
     return () => {
       globalThis.removeEventListener("pagehide", this.store.flush);
-      globalThis.removeEventListener("storage", told);
       this.store.flush();
     };
   }
-  /** How this window is looking at the workspace, and its history. */
-  private saveWindow(): void {
+  private save(snapshot: unknown): void {
     const text = JSON.stringify({
-      version: 2,
-      window: windowOf(this.state),
+      version: 1,
+      workspace: snapshot,
       navigation: this.navigation.toJSON(),
       focusedPanel: this.focusedPanel,
     });
-    const key = windowStorageKey(this.collection);
+    const key = panelStorageKey(this.collection);
     this.session?.setItem(key, text);
     if (this.storage !== this.session) {
-      // A copy where a new window finds it, so that it starts like the one used last.
       this.storage?.setItem(key, text);
-    }
-  }
-  /**
-   * Take up the arrangement another window saved, keeping this window's own view of it. A tab
-   * with unsaved changes here stays open even if the other window closed it.
-   */
-  adopt(saved: string): void {
-    try {
-      const envelope = JSON.parse(saved) as { version?: unknown; arrangement?: unknown };
-      if (envelope.version !== 2) {
-        return;
-      }
-      const before = this.state;
-      this.store.adopt(parseArrangement(envelope.arrangement), (arrived) => {
-        let next = withoutInvalid(arrived, null);
-        for (const id of this.dirty) {
-          const panel = before.panels[id];
-          if (panel && !next.panels[id]) {
-            const stack = stackOfPanel(before, id);
-            next = apply(next, {
-              type: "add",
-              panel,
-              target:
-                stack && findStack(next, stack.id)
-                  ? { at: "stack", stack: stack.id }
-                  : { at: "focus" },
-              activate: false,
-            });
-          }
-        }
-        return next;
-      });
-    } catch {
-      // Something else wrote under this key, or it is not readable: this window keeps its own.
     }
   }
 
@@ -448,9 +377,7 @@ export class ReaderPanelWorkspace {
         ? pane
           ? { at: "stack", stack: pane.id }
           : { at: "focus" }
-        : direction === "horizontal" && this.state.view === "columns"
-          ? { at: "column", stack: pane.id, side: "right" }
-          : { at: "split", stack: pane.id, side: direction === "horizontal" ? "right" : "bottom" };
+        : { at: "split", stack: pane.id, side: direction === "horizontal" ? "right" : "bottom" };
     const existing = this.existingTool(tab);
     this.store.dispatch(
       existing
@@ -736,7 +663,6 @@ export class ReaderPanelWorkspace {
           headerHeight: this.chromeHidden ? 0 : this.coarse ? 44 : 36,
           compactHeaderHeight: 0,
           minMainWidth: 360,
-          minColumnWidth: 360,
           overview: this.overviewOpen,
           hiddenEdges: this.hidden,
           preferEdge: this.asked,
@@ -1084,27 +1010,6 @@ export class ReaderPanelWorkspace {
     }
   }
 
-  get view(): WorkspaceState["view"] {
-    return this.state.view;
-  }
-  setView(view: WorkspaceState["view"]): void {
-    if (view === this.state.view) {
-      return;
-    }
-    // The canvas starts from where the panes are now, so switching to it moves nothing.
-    const from =
-      view === "canvas" && this.size && !this.mobile
-        ? computeLayout({ ...this.state, maximized: null }, this.size, {
-            ...this.layoutOptions(),
-            overview: false,
-          })
-        : null;
-    this.store.dispatch({
-      type: "setView",
-      view,
-      ...(from ? { frames: seedFrames(from.stacks, from.main) } : {}),
-    });
-  }
   get overview(): boolean {
     return this.overviewOpen;
   }

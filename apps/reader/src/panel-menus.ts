@@ -152,29 +152,11 @@ function ownItems(
 
 /** Ways of looking at the whole workspace: the same items end every tab and pane menu. */
 export function arrangementItems(dock: ReaderPanelWorkspace): MenuItem[] {
-  const views: MenuItem[] = [
-    {
-      label: translate({ message: "Fit panes to the window" }),
-      action: () => dock.setView("tiling"),
-      disabled: dock.view === "tiling",
-      separated: true,
-    },
-    {
-      label: translate({ message: "Scroll panes as columns" }),
-      action: () => dock.setView("columns"),
-      disabled: dock.view === "columns",
-    },
-    {
-      label: translate({ message: "Arrange panes on a canvas" }),
-      action: () => dock.setView("canvas"),
-      disabled: dock.view === "canvas",
-    },
-  ];
   return [
-    ...views,
     {
       label: translate({ message: "Show all tabs at once" }),
       action: () => dock.setOverview(true),
+      separated: true,
     },
     {
       label: translate({ message: "Undo arrangement change" }),

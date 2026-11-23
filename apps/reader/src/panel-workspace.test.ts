@@ -8,13 +8,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 import { navigatorPanelId } from "./panel-ids.js";
-import {
-  followedPane,
-  legacyPanelStorageKey,
-  notesView,
-  panelStorageKey,
-  windowStorageKey,
-} from "./panel-workspace-state.js";
+import { followedPane, notesView, panelStorageKey } from "./panel-workspace-state.js";
 import { ReaderPanelWorkspace } from "./panel-workspace.js";
 import { createWorkspaceTab, type NotesView } from "./source-workspace-layout.js";
 
@@ -83,7 +77,6 @@ describe("a new workspace", () => {
     sized(workspace, 1400);
     expect(titles(workspace)).toEqual(["library"]);
     expect(workspace.activeTab()?.pinned).toBe(true);
-    expect(workspace.view).toBe("columns");
     expect(workspace.isSidebarVisible("left")).toBe(true);
     expect(workspace.isSidebarVisible("right")).toBe(false);
     expect(notesViewsOf(workspace)).toEqual(["annotations", "note", "citation"]);
@@ -224,90 +217,48 @@ describe("what is saved", () => {
 });
 
 describe("two windows on one collection", () => {
-  /** A second window: the same local storage, and session storage of its own. */
-  const windows = (): {
-    storage: ReturnType<typeof memory>;
-    first: ReaderPanelWorkspace;
-    second: () => ReaderPanelWorkspace;
-    tell: (to: ReaderPanelWorkspace) => void;
-  } => {
-    const storage = memory();
-    const first = new ReaderPanelWorkspace("preview", storage, known, true, memory());
-    sized(first, 1400);
-    return {
-      storage,
-      first,
-      second: () => new ReaderPanelWorkspace("preview", storage, known, true, memory()),
-      // What the browser's storage event does for a window that is open.
-      tell: (to) => to.adopt(storage.getItem(panelStorageKey("preview")) ?? ""),
+  /** Windows share local storage, and each has session storage of its own. */
+  const windows = (): ((session?: ReturnType<typeof memory>) => ReaderPanelWorkspace) => {
+    const shared = memory();
+    return (session = memory()) => {
+      const workspace = new ReaderPanelWorkspace("preview", shared, known, true, session);
+      sized(workspace, 1400);
+      return workspace;
     };
   };
-  it("keeps the arrangement apart from how a window looks at it", () => {
-    const { storage, first } = windows();
+  it("gives a reloaded window its own layout back, and starts a new one from the last saved", () => {
+    const open = windows();
+    const session = memory();
+    const first = open(session);
     first.open(one);
     first.store.flush();
-    const arrangement = storage.getItem(panelStorageKey("preview")) ?? "";
-    expect(JSON.parse(arrangement)).toMatchObject({ version: 2 });
-    expect(arrangement).not.toContain('"focus"');
-    expect(arrangement).not.toContain('"camera"');
-    expect(JSON.parse(storage.getItem(windowStorageKey("preview")) ?? "")).toMatchObject({
-      version: 2,
-      window: { focus: expect.any(String) },
+    // A second window starts from what the first one saved.
+    const second = open();
+    expect(titles(second)).toEqual(["library", `${one}:document`]);
+    second.open(two);
+    second.split(idOf(second, two), "horizontal");
+    second.store.flush();
+    // The first window is not told, and reloading it brings back its own layout.
+    expect(titles(first)).toEqual(["library", `${one}:document`]);
+    const reloaded = open(session);
+    expect(titles(reloaded)).toEqual(["library", `${one}:document`]);
+    expect(mainStacks(reloaded.store.state)).toHaveLength(1);
+    // A third window starts from the second, which saved last.
+    const third = open();
+    expect(titles(third)).toEqual(["library", `${one}:document`, `${two}:document`]);
+    expect(mainStacks(third.store.state)).toHaveLength(2);
+  });
+  it("saves one envelope with the workspace and the tab in use", () => {
+    const shared = memory();
+    const workspace = new ReaderPanelWorkspace("preview", shared, known, true, memory());
+    sized(workspace, 1400);
+    workspace.open(three);
+    workspace.store.flush();
+    expect(JSON.parse(shared.getItem(panelStorageKey("preview")) ?? "")).toMatchObject({
+      version: 1,
+      workspace: toSnapshot(workspace.store.state),
+      focusedPanel: idOf(workspace, three),
     });
-    // Using a tab changes only the window's half.
-    first.activate(first.contentPanels()[0]?.id ?? "");
-    first.store.flush();
-    expect(storage.getItem(panelStorageKey("preview"))).toBe(arrangement);
-  });
-  it("shares tabs and panes, and leaves each window on the tab it was using", () => {
-    const { first, second, tell } = windows();
-    first.open(one);
-    first.store.flush();
-    const other = second();
-    sized(other, 1400);
-    expect(titles(other)).toEqual(["library", `${one}:document`]);
-    other.activate(other.contentPanels()[0]?.id ?? "");
-    first.open(two);
-    first.split(idOf(first, two), "horizontal");
-    first.store.flush();
-    tell(other);
-    expect(titles(other)).toEqual(["library", `${one}:document`, `${two}:document`]);
-    expect(mainStacks(other.store.state)).toHaveLength(2);
-    // The other window opened a document; this one is still where the reader left it.
-    expect(other.activeTab()?.kind).toBe("library");
-    expect(first.activeTab()).toMatchObject({ sourceId: two });
-  });
-  it("keeps a tab with unsaved changes that another window closed", async () => {
-    const { first, second, tell } = windows();
-    first.open(one, "citation");
-    first.store.flush();
-    const other = second();
-    sized(other, 1400);
-    const form = idOf(other, one, "citation");
-    other.patch(form, { dirty: true });
-    first.close(idOf(first, one, "citation"));
-    await Promise.resolve();
-    first.store.flush();
-    tell(other);
-    expect(other.tab(form)).toMatchObject({ view: "citation", dirty: true });
-    // Anything unreadable under the key leaves a window as it was.
-    other.adopt("{broken");
-    other.adopt(JSON.stringify({ version: 3, arrangement: {} }));
-    expect(other.tab(form)?.dirty).toBe(true);
-  });
-  it("reads the workspace as it was saved before it had two halves", () => {
-    const storage = memory();
-    const before = new ReaderPanelWorkspace("preview", null, known);
-    sized(before, 1400);
-    before.open(one);
-    before.open(two);
-    storage.setItem(
-      legacyPanelStorageKey("preview"),
-      JSON.stringify({ version: 1, workspace: toSnapshot(before.store.state) }),
-    );
-    const restored = new ReaderPanelWorkspace("preview", storage, known);
-    expect(titles(restored)).toEqual(["library", `${one}:document`, `${two}:document`]);
-    expect(restored.notesPanels().every(({ follows }) => follows === "leader")).toBe(true);
   });
 });
 
@@ -596,56 +547,16 @@ describe("arrangement", () => {
     expect(mainStacks(workspace.store.state)).toHaveLength(1);
     expect(titles(workspace)).toHaveLength(2);
   });
-  it("opens beside as a new column when panes scroll, and as a split when they are fitted", () => {
+  it("opens beside as a pane to the right, or below", () => {
     const workspace = new ReaderPanelWorkspace("preview", null, known);
     sized(workspace, 1400);
     workspace.open(one);
     workspace.beside(createWorkspaceTab(two));
-    workspace.setView("tiling");
-    workspace.beside(createWorkspaceTab(three), "vertical");
     const root = workspace.store.state.root;
     expect(root?.type === "split" ? root.direction : null).toBe("row");
+    expect(mainStacks(workspace.store.state)).toHaveLength(2);
+    workspace.beside(createWorkspaceTab(three), "vertical");
     expect(mainStacks(workspace.store.state)).toHaveLength(3);
-  });
-  it("moves to the canvas with every pane where it was, and opens beside without covering one", () => {
-    const workspace = new ReaderPanelWorkspace("preview", null, known);
-    sized(workspace, 1400);
-    workspace.setView("tiling");
-    workspace.open(one);
-    workspace.beside(createWorkspaceTab(two));
-    const before = computeLayout(
-      workspace.store.state,
-      { width: 1400, height: 800 },
-      workspace.layoutOptions(),
-    );
-    workspace.setView("canvas");
-    const frames = (): { x: number; y: number; width: number; height: number }[] =>
-      mainStacks(workspace.store.state).map(({ id }) => {
-        const frame = workspace.store.state.canvas.frames[id];
-        if (!frame) {
-          throw new Error(`No frame for ${id}`);
-        }
-        return frame;
-      });
-    const main = before.stacks.filter(({ edge }) => edge === null);
-    frames().forEach((frame, index) => {
-      const was = main[index]?.rect ?? { x: 0, y: 0, width: 0, height: 0 };
-      // Seeded from the tiled layout, with a small gap so panes read as separate.
-      expect(Math.abs(frame.x - (was.x - before.main.x))).toBeLessThan(16);
-      expect(Math.abs(frame.width - was.width)).toBeLessThan(32);
-    });
-    workspace.beside(createWorkspaceTab(three));
-    const placed = frames();
-    expect(placed).toHaveLength(3);
-    for (const [index, frame] of placed.entries()) {
-      for (const other of placed.slice(index + 1)) {
-        const apart =
-          frame.x + frame.width <= other.x ||
-          other.x + other.width <= frame.x ||
-          frame.y + frame.height <= other.y ||
-          other.y + other.height <= frame.y;
-        expect(apart).toBe(true);
-      }
-    }
+    expect(stackOfPanel(workspace.store.state, idOf(workspace, three))?.panels).toHaveLength(1);
   });
 });

@@ -17,15 +17,15 @@ one arrangement; what changes is how much of it is shown.
 - The desktop arrangement is not rewritten for the phone. Tabs opened or closed at phone
   width are part of the same arrangement, so returning to a wide window shows the panes as
   they were, with those changes. A side region opened only as a phone screen is hidden
-  again on the way back. The canvas view is also shown one pane at a time.
+  again on the way back.
 - Panel content stays mounted across the change: editors keep their state and document
   frames are not reloaded.
 - Maximizing a reading pane hides the side regions; leaving it restores them.
 
 ## Persistence
 
-Each side region's width is part of the saved arrangement, and whether the reader wants
-it is saved with the window. What is drawn at a given width is never saved, nor is the phone
+Each side region's width, and whether the reader wants it, is part of the saved
+arrangement. What is drawn at a given width is never saved, nor is the phone
 presentation, so a workspace last used on a phone opens on a desktop with its desktop
 arrangement.
 

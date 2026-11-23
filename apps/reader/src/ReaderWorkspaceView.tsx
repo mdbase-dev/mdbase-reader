@@ -73,7 +73,7 @@ import type { PanelDescriptor } from "@mdbase-dev/panels";
 import type { ThemePreference } from "@mdbase-dev/ui/theme";
 import type { Annotation, SourceId, SourceSummary } from "@mdbase-reader/core";
 import type { PickedFile } from "@mdbase-reader/platform";
-import type { ReadingSurface } from "@mdbase-reader/reading-surface";
+import type { ReadingSurface, ReadingTypography } from "@mdbase-reader/reading-surface";
 
 export interface ReaderWorkspaceViewModel {
   readonly library: ReaderLibrarySnapshot;
@@ -275,7 +275,6 @@ export function ReaderWorkspaceView({
           sources={library.sources}
           documentAttachment={model.documentAttachment}
           surfaces={model.surfaces}
-          typography={shell.value.typography}
           sourceWorkspace={sourceWorkspace}
           focusMode={model.focusMode}
           readingResume={model.readingResume}
@@ -595,6 +594,7 @@ function useReadingPreferences(
 > {
   const { typography, sidebarWhileReading } = shell.value;
   const activeTab = model.sourceWorkspace.activeTab;
+  useApplyTypography(model.surfaces, typography);
   const dock = model.sourceWorkspace.dock;
   useEffect(() => {
     dock.setHideWhileReading(sidebarWhileReading === "hide");
@@ -653,6 +653,18 @@ export function useLibraryAnnotationCounts(
     const ownedCount = loaded.value.filter((annotation) => annotation.sourceId === sourceId).length;
     return (known ?? new Map()).set(sourceId, ownedCount);
   }, [counts, loaded, sourceId, model.library.sources]);
+}
+
+/** Keeps every open reflowable document on the reader's chosen type settings. */
+function useApplyTypography(
+  surfaces: ReadonlyMap<string, ReadingSurface>,
+  typography: ReadingTypography,
+): void {
+  useEffect(() => {
+    for (const surface of surfaces.values()) {
+      void surface.capabilities.typography?.setTypography(typography).catch(() => undefined);
+    }
+  }, [surfaces, typography]);
 }
 
 function findWorkbenchOwner(

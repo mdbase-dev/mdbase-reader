@@ -2,7 +2,6 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import {
   Workspace,
   type PanelInfo,
-  type PanelZoom,
   type StackInfo,
   type TabInfo,
   type WorkspaceProps,
@@ -27,7 +26,7 @@ import { MobileWorkspaceNavigation } from "./MobileWorkspaceNavigation.js";
 import { PaneActions } from "./PaneActions.js";
 import { navigatorPanelId } from "./panel-ids.js";
 import { tabMenu } from "./panel-menus.js";
-import { followedPane, isSidePanel, notesView, panelTab } from "./panel-workspace-state.js";
+import { followedPane, isSidePanel, notesView } from "./panel-workspace-state.js";
 import { useProgressiveWorkspaceTabs } from "./use-progressive-workspace-tabs.js";
 import { sidePanelTitle, workspaceTabAccessibleTitle } from "./workspace-tab-display.js";
 
@@ -201,13 +200,7 @@ function useWorkspaceWording(
       tabs: t({ message: "Open tabs" }),
       resize: t({ message: "Resize panes" }),
       overview: t({ message: "All open tabs" }),
-      columns: t({ message: "Scroll between panes" }),
       show: (title) => t`Show ${title}`,
-      zoomIn: t({ message: "Zoom in", context: "Workspace canvas" }),
-      zoomOut: t({ message: "Zoom out", context: "Workspace canvas" }),
-      zoomReset: t({ message: "Actual size", context: "Workspace canvas" }),
-      zoomFit: t({ message: "Show every pane", context: "Workspace canvas" }),
-      movePane: t({ message: "Move pane", context: "Workspace canvas" }),
     },
   };
 }
@@ -227,15 +220,6 @@ function useHydratedTabs(
     [dock, layout],
   );
   return useProgressiveWorkspaceTabs(visible);
-}
-
-/**
- * What a pane does on a zoomed canvas. A document draws itself at the zoom, because what is
- * drawn over it (a selection, its toolbar, an annotation) is measured on screen. Everything
- * else is simply shown larger or smaller.
- */
-function panelZoom(panel: PanelDescriptor): PanelZoom {
-  return panelTab(panel)?.view === "document" ? "native" : "scaled";
 }
 
 export function PanelWorkspace({
@@ -267,7 +251,6 @@ export function PanelWorkspace({
           paneId={info.stack}
           visible={info.visible && info.mode !== "overview"}
           hydrated={hydrated}
-          zoom={info.zoom}
         />
       );
     }
@@ -330,7 +313,6 @@ export function PanelWorkspace({
           store={dock.store}
           layout={dock.layoutOptions()}
           renderPanel={renderPanel}
-          zoom={panelZoom}
           renderTab={renderTab}
           renderStackActions={renderStackActions}
           renderEmpty={() => (

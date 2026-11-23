@@ -345,11 +345,7 @@ function frameLocator(
 
 function epubPreferences(typography: ReadingTypography): EpubPreferences {
   return new EpubPreferences({
-    // Readium keeps the size it is given within its own limits (0.7 to 4 times the default).
-    fontSize:
-      readerEpubDefaults.fontSize *
-      Math.max(0.8, Math.min(1.6, typography.scale)) *
-      (typography.zoom ?? 1),
+    fontSize: readerEpubDefaults.fontSize * Math.max(0.8, Math.min(1.6, typography.scale)),
     optimalLineLength: readingMeasureCharacters[typography.measure],
     fontFamily: typography.face === "sans" ? "sans-serif" : null,
   });

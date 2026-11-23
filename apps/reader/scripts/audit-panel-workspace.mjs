@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 
 import { searchSources } from "./audit-source-search.mjs";
 
-const storageKey = "mdbase-reader:workspace:v2:test-reader-audit";
+const storageKey = "mdbase-reader:panels:v1:test-reader-audit";
 
 /** Real pointer gestures against the panel workspace, not calls to its store. */
 export async function auditPanelWorkspace(page, { screenshot }) {
@@ -79,30 +79,26 @@ export async function auditPanelWorkspace(page, { screenshot }) {
   await expect.poll(async () => (await frame(first).boundingBox()).width).not.toBe(before.width);
   completed.push("Dragging a divider over documents resizes the panes beside it");
 
-  // A new workspace scrolls its panes as columns once they no longer fit.
-  const scroller = page.locator(".mp-scroller");
-  const overflow = () => scroller.evaluate((element) => element.scrollWidth - element.clientWidth);
+  // Every pane shares the window, beside the Sources panel: nothing scrolls sideways.
   await open(2);
   await menu(tab(name(2)), "Move to new pane right");
   await open(3);
   await menu(tab(name(3)), "Move to new pane right");
-  await expect.poll(overflow).toBeGreaterThan(0);
+  await expect(panes).toHaveCount(5);
   const sources = page.locator('.reader-dock-sidebar[data-panel-id="reader:navigator"]');
   await expect(sources).toBeVisible();
   expect((await sources.boundingBox()).x).toBe(0);
-  await expect(tab(name(3))).toBeInViewport();
-  await screenshot("workspace-columns");
-  completed.push("Panes scroll as columns beside a pinned Sources panel");
-
-  await menu(tab(name(3)), "Fit panes to the window");
-  await expect.poll(overflow).toBe(0);
-  await expect(tab(name(0))).toBeInViewport();
-  await expect(tab(name(3))).toBeInViewport();
-  completed.push("Fitting the panes to the window shows every pane without scrolling");
+  for (const number of [0, 1, 2, 3]) {
+    await expect(tab(name(number))).toBeInViewport();
+  }
+  await screenshot("workspace-panes");
+  completed.push("Panes share the window beside the Sources panel");
 
   await menu(tab(name(3)), "Undo arrangement change");
-  await expect.poll(overflow).toBeGreaterThan(0);
+  await expect(panes).toHaveCount(4);
   await expect(page.locator(".reader-dock-tab:not(.is-side)")).toHaveCount(5);
+  await menu(tab(name(3)), "Redo arrangement change");
+  await expect(panes).toHaveCount(5);
   completed.push("Undoing an arrangement change restores the layout and keeps every tab");
 
   await menu(tab(name(3)), "Show all tabs at once");
@@ -124,7 +120,7 @@ export async function auditPanelWorkspace(page, { screenshot }) {
 
   await page.waitForTimeout(400);
   const stored = await saved();
-  expect(stored.version).toBe(2);
+  expect(stored.version).toBe(1);
   expect(JSON.stringify(stored)).not.toContain("dirty");
   await page.reload();
   await expect(panes).toHaveCount(5, { timeout: 30000 });

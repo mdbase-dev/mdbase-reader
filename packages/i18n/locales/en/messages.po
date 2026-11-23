@@ -655,11 +655,6 @@ msgstr "Accessed"
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Actual size"
-msgstr "Actual size"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1178,11 +1173,6 @@ msgstr "Area capture"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "Area captures"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Arrange panes on a canvas"
-msgstr "Arrange panes on a canvas"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3533,10 +3523,6 @@ msgstr "Event title"
 msgid "Every column is shown."
 msgstr "Every column is shown."
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Every pane shares the window"
-msgstr "Every pane shares the window"
-
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
 msgstr "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
@@ -3793,11 +3779,6 @@ msgstr "Finishing adding…"
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
 msgstr "First reference note number"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Fit panes to the window"
-msgstr "Fit panes to the window"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
@@ -5150,11 +5131,6 @@ msgstr "Move down"
 msgid "Move left"
 msgstr "Move left"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Move pane"
-msgstr "Move pane"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "Move right"
@@ -6170,10 +6146,6 @@ msgctxt "DockPaneActions interface"
 msgid "Pane actions"
 msgstr "Pane actions"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Panes keep a readable width and scroll sideways"
-msgstr "Panes keep a readable width and scroll sideways"
-
 #: apps/reader/src/library-source-parts.ts
 msgid "Parent not indexed — coverage is partial"
 msgstr "Parent not indexed — coverage is partial"
@@ -6336,10 +6308,6 @@ msgstr "Pinned"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "Place"
-
-#: apps/reader/src/reader-command-list.ts
-msgid "Place panes anywhere, at any size, and zoom out to see them"
-msgstr "Place panes anywhere, at any size, and zoom out to see them"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -7743,19 +7711,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
 msgstr "Script writer"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgid "Scroll between panes"
-msgstr "Scroll between panes"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
 msgstr "Scroll Layout"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Scroll panes as columns"
-msgstr "Scroll panes as columns"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
@@ -8036,11 +7995,6 @@ msgstr "Show Annotations panel"
 #: apps/reader/src/reader-command-list.ts
 msgid "Show Citation panel"
 msgstr "Show Citation panel"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Show every pane"
-msgstr "Show every pane"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
@@ -10098,11 +10052,6 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "Zoom Controls"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom in"
-msgstr "Zoom in"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10117,11 +10066,6 @@ msgstr "Zoom Level ({level}%)"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "Zoom Menu"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom out"
-msgstr "Zoom out"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

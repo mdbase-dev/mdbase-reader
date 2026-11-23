@@ -40,16 +40,11 @@ export const tabPanelKind = "workspace";
 export const navigatorPanelKind = "navigator";
 export const notesPanelKind = "notes";
 /**
- * Where a collection's workspace is kept, in two halves. The arrangement (what is open and
- * where) is shared by every window on the collection. The window state (focus, the tab in
- * front, open sides, history) is each window's own, under `windowStorageKey`.
+ * Where a collection's workspace is kept. A window keeps its own copy for as long as it lives,
+ * so reloading it brings back its own layout; the copy every window shares is where a new
+ * window starts from.
  */
 export const panelStorageKey = (collection: string): string =>
-  `mdbase-reader:workspace:v2:${collection}`;
-export const windowStorageKey = (collection: string): string =>
-  `${panelStorageKey(collection)}:window`;
-/** The single blob both halves were kept in before; read once, never written. */
-export const legacyPanelStorageKey = (collection: string): string =>
   `mdbase-reader:panels:v1:${collection}`;
 
 export const navigatorWidth = 260;

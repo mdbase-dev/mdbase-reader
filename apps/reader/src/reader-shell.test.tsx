@@ -94,7 +94,7 @@ describe("command palette", () => {
         layout: { panes: [{ id: "primary", tabs: [tab] }], focusedPaneId: "primary" },
         activeTab: null,
         openSourceIds: [open.id],
-        dock: { view: "columns", canUndo: true, canRedo: false },
+        dock: { canUndo: true, canRedo: false },
       },
       sourceExport: { run: () => undefined },
       bibliographyExport: { run: () => undefined },
@@ -132,10 +132,7 @@ describe("command palette", () => {
     expect(active.find(({ id }) => id === "citation")?.label).toBe("Open citation details");
     expect(active.find(({ id }) => id === "split-right")?.label).toBe("Open beside");
     expect(active.find(({ id }) => id === "split-below")?.label).toBe("Open below");
-    // The arrangement in use is not offered; the other two are.
-    expect(commands.find(({ id }) => id === "fit-panes")?.label).toBe("Fit panes to the window");
-    expect(commands.some(({ id }) => id === "arrange-panes-on-canvas")).toBe(true);
-    expect(commands.some(({ id }) => id === "scroll-pane-columns")).toBe(false);
+    expect(commands.find(({ id }) => id === "show-all-tabs")?.label).toBe("Show all tabs at once");
     expect(commands.some(({ id }) => id === "undo-arrangement")).toBe(true);
     expect(commands.some(({ id }) => id === "redo-arrangement")).toBe(false);
     for (const [query, id] of [

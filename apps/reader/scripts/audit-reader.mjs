@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { chromium, expect } from "@playwright/test";
 
 import { auditPdf, auditEpub } from "./reader-audit-documents.mjs";
-import { auditPanelCanvas } from "./audit-panel-canvas.mjs";
+import { auditPanelRegions } from "./audit-panel-regions.mjs";
 import { auditPanelWorkspace } from "./audit-panel-workspace.mjs";
 import { annotationFixture } from "./audit-annotation-fixture.mjs";
 import { auditAnnotations } from "./audit-annotations.mjs";
@@ -231,7 +231,7 @@ try {
   }
   if (workspaceAudit) {
     completed.push(...(await auditPanelWorkspace(page, { screenshot })));
-    completed.push(...(await auditPanelCanvas(page, { screenshot })));
+    completed.push(...(await auditPanelRegions(page, { screenshot })));
   }
   if (
     !formatsAudit &&
@@ -557,8 +557,7 @@ try {
     stack: error.stack,
     workspace: await page
       .evaluate(() => ({
-        saved: localStorage.getItem("mdbase-reader:workspace:v2:test-reader-audit"),
-        window: sessionStorage.getItem("mdbase-reader:workspace:v2:test-reader-audit:window"),
+        saved: sessionStorage.getItem("mdbase-reader:panels:v1:test-reader-audit"),
         mobileOptions: Array.from(
           globalThis.document.querySelectorAll(".mobile-workspace-navigation option"),
         ).map((option) => ({ value: option.value, title: option.textContent })),

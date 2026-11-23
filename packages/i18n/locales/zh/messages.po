@@ -655,11 +655,6 @@ msgstr "访问日期"
 msgid "Actions for {0}"
 msgstr "{0} 的操作"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Actual size"
-msgstr "实际大小"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1178,11 +1173,6 @@ msgstr "区域截图"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "区域截图"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Arrange panes on a canvas"
-msgstr "在画布上排列窗格"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3533,10 +3523,6 @@ msgstr "活动标题"
 msgid "Every column is shown."
 msgstr "已显示所有列。"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Every pane shares the window"
-msgstr "所有窗格共享窗口"
-
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
 msgstr "写入集合之前会验证每个载荷的校验和。目前需要支持文件夹选择的浏览器，例如 Chrome。"
@@ -3793,11 +3779,6 @@ msgstr "正在完成添加…"
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
 msgstr "首次引用注释编号"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Fit panes to the window"
-msgstr "让窗格适应窗口"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
@@ -5150,11 +5131,6 @@ msgstr "下移"
 msgid "Move left"
 msgstr "左移"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Move pane"
-msgstr "移动窗格"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "右移"
@@ -6170,10 +6146,6 @@ msgctxt "DockPaneActions interface"
 msgid "Pane actions"
 msgstr "窗格操作"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Panes keep a readable width and scroll sideways"
-msgstr "窗格保持易读的宽度并横向滚动"
-
 #: apps/reader/src/library-source-parts.ts
 msgid "Parent not indexed — coverage is partial"
 msgstr "父来源尚未建立索引——覆盖范围不完整"
@@ -6336,10 +6308,6 @@ msgstr "已固定"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "地点"
-
-#: apps/reader/src/reader-command-list.ts
-msgid "Place panes anywhere, at any size, and zoom out to see them"
-msgstr "将窗格放在任意位置、设为任意大小，缩小即可一览全部"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -7743,19 +7711,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
 msgstr "编剧"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgid "Scroll between panes"
-msgstr "在窗格之间滚动"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
 msgstr "滚动布局"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Scroll panes as columns"
-msgstr "将窗格作为列滚动"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
@@ -8036,11 +7995,6 @@ msgstr "显示注释面板"
 #: apps/reader/src/reader-command-list.ts
 msgid "Show Citation panel"
 msgstr "显示引文面板"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Show every pane"
-msgstr "显示所有窗格"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
@@ -10098,11 +10052,6 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "缩放控制"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom in"
-msgstr "放大"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10117,11 +10066,6 @@ msgstr "缩放级别（{level}%）"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "缩放菜单"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom out"
-msgstr "缩小"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

@@ -655,11 +655,6 @@ msgstr "열람일"
 msgid "Actions for {0}"
 msgstr "{0} 작업"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Actual size"
-msgstr "실제 크기"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgctxt "LibraryTableHeader interface"
 msgid "Add"
@@ -1178,11 +1173,6 @@ msgstr "영역 캡처"
 #: apps/reader/src/LibraryAnnotationToolbar.tsx
 msgid "Area captures"
 msgstr "영역 캡처"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Arrange panes on a canvas"
-msgstr "패널을 캔버스에 배치"
 
 #: apps/reader/src/reader-command-list.ts
 msgid "Arrange panes side by side"
@@ -3533,10 +3523,6 @@ msgstr "행사 제목"
 msgid "Every column is shown."
 msgstr "모든 열이 표시되어 있습니다."
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Every pane shares the window"
-msgstr "모든 패널이 창을 나누어 씁니다"
-
 #: apps/reader/src/ImportInput.tsx
 msgid "Every payload checksum is verified before collection writes. Currently requires a browser with folder selection support, such as Chrome."
 msgstr "컬렉션에 쓰기 전에 모든 페이로드 체크섬을 확인합니다. 현재는 Chrome과 같이 폴더 선택을 지원하는 브라우저가 필요합니다."
@@ -3793,11 +3779,6 @@ msgstr "추가 마무리 중…"
 msgctxt "CSL bibliographic field or item type"
 msgid "First reference note number"
 msgstr "첫 참조 각주 번호"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Fit panes to the window"
-msgstr "패널을 창에 맞추기"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
@@ -5150,11 +5131,6 @@ msgstr "아래로 이동"
 msgid "Move left"
 msgstr "왼쪽으로 이동"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Move pane"
-msgstr "패널 이동"
-
 #: apps/reader/src/LibraryTableHeader.tsx
 msgid "Move right"
 msgstr "오른쪽으로 이동"
@@ -6170,10 +6146,6 @@ msgctxt "DockPaneActions interface"
 msgid "Pane actions"
 msgstr "창 작업"
 
-#: apps/reader/src/reader-command-list.ts
-msgid "Panes keep a readable width and scroll sideways"
-msgstr "패널이 읽기 좋은 너비를 유지하며 옆으로 스크롤됩니다"
-
 #: apps/reader/src/library-source-parts.ts
 msgid "Parent not indexed — coverage is partial"
 msgstr "상위 자료가 색인되지 않음 — 일부만 확인됨"
@@ -6336,10 +6308,6 @@ msgstr "고정됨"
 msgctxt "CitationStructuredEditor interface"
 msgid "Place"
 msgstr "장소"
-
-#: apps/reader/src/reader-command-list.ts
-msgid "Place panes anywhere, at any size, and zoom out to see them"
-msgstr "패널을 원하는 위치와 크기로 놓고, 축소해서 한눈에 볼 수 있습니다"
 
 #: apps/extension/src/SaveBar.tsx
 msgid "Please wait…"
@@ -7743,19 +7711,10 @@ msgctxt "CSL bibliographic field or item type"
 msgid "Script writer"
 msgstr "각본가"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgid "Scroll between panes"
-msgstr "패널 사이 스크롤"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
 msgid "Scroll Layout"
 msgstr "스크롤 레이아웃"
-
-#: apps/reader/src/panel-menus.ts
-#: apps/reader/src/reader-command-list.ts
-msgid "Scroll panes as columns"
-msgstr "패널을 열로 스크롤"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer panel"
@@ -8036,11 +7995,6 @@ msgstr "주석 패널 표시"
 #: apps/reader/src/reader-command-list.ts
 msgid "Show Citation panel"
 msgstr "인용 패널 표시"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Show every pane"
-msgstr "모든 패널 보기"
 
 #: apps/reader/src/AnnotationCard.tsx
 msgid "Show in document"
@@ -10098,11 +10052,6 @@ msgctxt "PDF viewer menu"
 msgid "Zoom Controls"
 msgstr "확대/축소 컨트롤"
 
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom in"
-msgstr "확대"
-
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"
 msgid "Zoom In"
@@ -10117,11 +10066,6 @@ msgstr "확대/축소 수준 ({level}%)"
 msgctxt "PDF viewer zoom"
 msgid "Zoom Menu"
 msgstr "확대/축소 메뉴"
-
-#: apps/reader/src/PanelWorkspace.tsx
-msgctxt "Workspace canvas"
-msgid "Zoom out"
-msgstr "축소"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer zoom"

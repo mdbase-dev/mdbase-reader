@@ -1,30 +1,18 @@
-import {
-  apply,
-  compose,
-  emptyWorkspace,
-  fromSnapshot,
-  parseArrangement,
-  parseWindowState,
-  type WindowState,
-  type WorkspaceState,
-} from "@mdbase-dev/panels";
+import { apply, emptyWorkspace, fromSnapshot, type WorkspaceState } from "@mdbase-dev/panels";
 
 import {
   isSidePanel,
-  legacyPanelStorageKey,
   navigatorPanel,
   navigatorPanelId,
   navigatorPanelKind,
   navigatorWidth,
   notesPanel,
   notesPanels,
-  notesView,
   notesWidth,
   panelStorageKey,
   panelTab,
   tabPanel,
   tabPanelKind,
-  windowStorageKey,
   type WorkspaceStorage,
 } from "./panel-workspace-state.js";
 import {
@@ -45,9 +33,9 @@ export interface RestoredWorkspace {
 }
 
 interface RestoreOptions {
-  /** Shared by every window on the collection: holds the arrangement. */
+  /** Shared by every window on the collection: where a new window starts from. */
   readonly storage: WorkspaceStorage | null;
-  /** This window's own: holds how it was looking at the arrangement. */
+  /** This window's own: what it gets back when it is reloaded. */
   readonly session: WorkspaceStorage | null;
   readonly collection: string;
   readonly knownSources: ReadonlySet<SourceId>;
@@ -62,69 +50,20 @@ export function sessionId(tab: WorkspaceTab, taken: (id: string) => boolean): st
     : `reader:session:${crypto.randomUUID()}`;
 }
 
-/** What a window saved about itself, read from its own storage or, failing that, the last window's. */
-function savedWindow(options: RestoreOptions): {
-  readonly window: WindowState | null;
-  readonly navigation: unknown;
-  readonly focusedPanel: unknown;
-} {
-  const key = windowStorageKey(options.collection);
-  for (const storage of [options.session, options.storage]) {
-    try {
-      const envelope = JSON.parse(storage?.getItem(key) ?? "null") as {
-        version?: unknown;
-        window?: unknown;
-        navigation?: unknown;
-        focusedPanel?: unknown;
-      } | null;
-      if (envelope?.version === 2) {
-        return {
-          window: parseWindowState(envelope.window),
-          navigation: envelope.navigation,
-          focusedPanel: envelope.focusedPanel,
-        };
-      }
-    } catch {
-      // The other storage may still have something readable.
-    }
-  }
-  return { window: null, navigation: undefined, focusedPanel: undefined };
-}
-
 /**
  * The saved workspace, or a new one when nothing readable was saved. Layouts from before the
  * panel workspace (Dockview's, and the two-pane one before it) are not read: they are simply
  * left alone.
  */
 export function restoreWorkspace(options: RestoreOptions): RestoredWorkspace {
-  const { storage, collection, navigation } = options;
-  try {
-    const shared = storage?.getItem(panelStorageKey(collection));
-    if (shared) {
-      const known = sourcesForWorkspaceRestore(
-        options.knownSources,
-        shared,
-        options.sourceIndexComplete,
-      );
-      const envelope = JSON.parse(shared) as { version?: unknown; arrangement?: unknown };
-      if (envelope.version === 2) {
-        const own = savedWindow(options);
-        const state = withoutInvalid(
-          compose(parseArrangement(envelope.arrangement), own.window),
-          known,
-        );
-        navigation.restore(own.navigation, known);
-        const focused = own.focusedPanel;
-        return {
-          state,
-          focusedPanel:
-            typeof focused === "string" && panelTab(state.panels[focused]) ? focused : null,
-        };
+  const { collection, navigation } = options;
+  // A window that is reloaded gets its own layout back; a new one starts from the last saved.
+  for (const storage of [options.session, options.storage]) {
+    try {
+      const saved = storage?.getItem(panelStorageKey(collection));
+      if (!saved) {
+        continue;
       }
-    }
-    // The workspace as it was kept before it had two halves.
-    const saved = storage?.getItem(legacyPanelStorageKey(collection));
-    if (saved) {
       const known = sourcesForWorkspaceRestore(
         options.knownSources,
         saved,
@@ -146,22 +85,15 @@ export function restoreWorkspace(options: RestoreOptions): RestoredWorkspace {
             typeof focused === "string" && panelTab(state.panels[focused]) ? focused : null,
         };
       }
+    } catch {
+      // Storage is optional and a layout that cannot be read is not worth failing over.
     }
-  } catch {
-    // Storage is optional and a layout that cannot be read is not worth failing over.
   }
   return newWorkspace();
 }
 
-/**
- * Only Reader's own panels are shown, and tabs whose source no longer exists are closed. Pass
- * null for `known` when which sources exist is not in question (an arrangement that another
- * window of this Reader has just saved).
- */
-export function withoutInvalid(
-  state: WorkspaceState,
-  known: ReadonlySet<SourceId> | null,
-): WorkspaceState {
+/** Only Reader's own panels are shown, and tabs whose source no longer exists are closed. */
+function withoutInvalid(state: WorkspaceState, known: ReadonlySet<SourceId>): WorkspaceState {
   let next = state;
   for (const panel of Object.values(state.panels)) {
     const tab = panelTab(panel);
@@ -171,35 +103,19 @@ export function withoutInvalid(
         ? !tab
         : !isSidePanel(panel) ||
           (panel.kind === navigatorPanelKind) !== (panel.id === navigatorPanelId);
-    if (invalid || (known && tab?.kind === "source" && !known.has(tab.sourceId))) {
+    if (invalid || (tab?.kind === "source" && !known.has(tab.sourceId))) {
       next = apply(next, { type: "remove", panel: panel.id });
     }
   }
   return next;
 }
 
-/** A pinned library tab, with panes that scroll as columns once there are too many to fit. */
+/** A pinned library tab. */
 function newWorkspace(): RestoredWorkspace {
   const tab = { ...createLibraryWorkspaceTab(), pinned: true };
   const id = sessionId(tab, () => false);
-  let state = apply(emptyWorkspace(), { type: "add", panel: tabPanel({ ...tab, id }) });
-  state = apply(state, { type: "setView", view: "columns" });
+  const state = apply(emptyWorkspace(), { type: "add", panel: tabPanel({ ...tab, id }) });
   return { state, focusedPanel: id, fresh: true };
-}
-
-/** Workspaces saved before panels could follow have side panels that would lead. */
-function withoutLeadingSidePanels(state: WorkspaceState): WorkspaceState {
-  let next = state;
-  for (const panel of Object.values(state.panels)) {
-    if (notesView(panel)) {
-      if (panel.follows === undefined) {
-        next = apply(next, { type: "follow", panel: panel.id, follows: "leader" });
-      }
-    } else if (isSidePanel(panel) && panel.leads !== false) {
-      next = apply(next, { type: "update", panel: panel.id, changes: { leads: false } });
-    }
-  }
-  return next;
 }
 
 /** Sources beside a new workspace, and the Notes panels ready at the right but closed. */
@@ -235,7 +151,6 @@ export function withSidePanels(state: WorkspaceState, fresh: boolean): Workspace
       ],
     });
   }
-  next = withoutLeadingSidePanels(next);
   for (const side of ["left", "right"] as const) {
     if (next.edges[side]) {
       // Notes give way before sources when the window is too narrow for both.
