@@ -163,35 +163,21 @@ action, and one stylesheet section for each redesigned component.
   patches with its revision. `id`, `type`, `documents` and the whole `csl` and `reading`
   objects are not editable (`isEditableSourceField`); nested values inside them are.
 - **Annotations view.** The library's _Sources / Annotations_ switch lists every annotation in
-  the collection, with its passage, source, type, tags and place. Search covers quotes, notes,
-  source titles, creators and tags; the filter menu narrows by type, tag, and field conditions
-  on the annotation's source (the same conditions as the Sources view). Enter or double-click
-  opens the annotation in its document, reusing a tab already showing it; Ctrl/⌘+Enter opens it
-  beside. _Copy as Markdown_ copies the selection grouped by source, as blockquotes with a
-  wikilink back to each record. `AnnotationRepository.listAll` lists paths with a
-  contract query limited to `reader-annotation`, then reads each record with the bulk read
-  concurrency: semantic contract views reject `includeBody` and every field but `types`,
-  `timezone`, pagination, `frontmatterMode` and `contract`. Nothing is written from this view.
-- **Annotation columns.** The annotations table has the sources table's columns: headers sort
-  (Created, Source, Type), resize by drag or arrow keys, move, hide, and come back from the add
-  menu (`annotation-columns.ts`). Columns, widths and sort are remembered per view on this
-  device until saved (`use-layout-draft.ts`, shared with the sources table).
-- **Saved annotation views.** _Save as new view…_ writes an ordinary mdbase view record with
-  `query.types: [reader-annotation]` and `readerViewKind: annotations` in Reader's presentation
-  options (`mdbase-annotation-views.ts`). Conditions on the source are written through the
-  annotation's `source` link, e.g. `source.asFile() != null && source.asFile().course…`, using
-  the links profile's `asFile()`; sorting by source orders by a `source_title` projection. So
-  Obsidian, the CLI and agents run the same view. Opening a saved view runs it through mdbase
-  (`executeAnnotationView`) until its filter changes, then Reader filters locally; if mdbase
-  cannot run it, Reader filters locally and says so. On the 1,486-source test collection, 13
-  filters (scalar, list, nested, hyphenated and numeric fields, `is-not`, empty, and type with a
-  source condition) selected identical annotations locally and in mdbase.
-- **"Annotations for this source".** The annotations view options can add one view record whose
-  named view binds `this` to a `reader-source` (`on_missing: error`) and selects
-  `source.asFile().file.path == this.file.path`. It is for other tools, where it runs against a
-  source note; Reader does not list it as a library view.
+  the collection in the same list the Notes panel shows for one source (`AnnotationList` with
+  `collection`, mounted by `CollectionAnnotations.tsx`): the same cards, search and Filter menu,
+  with each card naming its source and the Source filter listing the sources that have
+  annotations. Search also covers source titles and creators; document order groups by source
+  title. Clicking a card opens the annotation in its document. _Copy as Markdown_, at the end of
+  the Filter menu in both places, copies the listed annotations grouped by source, as
+  blockquotes with a wikilink back to each record. `AnnotationRepository.listAll` lists paths
+  with a contract query limited to `reader-annotation`, then reads each record with the bulk
+  read concurrency: semantic contract views reject `includeBody` and every field but `types`,
+  `timezone`, pagination, `frontmatterMode` and `contract`. There is no annotations table, no
+  saved annotation views and no "Annotations for this source" view record; view records an
+  earlier build wrote with `readerViewKind: annotations` are not listed as library views
+  (`isReaderSourcesView`).
 - TanStack Table v9 is used headlessly for column sizing and resizing only
-  (`use-table-columns.ts`, shared by both tables; `TableHeadRow.tsx` renders either header).
+  (`use-table-columns.ts`; `TableHeadRow.tsx` renders the header).
   Filtering and sorting remain Reader's own (`applyLibraryViewConfiguration`,
   `sortAnnotationEntries`), matching each saved view's `order_by`.
 

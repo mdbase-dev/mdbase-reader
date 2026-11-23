@@ -699,3 +699,32 @@
 .annotation-list [role="listitem"]:has(details[open]) {
   z-index: 2;
 }
+
+/* Copy as Markdown, at the end of the filter menu: it copies what the list shows. */
+.annotation-copy-markdown {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.annotation-copy-markdown > button {
+  min-height: var(--control-h);
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: var(--r-sm);
+  color: var(--text-1);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.annotation-copy-markdown > button:hover {
+  background: var(--bg-hover);
+}
+
+.annotation-copy-markdown > small {
+  padding: 0 var(--sp-2) var(--sp-1);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}

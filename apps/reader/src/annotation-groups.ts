@@ -71,6 +71,8 @@ export function annotationGroupHeadings(
   results: readonly Annotation[],
   currentSourceId: SourceId | undefined,
   sources: readonly SourceSummary[] = [],
+  /** A list covering many sources has no open one: every run names its source. */
+  everySource = false,
 ): readonly (AnnotationGroupHeading | null)[] {
   let previous: string | null = null;
   let headed = false;
@@ -82,7 +84,7 @@ export function annotationGroupHeadings(
       outsideNoted = false;
     }
     outsideRun = outside;
-    const group = annotationGroup(annotation, currentSourceId, outside);
+    const group = annotationGroup(annotation, currentSourceId, outside, everySource);
     const starts = group.key !== previous;
     previous = group.key;
     // Once any heading is shown, unlocated cards need their own so they do not join the last page.
@@ -106,10 +108,11 @@ function annotationGroup(
   annotation: Annotation,
   currentSourceId: SourceId | undefined,
   outside: boolean,
+  everySource: boolean,
 ): { key: string; label: string; located: boolean; other: boolean } {
   const location = groupLocation(annotation);
   const linked = hasPassageAnchor(annotation.target);
-  const other = annotationFromOtherSource(annotation, currentSourceId);
+  const other = everySource || annotationFromOtherSource(annotation, currentSourceId);
   const place = location ?? (linked ? "\u0001" : "");
   return {
     key: `${other ? annotation.sourceId : ""}\u0000${place}${outside ? "\u0000outside" : ""}`,

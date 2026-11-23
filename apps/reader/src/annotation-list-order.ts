@@ -3,6 +3,8 @@ import {
   highlightColorKey,
   type Annotation,
   type HighlightColorKey,
+  type SourceId,
+  type SourceSummary,
 } from "@mdbase-reader/core";
 
 import { annotationBodyContent } from "./annotation-body-content.js";
@@ -21,25 +23,43 @@ interface AnnotationSearchEntry {
   readonly annotation: Annotation;
   readonly text: string;
 }
+/**
+ * `sources` is given when the list covers many sources: search then also matches a source's
+ * title and authors, and document order keeps each source's annotations together, by title.
+ */
 export function indexAnnotations(
   annotations: readonly Annotation[],
   order: "document" | "newest",
+  sources?: ReadonlyMap<SourceId, SourceSummary>,
 ): AnnotationSearchEntry[] {
+  const title = (annotation: Annotation): string =>
+    sources?.get(annotation.sourceId)?.title ?? annotation.source;
   return [...annotations]
     .sort(
-      order === "newest" ? (a, b) => b.createdAt.localeCompare(a.createdAt) : compareDocumentOrder,
+      order === "newest"
+        ? (a, b) => b.createdAt.localeCompare(a.createdAt)
+        : sources
+          ? (a, b) =>
+              sectionOrder.compare(title(a), title(b)) ||
+              a.sourceId.localeCompare(b.sourceId) ||
+              compareDocumentOrder(a, b)
+          : compareDocumentOrder,
     )
-    .map((annotation) => ({
-      annotation,
-      text: [
-        annotation.body,
-        annotation.target?.quote?.exact,
-        annotation.locator?.label,
-        ...annotation.tags,
-      ]
-        .join(" ")
-        .toLocaleLowerCase(),
-    }));
+    .map((annotation) => {
+      const source = sources?.get(annotation.sourceId);
+      return {
+        annotation,
+        text: [
+          annotation.body,
+          annotation.target?.quote?.exact,
+          annotation.locator?.label,
+          ...annotation.tags,
+          ...(source ? [source.title, ...source.creators] : []),
+        ]
+          .join(" ")
+          .toLocaleLowerCase(),
+      };
+    });
 }
 
 export function searchAnnotationIndex(

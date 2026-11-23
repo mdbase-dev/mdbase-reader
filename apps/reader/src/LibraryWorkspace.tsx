@@ -15,6 +15,7 @@ import {
 
 import { BrowserExtensionDiscovery } from "./BrowserExtensionHelp.js";
 import { CitationQualitySummary } from "./CitationQualitySummary.js";
+import { CollectionAnnotations } from "./CollectionAnnotations.js";
 import { ContinueReading } from "./ContinueReading.js";
 import { readerErrorMessage } from "./errors.js";
 import { FilterIcon, MoreIcon, LibraryIcon, PlusIcon, SearchIcon } from "./icons.js";
@@ -32,7 +33,6 @@ import {
   type RowSelection,
 } from "./library-row-selection.js";
 import { librarySourceParts } from "./library-source-parts.js";
-import { LibraryAnnotations } from "./LibraryAnnotations.js";
 import { LibraryBulkBar } from "./LibraryBulkBar.js";
 import { countLabel, readingStatusChoices, readingStatusLabel } from "./LibraryCells.js";
 import { LibraryConditionsEditor } from "./LibraryConditionsEditor.js";
@@ -117,11 +117,8 @@ export function LibraryWorkspace({
     () => ({ ...layout, filter }),
     [layout, filter],
   );
-  // A saved annotations view opens on its annotations; any view can switch between the two.
-  const [mode, setMode] = useState<"sources" | "annotations">(
-    view.annotations ? "annotations" : "sources",
-  );
-  const [annotationToolbar, setAnnotationToolbar] = useState<HTMLDivElement | null>(null);
+  // Any view can switch to the collection's annotations and back.
+  const [mode, setMode] = useState<"sources" | "annotations">("sources");
   const [selection, setSelection] = useState<RowSelection>(emptyRowSelection);
   // Remounts the table after a reset, since it reads column widths from the layout once.
   const [layoutResets, setLayoutResets] = useState(0);
@@ -129,14 +126,13 @@ export function LibraryWorkspace({
   const [valuesByPath, setValuesByPath] = useState<
     ReadonlyMap<string, Readonly<Record<string, unknown>>>
   >(() => new Map());
-  const [loading, setLoading] = useState(Boolean(view.path && !view.annotations));
+  const [loading, setLoading] = useState(Boolean(view.path));
   const [problem, setProblem] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const executionFamily = `reader-library-view:${useId()}`;
 
   useEffect(() => {
-    // Annotation mode owns its execution and hydration in LibraryAnnotations.
-    if (mode !== "sources" || view.annotations) {
+    if (mode !== "sources") {
       return undefined;
     }
     const controller = new AbortController();
@@ -181,7 +177,7 @@ export function LibraryWorkspace({
   }, [allSources, executedSources]);
   // A changed filter searches the whole library; layout changes keep the view's own results.
   const filterChanged = JSON.stringify(filter) !== JSON.stringify(view.configuration.filter);
-  const baseSources = filterChanged || view.annotations ? allSources : freshSources;
+  const baseSources = filterChanged ? allSources : freshSources;
   const { sortField, sortDirection } = layout;
   const matches = useMemo(
     () =>
@@ -380,9 +376,6 @@ export function LibraryWorkspace({
             </button>
           ))}
         </div>
-        {mode === "annotations" ? (
-          <div ref={setAnnotationToolbar} className="library-annotation-toolbar-host" />
-        ) : null}
         {mode === "sources" ? (
           <>
             <div className="library-workspace-search">
@@ -420,7 +413,7 @@ export function LibraryWorkspace({
                   ? t({ message: "Loading…", context: "LibraryWorkspace interface" })
                   : `${countLabel(matches.length, "source")}${indexLoading && !view.path ? t({ message: " · Loading more…" }) : ""}`}
               </span>
-              {dirty && view.owned && view.writable && !view.annotations ? (
+              {dirty && view.owned && view.writable ? (
                 <button
                   className="library-save-button"
                   type="button"
@@ -625,19 +618,13 @@ export function LibraryWorkspace({
         }}
       >
         {mode === "annotations" ? (
-          <LibraryAnnotations
-            toolbarHost={annotationToolbar}
+          <CollectionAnnotations
             gateway={gateway}
-            view={view}
-            controller={controller}
-            collectionKey={collectionKey}
-            onOpenView={onOpenView}
             sources={allSources}
-            propertyKeys={propertyKeys}
-            focused={focused}
-            scrollRef={resultsRef}
-            onOpenAnnotation={
-              onOpenAnnotation ?? ((annotation) => onOpenSource(annotation.sourceId))
+            onOpenAnnotation={(annotation) =>
+              onOpenAnnotation
+                ? onOpenAnnotation(annotation, false)
+                : onOpenSource(annotation.sourceId)
             }
           />
         ) : (

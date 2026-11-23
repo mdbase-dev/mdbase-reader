@@ -8,13 +8,7 @@ import {
 } from "@mdbase-reader/core";
 import { describe, expect, it } from "vitest";
 
-import {
-  annotationEntries,
-  annotationsToMarkdown,
-  emptyAnnotationFilter,
-  filterAnnotationEntries,
-  sortAnnotationEntries,
-} from "./annotation-overview.js";
+import { annotationEntries, annotationsToMarkdown } from "./annotation-overview.js";
 
 const collection = collectionId("c");
 const dostoevsky: SourceSummary = {
@@ -68,28 +62,6 @@ describe("annotation overview", () => {
   it("separates the quoted passage from the reader's note", () => {
     expect(entries[0]?.quote).toBe("Attention is rare.");
     expect(entries[0]?.note).toBe("Key claim.");
-  });
-
-  it("filters by text, type, tag and conditions on the source", () => {
-    const find = (filter: Partial<typeof emptyAnnotationFilter>): string[] =>
-      filterAnnotationEntries(entries, { ...emptyAnnotationFilter, ...filter }).map(
-        ({ annotation }) => annotation.id,
-      );
-    expect(find({ query: "tufte" })).toEqual(["bb"]);
-    expect(find({ type: "note" })).toEqual(["bb"]);
-    expect(find({ tag: "Attention" })).toEqual(["a"]);
-    expect(
-      find({ sourceConditions: [{ key: "course", operator: "is", value: "attention" }] }),
-    ).toEqual(["a"]);
-  });
-
-  it("sorts newest first by default and by source title", () => {
-    expect(
-      sortAnnotationEntries(entries, "created", "desc").map(({ annotation }) => annotation.id),
-    ).toEqual(["bb", "a"]);
-    expect(
-      sortAnnotationEntries(entries, "source", "asc").map(({ annotation }) => annotation.id),
-    ).toEqual(["a", "bb"]);
   });
 
   it("writes Markdown grouped by source with links back to each annotation", () => {

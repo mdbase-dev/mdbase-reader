@@ -2,10 +2,8 @@ import { collectionId, recordRevision, sourceId, type Source } from "@mdbase-rea
 import { readerI18n } from "@mdbase-reader/i18n";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { emptyAnnotationFilter } from "./annotation-overview.js";
 import { propertyColumn } from "./library-columns.js";
 import { editableText, parseFieldInput } from "./library-field-edit.js";
-import { buildAnnotationView } from "./mdbase-annotation-views.js";
 import { buildLibraryView, defaultLibraryViewConfiguration } from "./mdbase-library-views.js";
 import { addSourceFromInput, type SourceAdditionServices } from "./source-addition-flow.js";
 
@@ -109,23 +107,6 @@ describe("saved mdbase view files are identical in every interface language", ()
     const italian = await inLocale("it", () => JSON.stringify(buildLibraryView(request)));
     expect(italian).toBe(english);
     expect(english).toContain('"label":"Title"');
-  });
-
-  it("writes the same annotation view source in English and Italian", async () => {
-    const request = {
-      name: "Vista",
-      configuration: {
-        columns: ["passage", "source", "type", "tags", "location", "created"],
-        columnWidths: {},
-        sortField: "created",
-        sortDirection: "desc",
-        filter: emptyAnnotationFilter,
-      },
-    } as unknown as Parameters<typeof buildAnnotationView>[0];
-    const english = JSON.stringify(buildAnnotationView(request));
-    const italian = await inLocale("it", () => JSON.stringify(buildAnnotationView(request)));
-    expect(italian).toBe(english);
-    expect(english).toContain('"label":"Passage"');
   });
 });
 

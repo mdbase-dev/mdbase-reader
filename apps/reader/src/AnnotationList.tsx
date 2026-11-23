@@ -1,4 +1,4 @@
-import { t } from "@lingui/core/macro";
+import { plural, t } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { useMemo, useState, type JSX, type ReactNode } from "react";
@@ -14,6 +14,7 @@ import {
   indexAnnotations,
   searchAnnotationIndex,
 } from "./annotation-list-order.js";
+import { annotationEntries, annotationsToMarkdown } from "./annotation-overview.js";
 import { AnnotationCard } from "./AnnotationCard.js";
 import {
   AnnotationFilterMenu,
@@ -43,6 +44,11 @@ interface AnnotationListProps {
   readonly owners?: readonly SourceSummary[] | undefined;
   /** The open source; annotations saved to any other source say so. */
   readonly currentSourceId?: SourceId | undefined;
+  /**
+   * The whole collection's annotations rather than one source's: each names its source, search
+   * also matches sources, and there is no reading position to follow. `owners` is every source.
+   */
+  readonly collection?: boolean;
   readonly onMoveOwner?:
     ((annotation: Annotation, owner: SourceSummary) => Promise<void>) | undefined;
   readonly onRecolor?:
@@ -54,7 +60,7 @@ interface AnnotationListProps {
   /** For a chapter: whether the panel includes the whole book's annotations. */
   readonly wholeBook?:
     { readonly value: boolean; readonly onChange: (value: boolean) => void } | undefined;
-  readonly transclusion: AnnotationTransclusionController;
+  readonly transclusion?: AnnotationTransclusionController | undefined;
   readonly onUpdate: (annotation: Annotation, body: string) => Promise<Annotation>;
   readonly onPlanDelete: (annotation: Annotation) => Promise<AnnotationDeletionPlan>;
   readonly onDelete: (annotation: Annotation, plan: AnnotationDeletionPlan) => Promise<void>;
@@ -87,6 +93,7 @@ export function AnnotationList({
   beforeList,
   wholeBook,
   onBeginEdit,
+  collection = false,
 }: AnnotationListProps): JSX.Element {
   const { currentEditing, closeEditor, beginEdit } = useListEditing(
     editingId,
@@ -97,11 +104,11 @@ export function AnnotationList({
   const [view, setView] = useState<AnnotationView>(defaultAnnotationView);
   const [following, setFollowing] = useState(true);
   const { renderAll, setRenderAll, browserRef } = useAnnotationBrowserFind();
-  const context = { currentSourceId, owners, editingId: currentEditing };
+  const context = { currentSourceId, owners, editingId: currentEditing, collection };
   const { scoped, results, headings } = useAnnotationResults(annotations, view, query, context);
+  const listedOwners = useListedOwners(annotations, owners, collection);
   const grouped = view.order === "document";
   const total = annotations.status === "ready" ? annotations.value.length : 0;
-  const ready = annotations.status === "ready";
   const clear = (): void => {
     setQuery("");
     setView(clearedFilters);
@@ -116,13 +123,14 @@ export function AnnotationList({
             view={view}
             onViewChange={setView}
             scoped={scoped}
-            owners={owners}
+            owners={listedOwners}
             wholeBook={wholeBook}
-            following={following}
+            following={collection ? undefined : following}
             onFollowingChange={setFollowing}
             renderAll={renderAll}
             onRenderAllChange={setRenderAll}
             changed={filterMenuChanged(view, { renderAll, wholeBook })}
+            footer={<CopyAsMarkdown annotations={results} sources={owners ?? []} />}
           />
         ) : null}
         {addMenu}
@@ -130,15 +138,15 @@ export function AnnotationList({
       <AnnotationFilterStatus
         filtered={isFiltered(query, view)}
         hiddenActive={hiddenActive}
-        paused={!following}
+        paused={!collection && !following}
         onResume={() => setFollowing(true)}
         shown={results.length}
         total={total}
         onClear={clear}
       />
       {beforeList}
-      {!ready || !total ? (
-        <AnnotationListStatus annotations={annotations} />
+      {!total ? (
+        <AnnotationListStatus annotations={annotations} collection={collection} />
       ) : (
         <VirtualAnnotationList
           results={results}
@@ -148,13 +156,7 @@ export function AnnotationList({
           activeId={activeId}
           following={following}
           onFollowingChange={setFollowing}
-          renderHeading={(position) => {
-            const heading = headings[position];
-            const annotation = results[position];
-            return heading && annotation ? (
-              <AnnotationGroupTitle heading={heading} annotation={annotation} />
-            ) : null;
-          }}
+          renderHeading={(position) => groupTitle(headings[position], results[position])}
           renderCard={(annotation) => (
             <AnnotationCard
               annotation={annotation}
@@ -164,7 +166,7 @@ export function AnnotationList({
               showLocation={!grouped}
               // Headings name another source per run; the selected card also names it itself.
               showSource={
-                annotationFromOtherSource(annotation, currentSourceId) &&
+                (collection || annotationFromOtherSource(annotation, currentSourceId)) &&
                 (!grouped || activeId === annotation.id)
               }
               editing={currentEditing === annotation.id}
@@ -185,6 +187,15 @@ export function AnnotationList({
       )}
     </div>
   );
+}
+
+function groupTitle(
+  heading: AnnotationGroupHeading | null | undefined,
+  annotation: Annotation | undefined,
+): JSX.Element | null {
+  return heading && annotation ? (
+    <AnnotationGroupTitle heading={heading} annotation={annotation} />
+  ) : null;
 }
 
 /**
@@ -248,15 +259,24 @@ function useAnnotationResults(
     readonly owners: readonly SourceSummary[] | undefined;
     /** The card being edited stays listed whatever the search or filters, so it can be. */
     readonly editingId?: AnnotationId | null;
+    readonly collection?: boolean;
   },
 ): {
   readonly scoped: ReturnType<typeof indexAnnotations>;
   readonly results: readonly Annotation[];
   readonly headings: readonly (AnnotationGroupHeading | null)[];
 } {
+  const { currentSourceId, owners, collection = false } = context;
+  const sources = useMemo(
+    () => (collection ? new Map((owners ?? []).map((source) => [source.id, source])) : undefined),
+    [collection, owners],
+  );
   const index = useMemo(
-    () => (annotations.status === "ready" ? indexAnnotations(annotations.value, view.order) : []),
-    [annotations, view.order],
+    () =>
+      annotations.status === "ready"
+        ? indexAnnotations(annotations.value, view.order, sources)
+        : [],
+    [annotations, view.order, sources],
   );
   // Counts follow the source choice but not the type, so each type shows what choosing it gives.
   const scoped = useMemo(
@@ -280,11 +300,12 @@ function useAnnotationResults(
           .filter(({ id }) => matched.has(id) || id === editingId)
       : matches;
   }, [index, scoped, query, view.filter, view.color, editingId]);
-  const { currentSourceId, owners } = context;
   const headings = useMemo(
     () =>
-      view.order === "document" ? annotationGroupHeadings(results, currentSourceId, owners) : [],
-    [view.order, results, currentSourceId, owners],
+      view.order === "document"
+        ? annotationGroupHeadings(results, currentSourceId, owners, collection)
+        : [],
+    [view.order, results, currentSourceId, owners, collection],
   );
   return { scoped, results, headings };
 }
@@ -412,8 +433,10 @@ function NoMatchingAnnotations({ onClear }: { readonly onClear: () => void }): J
 
 function AnnotationListStatus({
   annotations,
+  collection,
 }: {
   readonly annotations: AsyncResource<readonly Annotation[]>;
+  readonly collection: boolean;
 }): JSX.Element {
   if (annotations.status !== "ready") {
     return annotations.status === "error" ? (
@@ -432,10 +455,80 @@ function AnnotationListStatus({
         <Trans>No annotations yet</Trans>
       </strong>
       <span>
-        <Trans>
-          Select text or an area in the document, or use Add above for a source comment or bookmark.
-        </Trans>
+        {collection ? (
+          <Trans>Highlights and notes you make while reading appear here.</Trans>
+        ) : (
+          <Trans>
+            Select text or an area in the document, or use Add above for a source comment or
+            bookmark.
+          </Trans>
+        )}
       </span>
     </div>
+  );
+}
+
+/**
+ * The sources the Source filter offers. A collection has far more sources than have
+ * annotations, so only those with any are listed, by title.
+ */
+function useListedOwners(
+  annotations: AsyncResource<readonly Annotation[]>,
+  owners: readonly SourceSummary[] | undefined,
+  collection: boolean,
+): readonly SourceSummary[] | undefined {
+  return useMemo(() => {
+    if (!collection || !owners || annotations.status !== "ready") {
+      return owners;
+    }
+    const used = new Set(annotations.value.map(({ sourceId }) => sourceId));
+    return owners
+      .filter(({ id }) => used.has(id))
+      .sort((left, right) => left.title.localeCompare(right.title));
+  }, [annotations, collection, owners]);
+}
+
+/**
+ * Copies the annotations shown, for writing: quotes and notes grouped under their source. It is
+ * the last item of the Filter menu, under its own rule.
+ */
+function CopyAsMarkdown({
+  annotations,
+  sources,
+}: {
+  readonly annotations: readonly Annotation[];
+  readonly sources: readonly SourceSummary[];
+}): JSX.Element | null {
+  useLocale();
+  const [status, setStatus] = useState<string | null>(null);
+  if (!annotations.length) {
+    return null;
+  }
+  const copy = (): void => {
+    void globalThis.navigator.clipboard
+      .writeText(annotationsToMarkdown(annotationEntries(annotations, sources)))
+      .then(() =>
+        setStatus(
+          plural(annotations.length, {
+            one: "Copied # annotation as Markdown.",
+            other: "Copied # annotations as Markdown.",
+          }),
+        ),
+      )
+      .catch(() => setStatus(t`Copying needs clipboard permission.`));
+  };
+  return (
+    <>
+      <hr />
+      <div className="annotation-copy-markdown">
+        <button type="button" onClick={copy}>
+          {plural(annotations.length, {
+            one: "Copy # annotation as Markdown",
+            other: "Copy # annotations as Markdown",
+          })}
+        </button>
+        {status ? <small role="status">{status}</small> : null}
+      </div>
+    </>
   );
 }

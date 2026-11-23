@@ -161,27 +161,12 @@
 /* Table rows: the title leads, metadata is quieter, separators are hairlines. */
 
 /* Source rows only: the annotation table keeps its own passage-led type and row heights. */
-.library-workspace
-  .library-table:not(.library-annotation-table)
-  .library-table-row:not(.is-header) {
-  height: 48px;
-  border-bottom-color: var(--line);
-  color: var(--text-2);
-  font-size: var(--ui-control);
-}
 
 .library-workspace .library-table-row.is-header {
   height: 32px;
   color: var(--text-3);
   font-size: var(--ui-meta);
   font-weight: var(--weight-regular);
-}
-@media (max-width: 680px) {
-  .library-workspace
-    .library-table:not(.library-annotation-table)
-    .library-table-row:not(.is-header) {
-    height: 76px;
-  }
 }
 
 .library-workspace .library-column-header[aria-sort="ascending"],
@@ -501,4 +486,32 @@
 .library-note-matches-problem {
   color: var(--text-2);
   font-size: var(--text-xs);
+}
+
+/* Every annotation in the collection: the Notes panel's list, at a readable width. */
+.library-workspace-results:has(> .library-annotations) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.library-annotations {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  background: transparent;
+}
+
+.library-annotations-retry {
+  align-self: flex-start;
+  margin: 0 var(--sp-4) var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--line-control);
+  border-radius: var(--r-sm);
+  color: var(--text-1);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
 }

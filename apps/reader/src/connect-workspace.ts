@@ -17,14 +17,9 @@ import {
 
 import { captureCitationProvenance } from "./capture-citation-provenance.js";
 import {
-  annotationViewConfiguration,
-  buildAnnotationView,
-  buildSourceAnnotationsView,
-  readerViewKind,
-} from "./mdbase-annotation-views.js";
-import {
   buildLibraryView,
   defaultLibraryView,
+  isReaderSourcesView,
   libraryViewConfiguration,
   libraryViewKey,
   type ExecutedLibraryView,
@@ -239,16 +234,12 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       return [defaultLibraryView];
     }
     const listed = await this.libraryViewRepository.list(options);
-    // Views are shared across apps; only explicitly Reader-marked presentations belong here.
-    // "Annotations for this source" needs a source to run against, so it is not a library view.
+    // Views are shared across apps; only Reader's own views of sources belong here.
     return [
       defaultLibraryView,
       ...listed.sources.flatMap((document) =>
         document.views
-          .filter((view) => {
-            const kind = readerViewKind(view.presentation);
-            return kind === "sources" || kind === "annotations";
-          })
+          .filter((view) => isReaderSourcesView(view.presentation))
           .map((view) => ({
             key: libraryViewKey(document.source.path, view.id),
             path: document.source.path,
@@ -262,9 +253,6 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
               ...(label ? { label } : {}),
             })),
             configuration: libraryViewConfiguration(view.presentation),
-            ...(readerViewKind(view.presentation) === "annotations"
-              ? { annotations: annotationViewConfiguration(view.presentation) }
-              : {}),
           })),
       ),
     ];
@@ -309,13 +297,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
         translate({ message: "Saved mdbase views are unavailable for this collection." }),
       );
     }
-    const frontmatter = request.annotations
-      ? buildAnnotationView({
-          name: request.name,
-          configuration: request.annotations,
-          ...(request.fieldShapes ? { fieldShapes: request.fieldShapes } : {}),
-        })
-      : buildLibraryView(request);
+    const frontmatter = buildLibraryView(request);
     const saved = await this.libraryViewRepository.save(
       request.existing?.path
         ? {
@@ -337,46 +319,6 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
       );
     }
     return match;
-  }
-
-  async executeAnnotationView(
-    view: MdbaseLibraryView,
-    options: ReaderRequestOptions = {},
-  ): Promise<ReadonlySet<string>> {
-    if (!view.path || !this.libraryViewRepository) {
-      throw new Error(
-        translate({ message: "Saved mdbase views are unavailable for this collection." }),
-      );
-    }
-    const execution = await this.libraryViewRepository.execute({ path: view.path }, view.viewId, {
-      ...options,
-      include: { effective: true },
-    });
-    return new Set(execution.records.map((row) => row.path));
-  }
-
-  async ensureSourceAnnotationsView(): Promise<{
-    readonly path: string;
-    readonly created: boolean;
-  }> {
-    if (!this.libraryViewRepository) {
-      throw new Error(
-        translate({ message: "Saved mdbase views are unavailable for this collection." }),
-      );
-    }
-    const listed = await this.libraryViewRepository.list();
-    const existing = listed.sources.find((document) =>
-      document.views.some((view) => readerViewKind(view.presentation) === "source-annotations"),
-    );
-    if (existing) {
-      return { path: existing.source.path, created: false };
-    }
-    const frontmatter = buildSourceAnnotationsView();
-    const saved = await this.libraryViewRepository.save({
-      path: viewPath(frontmatter),
-      frontmatter,
-    });
-    return { path: saved.path, created: true };
   }
 
   async annotations(

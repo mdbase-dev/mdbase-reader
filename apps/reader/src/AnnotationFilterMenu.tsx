@@ -2,7 +2,7 @@ import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { highlightColorKeys } from "@mdbase-reader/core";
-import { useId, useMemo, type JSX } from "react";
+import { useId, useMemo, type JSX, type ReactNode } from "react";
 
 import {
   annotationMatchesColor,
@@ -114,6 +114,7 @@ export function AnnotationFilterMenu({
   renderAll,
   onRenderAllChange,
   changed,
+  footer,
 }: {
   readonly view: AnnotationView;
   readonly onViewChange: (view: AnnotationView) => void;
@@ -122,11 +123,14 @@ export function AnnotationFilterMenu({
   readonly owners?: readonly SourceSummary[] | undefined;
   readonly wholeBook?:
     { readonly value: boolean; readonly onChange: (value: boolean) => void } | undefined;
-  readonly following: boolean;
+  /** Absent where the list is not beside a document, so there is no reading position. */
+  readonly following?: boolean | undefined;
   readonly onFollowingChange: (following: boolean) => void;
   readonly renderAll: boolean;
   readonly onRenderAllChange: (renderAll: boolean) => void;
   readonly changed: boolean;
+  /** Actions on the annotations shown, after the choices. */
+  readonly footer?: ReactNode;
 }): JSX.Element {
   useLocale();
   const counts = useMemo(
@@ -196,11 +200,13 @@ export function AnnotationFilterMenu({
             onChange={wholeBook.onChange}
           />
         ) : null}
-        <SwitchItem
-          label={translate({ message: "Follow reading position" })}
-          checked={following}
-          onChange={onFollowingChange}
-        />
+        {following === undefined ? null : (
+          <SwitchItem
+            label={translate({ message: "Follow reading position" })}
+            checked={following}
+            onChange={onFollowingChange}
+          />
+        )}
         <SwitchItem
           label={translate({ message: "Include all annotations in page search" })}
           hint={
@@ -211,6 +217,7 @@ export function AnnotationFilterMenu({
           checked={renderAll}
           onChange={onRenderAllChange}
         />
+        {footer}
       </div>
     </Menu>
   );

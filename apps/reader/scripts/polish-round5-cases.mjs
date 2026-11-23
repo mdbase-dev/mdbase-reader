@@ -101,7 +101,6 @@ export async function round5Library(page) {
       .evaluate((element) => ({ width: element.clientWidth, content: element.scrollWidth }));
     assert.ok(readingLabel.width >= readingLabel.content, "Phone Reading label stays complete");
   }
-  await round5AnnotationAlignment(page);
   await page.reload();
   await page.locator('.library-table[aria-label="Sources"]').waitFor();
   const add = page.getByRole("button", { name: "Add source…", exact: true }).first();
@@ -280,24 +279,6 @@ export async function round5Settings(page) {
   });
   assert.equal(labelStyle.size, labelStyle.legendSize);
   assert.equal(labelStyle.weight, labelStyle.legendWeight);
-}
-
-export async function round5AnnotationAlignment(page) {
-  const mode = page.locator(".library-mode");
-  await mode.getByRole("button", { name: "Annotations", exact: true }).click();
-  const chip = page.locator('[role="gridcell"].annotation-kind').first();
-  if (page.viewportSize().width <= 680) {
-    await expect(page.locator(".library-annotation-passage").first()).toBeVisible();
-    await expect(chip).toBeHidden();
-  } else {
-    await expect(chip).toBeVisible();
-    const alignment = await chip.evaluate((element) => {
-      const style = globalThis.getComputedStyle(element);
-      return { self: style.alignSelf, items: style.alignItems };
-    });
-    assert.deepEqual(alignment, { self: "start", items: "baseline" });
-  }
-  await mode.getByRole("button", { name: "Sources", exact: true }).click();
 }
 
 async function command(page, query) {

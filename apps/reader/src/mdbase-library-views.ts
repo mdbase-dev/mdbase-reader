@@ -22,7 +22,6 @@ import {
   type FieldShape,
 } from "./library-conditions.js";
 
-import type { AnnotationViewConfiguration } from "./mdbase-annotation-views.js";
 import type { JsonObject } from "@mdbase-reader/connect";
 
 export { columnLabel };
@@ -60,8 +59,6 @@ export interface MdbaseLibraryView {
   readonly owned: boolean;
   readonly properties: readonly { readonly key: string; readonly label?: string }[];
   readonly configuration: LibraryViewConfiguration;
-  /** Present when the view lists annotations rather than sources. */
-  readonly annotations?: AnnotationViewConfiguration;
 }
 
 export interface ExecutedLibraryView {
@@ -76,8 +73,6 @@ export interface LibraryViewSaveRequest {
   /** Whether each condition's field holds lists, which decides its CEL; default scalar. */
   readonly fieldShapes?: Readonly<Record<string, FieldShape>>;
   readonly existing?: MdbaseLibraryView;
-  /** Saves an annotations view instead; its source conditions take their shapes from `fieldShapes`. */
-  readonly annotations?: AnnotationViewConfiguration;
 }
 
 export const defaultLibraryViewConfiguration: LibraryViewConfiguration = {
@@ -111,6 +106,16 @@ export function parseLibraryViewKey(
 ): { readonly path: string; readonly viewId: string } | null {
   const separator = key.lastIndexOf("::");
   return separator > 0 ? { path: key.slice(0, separator), viewId: key.slice(separator + 2) } : null;
+}
+
+/**
+ * Whether a view is one of Reader's own views of sources. Views are shared across apps, so
+ * only presentations Reader marked count. Earlier versions also saved views of annotations
+ * under the same mark; those name another kind and are left alone.
+ */
+export function isReaderSourcesView(presentation: unknown): boolean {
+  const options = objectValue(objectValue(presentation)["options"]);
+  return options["readerViewVersion"] === 1 && options["readerViewKind"] === undefined;
 }
 
 export function libraryViewConfiguration(presentation: unknown): LibraryViewConfiguration {

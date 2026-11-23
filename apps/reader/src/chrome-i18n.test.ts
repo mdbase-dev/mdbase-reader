@@ -4,7 +4,6 @@ import { collectionId, detectDocumentFormat, sourceId } from "@mdbase-reader/cor
 import { afterEach, describe, expect, it } from "vitest";
 
 import "./i18n.js";
-import { annotationColumnLabel } from "./annotation-columns.js";
 import { cslFieldLabel } from "./citation-form-model.js";
 import { connectionProblemDetail, describeConnectionProblem } from "./connection-recovery.js";
 import { columnLabel, formatPropertyValue, propertySortValue } from "./library-columns.js";
@@ -26,10 +25,8 @@ afterEach(() => {
 describe("Reader model copy uses the active real Lingui catalogue", () => {
   it("updates lazy labels while preserving user labels and stable sort values", () => {
     expect(columnLabel("title")).toBe("Title");
-    expect(annotationColumnLabel("passage")).toBe("Passage");
     i18n.load("fr", {
       [id(msg({ message: "Title", context: "Library table column" }))]: "Titre",
-      [id(msg({ message: "Passage", context: "Annotation table column" }))]: "Extrait",
       [id(msg({ message: "Yes", context: "library columns" }))]: "Oui",
       [id(msg`Workspace`)]: "Espace de travail",
       [id(
@@ -41,7 +38,6 @@ describe("Reader model copy uses the active real Lingui catalogue", () => {
     });
     i18n.activate("fr");
     expect(columnLabel("title")).toBe("Titre");
-    expect(annotationColumnLabel("passage")).toBe("Extrait");
     expect(columnLabel("property:course", [{ key: "course", label: "My course" }])).toBe(
       "My course",
     );

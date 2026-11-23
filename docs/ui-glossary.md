@@ -22,8 +22,7 @@ are unchanged. The table prioritises ambiguity and safety before polish.
   when an operation affects every kind; never imply every annotation has a passage.
 - **Highlight / area capture / bookmark** — Respectively, marked text, a captured PDF
   region, and a saved reading position.
-  Avoid “Area” (produced by `R/annotation-kind.ts:3`), “Areas”
-  (`R/LibraryAnnotationToolbar.tsx:224`) and “area annotation”
+  Avoid “Area” (produced by `R/annotation-kind.ts:3`) and “area annotation”
   (`R/AnnotationComposer.tsx:41`). Preserve existing Highlights and Bookmarks labels.
 - **Comment** — Authored commentary attached to an annotation.
   Avoid unexplained “Comment” actions (`R/SelectionToolbar.tsx:195`);
@@ -117,7 +116,6 @@ occurrences share a row; these are representative replacements, not a migration 
 | Comment (source action)                                                                        | Add source comment                                                                                | R/AnnotationPanelActions.tsx:50                                                            |
 | Comment (`note` type label)                                                                    | Source comment                                                                                    | R/annotation-kind.ts:3                                                                     |
 | Comments on the source                                                                         | Source comments                                                                                   | R/AnnotationList.tsx:295                                                                   |
-| Comments (type filter)                                                                         | Source comments                                                                                   | R/LibraryAnnotationToolbar.tsx:225                                                         |
 | With commentary                                                                                | With comments                                                                                     | R/AnnotationList.tsx:292                                                                   |
 | New comment                                                                                    | New source comment                                                                                | R/AnnotationPanelActions.tsx:119                                                           |
 | Save comment                                                                                   | Save source comment                                                                               | R/AnnotationPanelActions.tsx:143                                                           |
@@ -159,7 +157,6 @@ occurrences share a row; these are representative replacements, not a migration 
 | This annotation has no supported passage anchor. Its text and original metadata are preserved. | This annotation has no supported link to a passage. Its text and original metadata are preserved. | R/annotation-navigation.ts:19                                                              |
 | New area annotation / Save area                                                                | New area capture / Save area capture                                                              | R/AnnotationComposer.tsx:41,101                                                            |
 | Area (`area` type label)                                                                       | Area capture                                                                                      | R/annotation-kind.ts:3                                                                     |
-| Areas                                                                                          | Area captures                                                                                     | R/LibraryAnnotationToolbar.tsx:224                                                         |
 | Add source (entry action)                                                                      | Add source…                                                                                       | R/NavigatorSections.tsx:126; R/LibraryWorkspace.tsx:524–525                                |
 | Add a source (dialog heading)                                                                  | Add source                                                                                        | R/SourceAddDialog.tsx:100                                                                  |
 | Add (link submission)                                                                          | Add source                                                                                        | R/SourceAddDialog.tsx:133                                                                  |
