@@ -8,4 +8,6 @@ interface ImportMetaEnv {
   readonly VITE_MDBASE_EDITOR_URL?: string;
   readonly VITE_MDBASE_READER_URL?: string;
   readonly VITE_MDBASE_WRITER_URL?: string;
+  readonly VITE_MDBASE_JOURNAL_URL?: string;
+  readonly VITE_MDBASE_TASKNOTES_URL?: string;
 }
