@@ -71,6 +71,8 @@ async function stagingFixture(t, pin) {
       "dist/native/sqlite3.wasm": sqlite,
       "dist/native/sqlite3.js": initializer,
       "dist/offline-shell-worker.js": "// test offline shell\n",
+      "dist/offline-shell-build.js":
+        "function offlineShellRegistration(worker, scope) {\n    return `register(${JSON.stringify(worker)}, ${JSON.stringify(scope)});\n`;\n}\n",
     };
     for (const [name, bytes] of Object.entries(members)) {
       const path = join(scratch, "package", name);
@@ -133,6 +135,10 @@ it("binds staging to the current production producer independently of the commit
   };
   const intake = await loadOriginals(options);
   assert.equal(intake.environment, "staging");
+  assert.equal(
+    intake.offlineShell.registration.sha256,
+    createHash("sha256").update('register("/mdbase-shell-sw.js", "/");\n').digest("hex"),
+  );
   assert.equal(intake.authentication.source, pin.sourceCommit);
   assert.equal(intake.archives.sdk.sha256, createHash("sha256").update(bytes).digest("hex"));
   await assert.rejects(
