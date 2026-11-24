@@ -7,7 +7,8 @@ not grant collection access or make uncached files and remote services available
 offline; collection recovery and sync remain the SDK's responsibility. Reader keeps no document text or
 file bytes on the device.
 
-Updates do not reload open tabs. An incomplete deployment does not replace the
+A new release activates on the next app start and reloads that tab once; a
+first install never reloads. An incomplete deployment does not replace the
 last successfully cached release. Shell caching never stores authentication or
 collection API responses.
 

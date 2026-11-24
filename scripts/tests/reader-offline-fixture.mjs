@@ -7,7 +7,7 @@ export const digest = (b) => createHash("sha256").update(b).digest("hex");
 export async function offlineFixture(root, { extraCached = 0 } = {}) {
   const runtime = "export const fixtureRuntime = true;\n";
   const registration =
-    'if ("serviceWorker" in navigator) navigator.serviceWorker.register("/mdbase-shell-sw.js", {scope:"/",type:"module"}).catch(() => console.warn("Offline app support could not start."));\n';
+    'if ("serviceWorker" in navigator) {\n  const shell = navigator.serviceWorker, controlled = shell.controller !== null;\n  shell.register("/mdbase-shell-sw.js", {scope:"/",type:"module"}).then(registration => {\n    if (!controlled || !registration.waiting) return;\n    shell.addEventListener("controllerchange", () => location.reload(), {once:true});\n    registration.waiting.postMessage({type:"mdbase-shell:activate"});\n  }).catch(() => console.warn("Offline app support could not start."));\n}\n';
   await mkdir(root, { recursive: true });
   await writeFile(join(root, "mdbase-shell-runtime.js"), runtime);
   await writeFile(join(root, "mdbase-shell-register.js"), registration);
