@@ -58,6 +58,49 @@ async function regular(root, path) {
   assert((await lstat(full)).isFile() && (await realpath(full)) === full, "nonregular original");
   return readFile(full);
 }
+// The SDK's offline-shell build writes mdbase-shell-register.js from a template
+// literal. Derive the exact expected bytes from that authenticated generator as
+// data (never executed) for Reader's root base. SDK 0.2.9 (Connect b5a8ee62) moved
+// the template into offlineShellRegistration(worker, scope); earlier SDKs wrote it
+// inline. Exactly one known generator must be present, with no other interpolation.
+const shellRegistrationGenerators = [
+  {
+    source: /^function offlineShellRegistration\(worker, scope\) \{\n    return `([^`]*)`;\n\}$/gm,
+    values: [
+      ["${JSON.stringify(worker)}", '"/mdbase-shell-sw.js"'],
+      ["${JSON.stringify(scope)}", '"/"'],
+    ],
+  },
+  {
+    source: /^ *await writeFile\(join\(directory, registrationFile\), `([^`]*)`\);$/gm,
+    values: [
+      ["${JSON.stringify(base + workerFile)}", '"/mdbase-shell-sw.js"'],
+      ["${JSON.stringify(base)}", '"/"'],
+    ],
+  },
+];
+export function offlineShellRegistration(build) {
+  const text = Buffer.from(build).toString("utf8");
+  const found = shellRegistrationGenerators.flatMap(({ source, values }) =>
+    [...text.matchAll(source)].map(([, template]) => ({ template, values })),
+  );
+  assert.equal(
+    found.length,
+    1,
+    "exactly one known SDK offline-shell registration generator required",
+  );
+  let { template, values } = found[0];
+  for (const [expression, value] of values) {
+    assert(template.includes(expression), "SDK offline-shell registration interpolation missing");
+    template = template.split(expression).join(value);
+  }
+  template = template.replaceAll("\\n", "\n");
+  assert(
+    !template.includes("${") && !template.includes("\\"),
+    "unknown SDK offline-shell registration interpolation or escape",
+  );
+  return template;
+}
 export async function installedMembers(root, ignored = new Set()) {
   const rows = [];
   async function walk(dir, prefix = "") {
@@ -252,8 +295,7 @@ export async function loadOriginals({
   const runtime = member(bytes, "dist/offline-shell-worker.js")
     .toString()
     .replace(/\n\/\/# sourceMappingURL=.*$/m, "");
-  const registration =
-    'if ("serviceWorker" in navigator) navigator.serviceWorker.register("/mdbase-shell-sw.js", {scope:"/",type:"module"}).catch(() => console.warn("Offline app support could not start."));\n';
+  const registration = offlineShellRegistration(member(bytes, "dist/offline-shell-build.js"));
   const offlineShell = {
     runtime: { bytes: Buffer.byteLength(runtime), sha256: hash(runtime) },
     registration: { bytes: Buffer.byteLength(registration), sha256: hash(registration) },

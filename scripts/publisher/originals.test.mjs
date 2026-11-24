@@ -20,6 +20,7 @@ import {
   productionPin,
   protectedHashes,
   installedMembers,
+  offlineShellRegistration,
 } from "./originals.mjs";
 const root = new URL("../../", import.meta.url).pathname;
 const publication = JSON.parse(
@@ -206,4 +207,25 @@ it("accepts beta and plain exact UI pins only", () => {
   for (const version of ["0.1.0-beta.176", "0.1.0", "0.2.1"]) assert.match(version, exactUiVersion);
   for (const version of ["^0.1.0", "latest", "0.1", "0.1.0 "])
     assert.doesNotMatch(version, exactUiVersion);
+});
+it("derives the exact offline-shell registration bytes from either known SDK generator and refuses anything else", () => {
+  const legacy =
+    'const base = "/";\n        await writeFile(join(directory, registrationFile), `if ("serviceWorker" in navigator) navigator.serviceWorker.register(${JSON.stringify(base + workerFile)}, {scope:${JSON.stringify(base)},type:"module"}).catch(() => console.warn("Offline app support could not start."));\\n`);\n';
+  assert.equal(
+    offlineShellRegistration(Buffer.from(legacy)),
+    'if ("serviceWorker" in navigator) navigator.serviceWorker.register("/mdbase-shell-sw.js", {scope:"/",type:"module"}).catch(() => console.warn("Offline app support could not start."));\n',
+  );
+  const activating =
+    '/** doc */\nfunction offlineShellRegistration(worker, scope) {\n    return `if ("serviceWorker" in navigator) {\n  navigator.serviceWorker.register(${JSON.stringify(worker)}, {scope:${JSON.stringify(scope)},type:"module"}).then(r => r.waiting?.postMessage({type:"mdbase-shell:activate"}));\n}\n`;\n}\n';
+  assert.equal(
+    offlineShellRegistration(Buffer.from(activating)),
+    'if ("serviceWorker" in navigator) {\n  navigator.serviceWorker.register("/mdbase-shell-sw.js", {scope:"/",type:"module"}).then(r => r.waiting?.postMessage({type:"mdbase-shell:activate"}));\n}\n',
+  );
+  for (const refused of [
+    "",
+    legacy + activating,
+    activating.replace("${JSON.stringify(scope)}", "${scope}"),
+    activating.replace("${JSON.stringify(worker)}", '"/sw.js"'),
+  ])
+    assert.throws(() => offlineShellRegistration(Buffer.from(refused)), /registration/);
 });
