@@ -13,7 +13,7 @@ import {
   versionParts,
   submitTarget,
 } from "../extension-store.mjs";
-import { storeLine } from "../extension-store-policy.mjs";
+import { STORE_LINE_ARTIFACT_READS, storeLine } from "../extension-store-policy.mjs";
 
 const source = "a".repeat(40);
 const workflowSha = "b".repeat(40);
@@ -393,7 +393,36 @@ test("store-line bridge follows only the returned first-attempt run and exact ar
     { conclusion: "failure" },
   ])
     await assert.rejects(storeLine(fixture(changed)));
-  await assert.rejects(storeLine(fixture({}, [])), /store-line-artifact-required/);
+  const lagging = (empty, artifacts) => {
+    let listings = 0;
+    const inner = fixture();
+    const transport = (path, options) => {
+      if (path.includes("/runs/71/artifacts"))
+        return { artifacts: ++listings <= empty ? [] : artifacts };
+      return inner(path, options);
+    };
+    return { transport, listings: () => listings };
+  };
+  const listingWaits = [];
+  const lagged = lagging(2, [{ id: 81, name: "tasknotes-store-line", expired: false }]);
+  assert.deepEqual(await storeLine(lagged.transport, async (ms) => listingWaits.push(ms)), state);
+  assert.equal(lagged.listings(), 3);
+  assert.deepEqual(listingWaits, [5000, 5000]);
+  const missing = lagging(Infinity, []);
+  await assert.rejects(
+    storeLine(missing.transport, async () => {}),
+    /store-line-artifact-required/,
+  );
+  assert.equal(missing.listings(), STORE_LINE_ARTIFACT_READS);
+  const duplicated = lagging(0, [
+    { id: 81, name: "tasknotes-store-line", expired: false },
+    { id: 82, name: "tasknotes-store-line", expired: false },
+  ]);
+  await assert.rejects(
+    storeLine(duplicated.transport, async () => {}),
+    /store-line-artifact-required/,
+  );
+  assert.equal(duplicated.listings(), 1);
   const flaky = (failures) => {
     let reads = 0;
     const inner = fixture();

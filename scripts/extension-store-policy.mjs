@@ -131,6 +131,7 @@ export function artifactJson(bytes, filename) {
     ),
   );
 }
+export const STORE_LINE_ARTIFACT_READS = 6;
 export async function storeLine(
   transport = gh,
   wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
@@ -170,11 +171,18 @@ export async function storeLine(
     );
     if (run.status === "completed") {
       need(run.conclusion === "success", "store-line-read-failed");
-      const artifacts = transport(
-        `repos/${ops}/actions/runs/${runId}/artifacts?per_page=100`,
-      ).artifacts.filter(
-        (artifact) => artifact.name === "tasknotes-store-line" && !artifact.expired,
-      );
+      // A just-completed run's artifact listing can briefly lag its upload.
+      // Listing is read-only, so only an empty listing is re-read, boundedly.
+      let artifacts = [];
+      for (let listing = 0; listing < STORE_LINE_ARTIFACT_READS; listing++) {
+        if (listing > 0) await wait(5000);
+        artifacts = transport(
+          `repos/${ops}/actions/runs/${runId}/artifacts?per_page=100`,
+        ).artifacts.filter(
+          (artifact) => artifact.name === "tasknotes-store-line" && !artifact.expired,
+        );
+        if (artifacts.length > 0) break;
+      }
       need(artifacts.length === 1, "store-line-artifact-required");
       return artifactJson(
         transport(`repos/${ops}/actions/artifacts/${artifacts[0].id}/zip`, { raw: true }),
