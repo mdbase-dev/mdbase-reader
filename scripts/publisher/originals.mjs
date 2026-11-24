@@ -65,7 +65,7 @@ async function regular(root, path) {
 // inline. Exactly one known generator must be present, with no other interpolation.
 const shellRegistrationGenerators = [
   {
-    source: /^function offlineShellRegistration\(worker, scope\) \{\n    return `([^`]*)`;\n\}$/gm,
+    source: /^function offlineShellRegistration\(worker, scope\) \{\n {4}return `([^`]*)`;\n\}$/gm,
     values: [
       ["${JSON.stringify(worker)}", '"/mdbase-shell-sw.js"'],
       ["${JSON.stringify(scope)}", '"/"'],
