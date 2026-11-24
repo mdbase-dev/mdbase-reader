@@ -12,10 +12,16 @@ import {
 test("app destinations stay in each environment and missing URLs fail the build", () => {
   assert.equal(readerAppUrls("lab").editor, "https://editor-lab.mdbase.dev");
   assert.equal(readerAppUrls("lab").writer, "https://lab.mdbase-writer.pages.dev");
+  assert.equal(readerAppUrls("lab").journal, "https://lab.mdbase-journal-lab.pages.dev");
+  assert.equal(readerAppUrls("lab").tasknotes, "https://lab.tasknotes-app.pages.dev");
   assert.equal(readerAppUrls("staging").editor, "https://editor-staging.mdbase.dev");
   assert.equal(readerAppUrls("staging").writer, "https://staging.mdbase-writer.pages.dev");
+  assert.equal(readerAppUrls("staging").journal, "https://staging.mdbase-journal.pages.dev");
+  assert.equal(readerAppUrls("staging").tasknotes, "https://staging.tasknotes-app.pages.dev");
   assert.equal(readerAppUrls("production").editor, "https://editor.mdbase.dev");
-  for (const field of ["editorUrl", "writerUrl"]) {
+  assert.equal(readerAppUrls("production").journal, "https://journal.mdbase.dev");
+  assert.equal(readerAppUrls("production").tasknotes, "https://app.tasknotes.dev");
+  for (const field of ["editorUrl", "writerUrl", "journalUrl", "tasknotesUrl"]) {
     assert.throws(
       () => readerAppUrls("lab", { lab: { ...readerDeployments.lab, [field]: undefined } }),
       /requires an HTTPS/,

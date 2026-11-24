@@ -6,6 +6,8 @@ export const readerDeployments = Object.freeze({
     branch: "lab",
     editorUrl: "https://editor-lab.mdbase.dev",
     writerUrl: "https://lab.mdbase-writer.pages.dev",
+    journalUrl: "https://lab.mdbase-journal-lab.pages.dev",
+    tasknotesUrl: "https://lab.tasknotes-app.pages.dev",
   }),
   staging: Object.freeze({
     origin: "https://staging.mdbase-reader.pages.dev",
@@ -14,6 +16,8 @@ export const readerDeployments = Object.freeze({
     branch: "staging",
     editorUrl: "https://editor-staging.mdbase.dev",
     writerUrl: "https://staging.mdbase-writer.pages.dev",
+    journalUrl: "https://staging.mdbase-journal.pages.dev",
+    tasknotesUrl: "https://staging.tasknotes-app.pages.dev",
   }),
   production: Object.freeze({
     origin: "https://reader.mdbase.dev",
@@ -22,6 +26,8 @@ export const readerDeployments = Object.freeze({
     branch: "main",
     editorUrl: "https://editor.mdbase.dev",
     writerUrl: "https://writer.mdbase.dev",
+    journalUrl: "https://journal.mdbase.dev",
+    tasknotesUrl: "https://app.tasknotes.dev",
   }),
 });
 
@@ -31,6 +37,8 @@ export function readerAppUrls(target, deployments = readerDeployments) {
     reader: deployment?.origin,
     editor: deployment?.editorUrl,
     writer: deployment?.writerUrl,
+    journal: deployment?.journalUrl,
+    tasknotes: deployment?.tasknotesUrl,
   };
   for (const [app, value] of Object.entries(urls)) {
     if (!value || new URL(value).protocol !== "https:") {
