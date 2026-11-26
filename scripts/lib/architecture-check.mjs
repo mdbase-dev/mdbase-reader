@@ -6,21 +6,10 @@ import * as ts from "typescript";
 const SOURCE_ROOTS = ["apps", "packages"];
 const SOURCE_EXTENSIONS = new Set([".js", ".mjs", ".mts", ".ts", ".tsx"]);
 const IGNORED_DIRECTORIES = new Set(["dist", "node_modules", "out"]);
-const REFACTOR_GUIDANCE =
-  "Do not make a quick line-count-only fix. Undertake a cohesive architectural refactor: " +
-  "identify misplaced responsibilities and broken dependency or invariant ownership, then " +
-  "extract well-owned modules with focused tests.";
-
 const relativePath = (root, value) => path.relative(root, value).split(path.sep).join("/");
 
 function isTestFile(file) {
   return /(^|\/)(test|tests)\//.test(file) || /\.(spec|test)\.[^.]+$/.test(file);
-}
-
-function lineCount(source) {
-  if (source.length === 0) return 0;
-  const lines = source.split(/\r?\n/);
-  return lines.at(-1) === "" ? lines.length - 1 : lines.length;
 }
 
 async function walk(directory) {
@@ -283,63 +272,10 @@ function validateForbiddenImports(root, importsByFile, rules, failures) {
   }
 }
 
-export async function evaluateArchitecture(root, budgets) {
+export async function evaluateArchitecture(root, rules) {
   const files = await sourceFiles(root);
   const failures = [];
-  const warnings = [];
   const productionFiles = files.filter((file) => !isTestFile(relativePath(root, file)));
-  const warning = budgets.lineCountWarningLines;
-  const error = budgets.lineCountErrorLines;
-  const validThresholds =
-    Number.isSafeInteger(warning) && warning > 0 && Number.isSafeInteger(error) && error > warning;
-  if (!Number.isSafeInteger(warning) || warning < 1) {
-    failures.push("lineCountWarningLines must be a positive integer.");
-  }
-  if (!Number.isSafeInteger(error) || error <= warning) {
-    failures.push("lineCountErrorLines must be an integer greater than lineCountWarningLines.");
-  }
-
-  const legacyBudgets = budgets.legacyFileLineBudgets ?? {};
-  const measured = new Map();
-  for (const file of productionFiles) {
-    const relative = relativePath(root, file);
-    if (/\.generated\.[^.]+$/.test(relative)) continue;
-    const lines = lineCount(await readFile(file, "utf8"));
-    measured.set(relative, lines);
-    if (!validThresholds) continue;
-    const baseline = legacyBudgets[relative];
-    if (baseline !== undefined) {
-      if (!Number.isSafeInteger(baseline) || baseline < error) {
-        failures.push(
-          `${relative} has an invalid legacy baseline; exceptions must be at least ${error} lines.`,
-        );
-      } else if (lines > baseline) {
-        failures.push(
-          `${relative} grew from its legacy baseline of ${baseline} to ${lines} lines and is above the ${error}-line hard limit. ${REFACTOR_GUIDANCE}`,
-        );
-      } else if (lines < baseline) {
-        failures.push(
-          `${relative} shrank from its legacy baseline of ${baseline} to ${lines} lines; lower the baseline in config/architecture-budgets.json so the improvement cannot regress.`,
-        );
-      }
-      warnings.push(
-        `${relative} has ${lines} lines and is temporarily grandfathered above the ${error}-line hard limit. Plan a proper architectural refactor; do not grow it.`,
-      );
-    } else if (lines >= error) {
-      failures.push(
-        `${relative} has ${lines} lines; the hard limit is ${error}. ${REFACTOR_GUIDANCE}`,
-      );
-    } else if (lines >= warning) {
-      warnings.push(
-        `${relative} has ${lines} lines; review its cohesion before it reaches the ${error}-line hard limit.`,
-      );
-    }
-  }
-  for (const file of Object.keys(legacyBudgets)) {
-    if (!measured.has(file)) {
-      failures.push(`${file} has a legacy baseline but is not a production source file.`);
-    }
-  }
 
   const importData = await sourceImportData(root, files);
   for (const cycle of graphCycles(importData.graph)) {
@@ -347,17 +283,16 @@ export async function evaluateArchitecture(root, budgets) {
       `Relative import cycle: ${cycle.map((file) => relativePath(root, file)).join(" -> ")}`,
     );
   }
-  validateForbiddenImports(root, importData.specifiers, budgets.forbiddenImportRules, failures);
+  validateForbiddenImports(root, importData.specifiers, rules.forbiddenImportRules, failures);
 
   const packageGraph = workspacePackageGraph(await workspacePackages(root));
-  validatePackageBoundaries(packageGraph, budgets.workspacePackageDependencies, failures);
+  validatePackageBoundaries(packageGraph, rules.workspacePackageDependencies, failures);
   for (const cycle of graphCycles(packageGraph)) {
     failures.push(`Workspace package cycle: ${cycle.join(" -> ")}`);
   }
 
   return {
     failures,
-    warnings,
     productionFileCount: productionFiles.length,
     relativeImportCount: [...importData.graph.values()].reduce(
       (total, dependencies) => total + dependencies.length,
@@ -368,20 +303,15 @@ export async function evaluateArchitecture(root, budgets) {
 }
 
 export async function checkArchitecture(root) {
-  const budgets = JSON.parse(
-    await readFile(path.join(root, "config", "architecture-budgets.json"), "utf8"),
-  );
-  return evaluateArchitecture(root, budgets);
+  const rules = JSON.parse(await readFile(path.join(root, "config", "architecture.json"), "utf8"));
+  return evaluateArchitecture(root, rules);
 }
 
 export function reportArchitecture(result) {
-  for (const warning of result.warnings) {
-    console.warn(`- warning: ${warning}`);
-  }
   for (const failure of result.failures) console.error(`- error: ${failure}`);
   if (result.failures.length > 0) return false;
   console.log(
-    `Architecture check passed with ${result.warnings.length} warning(s): ` +
+    `Architecture check passed: ` +
       `${result.productionFileCount} production files, ` +
       `${result.relativeImportCount} relative imports, ` +
       `${result.workspacePackageCount} workspace packages.`,

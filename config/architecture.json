@@ -1,7 +1,4 @@
 {
-  "lineCountWarningLines": 1000,
-  "lineCountErrorLines": 1500,
-  "legacyFileLineBudgets": {},
   "workspacePackageDependencies": {
     "@mdbase-reader/zotero-exporter": [],
     "@mdbase-reader/i18n": [],

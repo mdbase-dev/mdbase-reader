@@ -17,7 +17,6 @@ import type { CslValidationProblem } from "@mdbase-reader/core";
 import type { JSX } from "react";
 
 // The complete field surface stays together so its section order remains easy to audit.
-// eslint-disable-next-line max-lines-per-function
 export function CitationStructuredEditor({
   citation,
   problems,

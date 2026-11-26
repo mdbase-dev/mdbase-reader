@@ -113,7 +113,6 @@ interface PendingWorkspaceAnnotation {
 /** Every open tab is listed; other groups show a few until the reader types. */
 const paletteShowsAll = ["Open tabs", "Sources"];
 
-// eslint-disable-next-line max-lines-per-function
 export function ReaderWorkspaceView({
   model,
 }: {
