@@ -23,7 +23,7 @@
     "@lezer/highlight": "^1.2.5",
     "@lingui/core": "6.10.1",
     "@mdbase-dev/i18n": "0.2.22",
-    "@mdbase-dev/ui": "0.2.24",
+    "@mdbase-dev/ui": "0.2.28",
     "@mdbase-reader/core": "workspace:*",
     "react": "^19.3.1"
   },
