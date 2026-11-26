@@ -96,7 +96,6 @@ export function ReaderApp({
 }
 
 // Workspace composition preserves the existing focused sessions and controller ownership.
-// eslint-disable-next-line max-lines-per-function
 function OpenedReaderApp({
   gateway,
   initialSourceId = null,

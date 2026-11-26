@@ -61,7 +61,7 @@ export interface CitationEditorController extends ReturnType<typeof useCitationL
 }
 
 // One source-scoped transaction pins the baseline even when unrelated writes refresh the source.
-// eslint-disable-next-line complexity, max-lines-per-function
+// eslint-disable-next-line complexity
 export function useCitationEditor(input: {
   readonly gateway: ReaderWorkspaceGateway;
   readonly source: Source | null;

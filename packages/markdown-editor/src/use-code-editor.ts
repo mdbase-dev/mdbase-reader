@@ -18,7 +18,6 @@ import { useEditorPhrases } from "./use-editor-phrases.js";
 import type { CodeEditorProps } from "./markdown-editor.js";
 
 // Lifecycle wiring is centralized so the exported React adapter stays small.
-// eslint-disable-next-line max-lines-per-function
 export function useCodeEditor(props: CodeEditorProps): RefObject<HTMLDivElement | null> {
   const {
     value,

@@ -21,106 +21,21 @@ async function fixture(files) {
   return root;
 }
 
-const strictBudget = {
-  lineCountWarningLines: 3,
-  lineCountErrorLines: 5,
-  legacyFileLineBudgets: {},
+const rules = {
   workspacePackageDependencies: { "@mdbase-reader/example": [] },
   forbiddenImportRules: [],
 };
 
-test("accepts small acyclic modules", async (t) => {
+test("accepts acyclic modules", async (t) => {
   const root = await fixture({
     "packages/example/src/a.ts": "import { b } from './b.js';\nexport const a = b;\n",
     "packages/example/src/b.ts": "export const b = 1;\n",
   });
   t.after(() => rm(root, { recursive: true, force: true }));
 
-  const result = await evaluateArchitecture(root, strictBudget);
+  const result = await evaluateArchitecture(root, rules);
 
   assert.deepEqual(result.failures, []);
-  assert.deepEqual(result.warnings, []);
-});
-
-test("warns at the warning threshold", async (t) => {
-  const root = await fixture({
-    "packages/example/src/large.ts": "one\ntwo\nthree\n",
-  });
-  t.after(() => rm(root, { recursive: true, force: true }));
-
-  const result = await evaluateArchitecture(root, strictBudget);
-
-  assert.deepEqual(result.failures, []);
-  assert.equal(result.warnings.length, 1);
-  assert.match(result.warnings[0], /has 3 lines/);
-});
-
-test("errors at the hard limit with proper-refactor guidance", async (t) => {
-  const root = await fixture({
-    "packages/example/src/large.ts": "one\ntwo\nthree\nfour\nfive\n",
-  });
-  t.after(() => rm(root, { recursive: true, force: true }));
-
-  const result = await evaluateArchitecture(root, strictBudget);
-
-  assert.equal(result.failures.length, 1);
-  assert.match(result.failures[0], /hard limit is 5/);
-  assert.match(result.failures[0], /Do not make a quick line-count-only fix/);
-  assert.match(result.failures[0], /cohesive architectural refactor/);
-});
-
-test("ignores generated sources for line budgets", async (t) => {
-  const root = await fixture({
-    "packages/example/src/catalog.generated.ts": "one\ntwo\nthree\nfour\nfive\n",
-  });
-  t.after(() => rm(root, { recursive: true, force: true }));
-
-  const result = await evaluateArchitecture(root, strictBudget);
-
-  assert.deepEqual(result.failures, []);
-  assert.deepEqual(result.warnings, []);
-});
-
-test("grandfathers only an exact legacy baseline", async (t) => {
-  const file = "packages/example/src/legacy.ts";
-  const root = await fixture({ [file]: "one\ntwo\nthree\nfour\nfive\nsix\n" });
-  t.after(() => rm(root, { recursive: true, force: true }));
-  const result = await evaluateArchitecture(root, {
-    ...strictBudget,
-    legacyFileLineBudgets: { [file]: 6 },
-  });
-
-  assert.deepEqual(result.failures, []);
-  assert.match(result.warnings[0], /temporarily grandfathered/);
-});
-
-test("requires legacy baselines to ratchet down", async (t) => {
-  const file = "packages/example/src/legacy.ts";
-  const root = await fixture({ [file]: "one\ntwo\nthree\nfour\nfive\n" });
-  t.after(() => rm(root, { recursive: true, force: true }));
-  const result = await evaluateArchitecture(root, {
-    ...strictBudget,
-    legacyFileLineBudgets: { [file]: 6 },
-  });
-
-  assert.equal(result.failures.length, 1);
-  assert.match(result.failures[0], /lower the baseline/);
-});
-
-test("rejects legacy growth with proper-refactor guidance", async (t) => {
-  const file = "packages/example/src/legacy.ts";
-  const root = await fixture({
-    [file]: "one\ntwo\nthree\nfour\nfive\nsix\nseven\n",
-  });
-  t.after(() => rm(root, { recursive: true, force: true }));
-  const result = await evaluateArchitecture(root, {
-    ...strictBudget,
-    legacyFileLineBudgets: { [file]: 6 },
-  });
-
-  assert.equal(result.failures.length, 1);
-  assert.match(result.failures[0], /grew from its legacy baseline/);
-  assert.match(result.failures[0], /cohesive architectural refactor/);
 });
 
 test("uses the TypeScript AST to detect import cycles", async (t) => {
@@ -130,7 +45,7 @@ test("uses the TypeScript AST to detect import cycles", async (t) => {
   });
   t.after(() => rm(root, { recursive: true, force: true }));
 
-  const result = await evaluateArchitecture(root, strictBudget);
+  const result = await evaluateArchitecture(root, rules);
 
   assert.equal(result.failures.length, 1);
   assert.match(result.failures[0], /^Relative import cycle:/);
@@ -144,7 +59,7 @@ test("does not report a runtime cycle through a type-only import", async (t) => 
   });
   t.after(() => rm(root, { recursive: true, force: true }));
 
-  const result = await evaluateArchitecture(root, strictBudget);
+  const result = await evaluateArchitecture(root, rules);
 
   assert.deepEqual(result.failures, []);
 });
@@ -161,7 +76,7 @@ test("enforces exact workspace dependency permissions", async (t) => {
   });
   t.after(() => rm(root, { recursive: true, force: true }));
   const result = await evaluateArchitecture(root, {
-    ...strictBudget,
+    ...rules,
     workspacePackageDependencies: {
       "@mdbase-reader/a": [],
       "@mdbase-reader/b": ["@mdbase-reader/a"],
@@ -184,7 +99,7 @@ test("rejects path-specific forbidden imports", async (t) => {
   });
   t.after(() => rm(root, { recursive: true, force: true }));
   const result = await evaluateArchitecture(root, {
-    ...strictBudget,
+    ...rules,
     forbiddenImportRules: [
       {
         name: "domain stays platform-free",

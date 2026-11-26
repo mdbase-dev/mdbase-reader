@@ -65,7 +65,6 @@ interface EditingCell {
 }
 
 // Keep the virtualized grid, existing editing, and disclosure keyboard handling in one owner.
-// eslint-disable-next-line max-lines-per-function
 export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const { t } = useLingui();
   const { sources, layout, selection, onSelectionChange, scrollRef } = props;

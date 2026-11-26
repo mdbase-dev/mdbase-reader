@@ -165,7 +165,6 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 
-// eslint-disable-next-line max-lines-per-function
 describe("citation provenance and lookups", () => {
   it("saves every field of a newly created manual citation as user provenance", async () => {
     const { citation: stored, ...withoutCitation } = source;

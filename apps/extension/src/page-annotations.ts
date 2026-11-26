@@ -185,7 +185,6 @@ async function injectSocialQuotes(
  * is repeated here because Chrome serializes this function alone, so all runtime helpers
  * must be nested. page-annotations.test.ts checks that the two agree.
  */
-// eslint-disable-next-line max-lines-per-function
 export function pageText(
   request: PageTextRequest,
   doc: Document = document,
@@ -508,7 +507,6 @@ export function pageText(
   }
 
   /** `textQuoteMatcher` from core; see that module for the reasoning behind each step. */
-  // eslint-disable-next-line max-lines-per-function
   function quoteMatcher(
     text: string,
   ): (quote: QuoteSelector) => { start: number; end: number; ambiguous: boolean } | null {

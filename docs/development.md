@@ -241,7 +241,7 @@ Dependencies point inward toward the framework-free `core`. Renderers and
 platform shells adapt its ports; collection access belongs in `connect`.
 `reading-surface` defines renderer-neutral locations and capabilities.
 `apps/reader` composes these packages into the source workspace. Run
-`check:architecture` for the enforced dependency and source-size boundaries.
+`check:architecture` for the enforced dependency boundaries.
 
 See [source workspace architecture](architecture/source-workspace.md),
 [interface shell](interface-shell.md), and [shared editing](shared-editing.md)

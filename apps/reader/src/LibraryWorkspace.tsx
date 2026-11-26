@@ -1,4 +1,4 @@
-/* eslint-disable complexity, max-lines-per-function */
+/* eslint-disable complexity */
 import { t as translate } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Select, type SelectItems, type SelectOption } from "@mdbase-dev/ui/select";

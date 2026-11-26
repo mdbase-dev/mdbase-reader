@@ -19,7 +19,6 @@ import type { JSX, MouseEvent } from "react";
 const EDIT_CLICK_DELAY_MS = 500;
 
 // Column editing and the part disclosure share one virtual row without wrapping grid cells.
-// eslint-disable-next-line max-lines-per-function
 export function LibraryTableRow({
   source,
   index,
