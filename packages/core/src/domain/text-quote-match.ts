@@ -37,12 +37,12 @@ const maximumAnchorOccurrences = 50;
 const maximumComparisonCells = 4_000_000;
 
 /** Characters that differ between copies of a page without changing what it says. */
-const ignorable = /[\s\u00ad\u200b-\u200d\u2060\ufeff]/u;
+const ignorable = /[\s\u00ad\u200b-\u200d\u2060\ufeff]+/gu;
 
 interface Normalized {
   readonly text: string;
   /** For each normalized character, its offset in the original text. */
-  readonly offsets: readonly number[];
+  readonly offsets: Uint32Array;
 }
 
 interface Candidate {
@@ -76,35 +76,61 @@ export function resolveSearchQuote(
   return match && !match.ambiguous && !match.approximate ? match : null;
 }
 
-/** Prepares `text` once for locating many quotations in it. */
-export function textQuoteMatcher(text: string): (quote: TextQuote) => TextQuoteMatch | null {
+type QuoteRange = Pick<TextQuoteMatch, "start" | "end">;
+
+/** Prepares the text once. Range-only callers accept the first equally good placement. */
+export function textQuoteMatcher(text: string): (quote: TextQuote) => TextQuoteMatch | null;
+export function textQuoteMatcher(
+  text: string,
+  mode: "range",
+): (quote: TextQuote) => QuoteRange | null;
+export function textQuoteMatcher(
+  text: string,
+  mode?: "range",
+): (quote: TextQuote) => QuoteRange | null {
   const haystack = normalize(text);
   return (quote) => {
-    const needle = normalize(quote.exact).text;
+    const needle = quote.exact.replace(ignorable, "");
     if (!needle) {
       return null;
     }
-    const best = bestMatch(haystack.text, needle, quote);
-    if (!best) {
-      return null;
+    const prefix = (quote.prefix ?? "").replace(ignorable, "");
+    const suffix = (quote.suffix ?? "").replace(ignorable, "");
+    if (mode === "range") {
+      // Painting needs the first best range. A full context match already has the
+      // maximum possible score, even when a later occurrence ties.
+      const found = haystack.text.indexOf(prefix + needle + suffix);
+      if (found >= 0) {
+        const start = found + prefix.length;
+        return originalRange(haystack, start, start + needle.length);
+      }
     }
-    const start = haystack.offsets[best.start];
-    const last = haystack.offsets[best.end - 1];
-    if (start === undefined || last === undefined) {
-      return null;
-    }
-    return { start, end: last + 1, ambiguous: best.ambiguous, approximate: best.errors > 0 };
+    const best = bestMatch(haystack.text, needle, prefix, suffix);
+    const range = best && originalRange(haystack, best.start, best.end);
+    return (
+      best &&
+      range && {
+        ...range,
+        ambiguous: best.ambiguous,
+        approximate: best.errors > 0,
+      }
+    );
   };
+}
+
+function originalRange(haystack: Normalized, start: number, end: number): QuoteRange | null {
+  const first = haystack.offsets[start];
+  const last = haystack.offsets[end - 1];
+  return first === undefined || last === undefined ? null : { start: first, end: last + 1 };
 }
 
 function bestMatch(
   text: string,
   needle: string,
-  quote: TextQuote,
+  prefix: string,
+  suffix: string,
 ): (Candidate & { readonly ambiguous: boolean }) | null {
   const first = text.indexOf(needle);
-  const prefix = normalize(quote.prefix ?? "").text;
-  const suffix = normalize(quote.suffix ?? "").text;
   if (first === -1) {
     return choose(text, approximate(text, needle), prefix, suffix);
   }
@@ -137,14 +163,16 @@ function bestMatch(
 }
 
 function normalize(value: string): Normalized {
-  let text = "";
-  const offsets: number[] = [];
-  for (let index = 0; index < value.length; index++) {
-    const character = value.charAt(index);
-    if (!ignorable.test(character)) {
-      text += character;
-      offsets.push(index);
+  const text = value.replace(ignorable, "");
+  const offsets = new Uint32Array(text.length);
+  // Both strings use UTF-16 offsets. Ignorable code units never occur in text.
+  let raw = 0;
+  for (let index = 0; index < text.length; index++) {
+    const code = text.charCodeAt(index);
+    while (value.charCodeAt(raw) !== code) {
+      raw++;
     }
+    offsets[index] = raw++;
   }
   return { text, offsets };
 }

@@ -105,6 +105,12 @@ try {
       console.log("Library", size, width, "mounted rows", await rows.count());
     }
   }
+  await page.keyboard.press("Control+k");
+  const palette = page.getByRole("dialog", { name: "Reader commands" });
+  await palette.getByRole("combobox").fill("Study 09999");
+  await expect(palette.getByRole("option", { name: /Study 09999/u })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(palette).toBeHidden();
   const scrollMedian = await grid.evaluate(async (el) => {
     const frame = el.closest(".library-table-frame");
     const times = [];

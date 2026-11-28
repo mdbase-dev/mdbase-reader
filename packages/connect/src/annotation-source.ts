@@ -62,18 +62,18 @@ export async function resolveAnnotationSources(
   client: MdbaseClient,
   annotations: readonly { readonly path: string; readonly reference: unknown }[],
   options: ReaderRequestOptions = {},
-  ids = new Map<string, string | undefined>(),
+  ids = new Map<string, SourceId | undefined>(),
   linksByFolder: AnnotationLinkTargets = new Map(),
 ): Promise<Map<string, SourceId | undefined>> {
   const targets = await sourceLinkTargets(client, annotations, options, linksByFolder);
   await readSourceIds(client, [...new Set(targets.values())], ids, options);
-  return new Map(
-    annotations.map(({ path, reference }) => {
-      const target = targets.get(path);
-      const id = target ? ids.get(target) : undefined;
-      return [path, id ? sourceId(id) : legacySourceId(reference)];
-    }),
-  );
+  const owners = new Map<string, SourceId | undefined>();
+  for (const { path, reference } of annotations) {
+    const target = targets.get(path);
+    const id = target ? ids.get(target) : undefined;
+    owners.set(path, id ?? legacySourceId(reference));
+  }
+  return owners;
 }
 
 /** The record path each annotation's `source` link reaches, by annotation path. */
@@ -133,7 +133,7 @@ async function sourceLinkTargets(
 async function readSourceIds(
   client: MdbaseClient,
   paths: readonly string[],
-  ids: Map<string, string | undefined>,
+  ids: Map<string, SourceId | undefined>,
   options: ReaderRequestOptions,
 ): Promise<void> {
   const unknown = paths.filter((path) => !ids.has(path));
@@ -145,7 +145,8 @@ async function readSourceIds(
   );
   for (const [index, path] of unknown.entries()) {
     const record = records[index];
-    ids.set(path, record ? stringField((record.effective ?? record.frontmatter)["id"]) : undefined);
+    const id = record && stringField((record.effective ?? record.frontmatter)["id"]);
+    ids.set(path, id ? sourceId(id) : undefined);
   }
 }
 

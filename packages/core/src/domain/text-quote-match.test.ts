@@ -79,6 +79,24 @@ describe("matchTextQuote", () => {
     expect(matched("Read 📖 patiently.", { exact: "📖 patiently" })).toBe("📖 patiently");
   });
 
+  it.each([
+    ["a  📖\u00ad b  📖 b", { exact: "📖 b" }],
+    ["aaaaa", { exact: "aa", prefix: "a", suffix: "a" }],
+    ["first quote and second quote", { exact: "quote", prefix: "second " }],
+    ["first quote and second quote", { exact: "quote", prefix: "the second " }],
+    ["a distinctive inside phrase follows", { exact: "distinctive phrase follows" }],
+    ["missing", { exact: " " }],
+    ["missing", { exact: "absent" }],
+  ] as const)("paints the same range as the scored matcher in %s", (text, quote) => {
+    const match = matchTextQuote(text, quote);
+    const range = textQuoteMatcher(text, "range")(quote);
+    if (match) {
+      expect(range).toMatchObject({ start: match.start, end: match.end });
+    } else {
+      expect(range).toBeNull();
+    }
+  });
+
   it("locates many quotations in one prepared text", () => {
     const match = textQuoteMatcher("one two three");
     expect([match({ exact: "one" })?.start, match({ exact: "three" })?.start]).toEqual([0, 8]);

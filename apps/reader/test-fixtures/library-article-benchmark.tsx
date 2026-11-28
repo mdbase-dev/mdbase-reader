@@ -1,5 +1,6 @@
 import { ConnectContentSearchRepository } from "@mdbase-reader/connect";
 import { collectionId, type Annotation, type SourceSummary } from "@mdbase-reader/core";
+import "@mdbase-reader/i18n";
 import { HtmlDocumentRuntime, prepareHtmlDocument } from "@mdbase-reader/renderer-html";
 
 import { fieldValueSuggestions } from "../src/library-conditions.js";
@@ -16,51 +17,77 @@ type HighlightWindow = Window & {
 
 export async function measureLibraryAndArticle(
   sources: readonly SourceSummary[],
-): Promise<Readonly<Record<string, number[]>>> {
-  const samples: Record<string, number[]> = {};
-  async function measure(name: string, operation: () => unknown): Promise<void> {
-    const times = [];
-    for (let run = 0; run < 10; run++) {
-      const start = performance.now();
+): Promise<Readonly<Record<string, number>>> {
+  const samples: Record<string, number> = {};
+  async function measure(name: string, operation: () => unknown, repeat = 1): Promise<void> {
+    const start = performance.now();
+    for (let run = 0; run < repeat; run++) {
       await operation();
-      if (run) {
-        times.push(performance.now() - start);
-      }
     }
-    samples[name] = times;
+    samples[name] = (performance.now() - start) / repeat;
   }
 
+  const repeats = sources.length < 1000 ? 100 : 8;
   const defaults = defaultLibraryViewConfiguration;
-  await measure("sort 10k titles", () => {
-    const sorted = applyLibraryViewConfiguration(sources, defaults);
-    if (!sorted[0]?.title.endsWith("00000")) {
-      throw new Error("Wrong sort order");
-    }
-  });
-  await measure("filter 10k by metadata and tag", () => {
-    const matches = applyLibraryViewConfiguration(sources, {
-      ...defaults,
-      filter: { ...defaults.filter, query: "study", tag: "research" },
-    });
-    if (matches.length !== 5000) {
-      throw new Error("Wrong filter result");
-    }
-  });
-  await measure("tag suggestions from 10k library", () => {
-    if (!fieldValueSuggestions(sources, "tags").length) {
-      throw new Error("Missing tags");
-    }
-  });
+  await measure(
+    "sort fresh title snapshot",
+    () => {
+      const sorted = applyLibraryViewConfiguration([...sources], defaults);
+      if (sorted[0]?.title !== "Study 00000" || sorted.length !== sources.length) {
+        throw new Error("Wrong sort order");
+      }
+    },
+    repeats,
+  );
+  // Opening All sources precedes typing into its filter.
+  applyLibraryViewConfiguration(sources, defaults);
+  await measure(
+    "filter title order by metadata and tag",
+    () => {
+      const matches = applyLibraryViewConfiguration(sources, {
+        ...defaults,
+        filter: { ...defaults.filter, query: "study", tag: "research" },
+      });
+      if (matches.length !== sources.length / 2 || matches[0]?.title !== "Study 00000") {
+        throw new Error("Wrong filter result");
+      }
+    },
+    repeats,
+  );
+  await measure(
+    "rank tag suggestions",
+    () => {
+      const tags = fieldValueSuggestions(sources, "tags");
+      if (tags[0] !== "reading" || tags[1] !== "research") {
+        throw new Error("Wrong tag counts");
+      }
+    },
+    repeats,
+  );
 
   // Inject local query pages so this measures Reader's result processing only.
-  const records = sources.map(({ id }, index) => {
+  const ownerCount = sources.length / 10;
+  const annotations = sources.map(({ id }, index) => {
     return {
       path: `annotations/${id}.md`,
-      frontmatter: { id, type: "reader-annotation", source: `[[sources/${String(index % 1000)}]]` },
+      frontmatter: {
+        id,
+        type: "reader-annotation",
+        source: `[[sources/${String(index % ownerCount)}]]`,
+      },
       types: ["reader-annotation"],
       body: "> Paper mentions attention and retention.\n\nReader highlight comment.",
     };
   });
+  const records = [
+    ...sources.slice(0, ownerCount).map(({ path, id }) => ({
+      path,
+      frontmatter: { type: "reader-source", id },
+      types: ["reader-source"],
+      body: "Source note about attention.",
+    })),
+    ...annotations,
+  ];
   const client = {
     resolveLinks(_from: unknown, links: string[]) {
       return Promise.resolve({
@@ -82,12 +109,22 @@ export async function measureLibraryAndArticle(
     },
   } as unknown as MdbaseClient;
   const search = new ConnectContentSearchRepository(client);
-  await measure("process 10k annotation search hits", async () => {
-    const results = await search.search(collectionId("benchmark"), "attention");
-    if (results.length !== 1000) {
-      throw new Error(`Wrong search result: ${String(results.length)}`);
-    }
-  });
+  await measure(
+    "group source-note and annotation search hits",
+    async () => {
+      const results = await search.search(collectionId("benchmark"), "attention");
+      if (
+        results.length !== ownerCount ||
+        !results.every((hit) => hit.kinds.length === 2 && hit.passages?.length === 3)
+      ) {
+        throw new Error(`Wrong search result: ${String(results.length)}`);
+      }
+    },
+    repeats,
+  );
+  if (sources.length < 1000) {
+    return samples;
+  }
 
   const paragraphs = Array.from(
     { length: 3000 },
@@ -104,7 +141,10 @@ export async function measureLibraryAndArticle(
     const loaded = new Promise((done) => frame.addEventListener("load", done, { once: true }));
     frame.srcdoc = prepareHtmlDocument(article);
     await loaded;
-    if (!frame.contentDocument?.getElementById("p2999")?.getBoundingClientRect().height) {
+    if (
+      frame.contentDocument?.querySelector("[onclick]") ||
+      !frame.contentDocument?.getElementById("p2999")?.getBoundingClientRect().height
+    ) {
       throw new Error("Last paragraph is missing");
     }
   });
@@ -134,7 +174,12 @@ export async function measureLibraryAndArticle(
         const css = (frame.contentWindow as HighlightWindow | null)?.CSS.highlights.get(
           "reader-annotation-yellow",
         );
-        if (css?.size !== 600 || [...css].at(-1)?.startContainer.parentElement?.id !== "p2995") {
+        if (
+          css?.size !== 600 ||
+          [...css].some(
+            (range, i) => range.startContainer.parentElement?.id !== `p${String(i * 5)}`,
+          )
+        ) {
           throw new Error("Highlights did not anchor to the expected passages");
         }
       } finally {

@@ -1,6 +1,7 @@
 import {
   sourceId,
   type CollectionId,
+  type SourceId,
   type ContentSearchRepository,
   type ReaderRequestOptions,
   type SourceTextMatchKind,
@@ -35,7 +36,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
       return [];
     }
     const matches = new Map<string, SourceMatches>();
-    const sourceIds = new Map<string, string | undefined>();
+    const sourceIds = new Map<string, SourceId | undefined>();
     const linksByFolder: AnnotationLinkTargets = new Map();
     for await (const outcome of completeReaderPages(this.client, searchInput(normalized), {
       ...options,

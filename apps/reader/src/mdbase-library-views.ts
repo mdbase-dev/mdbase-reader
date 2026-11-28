@@ -215,31 +215,53 @@ export function applyLibraryViewConfiguration(
   }
   const query = configuration.filter.query.trim().toLocaleLowerCase();
   const tag = configuration.filter.tag.trim().toLocaleLowerCase();
-  const filtered = sources.filter((source) => {
-    if (
-      configuration.filter.status !== "all" &&
-      (source.readingStatus ?? "inbox") !== configuration.filter.status
-    ) {
-      return false;
-    }
-    if (
-      configuration.filter.format !== "all" &&
-      sourceFormat(source) !== configuration.filter.format
-    ) {
-      return false;
-    }
-    if (tag && !source.tags.some((candidate) => candidate.toLocaleLowerCase() === tag)) {
-      return false;
-    }
-    if (
-      !configuration.filter.conditions.every((condition) => matchesCondition(source, condition))
-    ) {
-      return false;
-    }
-    return !query || metadataSearchText(source, parentTitle).includes(query);
-  });
-  const { sortField, sortDirection } = configuration;
+  const { sortField, sortDirection, filter } = configuration;
   const direction = sortDirection === "asc" ? 1 : -1;
+  // Empty filters are the common library-open path. Sorting owns its input.
+  const unfiltered =
+    !query &&
+    !tag &&
+    filter.status === "all" &&
+    filter.format === "all" &&
+    filter.conditions.length === 0;
+  const matchingTags = new Map<string, boolean>();
+  function matchesTag(candidate: string): boolean {
+    const known = matchingTags.get(candidate);
+    if (known !== undefined) {
+      return known;
+    }
+    const matches = candidate.toLocaleLowerCase() === tag;
+    matchingTags.set(candidate, matches);
+    return matches;
+  }
+  const filtered = unfiltered
+    ? [...sources]
+    : sources.filter((source) => {
+        if (
+          configuration.filter.status !== "all" &&
+          (source.readingStatus ?? "inbox") !== configuration.filter.status
+        ) {
+          return false;
+        }
+        if (
+          configuration.filter.format !== "all" &&
+          sourceFormat(source) !== configuration.filter.format
+        ) {
+          return false;
+        }
+        if (tag && !source.tags.some(matchesTag)) {
+          return false;
+        }
+        if (
+          !configuration.filter.conditions.every((condition) => matchesCondition(source, condition))
+        ) {
+          return false;
+        }
+        return !query || metadataSearchText(source, parentTitle).includes(query);
+      });
+  if (sortField === "title") {
+    return filtered.sort((a, b) => direction * a.title.localeCompare(b.title));
+  }
   const key = propertyKey(sortField);
   if (key !== null) {
     // Dotted paths and formatted property values are independent of the comparison pair.
@@ -366,8 +388,6 @@ function columnSelection(column: LibraryColumn): string {
 
 function sortValue(source: SourceSummary, field: LibrarySortField): string | number {
   switch (field) {
-    case "title":
-      return source.title;
     case "creator":
       return source.creators[0] ?? "";
     case "published":

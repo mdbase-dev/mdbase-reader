@@ -23,7 +23,7 @@ export async function* annotationSourcePages(
     return;
   }
   // Source IDs by record path, shared by every page's link resolution.
-  const ids = new Map<string, string | undefined>();
+  const ids = new Map<string, SourceId | undefined>();
   const signal = options.signal ? { signal: options.signal } : {};
   for (const scope of annotationQueryScopes(options.paths)) {
     const selected = scope ? new Set(scope) : null;

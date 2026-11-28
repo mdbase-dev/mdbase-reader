@@ -1,9 +1,12 @@
-// Run locally with a warmed Vite server. Each row has one warm-up and nine samples.
+// Optional second server runs the same fixture on the baseline revision.
 import { chromium, expect } from "@playwright/test";
 
 const origin = process.env.READER_AUDIT_ORIGIN ?? "http://127.0.0.1:5311";
-if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(origin)) {
-  throw new Error("Performance measurements require a loopback origin.");
+const origins = [process.env.READER_BASELINE_ORIGIN, origin].filter(Boolean);
+for (const url of origins) {
+  if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/u.test(url)) {
+    throw new Error("Performance measurements require a loopback origin.");
+  }
 }
 const articles = Array.from({ length: 10_000 }, (_, index) => ({
   collectionId: "benchmark",
@@ -20,7 +23,6 @@ const articles = Array.from({ length: 10_000 }, (_, index) => ({
   recordRevision: "rev-1",
 }));
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 
 function summary(times) {
   const sorted = times.toSorted((a, b) => a - b);
@@ -32,57 +34,95 @@ function summary(times) {
 }
 
 try {
-  const errors = [];
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.route("**/*", (route) =>
-    new URL(route.request().url()).origin === origin ? route.continue() : route.abort(),
-  );
-  await page.route(`${origin}/__reader-audit/**`, (route) => {
-    const path = new URL(route.request().url()).pathname;
-    return route.fulfill({ json: path.endsWith("/library") ? articles : [] });
-  });
-  await page.addInitScript(() => {
-    globalThis.readerGridReady = new Promise((resolve) => {
-      const observer = new globalThis.MutationObserver(() => {
-        if (globalThis.document.querySelector('.library-table[aria-rowcount="10001"]')) {
-          observer.disconnect();
-          resolve(performance.now());
-        }
+  const reports = {};
+  for (const count of [100, 10_000]) {
+    const sources = articles.slice(0, count);
+    const lanes = [];
+    for (const url of origins) {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.route("**/*", (route) =>
+        new URL(route.request().url()).origin === url ? route.continue() : route.abort(),
+      );
+      await page.route(`${url}/__reader-audit/**`, (route) => {
+        const library = new URL(route.request().url()).pathname.endsWith("/library");
+        return route.fulfill({ json: library ? sources : [] });
       });
-      observer.observe(globalThis.document, { attributes: true, childList: true, subtree: true });
-    });
-  });
-  const startup = [];
-  const grid = page.locator(".library-table:visible");
-  for (let i = 0; i < 10; i++) {
-    await page.goto(`${origin}/test-fixtures/audit-reader.html`, { waitUntil: "domcontentloaded" });
-    const elapsed = await page.evaluate(() => globalThis.readerGridReady);
-    if (i) startup.push(elapsed);
+      await page.addInitScript((count) => {
+        performance.setResourceTimingBufferSize(5000);
+        globalThis.readerGridReady = new Promise((resolve, reject) => {
+          const observer = new globalThis.MutationObserver(() => {
+            if (globalThis.document.querySelector(`.library-table[aria-rowcount="${count + 1}"]`)) {
+              observer.disconnect();
+              const now = performance.now();
+              const response = performance.getEntriesByName(
+                new URL("/__reader-audit/library", globalThis.location.href).href,
+              )[0];
+              if (!response) {
+                reject(new Error("Missing library response timing"));
+                return;
+              }
+              resolve({
+                "startup to virtualized grid": now,
+                "library response to grid": now - response.responseEnd,
+              });
+            }
+          });
+          observer.observe(globalThis.document, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+          });
+        });
+      }, count);
+      // Keep component timings independent of deferred React work following the first grid commit.
+      const fixture = await context.newPage();
+      fixture.on("pageerror", (error) => errors.push(error.message));
+      await fixture.route("**/*", (route) =>
+        new URL(route.request().url()).origin === url ? route.continue() : route.abort(),
+      );
+      await fixture.goto(`${url}/test-fixtures/import-proof.html`);
+      lanes.push({ url, page, fixture, errors, times: {} });
+    }
+    for (let pair = 0; pair < 10; pair++) {
+      for (const { url, page, fixture, errors, times } of pair % 2 ? lanes.toReversed() : lanes) {
+        await page.goto(`${url}/test-fixtures/audit-reader.html`, {
+          waitUntil: "domcontentloaded",
+        });
+        await expect(page.locator(".library-table:visible")).toHaveAttribute(
+          "aria-rowcount",
+          String(count + 1),
+        );
+        const grid = await page.evaluate(() => globalThis.readerGridReady);
+        expect(await page.locator(".library-table:visible [data-row-index]").count()).toBeLessThan(
+          60,
+        );
+        const runs = await fixture.evaluate(
+          async ({ sources, moduleUrl }) =>
+            (await import(moduleUrl)).measureLibraryAndArticle(sources),
+          { sources, moduleUrl: "/test-fixtures/library-article-benchmark.tsx" },
+        );
+        expect(errors).toEqual([]);
+        if (pair > 0) {
+          for (const [label, ms] of Object.entries({
+            ...grid,
+            ...runs,
+          })) {
+            (times[label] ??= []).push(ms);
+          }
+        }
+      }
+    }
+    for (const { url, page, times } of lanes) {
+      reports[`${count} @ ${url}`] = Object.fromEntries(
+        Object.entries(times).map(([k, v]) => [k, summary(v)]),
+      );
+      await page.context().close();
+    }
   }
-  await expect(grid).toHaveAttribute("aria-rowcount", "10001");
-  expect(await grid.locator("[data-row-index]").count()).toBeLessThan(60);
-  const runs = await page.evaluate(
-    async ({ sources, moduleUrl }) => {
-      const { measureLibraryAndArticle } = await import(moduleUrl);
-      return measureLibraryAndArticle(sources);
-    },
-    { sources: articles, moduleUrl: "/test-fixtures/library-article-benchmark.tsx" },
-  );
-  expect(errors).toEqual([]);
-  console.log(
-    JSON.stringify(
-      {
-        chromium: browser.version(),
-        milliseconds: Object.fromEntries(
-          [["startup to virtualized 10k grid", startup], ...Object.entries(runs)].map(
-            ([label, times]) => [label, summary(times)],
-          ),
-        ),
-      },
-      null,
-      2,
-    ),
-  );
+  console.log(JSON.stringify({ chromium: browser.version(), milliseconds: reports }, null, 2));
 } finally {
   await browser.close();
 }

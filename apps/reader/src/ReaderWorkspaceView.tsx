@@ -675,6 +675,9 @@ function useCommandsForView(
   },
 ): ReturnType<typeof readerCommands> {
   const createSourceParts = useSourcePartCreation();
+  if (!model.commandsOpen) {
+    return [];
+  }
   return readerCommands({
     libraryViews: model.libraryViews.views,
     sources: model.library.sources,
