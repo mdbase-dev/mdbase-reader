@@ -22,7 +22,7 @@ afterEach(() => {
 const source = { ...partSource("Attention"), title: "Attention Is All You Need" };
 
 function render(handlers: {
-  readonly onMenu: (x: number, y: number) => void;
+  readonly onMenu: (index: number, x: number, y: number) => void;
   readonly onSelect: () => void;
   readonly onOpen: () => void;
   readonly selection?: typeof emptyRowSelection;
@@ -33,6 +33,7 @@ function render(handlers: {
     return (
       <div role="grid">
         <LibraryTableRow
+          rowIds={[]}
           sources={[source]}
           source={source}
           index={0}

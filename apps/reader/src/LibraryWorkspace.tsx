@@ -41,6 +41,7 @@ import { LibraryTable } from "./LibraryTable.js";
 import { LibraryViewSaveDialog } from "./LibraryViewSaveDialog.js";
 import {
   applyLibraryViewConfiguration,
+  defaultLibraryView,
   type LibraryViewConfiguration,
   type MdbaseLibraryView,
 } from "./mdbase-library-views.js";
@@ -123,6 +124,7 @@ export function LibraryWorkspace({
   // Any view can switch to the collection's annotations and back.
   const [mode, setMode] = useState<"sources" | "annotations">("sources");
   const [selection, setSelection] = useState<RowSelection>(emptyRowSelection);
+  const allSourcesView = view.key === defaultLibraryView.key;
   // Remounts the table after a reset, since it reads column widths from the layout once.
   const [layoutResets, setLayoutResets] = useState(0);
   const [executedSources, setExecutedSources] = useState<readonly SourceSummary[]>(allSources);
@@ -137,7 +139,8 @@ export function LibraryWorkspace({
   const executionFamily = `reader-library-view:${useId()}`;
 
   useEffect(() => {
-    if (mode !== "sources") {
+    // The built-in view already has its input, including progressive index updates.
+    if (mode !== "sources" || allSourcesView) {
       return undefined;
     }
     const controller = new AbortController();
@@ -172,18 +175,18 @@ export function LibraryWorkspace({
     return () => {
       controller.abort();
     };
-  }, [allSources, executionFamily, gateway, mode, view]);
+  }, [allSources, allSourcesView, executionFamily, gateway, mode, view]);
 
   const dirty = !sameConfiguration(configuration, view.configuration);
   const filterCount = activeFilterCount(configuration);
   // Prefer the library's copy of each source, so edits such as a status change show at once.
   const freshSources = useMemo(() => {
-    if (allSources === executedSources) {
+    if (allSourcesView || allSources === executedSources) {
       return allSources;
     }
     const byId = new Map(allSources.map((source) => [source.id, source]));
     return executedSources.map((source) => byId.get(source.id) ?? source);
-  }, [allSources, executedSources]);
+  }, [allSources, allSourcesView, executedSources]);
   // A changed filter searches the whole library; layout changes keep the view's own results.
   const filterChanged = JSON.stringify(filter) !== JSON.stringify(view.configuration.filter);
   const baseSources = filterChanged ? allSources : freshSources;
@@ -247,24 +250,14 @@ export function LibraryWorkspace({
       }
       return next;
     });
-  const visibleSelection = useMemo(
-    () =>
-      pruneRowSelection(
-        selection,
-        sources.map(({ id }) => id),
-      ),
-    [selection, sources],
-  );
+  const rowIds = useMemo(() => sources.map(({ id }) => id), [sources]);
+  const visibleSelection = useMemo(() => pruneRowSelection(selection, rowIds), [selection, rowIds]);
   const selectedSources = useMemo(
-    () => sources.filter(({ id }) => visibleSelection.ids.has(id)),
+    () =>
+      visibleSelection.ids.size ? sources.filter(({ id }) => visibleSelection.ids.has(id)) : [],
     [sources, visibleSelection],
   );
-  useInspectedLibraryRow(
-    useMemo(() => sources.map(({ id }) => id), [sources]),
-    visibleSelection,
-    focused && mode === "sources",
-    onInspectSource,
-  );
+  useInspectedLibraryRow(rowIds, visibleSelection, focused && mode === "sources", onInspectSource);
   // "Export citations" takes the selection, or every source in this view.
   const exportScope = selectedSources.length > 0 ? selectedSources : sources;
   const { setScope: setExportScope } = bibliographyExport;
@@ -702,6 +695,7 @@ export function LibraryWorkspace({
               <LibraryTable
                 key={layoutResets}
                 sources={sources}
+                rowIds={rowIds}
                 partRows={parts.rows}
                 onTogglePart={togglePart}
                 layout={layout}

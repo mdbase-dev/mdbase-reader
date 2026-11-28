@@ -44,38 +44,51 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
       include: { effective: true, body: true },
     })) {
       const records = outcome.records;
-      const references: { path: string; reference: unknown }[] = [];
+      let references: { path: string; reference: unknown }[] | undefined;
       for (const record of records) {
         if (isAnnotationRecord(record)) {
-          references.push({ path: record.path, reference: annotationSourceValue(record) });
+          (references ??= []).push({ path: record.path, reference: annotationSourceValue(record) });
         }
       }
       options.signal?.throwIfAborted();
-      const owners = references.length
+      const owners = references
         ? await resolveAnnotationSources(this.client, references, options, sourceIds, linksByFolder)
         : undefined;
       options.signal?.throwIfAborted();
       for (const record of records) {
-        const match = recordMatch(record, owners);
-        if (!match) {
-          continue;
-        }
-        let entry = matches.get(match.id);
-        if (!entry) {
-          entry = { sourceId: sourceId(match.id), kinds: [match.kind] };
-          matches.set(match.id, entry);
-        } else if (!entry.kinds.includes(match.kind)) {
-          entry.kinds.push(match.kind);
-        }
-        if (match.kind === "source-note") {
-          // A later page can resolve a link to this path without a second SDK read.
-          sourceIds.set(record.path, entry.sourceId);
-        }
-        appendPassage(entry, record, match.kind, normalized);
+        appendRecord(matches, sourceIds, owners, record, normalized);
       }
     }
     return [...matches.values()];
   }
+}
+
+function appendRecord(
+  matches: Map<string, SourceMatches>,
+  sourceIds: Map<string, SourceId | undefined>,
+  owners: ReadonlyMap<string, string | undefined> | undefined,
+  record: RecordView,
+  normalized: string,
+): void {
+  const frontmatter = record.effective ?? record.frontmatter;
+  const isNote = frontmatter["type"] === "reader-source" || record.types.includes("reader-source");
+  const kind = isNote ? "source-note" : "annotation";
+  const id = isNote ? frontmatter["id"] : owners?.get(record.path);
+  if (typeof id !== "string" || !id) {
+    return;
+  }
+  let entry = matches.get(id);
+  if (!entry) {
+    entry = { sourceId: sourceId(id), kinds: [kind] };
+    matches.set(id, entry);
+  } else if (!entry.kinds.includes(kind)) {
+    entry.kinds.push(kind);
+  }
+  if (isNote) {
+    // A later page can resolve a link to this path without a second SDK read.
+    sourceIds.set(record.path, entry.sourceId);
+  }
+  appendPassage(entry, record, kind, normalized);
 }
 
 function appendPassage(
@@ -101,20 +114,6 @@ function searchInput(query: string): Query {
     types: ["reader-source", "reader-annotation"],
     where: `file.body.lower().contains(${JSON.stringify(query)})`,
   };
-}
-
-function recordMatch(
-  record: RecordView,
-  owners: ReadonlyMap<string, string | undefined> | undefined,
-): { readonly id: string; readonly kind: SourceTextMatchKind } | null {
-  const frontmatter = record.effective ?? record.frontmatter;
-  const declaredType = frontmatter["type"];
-  if (declaredType === "reader-source" || record.types.includes("reader-source")) {
-    const id = frontmatter["id"];
-    return typeof id === "string" && id ? { id, kind: "source-note" } : null;
-  }
-  const id = owners?.get(record.path);
-  return id ? { id, kind: "annotation" } : null;
 }
 
 function isAnnotationRecord(record: RecordView): boolean {

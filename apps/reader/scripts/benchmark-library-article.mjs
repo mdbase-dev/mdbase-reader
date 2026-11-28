@@ -59,8 +59,9 @@ const browser = await chromium.launch();
 
 function summary(times) {
   const sorted = times.toSorted((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
   return {
-    median: Number(sorted[Math.floor(sorted.length / 2)].toFixed(3)),
+    median: Number(((sorted[middle] + sorted[Math.ceil(sorted.length / 2) - 1]) / 2).toFixed(3)),
     p95: Number(sorted[Math.ceil(sorted.length * 0.95) - 1].toFixed(3)),
     samples: times.map((time) => Number(time.toFixed(3))),
   };
@@ -161,9 +162,25 @@ try {
                   throw new Error("Grid did not mount target row");
                 await new Promise((done) => globalThis.requestAnimationFrame(done));
               }
-              const elapsed = performance.now() - start;
+              const jump = performance.now() - start;
+              // Advance by a few rows each frame so successive windows overlap, as
+              // they do during a wheel scroll. Include the cost of mounting new rows.
+              const frame = () => new Promise((done) => globalThis.requestAnimationFrame(done));
+              const intervals = [];
               viewport.scrollTop = 0;
-              return elapsed;
+              let previous = await frame();
+              for (let step = 0; step < 24; step++) {
+                viewport.scrollTop += 3 * 48;
+                const now = await frame();
+                intervals.push(now - previous);
+                previous = now;
+              }
+              viewport.scrollTop = 0;
+              intervals.sort((a, b) => a - b);
+              return {
+                "virtualized scroll to target row": jump,
+                "scroll frame interval p95": intervals[Math.ceil(intervals.length * 0.95) - 1],
+              };
             }, count);
           const open = await page
             .locator('.library-table:visible a[href="#source=source-0"]')
@@ -171,11 +188,25 @@ try {
               const start = performance.now();
               link.click();
               return new Promise((resolve, reject) => {
+                let usable;
                 function wait() {
                   const frame = globalThis.document.querySelector("iframe.html-viewer");
                   const paragraph = frame?.contentDocument?.getElementById("p2999");
-                  if (paragraph?.getBoundingClientRect().height) resolve(performance.now() - start);
-                  else if (performance.now() - start > 10000)
+                  if (paragraph?.getBoundingClientRect().height) {
+                    usable ??= performance.now() - start;
+                    if (
+                      !frame
+                        .closest(".document-renderer-stage")
+                        ?.querySelector(".document-renderer-status")
+                    ) {
+                      resolve({
+                        "open article to first usable iframe": usable,
+                        "open article until readable": performance.now() - start,
+                      });
+                      return;
+                    }
+                  }
+                  if (performance.now() - start > 15000)
                     reject(new Error("Article did not render"));
                   else globalThis.requestAnimationFrame(wait);
                 }
@@ -218,8 +249,8 @@ try {
           if (pair > 0) {
             for (const [label, ms] of Object.entries({
               ...grid,
-              "virtualized scroll to target row": scroll,
-              "open article to first usable iframe": open,
+              ...scroll,
+              ...open,
               "open annotation sidebar (600 highlights)": sidebar,
               ...runs,
             })) {

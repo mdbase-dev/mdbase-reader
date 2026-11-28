@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { PointerEvent as ReactPointerEvent } from "react";
 
@@ -77,7 +77,7 @@ export function useLongPress(): LongPress {
     return was;
   }, []);
   const touched = useCallback((): boolean => touch.current, []);
-  return { bind, consumeClick, touched };
+  return useMemo(() => ({ bind, consumeClick, touched }), [bind, consumeClick, touched]);
 }
 
 /**
