@@ -204,7 +204,11 @@ export function applyLibraryViewConfiguration(
   configuration: LibraryViewConfiguration,
   contextSources: readonly SourceSummary[] = sources,
 ): readonly SourceSummary[] {
-  const parentTitles = new Map(contextSources.map(({ id, title }) => [id, title]));
+  let parentTitles: Map<SourceSummary["id"], string> | undefined;
+  function parentTitle(id: SourceSummary["id"]): string | undefined {
+    parentTitles ??= new Map(contextSources.map((source) => [source.id, source.title]));
+    return parentTitles.get(id);
+  }
   const query = configuration.filter.query.trim().toLocaleLowerCase();
   const tag = configuration.filter.tag.trim().toLocaleLowerCase();
   const filtered = sources.filter((source) => {
@@ -234,14 +238,14 @@ export function applyLibraryViewConfiguration(
         source.title,
         ...source.creators,
         ...source.tags.map(String),
-        source.partOf ? parentTitles.get(source.partOf) : undefined,
+        source.partOf ? parentTitle(source.partOf) : undefined,
       ]
         .join(" ")
         .toLocaleLowerCase()
         .includes(query)
     );
   });
-  return [...filtered].sort((left, right) => compareSources(left, right, configuration));
+  return filtered.sort((left, right) => compareSources(left, right, configuration));
 }
 
 /** A source's format; `note` means no file is attached, `file` an unrecognised one. */

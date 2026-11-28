@@ -20,7 +20,7 @@ audit reloads offline and opens unvisited lazy UI/renderers; see
 
 ## Pages HTML redirect diagnostics
 
-The eaa4e697 SDK precache deliberately fetches with `redirect: "error"`. Cloudflare Pages redirects
+The SDK precache deliberately fetches with `redirect: "error"`. Cloudflare Pages redirects
 `/index.html` to `/` and `/404.html` to `/404`. Chrome can therefore log `net::ERR_FAILED` for the
 HTML filenames during worker installation, including an installation triggered by page reload.
 The SDK then retries exactly the known clean URL, verifies its bytes against the precache hash,
@@ -37,8 +37,9 @@ node apps/reader/scripts/audit-pages-offline.mjs
 The audit serves actual build bytes behind emulated Pages clean-URL redirects, loads the in-memory
 preview in a fresh headless Playwright browser, checks active worker control and both cached HTML
 responses (200), then checks online and offline reloads with no page errors. Both expected HTML
-request failures reproduce while installation and offline reload succeed. The failed `/` request
-reported during the offline phase is the SDK's network-first navigation falling back to cache.
+request failures reproduce while installation and offline reload succeed. SDK 0.2.58 serves pinned navigations such as `/` directly from its release cache. Other routes
+try the network and fall back to the cached index when offline. The audit rejects unexpected
+same-origin request failures during online startup and reload.
 No runtime change or vendored SDK patch is needed for these diagnostics. A rejected worker
 installation, missing cached responses, or a non-working offline reload would be a separate issue;
 this local check does not certify live Pages deployment state or offline collection access.

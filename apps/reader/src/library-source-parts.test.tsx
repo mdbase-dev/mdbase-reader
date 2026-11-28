@@ -14,6 +14,14 @@ const section = partSource("Section", "Chapter");
 const all = [chapter, book, section];
 
 describe("library source parts", () => {
+  it("reuses sorted standalone matches and keeps their treegrid metadata", () => {
+    const other = partSource("Other");
+    const matches = [other, book];
+    const result = librarySourceParts(matches, all, new Set([book.id]), false, false);
+    expect(result.sources).toBe(matches);
+    expect(result.rows.get(other.id)).toEqual({ depth: 0, expanded: true, expandable: false });
+    expect(result.rows.get(book.id)).toEqual({ depth: 0, expanded: false, expandable: false });
+  });
   it("nests independently sorted parts, supports collapse, and keeps filtered-out parents' children at root", () => {
     const nested = librarySourceParts(all, all, new Set(), false, true);
     expect(nested.sources.map(({ id }) => id)).toEqual([book.id, chapter.id, section.id]);

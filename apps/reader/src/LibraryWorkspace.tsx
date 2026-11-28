@@ -172,6 +172,9 @@ export function LibraryWorkspace({
   const filterCount = activeFilterCount(configuration);
   // Prefer the library's copy of each source, so edits such as a status change show at once.
   const freshSources = useMemo(() => {
+    if (allSources === executedSources) {
+      return allSources;
+    }
     const byId = new Map(allSources.map((source) => [source.id, source]));
     return executedSources.map((source) => byId.get(source.id) ?? source);
   }, [allSources, executedSources]);
@@ -200,10 +203,10 @@ export function LibraryWorkspace({
       noteSearch.matches.size === 0
         ? []
         : applyLibraryViewConfiguration(
-            baseSources,
+            baseSources.filter(({ id }) => noteSearch.matches.has(id)),
             { ...view.configuration, sortField, sortDirection, filter: { ...filter, query: "" } },
             allSources,
-          ).filter(({ id }) => noteSearch.matches.has(id)),
+          ),
     [
       allSources,
       baseSources,

@@ -172,7 +172,13 @@ function AnnotationCardView({
             showKind={annotation.annotationType !== "highlight"}
             showLocation={showLocation}
             // Without group headings, a card outside its chapter's pages says so itself.
-            outsideChapter={showLocation && annotationOutsideChapter(annotation, owners ?? [])}
+            outsideChapter={
+              showLocation &&
+              annotationOutsideChapter(
+                annotation,
+                owners?.find(({ id }) => id === annotation.sourceId),
+              )
+            }
             draft={needsAttention ? draftLabel(conflict) : null}
           />
           <AnnotationCardActions
