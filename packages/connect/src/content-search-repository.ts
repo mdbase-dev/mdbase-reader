@@ -37,8 +37,20 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
       return [];
     }
     const matches = new Map<string, SourceMatches>();
-    const sourceIds = new Map<string, SourceId | undefined>();
-    const linksByFolder: AnnotationLinkTargets = new Map();
+    // Most note-only searches never need a link index. Keep the path and ID pairs
+    // until a page actually has links to resolve, without retaining record bodies.
+    const notePaths: string[] = [];
+    const noteIds: SourceId[] = [];
+    let sourceIds: Map<string, SourceId | undefined> | undefined;
+    let linksByFolder: AnnotationLinkTargets | undefined;
+    const rememberSource = (path: string, id: SourceId): void => {
+      if (sourceIds) {
+        sourceIds.set(path, id);
+      } else {
+        notePaths.push(path);
+        noteIds.push(id);
+      }
+    };
     for await (const outcome of completeReaderPages(this.client, searchInput(normalized), {
       ...options,
       include: { effective: true, body: true },
@@ -51,12 +63,28 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
         }
       }
       options.signal?.throwIfAborted();
-      const owners = references
-        ? await resolveAnnotationSources(this.client, references, options, sourceIds, linksByFolder)
-        : undefined;
+      let owners: ReadonlyMap<string, string | undefined> | undefined;
+      if (references) {
+        if (!sourceIds) {
+          sourceIds = new Map();
+          for (const [index, path] of notePaths.entries()) {
+            sourceIds.set(path, noteIds[index]);
+          }
+          notePaths.length = 0;
+          noteIds.length = 0;
+        }
+        linksByFolder ??= new Map();
+        owners = await resolveAnnotationSources(
+          this.client,
+          references,
+          options,
+          sourceIds,
+          linksByFolder,
+        );
+      }
       options.signal?.throwIfAborted();
       for (const record of records) {
-        appendRecord(matches, sourceIds, owners, record, normalized);
+        appendRecord(matches, rememberSource, owners, record, normalized);
       }
     }
     return [...matches.values()];
@@ -65,7 +93,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
 
 function appendRecord(
   matches: Map<string, SourceMatches>,
-  sourceIds: Map<string, SourceId | undefined>,
+  rememberSource: (path: string, id: SourceId) => void,
   owners: ReadonlyMap<string, string | undefined> | undefined,
   record: RecordView,
   normalized: string,
@@ -86,7 +114,7 @@ function appendRecord(
   }
   if (isNote) {
     // A later page can resolve a link to this path without a second SDK read.
-    sourceIds.set(record.path, entry.sourceId);
+    rememberSource(record.path, entry.sourceId);
   }
   appendPassage(entry, record, kind, normalized);
 }
