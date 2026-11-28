@@ -6,6 +6,8 @@ import { createServer } from "node:http";
 import { extname, resolve } from "node:path";
 import { chromium } from "@playwright/test";
 
+import { unexpectedShellFailures } from "./pages-offline-requests.mjs";
+
 const directory = resolve(import.meta.dirname, "../dist");
 const types = {
   ".html": "text/html",
@@ -51,7 +53,13 @@ try {
   const page = await context.newPage();
   const failed = [];
   const pageErrors = [];
-  context.on("requestfailed", (request) => failed.push(new URL(request.url()).pathname));
+  context.on("requestfailed", (request) =>
+    failed.push({
+      url: request.url(),
+      worker: Boolean(request.serviceWorker()),
+      error: request.failure()?.errorText,
+    }),
+  );
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.goto(origin + "/?preview=1");
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
@@ -76,6 +84,7 @@ try {
   await page.getByText("The Principles of Psychology", { exact: true }).first().waitFor();
   assert.equal(await page.title(), "mdbase reader");
   const onlineFailedRequests = [...failed];
+  assert.deepEqual(unexpectedShellFailures(onlineFailedRequests, origin), []);
   await context.setOffline(true);
   const offline = await page.reload();
   await page.getByText("The Principles of Psychology", { exact: true }).first().waitFor();
