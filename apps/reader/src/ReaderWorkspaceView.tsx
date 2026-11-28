@@ -48,6 +48,7 @@ import { whenIdle } from "./when-idle.js";
 import { annotationDocumentTarget } from "./workspace-annotation-navigation.js";
 import { WorkspaceToolTab } from "./WorkspaceToolTab.js";
 
+import type { LibraryAnnotationCounts } from "./LibraryTable.js";
 import type { ReaderPanelWorkspace } from "./panel-workspace.js";
 import type { SourceDocumentRenderer } from "./RenderedSourceDocument.js";
 import type {
@@ -620,7 +621,7 @@ function useShellChrome(
 /** The index's counts, corrected by the annotations already loaded for the selected source. */
 export function useLibraryAnnotationCounts(
   model: ReaderWorkspaceViewModel,
-): ReadonlyMap<SourceId, number> | null {
+): LibraryAnnotationCounts | null {
   const loaded = model.workspace.annotations;
   const sourceId =
     model.workspace.sourceRecord.status === "ready" ? model.workspace.sourceRecord.value.id : null;
@@ -629,15 +630,24 @@ export function useLibraryAnnotationCounts(
     model.library.sourceIndex?.complete !== false && (!sourceId || loaded.status !== "loading"),
   );
   return useMemo(() => {
-    const known = counts
-      ? new Map(model.library.sources.map(({ id }) => [id, counts.get(id) ?? 0]))
-      : null;
-    if (!sourceId || loaded.status !== "ready") {
-      return known;
+    const ownedCount =
+      sourceId && loaded.status === "ready"
+        ? loaded.value.filter((annotation) => annotation.sourceId === sourceId).length
+        : undefined;
+    if (ownedCount === undefined && !counts) {
+      return null;
     }
-    const ownedCount = loaded.value.filter((annotation) => annotation.sourceId === sourceId).length;
-    return (known ?? new Map()).set(sourceId, ownedCount);
-  }, [counts, loaded, sourceId, model.library.sources]);
+    // Only mounted library rows need the zero default. Switching articles should
+    // not rebuild a count entry for every source in the library.
+    return {
+      get: (id) =>
+        id === sourceId && ownedCount !== undefined
+          ? ownedCount
+          : counts
+            ? (counts.get(id) ?? 0)
+            : undefined,
+    };
+  }, [counts, loaded, sourceId]);
 }
 
 /** Keeps every open reflowable document on the reader's chosen type settings. */

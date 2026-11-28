@@ -43,6 +43,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     const noteIds: SourceId[] = [];
     let sourceIds: Map<string, SourceId | undefined> | undefined;
     let linksByFolder: AnnotationLinkTargets | undefined;
+    let occurrences: Map<string, string> | undefined;
     const rememberSource = (path: string, id: SourceId): void => {
       if (sourceIds) {
         sourceIds.set(path, id);
@@ -80,6 +81,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
           options,
           sourceIds,
           linksByFolder,
+          (occurrences ??= new Map<string, string>()),
         );
       }
       options.signal?.throwIfAborted();

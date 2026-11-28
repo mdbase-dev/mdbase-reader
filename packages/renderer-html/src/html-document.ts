@@ -1,7 +1,10 @@
 import { highlightPalette, outsideArticleAttribute } from "@mdbase-reader/core";
 
 import { annotationHighlightCss } from "./html-css-highlights.js";
+import { applyHtmlTypography } from "./html-typography.js";
 import { sanitizedSvgImage } from "./svg-image.js";
+
+import type { ReadingTypography } from "@mdbase-reader/reading-surface";
 
 const blockedElements = [
   "script",
@@ -64,7 +67,7 @@ function parseHtmlDocument(source: string): Document {
   return parsed;
 }
 
-export function prepareHtmlDocument(source: string): string {
+export function prepareHtmlDocument(source: string, typography?: ReadingTypography): string {
   // A parsed document is inert: nothing loads before its attributes are sanitized below.
   const parsed = parseHtmlDocument(source);
   // Removing these would drop text the original page shows, such as a page wrapped in a form.
@@ -90,6 +93,9 @@ export function prepareHtmlDocument(source: string): string {
   }
   parsed.head.prepend(cspMeta(parsed));
   parsed.head.append(readerStyle(parsed));
+  if (typography) {
+    applyHtmlTypography(parsed, typography);
+  }
   return `<!doctype html>\n${parsed.documentElement.outerHTML}`;
 }
 

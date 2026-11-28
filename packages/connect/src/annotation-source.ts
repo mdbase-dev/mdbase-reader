@@ -10,7 +10,8 @@ import type { MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 
 type FolderLinks = Map<string, { from: string; pathsByLink: Map<string, string[]> }>;
 
-export type AnnotationLinkTargets = Map<string, Map<string, string | undefined>>;
+// null is a resolved occurrence with no record. Undefined means it has not been resolved.
+export type AnnotationLinkTargets = Map<string, Map<string, string | null>>;
 
 /**
  * mdbase resolves an annotation's `source` link, so Reader never guesses a link's target from its
@@ -66,6 +67,7 @@ export async function resolveAnnotationSources(
   options: ReaderRequestOptions = {},
   ids = new Map<string, SourceId | undefined>(),
   linksByFolder: AnnotationLinkTargets = new Map(),
+  occurrences = new Map<string, string>(),
 ): Promise<Map<string, SourceId | undefined>> {
   const owners = new Map<string, SourceId | undefined>();
   const folders: FolderLinks = new Map();
@@ -75,25 +77,24 @@ export async function resolveAnnotationSources(
     (target ? ids.get(target) : undefined) ?? legacySourceId(reference);
   for (const annotation of annotations) {
     const { path, reference } = annotation;
-    const link = linkOccurrence(reference);
+    const link = linkOccurrence(reference, occurrences);
     if (!link) {
       owners.set(path, legacySourceId(reference));
       continue;
     }
     // A link resolves against its note's folder alone (spec 08).
     const folder = path.slice(0, Math.max(0, path.lastIndexOf("/")));
-    const known = linksByFolder.get(folder);
-    if (known?.has(link)) {
-      const target = known.get(link);
-      if (target && !ids.has(target)) {
-        targets.set(path, target);
-        unresolved.push(annotation);
-      } else {
-        owners.set(path, ownerOf(target, reference));
+    const target = linksByFolder.get(folder)?.get(link);
+    if (target === undefined) {
+      addFolderLink(folders, folder, link, path);
+    } else {
+      const owner = target ? ids.get(target) : undefined;
+      if (owner || !target || ids.has(target)) {
+        owners.set(path, owner ?? legacySourceId(reference));
+        continue;
       }
-      continue;
+      targets.set(path, target);
     }
-    addFolderLink(folders, folder, link, path);
     unresolved.push(annotation);
   }
   if (!unresolved.length) {
@@ -133,12 +134,12 @@ async function resolveFolderLinks(
   for (const [folder, { from, pathsByLink }] of folders) {
     const links = [...pathsByLink.keys()];
     const resolved = await resolveLinksFrom(client, from, links, options);
-    const known = linksByFolder.get(folder) ?? new Map<string, string | undefined>();
+    const known = linksByFolder.get(folder) ?? new Map<string, string | null>();
     let index = 0;
     for (const [link, paths] of pathsByLink) {
       const resolution = resolved[index++];
       const target = resolution?.kind === "record" ? resolution.path : undefined;
-      known.set(link, target);
+      known.set(link, target ?? null);
       if (target) {
         for (const path of paths) {
           targets.set(path, target);
@@ -157,6 +158,9 @@ async function readSourceIds(
   options: ReaderRequestOptions,
 ): Promise<void> {
   const unknown = paths.filter((path) => !ids.has(path));
+  if (!unknown.length) {
+    return;
+  }
   const records = await mapConcurrent(unknown, readerConnectBulkConcurrency, (path) =>
     client.find(
       { path },
@@ -171,12 +175,21 @@ async function readSourceIds(
 }
 
 /** A frontmatter link as the resolver takes it; a bare value is read as a wikilink target. */
-function linkOccurrence(value: unknown): string | undefined {
-  const raw = stringField(value);
+function linkOccurrence(value: unknown, occurrences: Map<string, string>): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const known = occurrences.get(value);
+  if (known !== undefined) {
+    return known;
+  }
+  const raw = value.trim();
   if (!raw) {
     return undefined;
   }
-  return /^!?\[\[[^\]]+\]\]$|^!?\[[^\]]*\]\([^)]+\)$/u.test(raw) ? raw : `[[${raw}]]`;
+  const link = /^!?\[\[[^\]]+\]\]$|^!?\[[^\]]*\]\([^)]+\)$/u.test(raw) ? raw : `[[${raw}]]`;
+  occurrences.set(value, link);
+  return link;
 }
 
 /**

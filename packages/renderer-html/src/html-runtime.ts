@@ -250,8 +250,9 @@ export class HtmlDocumentRuntime {
   }
 
   public setTypography(typography: ReadingTypography): void {
-    applyHtmlTypography(this.#document, typography);
-    this.#markers.layout();
+    if (applyHtmlTypography(this.#document, typography)) {
+      this.#markers.layout();
+    }
   }
 
   public clearSelection(): void {

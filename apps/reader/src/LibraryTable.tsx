@@ -34,6 +34,8 @@ import type { ReadingStatus, SourceId, SourceSummary } from "@mdbase-reader/core
 export const libraryRowHeight = 48;
 const headerHeight = 32;
 
+export type LibraryAnnotationCounts = Pick<ReadonlyMap<SourceId, number>, "get">;
+
 export interface LibraryTableProps {
   readonly sources: readonly SourceSummary[];
   readonly rowIds: readonly SourceId[];
@@ -44,7 +46,7 @@ export interface LibraryTableProps {
   readonly properties: readonly { readonly key: string; readonly label?: string }[];
   readonly propertyKeys: readonly string[];
   readonly valuesByPath: ReadonlyMap<string, Readonly<Record<string, unknown>>>;
-  readonly annotationCounts: ReadonlyMap<SourceId, number> | null;
+  readonly annotationCounts: LibraryAnnotationCounts | null;
   readonly focused: boolean;
   readonly selection: RowSelection;
   readonly onSelectionChange: (selection: RowSelection) => void;

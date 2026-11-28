@@ -8,7 +8,7 @@ const faces: Record<ReadingTypography["face"], string> = {
 };
 
 /** Overrides the saved page's base size, face and measure with the reader's settings. */
-export function applyHtmlTypography(document: Document, typography: ReadingTypography): void {
+export function applyHtmlTypography(document: Document, typography: ReadingTypography): boolean {
   let style = document.head.querySelector<HTMLStyleElement>(
     "style[data-mdbase-reader='typography']",
   );
@@ -19,6 +19,11 @@ export function applyHtmlTypography(document: Document, typography: ReadingTypog
   }
   const scale = Math.max(0.8, Math.min(1.6, typography.scale));
   const measure = readingMeasureCharacters[typography.measure];
-  style.textContent = `body { font-size: ${String(18 * scale)}px; font-family: ${faces[typography.face]}; max-width: calc(${String(measure)}ch + 6rem); }
+  const css = `body { font-size: ${String(18 * scale)}px; font-family: ${faces[typography.face]}; max-width: calc(${String(measure)}ch + 6rem); }
     @media (max-width: 640px) { body { font-size: ${String(17 * scale)}px; } }`;
+  if (style.textContent === css) {
+    return false;
+  }
+  style.textContent = css;
+  return true;
 }

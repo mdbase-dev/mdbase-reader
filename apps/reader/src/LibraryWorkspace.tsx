@@ -55,6 +55,7 @@ import { useLibraryWrites } from "./use-library-writes.js";
 import { useRovingControls } from "./use-roving-controls.js";
 import "./library.css";
 
+import type { LibraryAnnotationCounts } from "./LibraryTable.js";
 import type { BibliographyExportController } from "./use-bibliography-export.js";
 import type { MdbaseLibraryViewsController } from "./use-mdbase-library-views.js";
 import type { ReaderWorkspaceGateway } from "./workspace-model.js";
@@ -92,7 +93,7 @@ export function LibraryWorkspace({
   readonly onRemoveSource?: (source: SourceSummary) => void;
   /** Opens an annotation in its source's document; defaults to opening the source. */
   readonly onOpenAnnotation?: (annotation: Annotation, beside: boolean) => void;
-  readonly annotationCounts?: ReadonlyMap<SourceId, number> | null;
+  readonly annotationCounts?: LibraryAnnotationCounts | null;
   readonly bibliographyExport: BibliographyExportController;
   readonly onSourceChanged?: (source: Source) => void;
   readonly changeStatus?: ((source: SourceSummary, status: ReadingStatus) => void) | undefined;
@@ -767,7 +768,7 @@ export function LibraryWorkspace({
   );
 }
 
-const noCounts: ReadonlyMap<SourceId, number> = new Map();
+const noCounts: LibraryAnnotationCounts = new Map<SourceId, number>();
 
 function statusFilterOptions(): SelectItems<LibraryViewConfiguration["filter"]["status"]> {
   return [

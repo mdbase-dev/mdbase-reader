@@ -1,5 +1,6 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
+import { defaultReadingTypography } from "@mdbase-reader/reading-surface";
 import { useEffect, useRef } from "react";
 
 import { prepareHtmlDocument } from "./html-document.js";
@@ -38,7 +39,9 @@ export function HtmlViewerSurface({
         if (!response.ok) {
           throw new Error(translate`HTML download failed with HTTP ${String(response.status)}.`);
         }
-        const prepared = prepareHtmlDocument(await response.text());
+        const source = await response.text();
+        lifetime.signal.throwIfAborted();
+        const prepared = prepareHtmlDocument(source, defaultReadingTypography);
         await loadFrame(frame, prepared, lifetime.signal);
         if (lifetime.signal.aborted) {
           return;
