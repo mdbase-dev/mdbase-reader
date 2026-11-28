@@ -1,7 +1,7 @@
 import { useLingui } from "@lingui/react/macro";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
-  useEffect,
+  useCallback,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -72,6 +72,7 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const gridRef = useRef<HTMLDivElement>(null);
   const table = useLibraryColumns(props);
   const rowIds = useMemo(() => sources.map(({ id }) => id), [sources]);
+  const getItemKey = useCallback((index: number) => sources[index]?.id ?? index, [sources]);
   const offset = useOffsetTop(gridRef);
   // TanStack Virtual returns fresh functions each render; the React Compiler must not memoize them.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -79,14 +80,14 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     count: sources.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => rowHeight,
-    getItemKey: (index) => sources[index]?.id ?? index,
+    getItemKey,
     overscan: 10,
     scrollPaddingStart: headerHeight,
     scrollMargin: offset + headerHeight,
   });
   const margin = offset + headerHeight;
   useLayoutEffect(() => virtualizer.measure(), [virtualizer, rowHeight]);
-  const focusRow = useRowFocus(gridRef);
+  const focusRow = useRowFocus(gridRef, sources);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
   const createChapters = useSourcePartCreation();
@@ -365,18 +366,31 @@ export function useOffsetTop(ref: RefObject<HTMLElement | null>): number {
 }
 
 /** Focuses a row once it has rendered, after keyboard travel scrolls it into view. */
-function useRowFocus(gridRef: RefObject<HTMLElement | null>): (index: number) => void {
-  const [request, setRequest] = useState<{ readonly index: number } | null>(null);
-  useEffect(() => {
-    if (!request) {
-      return undefined;
+function useRowFocus(
+  gridRef: RefObject<HTMLElement | null>,
+  sources: readonly SourceSummary[],
+): (index: number) => void {
+  const pending = useRef<{ index: number; id: SourceId } | null>(null);
+  // A virtual scroll can mount the destination several commits after the key event.
+  useLayoutEffect(() => {
+    const target = pending.current;
+    if (!target) {
+      return;
     }
-    const frame = requestAnimationFrame(() =>
-      gridRef.current
-        ?.querySelector<HTMLElement>(`[data-row-index="${String(request.index)}"]`)
-        ?.focus({ preventScroll: true }),
+    if (sources[target.index]?.id !== target.id) {
+      pending.current = null;
+      return;
+    }
+    const row = gridRef.current?.querySelector<HTMLElement>(
+      `[data-row-index="${String(target.index)}"]`,
     );
-    return () => cancelAnimationFrame(frame);
-  }, [gridRef, request]);
-  return (index) => setRequest({ index });
+    if (row) {
+      pending.current = null;
+      row.focus({ preventScroll: true });
+    }
+  });
+  return (index) => {
+    const source = sources[index];
+    pending.current = source ? { index, id: source.id } : null;
+  };
 }

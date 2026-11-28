@@ -90,6 +90,11 @@ try {
   await page.getByText("The Principles of Psychology", { exact: true }).first().waitFor();
   assert.equal(offline.status(), 200);
   assert.equal(await page.title(), "mdbase reader");
+  await context.setOffline(false);
+  const reconnected = await page.reload();
+  await page.getByText("The Principles of Psychology", { exact: true }).first().waitFor();
+  assert.equal(reconnected.status(), 200);
+  assert.equal(await page.evaluate(() => navigator.onLine), true);
   assert.deepEqual(pageErrors, []);
   console.log(
     JSON.stringify({
@@ -98,6 +103,7 @@ try {
       failedRequests: failed,
       onlineFailedRequests,
       offlineReload: offline.status(),
+      reconnectedReload: reconnected.status(),
       pageErrors,
     }),
   );

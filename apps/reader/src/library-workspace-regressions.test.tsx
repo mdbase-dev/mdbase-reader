@@ -48,6 +48,7 @@ afterEach(() => {
 async function renderLibrary(
   sources: readonly Source[],
   indexed: readonly SourceSummary[],
+  executeLibraryView = vi.fn().mockResolvedValue({ sources, valuesByPath: new Map() }),
 ): Promise<ReturnType<typeof vi.fn>> {
   const saveReadingStatus = vi.fn((id: SourceId, status: ReadingStatus) =>
     Promise.resolve({
@@ -56,7 +57,8 @@ async function renderLibrary(
     }),
   );
   const gateway = {
-    executeLibraryView: vi.fn().mockResolvedValue({ sources, valuesByPath: new Map() }),
+    executeLibraryView,
+    allAnnotations: vi.fn().mockResolvedValue([]),
     searchText: vi.fn().mockResolvedValue([
       {
         sourceId: sources[0]?.id,
@@ -150,6 +152,23 @@ it("saves and undoes a displayed row absent from the progressive global index", 
   await clickText("Undo");
   expect(save).toHaveBeenLastCalledWith(source.id, "queued");
   expect(host.querySelector("[data-table]")?.textContent).toContain("Queued");
+});
+
+it("clears the view failure after a successful reread", async () => {
+  const sources = [partSource("Recovered")];
+  const execute = vi
+    .fn()
+    .mockRejectedValueOnce(new Error("connection_unavailable"))
+    .mockResolvedValue({ sources, valuesByPath: new Map() });
+  await renderLibrary(sources, sources, execute);
+  expect(host.querySelector(".library-view-problem")?.textContent).toBe(
+    "Reader could not execute this mdbase view.",
+  );
+  await clickText("Annotations");
+  await clickText("Sources");
+  expect(execute).toHaveBeenCalledTimes(2);
+  expect(host.querySelector(".library-view-problem")).toBeNull();
+  expect(host.querySelector("[data-table]")?.textContent).toContain("Recovered");
 });
 
 it("lists note and annotation matches above the table and focuses them first", async () => {

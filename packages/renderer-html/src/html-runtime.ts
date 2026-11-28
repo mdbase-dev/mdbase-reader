@@ -261,6 +261,7 @@ export class HtmlDocumentRuntime {
     if (!this.#revealed.includes(range)) {
       this.#revealed = [...this.#revealed, range];
       this.#showRevealed();
+      this.#markers.layout();
     }
   }
 
@@ -299,7 +300,6 @@ export class HtmlDocumentRuntime {
     for (const [element, extent] of shown) {
       element.setAttribute(outsideArticleRevealedAttribute, extent);
     }
-    this.#markers.layout();
   }
 
   public destroy(): void {

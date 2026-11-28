@@ -84,3 +84,53 @@ These measure only the shell, not authenticated collection readiness or document
 The engine's separate optimized 10,000-record synthetic benchmark excludes initial cache
 construction and compares a bounded first page with full materialization; see its documentation.
 Live LAB acceptance and a production collection trace remain separate validation steps.
+
+## Large-library and long-article regression fixtures
+
+The library fixture uses in-memory SDK pages and the production filtering and search
+code. Each annotation search returns 200 matching annotations per owner. The browser
+fixture runs Reader against an intercepted collection on loopback. It opens a real
+sandboxed HTML document, saves selections through the toolbar and reloads the page.
+CI checks the restored CSS Highlight ranges, their text, owning elements, geometry
+and background colour for the h1 title, h2 “Abstract”, h3 and first paragraph.
+
+The following medians compare `d94b99a6` (after #352) with this change on 2026-11-28.
+Each timed operation has one warm-up and seven measured samples. The Vitest runner
+used Node 22.22.0 on the shared build VM. Chromium 156.0.8078.4 ran locally.
+
+| Vitest operation (ms)               | 2,000 before | 2,000 after | 10,000 before | 10,000 after |
+| ----------------------------------- | -----------: | ----------: | ------------: | -----------: |
+| Numeric field filter and sort       |         2.07 |        0.74 |          9.09 |         1.78 |
+| Three title, author and tag queries |         2.57 |        2.55 |         14.90 |        14.97 |
+| Annotation search result processing |         2.28 |        1.63 |          5.77 |         5.37 |
+| Tag suggestions                     |         0.54 |        0.67 |          0.21 |         0.26 |
+
+Numeric comparisons now skip display-value formatting. Annotation search resolves
+each matching annotation's owner using the replica's link resolver, caches owner IDs
+across pages and keeps the first three excerpts per owner. Its CPU figures exclude
+SDK transport and query execution. Reader's Sources sidebar lists saved views, open
+sources and recent sources. The tag suggestion menu samples the first 2,000 sources.
+Reader has no folder-count sidebar.
+
+| Chromium operation (ms)                                | Before | After |
+| ------------------------------------------------------ | -----: | ----: |
+| 10,000-row grid scroll until target row mounts         |   23.0 |  19.1 |
+| Prepare HTML, load iframe and lay out 1,000 paragraphs |   27.1 |  25.4 |
+| Locate and lay out 50 quote-only highlights            |   73.6 |   3.8 |
+| Locate and lay out 200 quote-only highlights           |  286.9 |   8.5 |
+| Read HTML import metadata (1,000 paragraphs)           |    0.5 |   0.4 |
+| Read EPUB import metadata (one chapter)                |    3.4 |   3.2 |
+
+Highlight timings start with a loaded article and a fresh runtime per sample. Each
+quote-only target searches the body. The runtime now prepares the normalized text
+once per root, draws the CSS ranges and lays out margin markers. The browser regression
+also exercises selections with element-specific selectors. Import timings cover metadata
+extraction from local bytes. Grid timings include animation-frame scheduling. At both
+library sizes the grid mounted 20, 25 and 26 data rows at the top at viewport widths
+of 360, 768 and 1280 pixels respectively (900 pixels high).
+
+Run `rpnpm --filter @mdbase-reader/app run bench:library` for the CPU fixture.
+After installing workspace dependencies and Playwright Chromium, run
+`node apps/reader/scripts/audit-library-article.mjs` for the browser fixture.
+It starts and closes its own loopback server. To compare an earlier commit, copy
+the two benchmark files into a worktree at that commit and run the same commands.

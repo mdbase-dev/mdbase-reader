@@ -14,14 +14,15 @@ export function readerErrorMessage(reason: unknown, fallback: string): string {
   if (code === "query_budget_exceeded") {
     return t`This annotation query is too large. Try again. If it still fails, contact support.`;
   }
-  if (isMdbaseError(reason)) {
-    return describeError(reason)?.message ?? fallback;
+  const message = isMdbaseError(reason)
+    ? describeError(reason)?.message
+    : reason instanceof Error
+      ? reason.message
+      : typeof reason === "string"
+        ? reason
+        : undefined;
+  if (!message?.trim() || /^[a-z][a-z0-9]*(?:_[a-z0-9]+)+$/u.test(message.trim())) {
+    return fallback;
   }
-  if (reason instanceof Error && reason.message.trim()) {
-    return reason.message;
-  }
-  if (typeof reason === "string" && reason.trim()) {
-    return reason;
-  }
-  return fallback;
+  return message;
 }
