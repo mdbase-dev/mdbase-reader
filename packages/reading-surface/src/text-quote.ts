@@ -13,7 +13,7 @@ export function locateTextQuote(root: Element, quote: TextQuote): Range | null {
 /** Reuse an index while a caller guarantees that the root's text has not changed. */
 export function createTextQuoteLocator(root: Element): (quote: TextQuote) => Range | null {
   const index = textIndex(root);
-  const matchQuote = textQuoteMatcher(index.text);
+  const matchQuote = textQuoteMatcher(index.text, "range");
   return (quote) => {
     const match = matchQuote(quote);
     return match ? rangeAt(root.ownerDocument, index.nodes, match.start, match.end) : null;

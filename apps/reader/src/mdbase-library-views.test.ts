@@ -78,6 +78,24 @@ describe("mdbase library views", () => {
     ]);
   });
 
+  it("keeps title ties stable in both directions when filtering mixed-case tags", () => {
+    const rows = [
+      source("b", "Same", "reading", ["Study"]),
+      source("c", "Last", "reading", ["study"]),
+      source("a", "Same", "reading", ["STUDY"]),
+    ];
+    const base = defaultLibraryViewConfiguration;
+    const filter = { ...base.filter, query: "author", tag: "study" };
+    for (const sortDirection of ["asc", "desc"] as const) {
+      const configuration = { ...base, sortDirection };
+      const filtered = applyLibraryViewConfiguration(rows, { ...configuration, filter });
+      expect(filtered.map((row) => row.id)).toEqual(
+        sortDirection === "asc" ? ["c", "b", "a"] : ["b", "a", "c"],
+      );
+    }
+    expect(rows.map((row) => row.id)).toEqual(["b", "c", "a"]);
+  });
+
   it("round-trips Reader presentation options", () => {
     const configuration = libraryViewConfiguration({
       type: "table",

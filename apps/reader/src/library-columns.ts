@@ -131,6 +131,9 @@ export function propertyValue(
   if (selected && key in selected) {
     return selected[key];
   }
+  if (!key.includes(".")) {
+    return source.properties?.[key];
+  }
   let current: unknown = source.properties;
   for (const part of key.split(".")) {
     if (typeof current !== "object" || current === null || Array.isArray(current)) {
