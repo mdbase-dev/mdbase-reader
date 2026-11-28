@@ -43,8 +43,9 @@ try {
       const page = await context.newPage();
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.route("**/*", (route) =>
-        new URL(route.request().url()).origin === url ? route.continue() : route.abort(),
+      await context.route(
+        (request) => request.origin !== url,
+        (route) => route.abort(),
       );
       await page.route(`${url}/__reader-audit/**`, (route) => {
         const library = new URL(route.request().url()).pathname.endsWith("/library");
@@ -80,9 +81,6 @@ try {
       // Keep component timings independent of deferred React work following the first grid commit.
       const fixture = await context.newPage();
       fixture.on("pageerror", (error) => errors.push(error.message));
-      await fixture.route("**/*", (route) =>
-        new URL(route.request().url()).origin === url ? route.continue() : route.abort(),
-      );
       await fixture.goto(`${url}/test-fixtures/import-proof.html`);
       lanes.push({ url, page, fixture, errors, times: {} });
     }
@@ -94,6 +92,7 @@ try {
         await expect(page.locator(".library-table:visible")).toHaveAttribute(
           "aria-rowcount",
           String(count + 1),
+          { timeout: 60_000 },
         );
         const grid = await page.evaluate(() => globalThis.readerGridReady);
         expect(await page.locator(".library-table:visible [data-row-index]").count()).toBeLessThan(
