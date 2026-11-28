@@ -8,6 +8,8 @@ import {
 
 import type { MdbaseClient, RecordView } from "@mdbase-dev/sdk";
 
+export type AnnotationLinkTargets = Map<string, Map<string, string | undefined>>;
+
 /**
  * mdbase resolves an annotation's `source` link, so Reader never guesses a link's target from its
  * text: a link can name a path or a shortened filename, and mdbase alone knows which record it
@@ -61,8 +63,9 @@ export async function resolveAnnotationSources(
   annotations: readonly { readonly path: string; readonly reference: unknown }[],
   options: ReaderRequestOptions = {},
   ids = new Map<string, string | undefined>(),
+  linksByFolder: AnnotationLinkTargets = new Map(),
 ): Promise<Map<string, SourceId | undefined>> {
-  const targets = await sourceLinkTargets(client, annotations, options);
+  const targets = await sourceLinkTargets(client, annotations, options, linksByFolder);
   await readSourceIds(client, [...new Set(targets.values())], ids, options);
   return new Map(
     annotations.map(({ path, reference }) => {
@@ -78,29 +81,50 @@ async function sourceLinkTargets(
   client: MdbaseClient,
   annotations: readonly { readonly path: string; readonly reference: unknown }[],
   options: ReaderRequestOptions,
+  linksByFolder: AnnotationLinkTargets,
 ): Promise<Map<string, string>> {
-  // A link resolves against its note's folder alone (spec 08), so one request serves a folder.
-  const folders = new Map<string, { from: string; paths: string[]; links: string[] }>();
+  // A link resolves against its note's folder alone (spec 08). Ask once per distinct
+  // occurrence, including across pages when the caller supplies a search-scoped cache.
+  const folders = new Map<string, { from: string; pathsByLink: Map<string, string[]> }>();
+  const targets = new Map<string, string>();
   for (const { path, reference } of annotations) {
     const link = linkOccurrence(reference);
     if (!link) {
       continue;
     }
     const folder = path.slice(0, Math.max(0, path.lastIndexOf("/")));
-    const group = folders.get(folder) ?? { from: path, paths: [], links: [] };
-    group.paths.push(path);
-    group.links.push(link);
+    const known = linksByFolder.get(folder);
+    if (known?.has(link)) {
+      const target = known.get(link);
+      if (target) {
+        targets.set(path, target);
+      }
+      continue;
+    }
+    const group = folders.get(folder) ?? { from: path, pathsByLink: new Map<string, string[]>() };
+    const paths = group.pathsByLink.get(link);
+    if (paths) {
+      paths.push(path);
+    } else {
+      group.pathsByLink.set(link, [path]);
+    }
     folders.set(folder, group);
   }
-  const targets = new Map<string, string>();
-  for (const { from, paths, links } of folders.values()) {
+  for (const [folder, { from, pathsByLink }] of folders) {
+    const links = [...pathsByLink.keys()];
     const resolved = await resolveLinksFrom(client, from, links, options);
-    for (const [index, path] of paths.entries()) {
-      const target = resolved[index];
-      if (target?.kind === "record" && target.path) {
-        targets.set(path, target.path);
+    const known = linksByFolder.get(folder) ?? new Map<string, string | undefined>();
+    for (const [index, [link, paths]] of [...pathsByLink].entries()) {
+      const resolution = resolved[index];
+      const target = resolution?.kind === "record" ? resolution.path : undefined;
+      known.set(link, target);
+      if (target) {
+        for (const path of paths) {
+          targets.set(path, target);
+        }
       }
     }
+    linksByFolder.set(folder, known);
   }
   return targets;
 }

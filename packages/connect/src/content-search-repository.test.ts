@@ -100,6 +100,38 @@ describe("ConnectContentSearchRepository", () => {
       records.slice(0, 3).map((record) => record.path),
     );
     expect(find).toHaveBeenCalledTimes(1);
+    expect(links.resolveLinks).toHaveBeenCalledExactlyOnceWith(
+      records[0]?.path,
+      ["[[My paper|Study]]"],
+      {},
+    );
+  });
+
+  it("resolves identical links independently by folder and on each search", async () => {
+    const first = testRecord({ path: "one/Owner.md", effective: { id: "first" } });
+    const second = testRecord({ path: "two/Owner.md", effective: { id: "second" } });
+    const note = (path: string): RecordView =>
+      testRecord({
+        path,
+        effective: { type: "reader-annotation", source: "[[Owner]]" },
+        body: "Matched passage",
+      });
+    let moved = false;
+    const links = linkIndex([first, second], (_link, from) =>
+      !moved && from.startsWith("one/") ? first.path : second.path,
+    );
+    const repository = new ConnectContentSearchRepository(
+      mockSdk({
+        ...links,
+        find: ({ path }: { path: string }) => Promise.resolve(path === first.path ? first : second),
+        pages: () => queryStream([page([note("one/a.md"), note("two/a.md")])]),
+      }),
+    );
+    const search = async (): Promise<string[]> =>
+      (await repository.search(collectionId("reading"), "matched")).map(({ sourceId }) => sourceId);
+    expect(await search()).toEqual(["first", "second"]);
+    moved = true;
+    expect(await search()).toEqual(["second"]);
   });
 
   it("includes bounded passage context without losing record destinations", async () => {

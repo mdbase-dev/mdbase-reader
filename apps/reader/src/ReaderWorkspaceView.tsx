@@ -19,6 +19,7 @@ import { inspectorSourceForTab } from "./inspector-source.js";
 import { InspectorPane, preloadInspectorTools } from "./InspectorPane.js";
 import { LibraryNavigator } from "./LibraryNavigator.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
+import { defaultLibraryView } from "./mdbase-library-views.js";
 import { mobileSourceBar } from "./mobile-source-bar.js";
 import { OverlayPresence } from "./OverlayPresence.js";
 import { followedPane, notesView } from "./panel-workspace-state.js";
@@ -147,6 +148,9 @@ export function ReaderWorkspaceView({
   const shellRef = useRef<HTMLDivElement>(null);
   useShellChrome(shellRef, model, mobile);
   const annotationCounts = useLibraryAnnotationCounts(model);
+  const urlLibraryTab = sourceWorkspace.layout.panes
+    .flatMap(({ tabs }) => tabs)
+    .find((tab) => tab.kind === "library" && tab.libraryViewId === defaultLibraryView.key);
   const notices = useShellNotices(
     model.deploymentUpdateAvailable,
     model.gateway.createFollowThrough,
@@ -322,9 +326,10 @@ export function ReaderWorkspaceView({
           }}
           renderLibrary={(workspaceTab, focused) => {
             const libraryView = model.libraryViews.view(workspaceTab.libraryViewId);
+            const syncFilterUrl = workspaceTab.id === urlLibraryTab?.id;
             return (
               <LibraryWorkspace
-                key={libraryView.key}
+                key={`${libraryView.key}:${String(syncFilterUrl)}`}
                 view={libraryView}
                 availableViews={model.libraryViews.views}
                 allSources={library.sources}
@@ -333,6 +338,7 @@ export function ReaderWorkspaceView({
                 onOpenSourceView={(id, view) => sourceWorkspace.openView(id, view)}
                 controller={model.libraryViews}
                 focused={focused}
+                syncFilterUrl={syncFilterUrl}
                 // A tab's own view switcher changes that tab, even one pinned to its view.
                 onOpenView={(next) => dock.showLibraryView(workspaceTab.id, next.key, next.name)}
                 onOpenSource={(id) => sourceWorkspace.open(id)}

@@ -130,19 +130,23 @@ export function libraryViewConfiguration(presentation: unknown): LibraryViewConf
     ? options["sortField"]
     : defaultLibraryViewConfiguration.sortField;
   const sortDirection = options["sortDirection"] === "asc" ? "asc" : "desc";
-  const filter = objectValue(options["filter"]);
   return {
     columns: columns.length > 0 ? columns : defaultLibraryViewConfiguration.columns,
     columnWidths: parseColumnWidths(options["columnWidths"]),
     sortField,
     sortDirection,
-    filter: {
-      query: typeof filter["query"] === "string" ? filter["query"] : "",
-      status: isStatus(filter["status"]) ? filter["status"] : "all",
-      format: isFormat(filter["format"]) ? filter["format"] : "all",
-      tag: typeof filter["tag"] === "string" ? filter["tag"] : "",
-      conditions: parseConditions(filter["conditions"]),
-    },
+    filter: parseLibraryViewFilter(options["filter"]),
+  };
+}
+
+export function parseLibraryViewFilter(value: unknown): LibraryViewFilter {
+  const filter = objectValue(value);
+  return {
+    query: typeof filter["query"] === "string" ? filter["query"] : "",
+    status: isStatus(filter["status"]) ? filter["status"] : "all",
+    format: isFormat(filter["format"]) ? filter["format"] : "all",
+    tag: typeof filter["tag"] === "string" ? filter["tag"] : "",
+    conditions: parseConditions(filter["conditions"]),
   };
 }
 
@@ -232,20 +236,48 @@ export function applyLibraryViewConfiguration(
     ) {
       return false;
     }
-    return (
-      !query ||
-      [
-        source.title,
-        ...source.creators,
-        ...source.tags.map(String),
-        source.partOf ? parentTitle(source.partOf) : undefined,
-      ]
-        .join(" ")
-        .toLocaleLowerCase()
-        .includes(query)
-    );
+    return !query || metadataSearchText(source, parentTitle).includes(query);
   });
-  return filtered.sort((left, right) => compareSources(left, right, configuration));
+  const { sortField, sortDirection } = configuration;
+  const direction = sortDirection === "asc" ? 1 : -1;
+  const key = propertyKey(sortField);
+  if (key !== null) {
+    // Dotted paths and formatted property values are independent of the comparison pair.
+    return filtered
+      .map((source) => ({ source, value: propertySortValue(propertyValue(source, key)) }))
+      .sort((left, right) => direction * compareSortValues(left.value, right.value))
+      .map(({ source }) => source);
+  }
+  return filtered.sort(
+    (left, right) =>
+      direction * compareSortValues(sortValue(left, sortField), sortValue(right, sortField)),
+  );
+}
+
+// Summaries are replaced when edited. Chapter text also depends on the current parent, so
+// its search text is derived from the current library snapshot.
+const searchTextBySource = new WeakMap<SourceSummary, string>();
+
+function metadataSearchText(
+  source: SourceSummary,
+  parentTitle: (id: SourceSummary["id"]) => string | undefined,
+): string {
+  const cached = searchTextBySource.get(source);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const text = [
+    source.title,
+    ...source.creators,
+    ...source.tags,
+    source.partOf ? parentTitle(source.partOf) : undefined,
+  ]
+    .join(" ")
+    .toLocaleLowerCase();
+  if (!source.partOf) {
+    searchTextBySource.set(source, text);
+  }
+  return text;
 }
 
 /** A source's format; `note` means no file is attached, `file` an unrecognised one. */
@@ -332,38 +364,29 @@ function columnSelection(column: LibraryColumn): string {
   }
 }
 
-function compareSources(
-  left: SourceSummary,
-  right: SourceSummary,
-  configuration: LibraryViewConfiguration,
-): number {
-  const key = propertyKey(configuration.sortField);
-  const value = (source: SourceSummary): string | number => {
-    if (key !== null) {
-      return propertySortValue(propertyValue(source, key));
-    }
-    switch (configuration.sortField) {
-      case "title":
-        return source.title;
-      case "creator":
-        return source.creators[0] ?? "";
-      case "published":
-        return Number(source.published ?? 0);
-      case "status":
-        return source.readingStatus ?? "inbox";
-      case "saved":
-        return source.id;
-      case "opened":
-        return source.reading?.lastOpenedAt ?? "";
-      default:
-        return "";
-    }
-  };
-  const a = value(left);
-  const b = value(right);
-  const comparison =
-    typeof a === "number" && typeof b === "number" ? a - b : String(a).localeCompare(String(b));
-  return configuration.sortDirection === "asc" ? comparison : -comparison;
+function sortValue(source: SourceSummary, field: LibrarySortField): string | number {
+  switch (field) {
+    case "title":
+      return source.title;
+    case "creator":
+      return source.creators[0] ?? "";
+    case "published":
+      return Number(source.published ?? 0);
+    case "status":
+      return source.readingStatus ?? "inbox";
+    case "saved":
+      return source.id;
+    case "opened":
+      return source.reading?.lastOpenedAt ?? "";
+    default:
+      return "";
+  }
+}
+
+function compareSortValues(a: string | number, b: string | number): number {
+  return typeof a === "number" && typeof b === "number"
+    ? a - b
+    : String(a).localeCompare(String(b));
 }
 
 function viewIdentifier(name: string): string {

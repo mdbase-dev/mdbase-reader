@@ -154,7 +154,13 @@ export function createReaderRuntimeServices(storage: KeyValueStorage): {
     clock: { now: () => dateTime(new Date().toISOString()) },
     hasher: {
       async sha256(bytes) {
-        const buffer = await crypto.subtle.digest("SHA-256", bytes.slice().buffer);
+        // Web Crypto snapshots the passed view, including its offset and length. Copy only
+        // SharedArrayBuffer-backed inputs, which Web Crypto does not accept.
+        const input =
+          bytes.buffer instanceof ArrayBuffer
+            ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+            : new Uint8Array(bytes);
+        const buffer = await crypto.subtle.digest("SHA-256", input);
         const digest = Array.from(new Uint8Array(buffer), (byte) =>
           byte.toString(16).padStart(2, "0"),
         ).join("");

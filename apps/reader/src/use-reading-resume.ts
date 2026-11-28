@@ -72,7 +72,7 @@ export function useReadingResume(input: {
     let unsubscribe: (() => void) | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let latest: ReaderLocator | null = null;
-    let progress: number | null | undefined;
+    let measureProgress: ((locator: ReaderLocator) => number | null) | undefined;
     const saveForSource = saveRef.current;
     const persist = (
       locator: ReaderLocator,
@@ -102,6 +102,13 @@ export function useReadingResume(input: {
           }
         });
     };
+    const flush = (report = true): void => {
+      if (latest) {
+        const locator = latest;
+        latest = null;
+        persist(locator, measureProgress?.(locator), report);
+      }
+    };
     void (async () => {
       const range = await resolveSourceReadingRange(current, surface);
       if (!isActive() || (range && !range.valid)) {
@@ -112,11 +119,13 @@ export function useReadingResume(input: {
         return;
       }
       setState({ status: "idle" });
+      measureProgress = range?.valid
+        ? (locator) => range.measure(locator)?.progress ?? null
+        : undefined;
       const update = (locator: ReaderLocator): void => {
         latest = locator;
-        progress = range?.valid ? (range.measure(locator)?.progress ?? null) : undefined;
         clearTimeout(timer);
-        timer = setTimeout(() => persist(locator, progress), 1_200);
+        timer = setTimeout(flush, 1_200);
       };
       unsubscribe = surface.locations.subscribe(update);
       const initial = surface.currentLocation();
@@ -140,9 +149,7 @@ export function useReadingResume(input: {
       // resuming from our own write would pull a reader browsing outside a chapter to its start.
       unsubscribe?.();
       clearTimeout(timer);
-      if (latest) {
-        persist(latest, progress, false);
-      }
+      flush(false);
     };
   }, [contextKey, sourceId, surface]);
 

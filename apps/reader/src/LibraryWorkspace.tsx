@@ -48,6 +48,7 @@ import { Menu } from "./Menu.js";
 import { OverlayPresence } from "./OverlayPresence.js";
 import { ReaderNotice } from "./ReaderNotice.js";
 import { useInspectedLibraryRow } from "./use-inspected-library-row.js";
+import { useLibraryFilter } from "./use-library-filter.js";
 import { layoutOf, useLibraryLayoutDraft } from "./use-library-layout-draft.js";
 import { useLibraryWrites } from "./use-library-writes.js";
 import { useRovingControls } from "./use-roving-controls.js";
@@ -72,6 +73,7 @@ export function LibraryWorkspace({
   gateway,
   controller,
   focused,
+  syncFilterUrl = false,
   onOpenView,
   onOpenSource,
   onOpenBeside,
@@ -101,6 +103,7 @@ export function LibraryWorkspace({
   readonly gateway: ReaderWorkspaceGateway;
   readonly controller: MdbaseLibraryViewsController;
   readonly focused: boolean;
+  readonly syncFilterUrl?: boolean;
   readonly onOpenView: (view: MdbaseLibraryView) => void;
   readonly onOpenSource: (sourceId: SourceId) => void;
   readonly onOpenBeside: (sourceId: SourceId) => void;
@@ -112,7 +115,7 @@ export function LibraryWorkspace({
   const trailingControls = useRovingControls();
   const collectionKey = allSources[0]?.collectionId ?? "library";
   const [layout, setLayout] = useLibraryLayoutDraft(collectionKey, view);
-  const [filter, setFilter] = useState(view.configuration.filter);
+  const [filter, setFilter] = useLibraryFilter(view.configuration.filter, syncFilterUrl);
   const configuration = useMemo<LibraryViewConfiguration>(
     () => ({ ...layout, filter }),
     [layout, filter],
@@ -431,12 +434,16 @@ export function LibraryWorkspace({
               ) : null}
               <Menu
                 className="library-workspace-more"
-                label={t`Filter`}
+                label={filterCount ? `${t`Filter`} · ${String(filterCount)}` : t`Filter`}
                 title={t`Filter`}
                 trigger={
                   <>
                     <FilterIcon />
-                    {filterCount ? <span className="menu-badge">{filterCount}</span> : null}
+                    {filterCount ? (
+                      <span className="menu-badge" aria-hidden>
+                        {filterCount}
+                      </span>
+                    ) : null}
                   </>
                 }
               >
