@@ -84,13 +84,7 @@ export function textQuoteMatcher(text: string): (quote: TextQuote) => TextQuoteM
     if (!needle) {
       return null;
     }
-    const exact = occurrences(haystack.text, needle, Number.POSITIVE_INFINITY).map((start) => ({
-      start,
-      end: start + needle.length,
-      errors: 0,
-    }));
-    const candidates = exact.length ? exact : approximate(haystack.text, needle);
-    const best = choose(haystack.text, candidates, quote);
+    const best = bestMatch(haystack.text, needle, quote);
     if (!best) {
       return null;
     }
@@ -101,6 +95,45 @@ export function textQuoteMatcher(text: string): (quote: TextQuote) => TextQuoteM
     }
     return { start, end: last + 1, ambiguous: best.ambiguous, approximate: best.errors > 0 };
   };
+}
+
+function bestMatch(
+  text: string,
+  needle: string,
+  quote: TextQuote,
+): (Candidate & { readonly ambiguous: boolean }) | null {
+  const first = text.indexOf(needle);
+  const prefix = normalize(quote.prefix ?? "").text;
+  const suffix = normalize(quote.suffix ?? "").text;
+  if (first === -1) {
+    return choose(text, approximate(text, needle), prefix, suffix);
+  }
+  const second = text.indexOf(needle, first + 1);
+  if (second === -1 || (!prefix && !suffix)) {
+    return { start: first, end: first + needle.length, errors: 0, ambiguous: second !== -1 };
+  }
+  // A full context match has the highest possible score. Find it directly when a quote
+  // repeats, which is common for headings, pull quotes, and highlights of short passages.
+  if (prefix.length + suffix.length >= minimumContext) {
+    const contextual = prefix + needle + suffix;
+    const match = text.indexOf(contextual);
+    if (match !== -1) {
+      const start = match + prefix.length;
+      return {
+        start,
+        end: start + needle.length,
+        errors: 0,
+        ambiguous: text.includes(contextual, match + 1),
+      };
+    }
+  }
+  function* candidates(): Iterable<Candidate> {
+    yield { start: first, end: first + needle.length, errors: 0 };
+    for (let start = second; start !== -1; start = text.indexOf(needle, start + 1)) {
+      yield { start, end: start + needle.length, errors: 0 };
+    }
+  }
+  return choose(text, candidates(), prefix, suffix);
 }
 
 function normalize(value: string): Normalized {
@@ -198,29 +231,41 @@ function approximate(text: string, needle: string): Candidate[] {
 /** The candidate that best fits the text and its recorded context. */
 function choose(
   text: string,
-  candidates: readonly Candidate[],
-  quote: TextQuote,
+  candidates: Iterable<Candidate>,
+  prefix: string,
+  suffix: string,
 ): (Candidate & { readonly ambiguous: boolean }) | null {
-  const prefix = normalize(quote.prefix ?? "").text;
-  const suffix = normalize(quote.suffix ?? "").text;
-  const scored = candidates
-    .map((candidate) => ({
-      ...candidate,
-      context:
-        commonSuffix(
-          text.slice(Math.max(0, candidate.start - prefix.length), candidate.start),
-          prefix,
-        ) + commonPrefix(text.slice(candidate.end, candidate.end + suffix.length), suffix),
-    }))
-    .sort((a, b) => a.errors - b.errors || b.context - a.context);
-  const [best, runnerUp] = scored;
-  if (!best) {
-    return null;
+  let best: Candidate | undefined;
+  let bestContext = -1;
+  let runnerUpContext = -1;
+  for (const candidate of candidates) {
+    if (best && candidate.errors > best.errors) {
+      continue;
+    }
+    const context =
+      commonSuffix(
+        text.slice(Math.max(0, candidate.start - prefix.length), candidate.start),
+        prefix,
+      ) + commonPrefix(text.slice(candidate.end, candidate.end + suffix.length), suffix);
+    if (!best || candidate.errors < best.errors) {
+      best = candidate;
+      bestContext = context;
+      runnerUpContext = -1;
+    } else if (context > bestContext) {
+      best = candidate;
+      runnerUpContext = bestContext;
+      bestContext = context;
+    } else {
+      runnerUpContext = Math.max(runnerUpContext, context);
+    }
   }
-  const ambiguous =
-    runnerUp?.errors === best.errors &&
-    (best.context < minimumContext || runnerUp.context === best.context);
-  return { ...best, ambiguous };
+  return best
+    ? {
+        ...best,
+        ambiguous:
+          runnerUpContext >= 0 && (bestContext < minimumContext || runnerUpContext === bestContext),
+      }
+    : null;
 }
 
 /** Levenshtein distance, stopping early once it must exceed `limit`. */

@@ -1,7 +1,5 @@
 import { t } from "@lingui/core/macro";
 
-// Legacy device-recovery format. New annotation editors only read/remove old entries;
-// non-null writes below remain for compatibility fixtures, never the typing path.
 import { LocalDraftCheckpoint, flushLocalDraftCheckpoints } from "./local-draft-checkpoint.js";
 
 import type { ComposerSelection } from "./annotation-composer-request.js";
@@ -9,6 +7,7 @@ import type { ComposerSelection } from "./annotation-composer-request.js";
 export interface AnnotationLocalDraft {
   readonly body: string;
   readonly baseBody?: string;
+  readonly savedOnDevice?: boolean;
   readonly selection?: ComposerSelection;
 }
 export interface AnnotationDraftSnapshot {
@@ -122,6 +121,39 @@ export function saveAnnotationDraft(key: string, value: AnnotationLocalDraft | n
 }
 export function flushAnnotationDraft(key: string): void {
   checkpoints.get(key)?.flush();
+}
+
+/** A receipt from an older tab must not remove another tab's newer checkpoint. */
+export async function clearAnnotationDraftIfCurrent(
+  key: string,
+  expected: AnnotationLocalDraft,
+): Promise<void> {
+  if (annotationDraftSnapshot(key).value !== expected) {
+    return;
+  }
+  const database = await db();
+  await new Promise<void>((resolve, reject) => {
+    const transaction = database.transaction("drafts", "readwrite");
+    const store = transaction.objectStore("drafts");
+    const read = store.get(key);
+    read.onsuccess = () => {
+      const stored = read.result as AnnotationLocalDraft | undefined;
+      if (
+        annotationDraftSnapshot(key).value === expected &&
+        stored?.body === expected.body &&
+        stored.baseBody === expected.baseBody &&
+        stored.savedOnDevice === expected.savedOnDevice
+      ) {
+        store.delete(key);
+      }
+    };
+    transaction.oncomplete = () => resolve();
+    transaction.onabort = transaction.onerror = () =>
+      reject(transaction.error ?? new Error("Could not clear the annotation checkpoint."));
+  });
+  if (annotationDraftSnapshot(key).value === expected) {
+    publish(key, { value: null, ready: true, saved: true, problem: null });
+  }
 }
 function writeAnnotationDraft(key: string): void {
   const snapshot = annotationDraftSnapshot(key);

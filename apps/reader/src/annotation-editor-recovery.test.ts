@@ -109,3 +109,33 @@ it("preserves a previous-version draft for recovery and removes it only after co
   expect(annotationDraftSnapshot(key).value).toBeNull();
   await vi.waitFor(() => expect(annotationDraftSnapshot(key).saved).toBe(true));
 });
+
+it("retains an acknowledged offline comment when the replica later refuses it", async () => {
+  const native = await editorFixture();
+  closes.push(native.close);
+  const client = native.app.client();
+  const replica = native.app.replica();
+  replica.setOnline(false);
+  const session = new AnnotationEditSession(native.app.mdbase, native.annotation);
+  sessions.push(session);
+  session.start();
+  await vi.waitFor(() => expect(session.getSnapshot().status).toBe("saved"));
+  session.edit("Local pending comment");
+  await session.save();
+  await vi.waitFor(() =>
+    expect(annotationDraftSnapshot(session.key)).toMatchObject({
+      saved: true,
+      value: { body: "Local pending comment", savedOnDevice: true },
+    }),
+  );
+  const [pending] = await client.pendingWrites();
+  replica.reject(pending!.receipt.mutation);
+  replica.editElsewhere(native.annotation.path!, { body: "Other device's comment" });
+  await vi.waitFor(() =>
+    expect(session.getSnapshot().conflict?.body).toBe("Other device's comment"),
+  );
+  expect(session.getText()).toBe("Local pending comment");
+  session.resolve("remote");
+  await vi.waitFor(() => expect(annotationDraftSnapshot(session.key).value).toBeNull());
+  expect(session.getText()).toBe("Other device's comment");
+});

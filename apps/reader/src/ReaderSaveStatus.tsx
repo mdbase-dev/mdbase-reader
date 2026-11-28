@@ -2,6 +2,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useContext, useSyncExternalStore, type JSX } from "react";
 
 import { Menu } from "./Menu.js";
+import { ReaderSyncConflicts } from "./ReaderSyncConflicts.js";
 import { sdkOffline, sdkSyncIncidents } from "./sdk-connection-state.js";
 import { SourceLibraryContext } from "./SourceLibraryContext.js";
 
@@ -12,6 +13,7 @@ import type {
 } from "@mdbase-reader/connect/native";
 
 const noop = (): void => undefined;
+type Writes = NonNullable<NonNullable<MdbaseSnapshot["sync"]>["writes"]>;
 
 export function ReaderSaveStatus({
   mdbase,
@@ -30,15 +32,14 @@ export function ReaderSaveStatus({
     () => mdbase?.getSnapshot() ?? null,
     () => null,
   );
-  const online = !sdkOffline(snapshot);
   const { pending, rejected } = snapshot?.sync?.writes ?? { pending: [], rejected: [] };
   const incidents = sdkSyncIncidents(snapshot);
-  const needsAttention = rejected.length + incidents.length > 0;
-  const stalled = snapshot?.sync?.pendingFor === "long";
+  const conflicts = snapshot?.sync?.conflicts ?? 0;
+  const holds = snapshot?.sync?.holds ?? 0;
+  const needsAttention = rejected.length + incidents.length + conflicts + holds > 0;
   if (!pending.length && !needsAttention) {
     return null;
   }
-  const entries = [...pending, ...rejected];
   const label = needsAttention ? t`Changes need attention` : t`${String(pending.length)} pending`;
   return (
     <Menu
@@ -47,26 +48,65 @@ export function ReaderSaveStatus({
       trigger={label}
       triggerClassName="reader-save-trigger"
     >
-      <div className="reader-save-details">
+      <SaveStatusDetails
+        snapshot={snapshot}
+        pending={pending}
+        rejected={rejected}
+        incidents={incidents}
+        conflicts={conflicts}
+        holds={holds}
+      />
+    </Menu>
+  );
+}
+
+function SaveStatusDetails({
+  snapshot,
+  pending,
+  rejected,
+  incidents,
+  conflicts,
+  holds,
+}: Pick<Writes, "pending" | "rejected"> & {
+  readonly snapshot: MdbaseSnapshot | null;
+  readonly incidents: ReturnType<typeof sdkSyncIncidents>;
+  readonly conflicts: number;
+  readonly holds: number;
+}): JSX.Element {
+  const online = !sdkOffline(snapshot);
+  const connection = openConnection(snapshot);
+  const entries = [...pending, ...rejected];
+  const stalled = snapshot?.sync?.pendingFor === "long";
+  return (
+    <div className="reader-save-details">
+      {entries.length + incidents.length > 0 ? (
         <SaveStatusMessage
           incidents={incidents.length}
           pending={pending.length}
           refused={rejected.length}
           storageWarning={online && Boolean(snapshot?.saveWarning)}
         />
-        <SyncIncidentList incidents={incidents} />
-        <SaveStatusEntries entries={entries} connection={openConnection(snapshot)} />
-        {online && (stalled || incidents.length > 0) ? (
-          <button
-            className="connection-secondary"
-            type="button"
-            onClick={() => window.location.reload()}
-          >
-            <Trans>Reload Reader to check again</Trans>
-          </button>
-        ) : null}
-      </div>
-    </Menu>
+      ) : null}
+      {connection && conflicts + holds > 0 ? (
+        <ReaderSyncConflicts
+          key={connection.generation}
+          connection={connection}
+          hasConflicts={conflicts > 0}
+          hasHolds={holds > 0}
+        />
+      ) : null}
+      <SyncIncidentList incidents={incidents} />
+      {entries.length ? <SaveStatusEntries entries={entries} connection={connection} /> : null}
+      {online && (stalled || incidents.length > 0) ? (
+        <button
+          className="connection-secondary"
+          type="button"
+          onClick={() => window.location.reload()}
+        >
+          <Trans>Reload Reader to check again</Trans>
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -80,7 +120,7 @@ function SaveStatusEntries({
   connection,
 }: {
   readonly connection: MdbaseApplicationConnection | null;
-  readonly entries: NonNullable<NonNullable<MdbaseSnapshot["sync"]>["writes"]>["pending"];
+  readonly entries: Writes["pending"];
 }): JSX.Element {
   const { t } = useLingui();
   const sources = useContext(SourceLibraryContext);

@@ -2064,6 +2064,7 @@ msgid "Collection title"
 msgstr "Titre de la collection"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
+#: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Collection version"
 msgstr "Version de la collection"
 
@@ -5703,6 +5704,10 @@ msgstr "Autres sources Readwise"
 msgid "other source"
 msgstr "autre source"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Other version"
+msgstr ""
+
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
 msgstr "Plan"
@@ -6150,6 +6155,10 @@ msgstr "Propriétés"
 #: apps/reader/src/CitationLookup.tsx
 msgid "Proposed"
 msgstr "Proposé"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Protected local edit"
+msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7684,6 +7693,10 @@ msgctxt "CSL item type"
 msgid "Software"
 msgstr "Logiciel"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Some changes need review after sync. Compare the preserved versions below."
+msgstr ""
+
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
 msgstr "Certaines modifications n’ont pas atteint la collection. Les brouillons sont locaux à cet appareil, non enregistrés dans la collection, et changer de collection peut interrompre les enregistrements en attente. Terminez d’abord vos modifications pour éviter de perdre votre travail."
@@ -9188,6 +9201,10 @@ msgstr "Vérification des documents importés"
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
 msgstr "Numéro de version"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Version kept during sync"
+msgstr ""
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"

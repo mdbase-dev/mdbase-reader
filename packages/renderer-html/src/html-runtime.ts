@@ -271,18 +271,22 @@ export class HtmlDocumentRuntime {
    */
   #showRevealed(): void {
     const shown = new Map<Element, "path" | "all">();
+    const outsideArticle = `[${outsideArticleAttribute}]`;
     for (const range of this.#revealed) {
       let block = parentElement(range.commonAncestorContainer);
-      while (block?.parentElement && inlineElement(block)) {
+      if (!block?.closest(outsideArticle)) {
+        continue;
+      }
+      while (block.parentElement && inlineElement(block)) {
         block = block.parentElement;
       }
-      if (!block?.closest(`[${outsideArticleAttribute}]`)) {
+      if (!block.closest(outsideArticle)) {
         continue;
       }
       shown.set(block, "all");
       for (
         let node = block.parentElement;
-        node?.closest(`[${outsideArticleAttribute}]`);
+        node?.closest(outsideArticle);
         node = node.parentElement
       ) {
         if (!shown.has(node)) {

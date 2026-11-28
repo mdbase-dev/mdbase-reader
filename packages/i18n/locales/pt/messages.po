@@ -2064,6 +2064,7 @@ msgid "Collection title"
 msgstr "Título da coleção"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
+#: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Collection version"
 msgstr "Versão da coleção"
 
@@ -5703,6 +5704,10 @@ msgstr "Outras fontes do Readwise"
 msgid "other source"
 msgstr "outra fonte"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Other version"
+msgstr ""
+
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
 msgstr "Sumário"
@@ -6150,6 +6155,10 @@ msgstr "Propriedades"
 #: apps/reader/src/CitationLookup.tsx
 msgid "Proposed"
 msgstr "Proposto"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Protected local edit"
+msgstr ""
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7684,6 +7693,10 @@ msgctxt "CSL item type"
 msgid "Software"
 msgstr "Software"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Some changes need review after sync. Compare the preserved versions below."
+msgstr ""
+
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
 msgstr "Algumas edições ainda não chegaram à coleção. Os rascunhos ficam neste dispositivo, não são salvos na coleção, e a troca pode interromper salvamentos pendentes. Termine suas edições primeiro para evitar perder trabalho."
@@ -9188,6 +9201,10 @@ msgstr "Verificando os registros importados"
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
 msgstr "Versão"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Version kept during sync"
+msgstr ""
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
