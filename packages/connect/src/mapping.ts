@@ -217,10 +217,14 @@ export function sourceSummaryFromContract(
   collection: CollectionId,
   record: ContractQueryRecord,
   views: readonly RecordView[],
+  index?: number,
 ): SourceSummary {
   const implementation =
     record.implementations.length === 1 ? record.implementations[0] : undefined;
-  const view = views.find((candidate) => candidate.id === record.id);
+  // The SDK verifies positional binding between projections and backing records.
+  const aligned = index === undefined ? undefined : views[index];
+  const view =
+    aligned?.id === record.id ? aligned : views.find((candidate) => candidate.id === record.id);
   if (!implementation || !view) {
     throw new Error("Reader cannot select a unique source contract implementation.");
   }

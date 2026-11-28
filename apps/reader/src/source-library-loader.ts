@@ -143,7 +143,7 @@ function snapshot(
 ): ReaderLibrarySnapshot {
   return {
     collectionName,
-    sources: [...sources],
+    sources: complete ? sources : [...sources],
     connectionState: "connected",
     sourceIndex: {
       loaded: sources.length,

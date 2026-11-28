@@ -1,8 +1,25 @@
-import { ConnectContentSearchRepository } from "@mdbase-reader/connect";
-import { collectionId, type Annotation, type SourceSummary } from "@mdbase-reader/core";
+import {
+  ConnectAnnotationAssetRepository,
+  ConnectAnnotationRepository,
+  ConnectContentSearchRepository,
+  ConnectSourceImportRepository,
+  ConnectSourceRepository,
+} from "@mdbase-reader/connect";
+import {
+  collectionId,
+  fileRevision,
+  type Annotation,
+  type SourceSummary,
+} from "@mdbase-reader/core";
 import "@mdbase-reader/i18n";
-import { HtmlDocumentRuntime, prepareHtmlDocument } from "@mdbase-reader/renderer-html";
+import { createReaderRuntimeServices, MemoryStorage } from "@mdbase-reader/platform";
+import {
+  HtmlDocumentRuntime,
+  HtmlReadingSurface,
+  prepareHtmlDocument,
+} from "@mdbase-reader/renderer-html";
 
+import { ConnectWorkspaceGateway } from "../src/connect-workspace.js";
 import { fieldValueSuggestions } from "../src/library-conditions.js";
 import {
   applyLibraryViewConfiguration,
@@ -26,6 +43,79 @@ export async function measureLibraryAndArticle(
     }
     samples[name] = (performance.now() - start) / repeat;
   }
+
+  // Return contract projections as the SDK would after decoding a page.
+  const views = sources.map((source) => ({
+    id: source.id,
+    path: source.path,
+    types: ["reader-source"],
+    frontmatter: {
+      id: source.id,
+      title: source.title,
+      authors: source.creators,
+      tags: source.tags,
+    },
+  }));
+  const projections = views.map(({ id, frontmatter }) => ({
+    id,
+    implementations: [{ typeName: "reader-source", fields: frontmatter }],
+  }));
+  let pageReads = 0;
+  const sdk = {
+    async queryContract(
+      _contract: unknown,
+      { pageSize, cursor }: { pageSize: number; cursor?: string },
+    ) {
+      pageReads++;
+      const start = Number(cursor ?? 0);
+      const end = start + pageSize;
+      await new Promise((done) => setTimeout(done, 0));
+      return {
+        page: {
+          records: views.slice(start, end),
+          cursor: end < sources.length ? String(end) : undefined,
+          totalCount: sources.length,
+          complete: true,
+        },
+        records: projections.slice(start, end),
+      };
+    },
+  } as unknown as MdbaseClient;
+  const files = { upload: () => Promise.reject(new Error("Benchmark is read-only")) };
+  const gateway = new ConnectWorkspaceGateway(
+    new ConnectSourceRepository(sdk),
+    new ConnectAnnotationRepository(sdk),
+    new ConnectAnnotationAssetRepository(files),
+    new ConnectSourceImportRepository(sdk, files),
+    collectionId("benchmark"),
+    "Benchmark",
+    createReaderRuntimeServices(new MemoryStorage()),
+  );
+  await measure("cold paged workspace hydration", async () => {
+    const start = performance.now();
+    const snapshot = await gateway.library({
+      onProgress: () => {
+        samples["first workspace page"] ??= performance.now() - start;
+      },
+    });
+    if (
+      snapshot.sources.length !== sources.length ||
+      snapshot.sources.at(-1)?.id !== sources.at(-1)?.id
+    ) {
+      throw new Error("Incomplete workspace hydration");
+    }
+  });
+  const coldPageReads = pageReads;
+  await measure(
+    "warm workspace library read",
+    async () => {
+      const snapshot = await gateway.library();
+      if (snapshot.sources.length !== sources.length || pageReads !== coldPageReads) {
+        throw new Error("Warm library read fetched another page");
+      }
+    },
+    100,
+  );
 
   const repeats = sources.length < 1000 ? 100 : 8;
   const defaults = defaultLibraryViewConfiguration;
@@ -55,6 +145,21 @@ export async function measureLibraryAndArticle(
     repeats,
   );
   await measure(
+    "switch three status buckets",
+    () => {
+      for (const status of ["inbox", "reading", "finished"] as const) {
+        const matches = applyLibraryViewConfiguration(sources, {
+          ...defaults,
+          filter: { ...defaults.filter, status },
+        });
+        if (matches.length === 0 || matches.some((source) => source.readingStatus !== status)) {
+          throw new Error("Wrong status bucket");
+        }
+      }
+    },
+    repeats,
+  );
+  await measure(
     "rank tag suggestions",
     () => {
       const tags = fieldValueSuggestions(sources, "tags");
@@ -76,7 +181,7 @@ export async function measureLibraryAndArticle(
         source: `[[sources/${String(index % ownerCount)}]]`,
       },
       types: ["reader-annotation"],
-      body: "> Paper mentions attention and retention.\n\nReader highlight comment.",
+      body: "> Paper mentions attention and retention.\n\nAnnotation-only highlight comment.",
     };
   });
   const records = [
@@ -84,7 +189,7 @@ export async function measureLibraryAndArticle(
       path,
       frontmatter: { type: "reader-source", id },
       types: ["reader-source"],
-      body: "Source note about attention.",
+      body: "Source-only note about attention.",
     })),
     ...annotations,
   ];
@@ -99,10 +204,12 @@ export async function measureLibraryAndArticle(
       const owner = sources[Number(path.slice(8, -3))];
       return Promise.resolve(owner && { frontmatter: { id: owner.id } });
     },
-    async *pages() {
-      for (let offset = 0; offset < records.length; offset += 128) {
+    async *pages({ where, limit = 500 }: { where: string; limit?: number }) {
+      const query = JSON.parse(where.slice("file.body.lower().contains(".length, -1)) as string;
+      const matched = records.filter(({ body }) => body.toLowerCase().includes(query));
+      for (let offset = 0; offset < matched.length; offset += limit) {
         yield await Promise.resolve({
-          records: records.slice(offset, offset + 128),
+          records: matched.slice(offset, offset + limit),
           complete: true,
         });
       }
@@ -122,14 +229,30 @@ export async function measureLibraryAndArticle(
     },
     repeats,
   );
-  if (sources.length < 1000) {
-    return samples;
+
+  for (const [query, kind] of [
+    ["source-only", "source-note"],
+    ["annotation-only", "annotation"],
+  ] as const) {
+    await measure(
+      `search ${kind} bodies`,
+      async () => {
+        const results = await search.search(collectionId("benchmark"), query);
+        if (
+          results.length !== ownerCount ||
+          !results.every((hit) => hit.kinds.length === 1 && hit.kinds[0] === kind)
+        ) {
+          throw new Error(`Wrong ${kind} search results`);
+        }
+      },
+      repeats,
+    );
   }
 
   const paragraphs = Array.from(
     { length: 3000 },
     (_, index) =>
-      `<p id="p${String(index)}" onclick="ignored()">Passage [${String(index)}] about reading. The study compares two methods. ${"Attention and retention. ".repeat(6)}</p>`,
+      `${index % 10 === 0 ? `<h2>Section ${String(index / 10)}</h2>` : ""}<p id="p${String(index)}" onclick="ignored()">Passage [${String(index)}] about reading. The study compares two methods. ${"Attention and retention. ".repeat(6)}</p>`,
   );
   const article = `<html lang="en"><head><title>Long article</title></head><body><article>${paragraphs.join("")}</article></body></html>`;
   const frame = document.createElement("iframe");
@@ -137,9 +260,34 @@ export async function measureLibraryAndArticle(
   frame.width = "800";
   frame.height = "640";
   document.body.append(frame);
-  await measure("sanitize and lay out 3k HTML paragraphs", async () => {
+  let prepared = "";
+  await measure(
+    "sanitize long HTML",
+    () => {
+      prepared = prepareHtmlDocument(article);
+    },
+    4,
+  );
+  const svg = encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><script>bad()</script><path d="M0 0 L10 10"/></svg>',
+  );
+  const withSvg = article.replace(
+    "</article>",
+    `${`<img alt="" src="data:image/svg+xml,${svg}">`.repeat(64)}</article>`,
+  );
+  await measure(
+    "sanitize HTML with 64 repeated SVGs",
+    () => {
+      const sanitized = prepareHtmlDocument(withSvg);
+      if (sanitized.includes("bad()") || !sanitized.includes("data:image/svg+xml,")) {
+        throw new Error("SVG was not sanitized and retained");
+      }
+    },
+    4,
+  );
+  await measure("load and lay out long HTML iframe", async () => {
     const loaded = new Promise((done) => frame.addEventListener("load", done, { once: true }));
-    frame.srcdoc = prepareHtmlDocument(article);
+    frame.srcdoc = prepared;
     await loaded;
     if (
       frame.contentDocument?.querySelector("[onclick]") ||
@@ -148,6 +296,39 @@ export async function measureLibraryAndArticle(
       throw new Error("Last paragraph is missing");
     }
   });
+  const tocRuntime = new HtmlDocumentRuntime(frame, "long.html");
+  const surfaceDocument = {
+    document: { file: "long.html", revision: fileRevision(`sha256:${"a".repeat(64)}`) },
+    mediaType: "text/html",
+    url: "about:blank",
+  };
+  const surface = new HtmlReadingSurface(surfaceDocument, tocRuntime);
+  try {
+    await measure(
+      "extract long article TOC",
+      () => {
+        const contents = surface.capabilities.contents?.entries();
+        if (contents?.length !== 300 || contents.at(-1)?.title !== "Section 299") {
+          throw new Error("Wrong table of contents");
+        }
+      },
+      20,
+    );
+    await measure(
+      "check long article TOC availability",
+      async () => {
+        const runtime = new HtmlDocumentRuntime(frame, "long.html");
+        const candidate = new HtmlReadingSurface(surfaceDocument, runtime);
+        if (!candidate.capabilities.contents) {
+          throw new Error("Missing table of contents");
+        }
+        await candidate.destroy();
+      },
+      8,
+    );
+  } finally {
+    await surface.destroy();
+  }
   const unique = Array.from({ length: 600 }, (_, index) => ({
     id: `u${String(index)}`,
     body: "",

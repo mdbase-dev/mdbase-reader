@@ -129,6 +129,17 @@ try {
     return times.sort((a, b) => a - b)[3];
   });
   console.log("10k grid scroll to mounted row, ms", scrollMedian);
+  await grid.locator('[aria-rowindex="2"]').focus();
+  await grid.evaluate((element) => {
+    element.closest(".library-table-frame").scrollTop = 4800;
+  });
+  await expect(grid.locator('[aria-rowindex="2"]')).toHaveCount(0);
+  const search = page.getByRole("textbox", { name: "Search this view" });
+  await search.focus();
+  await search.press("ArrowDown");
+  await expect(grid.locator("[data-row-index]:focus")).toHaveCount(1);
+  await page.keyboard.press("Home");
+  await expect(grid.locator('[aria-rowindex="2"]')).toBeFocused();
   await page.addScriptTag({ path: createRequire(import.meta.url).resolve("axe-core/axe.min.js") });
   for (const width of [360, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 });

@@ -161,6 +161,10 @@ export class HtmlDocumentRuntime {
     }));
   }
 
+  public hasContents(): boolean {
+    return headingElements(this.#document, 2).length === 2;
+  }
+
   public goToContents(id: string): boolean {
     const heading = headingElements(this.#document)[Number(id)];
     if (!heading) {
@@ -450,11 +454,17 @@ function parentElement(node: Node): Element | null {
   return node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
 }
 
-function headingElements(document: Document): HTMLElement[] {
-  return [...document.body.querySelectorAll<HTMLElement>("h1, h2, h3")].filter(
-    (heading) =>
-      heading.textContent.trim() !== "" && !heading.closest(`[${outsideArticleAttribute}]`),
-  );
+function headingElements(document: Document, limit = Infinity): HTMLElement[] {
+  const headings: HTMLElement[] = [];
+  for (const heading of document.body.querySelectorAll<HTMLElement>("h1, h2, h3")) {
+    if (heading.textContent.trim() && !heading.closest(`[${outsideArticleAttribute}]`)) {
+      headings.push(heading);
+      if (headings.length === limit) {
+        break;
+      }
+    }
+  }
+  return headings;
 }
 
 /** Converts a range inside the frame to the parent window's viewport. */

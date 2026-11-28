@@ -79,7 +79,7 @@ import type {
 const noop = (): void => undefined;
 
 export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
-  #library: ReaderLibrarySnapshot["sources"] | null = null;
+  #library: ReaderLibrarySnapshot | null = null;
   /** Bumped when a change outside this workspace makes the cached library stale. */
   #libraryGeneration = 0;
   readonly #libraryLoads = new SharedRequests<
@@ -173,7 +173,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   async library(options: ReaderLibraryRequestOptions = {}): Promise<ReaderLibrarySnapshot> {
     options.signal?.throwIfAborted();
     if (this.#library) {
-      return completeLibrarySnapshot(this.collectionName, this.#library);
+      return this.#library;
     }
     const generation = this.#libraryGeneration;
     return this.#libraryLoads.get(
@@ -190,7 +190,7 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
         signal.throwIfAborted();
         // A load that a later change overtook must not become the cached library.
         if (generation === this.#libraryGeneration) {
-          this.#library = snapshot.sources;
+          this.#library = snapshot;
         }
         return snapshot;
       },
@@ -492,10 +492,16 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     options: Parameters<ReaderWorkspaceGateway["saveSourceCitation"]>[2] = {},
   ): Promise<Source> {
     const expectedCitation = loadedCitation(source);
-    const updated = await saveSourceCitation(this.sources, source, this.#library ?? [], citation, {
-      ...(expectedCitation !== undefined ? { expectedCitation } : {}),
-      ...options,
-    });
+    const updated = await saveSourceCitation(
+      this.sources,
+      source,
+      this.#library?.sources ?? [],
+      citation,
+      {
+        ...(expectedCitation !== undefined ? { expectedCitation } : {}),
+        ...options,
+      },
+    );
     this.#replaceSource(updated);
     for (const listener of this.#citationListeners) {
       listener();
@@ -863,7 +869,10 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
     await this.sources.delete(plan);
     this.#sourcesById.delete(plan.sourceId);
     if (this.#library) {
-      this.#library = this.#library.filter(({ id }) => id !== plan.sourceId);
+      this.#library = completeLibrarySnapshot(
+        this.collectionName,
+        this.#library.sources.filter(({ id }) => id !== plan.sourceId),
+      );
     }
     this.#countsChanged();
   }
@@ -871,8 +880,13 @@ export class ConnectWorkspaceGateway implements ReaderWorkspaceGateway {
   #replaceSource(source: Source, prepend = false): void {
     this.#sourcesById.set(source.id, source);
     if (this.#library) {
-      const remaining = this.#library.filter(({ id }) => id !== source.id);
-      this.#library = prepend ? [source, ...remaining] : replaceInOrder(this.#library, source);
+      const { sources } = this.#library;
+      this.#library = completeLibrarySnapshot(
+        this.collectionName,
+        prepend
+          ? [source, ...sources.filter(({ id }) => id !== source.id)]
+          : replaceInOrder(sources, source),
+      );
     }
   }
 }

@@ -68,8 +68,8 @@ export class ConnectSourceRepository implements SourceRepository {
       ...(options.signal ? { signal: options.signal } : {}),
     });
     requireCompleteQuery(result.page);
-    const records = result.records.map((record) =>
-      sourceSummaryFromContract(query.collectionId, record, result.page.records),
+    const records = result.records.map((record, index) =>
+      sourceSummaryFromContract(query.collectionId, record, result.page.records, index),
     );
     const items = await resolveSourceSummaryParts(
       this.client,
@@ -91,13 +91,16 @@ export class ConnectSourceRepository implements SourceRepository {
     let cursor: string | undefined;
     do {
       const result = await this.client.queryContract(sourceContract, {
-        pageSize: 128,
+        // The SDK keeps older replicas at 128 and the cursor binds the requested limit.
+        pageSize: 512,
         ...(cursor ? { cursor } : {}),
         ...(options.signal ? { signal: options.signal } : {}),
       });
       requireCompleteQuery(result.page);
       const summaries = result.records
-        .map((record) => sourceSummaryFromContract(query.collectionId, record, result.page.records))
+        .map((record, index) =>
+          sourceSummaryFromContract(query.collectionId, record, result.page.records, index),
+        )
         .filter(
           (source) =>
             query.readingStatus === undefined || source.readingStatus === query.readingStatus,

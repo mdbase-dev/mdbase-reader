@@ -401,11 +401,14 @@ export function LibraryWorkspace({
                       updateFilter({ query: "" });
                     } else if (event.key === "ArrowDown" || event.key === "Escape") {
                       event.preventDefault();
-                      resultsAreaRef.current
-                        ?.querySelector<HTMLElement>(
-                          '.search-passage-list button, .library-table-row:not(.is-header)[tabindex="0"]',
-                        )
-                        ?.focus();
+                      const results = resultsAreaRef.current;
+                      // The roving tab stop can be outside the mounted window after scrolling.
+                      const target =
+                        results?.querySelector<HTMLElement>(
+                          '.search-passage-list button, .library-table-row[data-row-index][tabindex="0"]',
+                        ) ??
+                        results?.querySelector<HTMLElement>(".library-table-row[data-row-index]");
+                      target?.focus();
                     }
                   }}
                 />

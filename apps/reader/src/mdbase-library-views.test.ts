@@ -88,10 +88,13 @@ describe("mdbase library views", () => {
     const filter = { ...base.filter, query: "author", tag: "study" };
     for (const sortDirection of ["asc", "desc"] as const) {
       const configuration = { ...base, sortDirection };
-      const filtered = applyLibraryViewConfiguration(rows, { ...configuration, filter });
-      expect(filtered.map((row) => row.id)).toEqual(
-        sortDirection === "asc" ? ["c", "b", "a"] : ["b", "a", "c"],
-      );
+      const expected = sortDirection === "asc" ? ["c", "b", "a"] : ["b", "a", "c"];
+      const cold = applyLibraryViewConfiguration(rows, { ...configuration, filter });
+      expect(cold.map((row) => row.id)).toEqual(expected);
+      const ordered = applyLibraryViewConfiguration(rows, configuration);
+      expect(applyLibraryViewConfiguration(rows, configuration)).toBe(ordered);
+      const warmed = applyLibraryViewConfiguration(rows, { ...configuration, filter });
+      expect(warmed.map((row) => row.id)).toEqual(expected);
     }
     expect(rows.map((row) => row.id)).toEqual(["b", "c", "a"]);
   });

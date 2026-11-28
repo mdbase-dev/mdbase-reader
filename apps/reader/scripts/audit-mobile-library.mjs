@@ -5,6 +5,8 @@ import { resolve } from "node:path";
 import { chromium, expect } from "@playwright/test";
 import { createServer } from "vite";
 
+import { chooseOption } from "./audit-select.mjs";
+
 const root = resolve(import.meta.dirname, "..");
 const axePath = createRequire(import.meta.url).resolve("axe-core/axe.min.js");
 const server = await createServer({
@@ -36,6 +38,7 @@ const collection = [
   {
     collectionId: "audit",
     id: "structural",
+    readingStatus: "finished",
     path: "sources/structural.md",
     title: "Structural learning",
     creators: ["Inez"],
@@ -82,11 +85,21 @@ try {
     const search = page.getByRole("textbox", { name: "Search this view" });
     await expect(grid).toHaveAttribute("aria-rowcount", "3", { timeout: 60000 });
     await assertAxe(page, `${colorScheme} library`);
+    const filter = page.locator(".library-workspace-more > summary:visible");
+    await filter.tap();
+    const status = page.getByRole("combobox", { name: "Status", exact: true });
+    await chooseOption(status, "finished");
+    await expect(grid).toHaveAttribute("aria-rowcount", "2");
+    await expect(grid.getByRole("row", { name: /^Structural learning/u })).toBeVisible();
+    await chooseOption(status, "inbox");
+    await expect(grid.getByRole("row", { name: /^Attention and memory/u })).toBeVisible();
+    await chooseOption(status, "all");
+    await page.keyboard.press("Escape");
+    await expect(filter).toBeFocused();
     await page.keyboard.press("/");
     await expect(search).toBeFocused();
     await search.fill("attention");
     await expect(grid).toHaveAttribute("aria-rowcount", "2");
-    const filter = page.locator(".library-workspace-more > summary:visible");
     await filter.tap();
     const options = page.locator(".reader-menu-panel:visible").filter({ hasText: "Clear filters" });
     const tag = page.getByRole("textbox", { name: "Tag", exact: true });
