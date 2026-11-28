@@ -1,7 +1,7 @@
 import { t, t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { isEditableSourceField } from "@mdbase-reader/core";
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 
 import { MoreIcon } from "./icons.js";
 import { columnFieldKey, type LibraryColumn } from "./library-columns.js";
@@ -19,7 +19,7 @@ import type { JSX, MouseEvent } from "react";
 const EDIT_CLICK_DELAY_MS = 500;
 
 // Column editing and the part disclosure share one virtual row without wrapping grid cells.
-export function LibraryTableRow({
+export const LibraryTableRow = memo(function LibraryTableRow({
   source,
   index,
   top,
@@ -47,21 +47,21 @@ export function LibraryTableRow({
   readonly top: number;
   readonly gridTemplateColumns: string;
   readonly tabbable: boolean;
-  readonly onSelect: (event: MouseEvent<HTMLElement>) => void;
+  readonly onSelect: (index: number, event: MouseEvent<HTMLElement>) => void;
   readonly press: LongPress;
-  readonly onLongPress: () => void;
+  readonly onLongPress: (index: number) => void;
   /** Opens this source's actions at a point, as a right-click does. */
-  readonly onMenu: (x: number, y: number) => void;
+  readonly onMenu: (index: number, x: number, y: number) => void;
   readonly editing: LibraryColumn | null;
-  readonly onEditCell: (column: LibraryColumn) => void;
-  readonly onEditDone: () => void;
+  readonly onEditCell: (source: SourceSummary, column: LibraryColumn) => void;
+  readonly onEditDone: (index: number) => void;
 }): JSX.Element {
   useLocale();
   const part = partRows?.get(source.id);
   const context = part?.diagnostic ?? part?.context;
   const annotations = annotationCounts?.get(source.id);
   const selected = selection.ids.has(source.id);
-  const pressHandlers = press.bind(onLongPress);
+  const pressHandlers = press.bind(() => onLongPress(index));
   const editable = (column: LibraryColumn): boolean =>
     onEditField !== undefined && isEditableColumn(column);
   const onlySelected = selected && selection.ids.size === 1;
@@ -86,7 +86,7 @@ export function LibraryTableRow({
         // A touch long-press selects instead; everything else gets this source's actions.
         if (!event.defaultPrevented) {
           event.preventDefault();
-          onMenu(event.clientX, event.clientY);
+          onMenu(index, event.clientX, event.clientY);
         }
       }}
       onClick={(event) => {
@@ -95,7 +95,7 @@ export function LibraryTableRow({
         if (action === "open") {
           onOpen(source.id);
         } else if (action === "select") {
-          onSelect(event);
+          onSelect(index, event);
         }
       }}
       onDoubleClick={() => {
@@ -132,7 +132,7 @@ export function LibraryTableRow({
               !press.touched()
             ) {
               event.stopPropagation();
-              pendingEdit.start(() => onEditCell(column));
+              pendingEdit.start(() => onEditCell(source, column));
             } else if (event.detail > 1) {
               pendingEdit.cancel();
             }
@@ -150,7 +150,7 @@ export function LibraryTableRow({
               source={source}
               fieldKey={columnFieldKey(column) ?? column}
               onSave={(text) => onEditField(source, columnFieldKey(column) ?? column, text)}
-              onDone={onEditDone}
+              onDone={() => onEditDone(index)}
             />
           ) : column === "title" ? (
             <a
@@ -165,7 +165,7 @@ export function LibraryTableRow({
                   return;
                 }
                 if (selection.touch === true || hasModifier(event)) {
-                  onSelect(event);
+                  onSelect(index, event);
                 } else {
                   onOpen(source.id);
                 }
@@ -205,7 +205,7 @@ export function LibraryTableRow({
           onClick={(event) => {
             event.stopPropagation();
             const box = event.currentTarget.getBoundingClientRect();
-            onMenu(box.left, box.bottom);
+            onMenu(index, box.left, box.bottom);
           }}
           onDoubleClick={(event) => event.stopPropagation()}
         >
@@ -214,7 +214,7 @@ export function LibraryTableRow({
       </span>
     </div>
   );
-}
+});
 
 /**
  * Starts a click's edit once the double-click window has passed, and drops it when the click

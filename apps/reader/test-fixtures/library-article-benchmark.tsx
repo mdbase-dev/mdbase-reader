@@ -193,6 +193,12 @@ export async function measureLibraryAndArticle(
     })),
     ...annotations,
   ];
+  const matchesByQuery = new Map(
+    ["attention", "source-only", "annotation-only"].map((query) => [
+      query,
+      records.filter(({ body }) => body.toLowerCase().includes(query)),
+    ]),
+  );
   const client = {
     resolveLinks(_from: unknown, links: string[]) {
       return Promise.resolve({
@@ -206,7 +212,10 @@ export async function measureLibraryAndArticle(
     },
     async *pages({ where, limit = 500 }: { where: string; limit?: number }) {
       const query = JSON.parse(where.slice("file.body.lower().contains(".length, -1)) as string;
-      const matched = records.filter(({ body }) => body.toLowerCase().includes(query));
+      const matched = matchesByQuery.get(query);
+      if (!matched) {
+        throw new Error(`Unexpected benchmark search: ${query}`);
+      }
       for (let offset = 0; offset < matched.length; offset += limit) {
         yield await Promise.resolve({
           records: matched.slice(offset, offset + limit),

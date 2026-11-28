@@ -1,6 +1,7 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { moveMenuFocus } from "@mdbase-dev/ui/popover";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -167,16 +168,20 @@ export function useLibraryRowMenu(input: {
   const [menu, setMenu] = useState<(LibraryRowMenuTarget & { readonly index: number }) | null>(
     null,
   );
-  const open = (index: number, x: number, y: number): void => {
-    const source = input.sources[index];
-    if (!source) {
-      return;
-    }
-    if (!input.selection.ids.has(source.id)) {
-      input.onSelectionChange(selectRow(input.selection, input.rowIds, index, "replace"));
-    }
-    setMenu({ source, index, x, y });
-  };
+  const { sources, selection, rowIds, onSelectionChange } = input;
+  const open = useCallback(
+    (index: number, x: number, y: number): void => {
+      const source = sources[index];
+      if (!source) {
+        return;
+      }
+      if (!selection.ids.has(source.id)) {
+        onSelectionChange(selectRow(selection, rowIds, index, "replace"));
+      }
+      setMenu({ source, index, x, y });
+    },
+    [onSelectionChange, rowIds, selection, sources],
+  );
   const openFromKey = (event: ReactKeyboardEvent): boolean => {
     const index = input.selection.active;
     if (

@@ -3,10 +3,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   useCallback,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   type JSX,
+  type MouseEvent,
   type RefObject,
 } from "react";
 
@@ -36,6 +36,7 @@ const headerHeight = 32;
 
 export interface LibraryTableProps {
   readonly sources: readonly SourceSummary[];
+  readonly rowIds: readonly SourceId[];
   readonly partRows?: ReadonlyMap<SourceId, LibraryPartRow>;
   readonly onTogglePart?: (id: SourceId) => void;
   readonly layout: LibraryLayout;
@@ -47,7 +48,7 @@ export interface LibraryTableProps {
   readonly focused: boolean;
   readonly selection: RowSelection;
   readonly onSelectionChange: (selection: RowSelection) => void;
-  /** The scrolling results pane; the table may sit below other content in it. */
+  /** The table's scrolling frame. */
   readonly scrollRef: RefObject<HTMLDivElement | null>;
   readonly onOpen: (id: SourceId) => void;
   readonly onOpenBeside: (id: SourceId) => void;
@@ -67,13 +68,11 @@ interface EditingCell {
 // Keep the virtualized grid, existing editing, and disclosure keyboard handling in one owner.
 export function LibraryTable(props: LibraryTableProps): JSX.Element {
   const { t } = useLingui();
-  const { sources, layout, selection, onSelectionChange, scrollRef } = props;
+  const { sources, rowIds, layout, selection, onSelectionChange, scrollRef } = props;
   const rowHeight = useMediaQuery("(max-width: 680px)") ? 76 : libraryRowHeight;
   const gridRef = useRef<HTMLDivElement>(null);
   const table = useLibraryColumns(props);
-  const rowIds = useMemo(() => sources.map(({ id }) => id), [sources]);
   const getItemKey = useCallback((index: number) => sources[index]?.id ?? index, [sources]);
-  const offset = useOffsetTop(gridRef);
   // TanStack Virtual returns fresh functions each render; the React Compiler must not memoize them.
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
@@ -83,10 +82,15 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     getItemKey,
     overscan: 10,
     scrollPaddingStart: headerHeight,
-    scrollMargin: offset + headerHeight,
+    scrollMargin: headerHeight,
   });
-  const margin = offset + headerHeight;
-  useLayoutEffect(() => virtualizer.measure(), [virtualizer, rowHeight]);
+  const previousRowHeight = useRef(rowHeight);
+  useLayoutEffect(() => {
+    if (previousRowHeight.current !== rowHeight) {
+      previousRowHeight.current = rowHeight;
+      virtualizer.measure();
+    }
+  }, [virtualizer, rowHeight]);
   const focusRow = useRowFocus(gridRef, sources);
   const press = useLongPress();
   const [editing, setEditing] = useState<EditingCell | null>(null);
@@ -104,6 +108,32 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
       createChapters,
     ),
   });
+  const editCell = useCallback((source: SourceSummary, column: LibraryColumn): void => {
+    setEditing({ id: source.id, column });
+  }, []);
+  const finishEditing = useCallback(
+    (index: number): void => {
+      setEditing(null);
+      focusRow(index);
+    },
+    [focusRow],
+  );
+  const longPress = useCallback(
+    (index: number): void => {
+      onSelectionChange(toggleTouchRow(selection, rowIds, index));
+    },
+    [onSelectionChange, rowIds, selection],
+  );
+  const select = useCallback(
+    (index: number, event: MouseEvent<HTMLElement>): void => {
+      onSelectionChange(
+        selection.touch && !hasModifier(event)
+          ? toggleTouchRow(selection, rowIds, index)
+          : selectRow(selection, rowIds, index, selectionGesture(event)),
+      );
+    },
+    [onSelectionChange, rowIds, selection],
+  );
   const sizes = layout.columns.map(
     (column) => table.getColumn(column)?.getSize() ?? defaultColumnWidth(column),
   );
@@ -114,21 +144,27 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
     if (!frame) {
       return undefined;
     }
+    let scrollEnd = 0;
+    const updateClipping = (): void => {
+      const clipped = String(scrollEnd - frame.scrollLeft > 1);
+      if (frame.dataset["clipped"] !== clipped) {
+        frame.dataset["clipped"] = clipped;
+      }
+    };
     const measure = (): void => {
-      frame.dataset["clipped"] = String(
-        frame.scrollWidth - frame.clientWidth - frame.scrollLeft > 1,
-      );
+      scrollEnd = frame.scrollWidth - frame.clientWidth;
+      updateClipping();
     };
     const observer = new ResizeObserver(measure);
     observer.observe(frame);
     if (gridRef.current) {
       observer.observe(gridRef.current);
     }
-    frame.addEventListener("scroll", measure);
+    frame.addEventListener("scroll", updateClipping, { passive: true });
     measure();
     return () => {
       observer.disconnect();
-      frame.removeEventListener("scroll", measure);
+      frame.removeEventListener("scroll", updateClipping);
     };
   }, [scrollRef, width]);
   return (
@@ -210,25 +246,16 @@ export function LibraryTable(props: LibraryTableProps): JSX.Element {
                 {...props}
                 source={source}
                 index={item.index}
-                top={item.start - margin}
+                top={item.start - headerHeight}
                 gridTemplateColumns={gridTemplateColumns}
                 tabbable={props.focused && item.index === (selection.active ?? 0)}
                 editing={editing?.id === source.id ? editing.column : null}
-                onEditCell={(column) => setEditing({ id: source.id, column })}
-                onEditDone={() => {
-                  setEditing(null);
-                  focusRow(item.index);
-                }}
+                onEditCell={editCell}
+                onEditDone={finishEditing}
                 press={press}
-                onMenu={(x, y) => rowMenu.open(item.index, x, y)}
-                onLongPress={() => onSelectionChange(toggleTouchRow(selection, rowIds, item.index))}
-                onSelect={(event) =>
-                  onSelectionChange(
-                    selection.touch && !hasModifier(event)
-                      ? toggleTouchRow(selection, rowIds, item.index)
-                      : selectRow(selection, rowIds, item.index, selectionGesture(event)),
-                  )
-                }
+                onMenu={rowMenu.open}
+                onLongPress={longPress}
+                onSelect={select}
               />
             ) : null;
           })}
@@ -350,21 +377,6 @@ function rowMenuActions(
   };
 }
 
-/** The element's offset within its scroller, re-read after every render that may move it. */
-export function useOffsetTop(ref: RefObject<HTMLElement | null>): number {
-  const [offset, setOffset] = useState(0);
-  // Content above the table (Continue reading, a problem banner) can change on any render, so
-  // this re-reads after every render; the equality guard stops it from looping.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => {
-    const next = ref.current?.offsetTop ?? 0;
-    if (next !== offset) {
-      setOffset(next);
-    }
-  });
-  return offset;
-}
-
 /** Focuses a row once it has rendered, after keyboard travel scrolls it into view. */
 function useRowFocus(
   gridRef: RefObject<HTMLElement | null>,
@@ -389,8 +401,11 @@ function useRowFocus(
       row.focus({ preventScroll: true });
     }
   });
-  return (index) => {
-    const source = sources[index];
-    pending.current = source ? { index, id: source.id } : null;
-  };
+  return useCallback(
+    (index: number) => {
+      const source = sources[index];
+      pending.current = source ? { index, id: source.id } : null;
+    },
+    [sources],
+  );
 }

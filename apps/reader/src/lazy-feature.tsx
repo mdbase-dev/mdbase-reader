@@ -1,7 +1,7 @@
 import { t as translate } from "@lingui/core/macro";
 import { useLingui as useLocale } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Component, lazy, Suspense, useState } from "react";
+import { Component, useEffect, useState } from "react";
 
 import type { ComponentType, JSX, ReactNode } from "react";
 
@@ -11,23 +11,78 @@ export function lazyFeature<Props extends object>(
   label: string,
   renderLoading?: (props: Props) => ReactNode,
 ): ComponentType<Props> & { preload: () => void } {
-  let pending: ReturnType<typeof importFeature> | undefined;
-  const load = (): ReturnType<typeof importFeature> => {
-    pending ??= importFeature().catch((error: unknown) => {
-      pending = undefined;
-      throw error;
-    });
+  type Module = Awaited<ReturnType<typeof importFeature>>;
+  type LoadResult = Module | { readonly error: unknown };
+  let loaded: Module | undefined;
+  let pending: Promise<Module> | undefined;
+  const load = (): Promise<Module> => {
+    pending ??= importFeature().then(
+      (module) => {
+        loaded = module;
+        return module;
+      },
+      (error: unknown) => {
+        pending = undefined;
+        throw error;
+      },
+    );
     return pending;
   };
+
+  function FeatureContent({ props }: { readonly props: Props }): JSX.Element {
+    // Commit as soon as the import settles. A Suspense fallback can delay that commit
+    // even after an intent preload has finished loading the renderer.
+    const [result, setResult] = useState<LoadResult | undefined>(() => loaded);
+    useEffect(() => {
+      let active = true;
+      void load().then(
+        (module) => {
+          if (active) {
+            setResult(module);
+          }
+        },
+        (error: unknown) => {
+          if (active) {
+            setResult({ error });
+          }
+        },
+      );
+      return () => {
+        active = false;
+      };
+    }, []);
+    if (result && "error" in result) {
+      throw result.error;
+    }
+    if (result) {
+      const Surface = result.default;
+      return <Surface {...props} />;
+    }
+    return (
+      <>
+        {renderLoading ? (
+          renderLoading(props)
+        ) : (
+          <div
+            className="reader-feature-skeleton"
+            role="status"
+            aria-label={translate`Loading ${label}…`}
+          >
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+        )}
+      </>
+    );
+  }
+
   function Feature(props: Props): JSX.Element {
     useLocale();
-    // React.lazy remembers rejections; a retry needs a fresh lazy identity.
-    const [{ attempt, Surface }, setFeature] = useState(() => ({
-      attempt: 0,
-      Surface: lazy(load),
-    }));
+    const [attempt, setAttempt] = useState(0);
     const retry = (): void => {
-      setFeature((current) => ({ attempt: current.attempt + 1, Surface: lazy(load) }));
+      setAttempt((current) => current + 1);
     };
     const onError =
       "onDocumentError" in props && typeof props.onDocumentError === "function"
@@ -35,26 +90,7 @@ export function lazyFeature<Props extends object>(
         : undefined;
     return (
       <FeatureBoundary key={attempt} label={label} retry={retry} onError={onError}>
-        <Suspense
-          fallback={
-            renderLoading ? (
-              renderLoading(props)
-            ) : (
-              <div
-                className="reader-feature-skeleton"
-                role="status"
-                aria-label={translate`Loading ${label}…`}
-              >
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
-            )
-          }
-        >
-          <Surface {...props} />
-        </Suspense>
+        <FeatureContent props={props} />
       </FeatureBoundary>
     );
   }

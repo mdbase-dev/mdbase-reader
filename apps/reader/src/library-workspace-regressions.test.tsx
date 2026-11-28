@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { StatusPicker } from "./LibraryCells.js";
 import { LibraryWorkspace } from "./LibraryWorkspace.js";
-import { defaultLibraryView } from "./mdbase-library-views.js";
+import { defaultLibraryView, type MdbaseLibraryView } from "./mdbase-library-views.js";
 import { partSource } from "./source-parts.fixtures.js";
 import { createRoot } from "./testing/i18n.js";
 import { useSourceStatus } from "./use-source-status.js";
@@ -31,6 +31,7 @@ vi.mock("./LibraryTable.js", () => ({
 
 let root: ReturnType<typeof createRoot>;
 let host: HTMLDivElement;
+const savedView = { ...defaultLibraryView, key: "saved", path: "views/saved.md" };
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   localStorage.clear();
@@ -49,6 +50,7 @@ async function renderLibrary(
   sources: readonly Source[],
   indexed: readonly SourceSummary[],
   executeLibraryView = vi.fn().mockResolvedValue({ sources, valuesByPath: new Map() }),
+  view: MdbaseLibraryView = savedView,
 ): Promise<ReturnType<typeof vi.fn>> {
   const saveReadingStatus = vi.fn((id: SourceId, status: ReadingStatus) =>
     Promise.resolve({
@@ -75,17 +77,17 @@ async function renderLibrary(
     return (
       <>
         <LibraryWorkspace
-          view={defaultLibraryView}
-          availableViews={[defaultLibraryView]}
+          view={view}
+          availableViews={[view]}
           allSources={allSources}
           indexLoading
           gateway={gateway}
           controller={{
-            views: [defaultLibraryView],
+            views: [view],
             loading: false,
             saving: false,
             problem: null,
-            view: () => defaultLibraryView,
+            view: () => view,
             refresh: vi.fn(),
             save: vi.fn(),
           }}
@@ -169,6 +171,14 @@ it("clears the view failure after a successful reread", async () => {
   expect(execute).toHaveBeenCalledTimes(2);
   expect(host.querySelector(".library-view-problem")).toBeNull();
   expect(host.querySelector("[data-table]")?.textContent).toContain("Recovered");
+});
+
+it("uses the current index for All sources without executing a saved view", async () => {
+  const indexed = [partSource("Indexed source")];
+  const execute = vi.fn().mockResolvedValue({ sources: [], valuesByPath: new Map() });
+  await renderLibrary(indexed, indexed, execute, defaultLibraryView);
+  expect(host.querySelector("[data-table]")?.textContent).toContain("Indexed source");
+  expect(execute).not.toHaveBeenCalled();
 });
 
 it("lists note and annotation matches above the table and focuses them first", async () => {
