@@ -40,10 +40,11 @@ Reader stays an SDK consumer; it does not duplicate authorization or readiness c
   indexes perform the normal missing-source checks.
 - Source metadata precedes its annotation query. Global annotation counts wait for the complete
   source index; saved views defer while a requested/active source is loading.
-- Sources use the existing SDK options `firstPageSize: 100`, `pageSize: 1000`. With the updated
-  authority this means 11 requests for 10,000 sources, not 100. Older authorities remain usable
-  but can retain their original small pages. Growing progress intervals bound cumulative
-  snapshot copying even with those authorities; the first rows stay immediate.
+- Sources request up to 512 records per SDK contract cursor page. This takes 20 requests for
+  10,000 compact source records on replicas that support larger pages. SDK compatibility
+  limits keep older replicas at 128, and the replica may return shorter pages to fit its
+  byte budget. Reader publishes the first available rows immediately. Later progress
+  publications grow with the index size, and completed reads reuse the workspace snapshot.
 - Navigation and library counts distinguish partial loading from an empty/complete collection.
 
 The coordinated SDK change runs live setup assessment and contract description concurrently.

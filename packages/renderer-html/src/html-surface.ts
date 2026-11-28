@@ -78,7 +78,7 @@ export class HtmlReadingSurface implements ReadingSurface {
         },
       },
       // A page with fewer than two headings has no useful contents.
-      ...(runtime.contents().length > 1
+      ...(runtime.hasContents()
         ? {
             contents: {
               entries: () => runtime.contents(),

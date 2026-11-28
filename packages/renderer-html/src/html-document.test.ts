@@ -17,6 +17,22 @@ describe("prepareHtmlDocument", () => {
     expect(rendered.querySelector("code")?.textContent).toBe("const example = 42;");
     expect(rendered.body.textContent).toContain("Unicode: café 漢字 🐨");
   });
+  it("sanitizes repeated SVGs and preserves each image's alt text", () => {
+    const svg = encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg"><script>ignored()</script><path d="M0 0 L1 1"/></svg>',
+    );
+    const url = `data:image/svg+xml,${svg}`;
+    const rendered = new DOMParser().parseFromString(
+      prepareHtmlDocument(`<img src="${url}" alt="First"><img src="${url}" alt="Second">`),
+      "text/html",
+    );
+    const images = [...rendered.querySelectorAll("img")];
+    expect(images.map((image) => image.alt)).toEqual(["First", "Second"]);
+    const urls = images.map((image) => image.getAttribute("src"));
+    expect(urls[0]).toMatch(/^data:image\/svg\+xml,/u);
+    expect(urls[1]).toBe(urls[0]);
+    expect(decodeURIComponent(urls[0] ?? "")).not.toContain("ignored()");
+  });
   it("removes executable and network-bearing content while retaining readable markup", () => {
     const prepared = prepareHtmlDocument(`<!doctype html><html><head>
       <script>window.bad = true</script>

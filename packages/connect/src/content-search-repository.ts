@@ -43,18 +43,16 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
       include: { effective: true, body: true },
     })) {
       const records = outcome.records;
-      const references = records.filter(isAnnotationRecord).map((record) => ({
-        path: record.path,
-        reference: annotationSourceValue(record),
-      }));
+      const references: { path: string; reference: unknown }[] = [];
+      for (const record of records) {
+        if (isAnnotationRecord(record)) {
+          references.push({ path: record.path, reference: annotationSourceValue(record) });
+        }
+      }
       options.signal?.throwIfAborted();
-      const owners = await resolveAnnotationSources(
-        this.client,
-        references,
-        options,
-        sourceIds,
-        linksByFolder,
-      );
+      const owners = references.length
+        ? await resolveAnnotationSources(this.client, references, options, sourceIds, linksByFolder)
+        : undefined;
       options.signal?.throwIfAborted();
       for (const record of records) {
         const match = recordMatch(record, owners);
@@ -96,7 +94,7 @@ function searchInput(query: string): Query {
 
 function recordMatch(
   record: RecordView,
-  owners: ReadonlyMap<string, string | undefined>,
+  owners: ReadonlyMap<string, string | undefined> | undefined,
 ): { readonly id: string; readonly kind: SourceTextMatchKind } | null {
   const frontmatter = record.effective ?? record.frontmatter;
   const declaredType = frontmatter["type"];
@@ -104,7 +102,7 @@ function recordMatch(
     const id = frontmatter["id"];
     return typeof id === "string" && id ? { id, kind: "source-note" } : null;
   }
-  const id = owners.get(record.path);
+  const id = owners?.get(record.path);
   return id ? { id, kind: "annotation" } : null;
 }
 

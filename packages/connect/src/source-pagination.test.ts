@@ -43,8 +43,8 @@ describe("Connect source pagination", () => {
 
     expect(pages.map(({ items }) => items.map(({ id }) => id))).toEqual([["src_01"], ["src_02"]]);
     expect(queryContract.mock.calls).toEqual([
-      [sourceContract, { pageSize: 128 }],
-      [sourceContract, { pageSize: 128, cursor: "opaque-next" }],
+      [sourceContract, { pageSize: 512 }],
+      [sourceContract, { pageSize: 512, cursor: "opaque-next" }],
     ]);
   });
 });

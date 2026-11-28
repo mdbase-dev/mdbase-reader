@@ -10,6 +10,7 @@ import {
   sourceId,
   type Annotation,
 } from "@mdbase-reader/core";
+import { ReaderI18nProvider } from "@mdbase-reader/i18n/react";
 import { Profiler, useState, type JSX } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -17,12 +18,12 @@ import "@mdbase-reader/ui/styles.css";
 import "../src/reader.css";
 import "../src/annotation-polish.css";
 import "../src/reader-shell.css";
+import "../src/notes-panel.css";
 import { AnnotationList } from "../src/AnnotationList.js";
 
-const count = Math.min(
-  3000,
-  Math.max(1, Number(new URLSearchParams(location.search).get("count")) || 300),
-);
+const parameters = new URLSearchParams(location.search);
+const html = parameters.get("format") === "html";
+const count = Math.min(3000, Math.max(1, Number(parameters.get("count")) || 300));
 const annotations: Annotation[] = Array.from({ length: count }, (_, index) => ({
   id: annotationId(`scale_${String(index).padStart(4, "0")}`),
   collectionId: collectionId("annotation-scale-fixture"),
@@ -32,14 +33,16 @@ const annotations: Annotation[] = Array.from({ length: count }, (_, index) => ({
   recordRevision: recordRevision("fixture-1"),
   document: {
     fileId: fileId("scale-document"),
-    file: "[[scale.pdf]]",
+    file: html ? "[[scale.html]]" : "[[scale.pdf]]",
     revision: fileRevision(`sha256:${"a".repeat(64)}`),
   },
-  annotationType: index % 5 === 0 ? "bookmark" : "highlight",
+  annotationType: !html && index % 5 === 0 ? "bookmark" : "highlight",
   locator: { label: `p. ${String(index + 1)}` },
-  target: { position: { kind: "pdf", pageIndex: index } },
+  target: html
+    ? { quote: { exact: `Passage ${String(index)}` } }
+    : { position: { kind: "pdf", pageIndex: index } },
   body:
-    index % 5 === 0
+    !html && index % 5 === 0
       ? ""
       : `> Passage ${String(index)}: ${"Patient attention makes careful research possible. ".repeat(1 + (index % 9))}\n\nComment ${String(index)}: ${"A useful connection to revisit. ".repeat(index % 4)}`,
   tags: [index % 2 ? "research" : "attention"],
@@ -123,4 +126,8 @@ const root = document.getElementById("root");
 if (!root) {
   throw new Error("Missing fixture root");
 }
-createRoot(root).render(<Fixture />);
+createRoot(root).render(
+  <ReaderI18nProvider>
+    <Fixture />
+  </ReaderI18nProvider>,
+);

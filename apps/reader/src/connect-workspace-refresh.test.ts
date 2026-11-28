@@ -40,13 +40,17 @@ it("bypasses warm source caches for draft conflict checks and retains the fresh 
     "Test",
     createReaderRuntimeServices(new MemoryStorage()),
   );
-  await gateway.library();
+  const library = await gateway.library();
+  expect(await gateway.library()).toBe(library);
   expect(await gateway.source(source.id)).toBe(source);
   expect(await gateway.source(source.id)).toBe(source);
   expect(get).toHaveBeenCalledTimes(1);
   expect(await gateway.refreshSource(source.id)).toBe(updated);
   expect(await gateway.source(source.id)).toBe(updated);
-  expect((await gateway.library()).sources[0]).toBe(updated);
+  const refreshed = await gateway.library();
+  expect(refreshed.sources[0]).toBe(updated);
+  expect(library.sources[0]).toBe(source);
+  expect(await gateway.library()).toBe(refreshed);
   expect(await gateway.refreshSource(source.id)).toBeNull();
   expect(get).toHaveBeenCalledTimes(3);
 });

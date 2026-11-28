@@ -18,10 +18,11 @@ export function browseAnnotations(
   return searchAnnotationIndex(indexAnnotations(annotations, order), query, filter);
 }
 
-/** Sort and normalize once per snapshot/order, not on each search keystroke. */
+/** Search text is normalized on demand and reused for subsequent queries. */
 interface AnnotationSearchEntry {
   readonly annotation: Annotation;
-  readonly text: string;
+  readonly source: SourceSummary | undefined;
+  text?: string;
 }
 /**
  * `sources` is given when the list covers many sources: search then also matches a source's
@@ -45,21 +46,7 @@ export function indexAnnotations(
               compareDocumentOrder(a, b)
           : compareDocumentOrder,
     )
-    .map((annotation) => {
-      const source = sources?.get(annotation.sourceId);
-      return {
-        annotation,
-        text: [
-          annotation.body,
-          annotation.target?.quote?.exact,
-          annotation.locator?.label,
-          ...annotation.tags,
-          ...(source ? [source.title, ...source.creators] : []),
-        ]
-          .join(" ")
-          .toLocaleLowerCase(),
-      };
-    });
+    .map((annotation) => ({ annotation, source: sources?.get(annotation.sourceId) }));
 }
 
 export function searchAnnotationIndex(
@@ -70,14 +57,26 @@ export function searchAnnotationIndex(
   const search = query.trim().toLocaleLowerCase();
   return index
     .filter(
-      ({ annotation, text }) =>
+      (entry) =>
         (filter === "all" ||
           (filter === "comments"
-            ? Boolean(annotationBodyContent(annotation.body).note.trim())
-            : annotation.annotationType === filter)) &&
-        (!search || text.includes(search)),
+            ? Boolean(annotationBodyContent(entry.annotation.body).note.trim())
+            : entry.annotation.annotationType === filter)) &&
+        (!search || (entry.text ??= annotationSearchText(entry)).includes(search)),
     )
     .map(({ annotation }) => annotation);
+}
+
+function annotationSearchText({ annotation, source }: AnnotationSearchEntry): string {
+  return [
+    annotation.body,
+    annotation.target?.quote?.exact,
+    annotation.locator?.label,
+    ...annotation.tags,
+    ...(source ? [source.title, ...source.creators] : []),
+  ]
+    .join(" ")
+    .toLocaleLowerCase();
 }
 
 /** A palette colour to list, or "" for any colour. */

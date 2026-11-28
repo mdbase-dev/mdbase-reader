@@ -203,6 +203,12 @@ export function buildLibraryView(request: LibraryViewSaveRequest): JsonObject {
   };
 }
 
+// A warmed title order can serve subsequent filters over the same immutable snapshot.
+const titleOrders = new WeakMap<
+  readonly SourceSummary[],
+  Partial<Record<LibrarySortDirection, readonly SourceSummary[]>>
+>();
+
 export function applyLibraryViewConfiguration(
   sources: readonly SourceSummary[],
   configuration: LibraryViewConfiguration,
@@ -218,12 +224,13 @@ export function applyLibraryViewConfiguration(
   const { sortField, sortDirection, filter } = configuration;
   const direction = sortDirection === "asc" ? 1 : -1;
   // Empty filters are the common library-open path. Sorting owns its input.
-  const unfiltered =
-    !query &&
-    !tag &&
-    filter.status === "all" &&
-    filter.format === "all" &&
-    filter.conditions.length === 0;
+  const unfiltered = hasNoFilters(filter, query, tag);
+  // Metadata queries often discard most rows. Walk their original snapshot order.
+  let orders = sortField === "title" && !query ? titleOrders.get(sources) : undefined;
+  const ordered = orders?.[sortDirection];
+  if (unfiltered && ordered) {
+    return ordered;
+  }
   const matchingTags = new Map<string, boolean>();
   function matchesTag(candidate: string): boolean {
     const known = matchingTags.get(candidate);
@@ -236,7 +243,7 @@ export function applyLibraryViewConfiguration(
   }
   const filtered = unfiltered
     ? [...sources]
-    : sources.filter((source) => {
+    : (ordered ?? sources).filter((source) => {
         if (
           configuration.filter.status !== "all" &&
           (source.readingStatus ?? "inbox") !== configuration.filter.status
@@ -260,7 +267,17 @@ export function applyLibraryViewConfiguration(
         return !query || metadataSearchText(source, parentTitle).includes(query);
       });
   if (sortField === "title") {
-    return filtered.sort((a, b) => direction * a.title.localeCompare(b.title));
+    if (!ordered) {
+      filtered.sort((a, b) => direction * a.title.localeCompare(b.title));
+    }
+    if (unfiltered) {
+      if (!orders) {
+        orders = {};
+        titleOrders.set(sources, orders);
+      }
+      orders[sortDirection] = filtered;
+    }
+    return filtered;
   }
   const key = propertyKey(sortField);
   if (key !== null) {
@@ -273,6 +290,16 @@ export function applyLibraryViewConfiguration(
   return filtered.sort(
     (left, right) =>
       direction * compareSortValues(sortValue(left, sortField), sortValue(right, sortField)),
+  );
+}
+
+function hasNoFilters(filter: LibraryViewFilter, query: string, tag: string): boolean {
+  return (
+    !query &&
+    !tag &&
+    filter.status === "all" &&
+    filter.format === "all" &&
+    filter.conditions.length === 0
   );
 }
 

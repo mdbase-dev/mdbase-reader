@@ -82,32 +82,43 @@ export function prepareHtmlDocument(source: string): string {
       element.replaceWith(...element.childNodes);
     }
   }
+  const svgImages = new Map<string, string | null>();
   for (const element of parsed.querySelectorAll("*")) {
-    sanitizeAttributes(element);
+    if (element.hasAttributes()) {
+      sanitizeAttributes(element, svgImages);
+    }
   }
   parsed.head.prepend(cspMeta(parsed));
   parsed.head.append(readerStyle(parsed));
   return `<!doctype html>\n${parsed.documentElement.outerHTML}`;
 }
 
-function sanitizeAttributes(element: Element): void {
+function sanitizeAttributes(element: Element, svgImages: Map<string, string | null>): void {
   for (const attribute of element.getAttributeNames()) {
-    const name = attribute.toLocaleLowerCase();
+    const name = attribute.toLowerCase();
     if (name.startsWith("on") || name === "srcdoc" || name === "srcset" || name === "style") {
       element.removeAttribute(attribute);
     } else if (urlAttributes.has(attribute)) {
-      sanitizeResource(element, attribute);
+      sanitizeResource(element, attribute, svgImages);
     }
   }
 }
 
-function sanitizeResource(element: Element, name: string): void {
+function sanitizeResource(
+  element: Element,
+  name: string,
+  svgImages: Map<string, string | null>,
+): void {
   const value = element.getAttribute(name)?.trim();
   if (!value) {
     return;
   }
-  if (name === "src" && element.localName === "img") {
-    const svg = sanitizedSvgImage(value);
+  if (name === "src" && element.localName === "img" && /^data:image\/svg\+xml[;,]/iu.test(value)) {
+    let svg = svgImages.get(value);
+    if (svg === undefined) {
+      svg = sanitizedSvgImage(value);
+      svgImages.set(value, svg);
+    }
     if (svg) {
       element.setAttribute(name, svg);
       return;

@@ -102,8 +102,12 @@ describe("HtmlDocumentRuntime page text outside the article", () => {
   });
 
   it("leaves hidden headings out of the contents", () => {
-    const { runtime: reader } = runtime();
+    const { runtime: reader, document: frame } = runtime();
+    expect(reader.hasContents()).toBe(true);
     expect(reader.contents().map((entry) => entry.title)).toEqual(["Essay", "Method"]);
+    frame.querySelector("article h2")?.remove();
+    expect(reader.hasContents()).toBe(false);
+    expect(reader.goToContents("1")).toBe(false);
     reader.destroy();
   });
 });
