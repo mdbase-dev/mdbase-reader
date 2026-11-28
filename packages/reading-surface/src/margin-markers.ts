@@ -67,6 +67,11 @@ export class MarginMarkers {
     if (!this.#document.defaultView) {
       return;
     }
+    if (!this.#ranges.length) {
+      this.#positions = [];
+      this.#layer.replaceChildren();
+      return;
+    }
     // Measure from the layer itself: EPUB frames offset and zoom the root element, so viewport
     // coordinates are converted into the layer's own positioning space.
     const origin = this.#layer.getBoundingClientRect();

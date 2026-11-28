@@ -12,6 +12,7 @@ import {
 
 import { confirmCollectionSwitch } from "./collection-switching.js";
 import { useShellNotices } from "./CreateFollowThroughNotice.js";
+import { preloadDocumentRenderer } from "./document-renderers.js";
 import { useReaderFeedbackContext } from "./FeedbackRoot.js";
 import { bindHighlightSettings } from "./highlight-colors.js";
 import { importHref } from "./import-navigation.js";
@@ -136,6 +137,13 @@ export function ReaderWorkspaceView({
     setDensity: (density) => shell.update({ density }),
     openSettings: settingsPage.show,
   });
+  const openLibrarySource = (id: SourceId): void => {
+    const document = library.sources.find((entry) => entry.id === id)?.documents[0];
+    if (document) {
+      preloadDocumentRenderer(document.mediaType, document.file);
+    }
+    sourceWorkspace.open(id);
+  };
   const inspectorSource = useLeaderSource(model);
   const sourceToolsOpen = dock.isSidebarVisible("right");
   useEffect(() => whenIdle(preloadInspectorTools), []);
@@ -258,7 +266,7 @@ export function ReaderWorkspaceView({
               indexLoading={library.sourceIndex?.complete === false}
               problem={model.libraryViews.problem}
               onPreviewSource={sourceWorkspace.preview}
-              onOpenSource={sourceWorkspace.open}
+              onOpenSource={openLibrarySource}
               onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
               onOpenView={(view) => {
                 sourceWorkspace.openLibrary(view.key, view.name);
@@ -341,7 +349,7 @@ export function ReaderWorkspaceView({
                 syncFilterUrl={syncFilterUrl}
                 // A tab's own view switcher changes that tab, even one pinned to its view.
                 onOpenView={(next) => dock.showLibraryView(workspaceTab.id, next.key, next.name)}
-                onOpenSource={(id) => sourceWorkspace.open(id)}
+                onOpenSource={openLibrarySource}
                 onOpenBeside={(id) => sourceWorkspace.openBeside(id)}
                 onInspectSource={workspace.selectSource}
                 onAddSource={sourceAddition.open}
