@@ -1,7 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { moveMenuFocus } from "@mdbase-dev/ui/popover";
 import {
-  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -196,16 +195,12 @@ export function useLibraryRowMenu(input: {
     open(index, box.left + 24, box.top + box.height / 2);
     return true;
   };
-  const close = useCallback((dismissed: boolean): void => {
-    setMenu((current) => {
-      if (current && dismissed) {
-        input.onClosed(current.index);
-      }
-      return null;
-    });
-    // onClosed only refocuses a row; a stale copy of it is harmless.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const close = (dismissed: boolean): void => {
+    if (dismissed && menu && input.sources[menu.index]?.id === menu.source.id) {
+      input.onClosed(menu.index);
+    }
+    setMenu(null);
+  };
   return {
     open,
     openFromKey,

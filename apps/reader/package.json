@@ -20,6 +20,7 @@
     "test": "pnpm manifest && pnpm manifest:verify && node --test scripts/*.test.mjs && vitest run src capture --maxWorkers=2 --testTimeout=15000",
     "bench:library": "vitest run test-fixtures/library-scale.test.tsx",
     "test:browser": "node scripts/audit-reader.mjs",
+    "test:library-article": "node scripts/audit-library-article.mjs",
     "test:html-svg": "node scripts/audit-html-svg.mjs",
     "test:feedback": "node scripts/feedback-browser-test.mjs",
     "test:pdf-touch": "node scripts/run-pdf-touch-audits.mjs",

@@ -7,9 +7,15 @@ import {
   type SourceTextSearchMatch,
 } from "@mdbase-reader/core";
 
+import { annotationSourceValue, resolveAnnotationSources } from "./annotation-source.js";
 import { completeReaderPages } from "./repository-client.js";
 
 import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
+
+interface SourceMatches {
+  readonly kinds: Set<SourceTextMatchKind>;
+  readonly passages: NonNullable<SourceTextSearchMatch["passages"]>[number][];
+}
 
 export class ConnectContentSearchRepository implements ContentSearchRepository {
   constructor(private readonly client: MdbaseClient) {}
@@ -24,34 +30,46 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     if (!normalized) {
       return [];
     }
-    const matches = new Map<string, SourceTextSearchMatch>();
+    const matches = new Map<string, SourceMatches>();
+    const sourceIds = new Map<string, string | undefined>();
     for await (const outcome of completeReaderPages(this.client, searchInput(normalized), {
       ...options,
       include: { effective: true, body: true },
     })) {
       const records = outcome.records;
-      for (const match of mergeMatches(records, normalized)) {
-        const previous = matches.get(match.sourceId);
-        matches.set(
-          match.sourceId,
-          previous
-            ? {
-                sourceId: match.sourceId,
-                kinds: [...new Set([...previous.kinds, ...match.kinds])],
-                ...((previous.passages ?? match.passages)
-                  ? {
-                      passages: [...(previous.passages ?? []), ...(match.passages ?? [])].slice(
-                        0,
-                        3,
-                      ),
-                    }
-                  : {}),
-              }
-            : match,
-        );
+      const references = records.filter(isAnnotationRecord).map((record) => ({
+        path: record.path,
+        reference: annotationSourceValue(record),
+      }));
+      const owners = await resolveAnnotationSources(this.client, references, options, sourceIds);
+      for (const record of records) {
+        const match = recordMatch(record, owners);
+        if (!match) {
+          continue;
+        }
+        let entry = matches.get(match.id);
+        if (!entry) {
+          entry = { kinds: new Set(), passages: [] };
+          matches.set(match.id, entry);
+        }
+        entry.kinds.add(match.kind);
+        if (entry.passages.length < 3 && typeof record.body === "string") {
+          const index = record.body.toLowerCase().indexOf(normalized);
+          if (index >= 0) {
+            entry.passages.push({
+              kind: match.kind,
+              path: record.path,
+              text: record.body.slice(Math.max(0, index - 100), index + normalized.length + 150),
+            });
+          }
+        }
       }
     }
-    return [...matches.values()];
+    return [...matches].map(([id, { kinds, passages }]) => ({
+      sourceId: sourceId(id),
+      kinds: [...kinds],
+      ...(passages.length ? { passages } : {}),
+    }));
   }
 }
 
@@ -62,43 +80,9 @@ function searchInput(query: string): Query {
   };
 }
 
-function mergeMatches(
-  records: readonly RecordView[],
-  query: string,
-): readonly SourceTextSearchMatch[] {
-  const kindsBySource = new Map<string, Set<SourceTextMatchKind>>();
-  const passages = new Map<string, NonNullable<SourceTextSearchMatch["passages"]>[number][]>();
-  for (const record of records) {
-    const match = recordMatch(record);
-    if (!match) {
-      continue;
-    }
-    const kinds = kindsBySource.get(match.id) ?? new Set<SourceTextMatchKind>();
-    kinds.add(match.kind);
-    kindsBySource.set(match.id, kinds);
-    const text = record.body;
-    if (typeof text === "string") {
-      const index = text.toLocaleLowerCase().indexOf(query);
-      const items = passages.get(match.id) ?? [];
-      if (index >= 0 && items.length < 3) {
-        items.push({
-          kind: match.kind,
-          path: record.path,
-          text: text.slice(Math.max(0, index - 100), index + query.length + 150),
-        });
-        passages.set(match.id, items);
-      }
-    }
-  }
-  return [...kindsBySource.entries()].map(([id, kinds]) => ({
-    sourceId: sourceId(id),
-    kinds: [...kinds],
-    ...(passages.has(id) ? { passages: passages.get(id) ?? [] } : {}),
-  }));
-}
-
 function recordMatch(
   record: RecordView,
+  owners: ReadonlyMap<string, string | undefined>,
 ): { readonly id: string; readonly kind: SourceTextMatchKind } | null {
   const frontmatter = record.effective ?? record.frontmatter;
   const declaredType = frontmatter["type"];
@@ -106,17 +90,13 @@ function recordMatch(
     const id = frontmatter["id"];
     return typeof id === "string" && id ? { id, kind: "source-note" } : null;
   }
-  if (declaredType === "reader-annotation" || record.types.includes("reader-annotation")) {
-    const id = wikilinkTarget(frontmatter["source"]);
-    return id ? { id, kind: "annotation" } : null;
-  }
-  return null;
+  const id = owners.get(record.path);
+  return id ? { id, kind: "annotation" } : null;
 }
 
-function wikilinkTarget(value: unknown): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-  const match = /^\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]$/u.exec(value.trim());
-  return match?.[1] ?? null;
+function isAnnotationRecord(record: RecordView): boolean {
+  return (
+    (record.effective ?? record.frontmatter)["type"] === "reader-annotation" ||
+    record.types.includes("reader-annotation")
+  );
 }

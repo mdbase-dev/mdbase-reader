@@ -25,6 +25,16 @@ describe("readerErrorMessage", () => {
       "This annotation query is too large. Try again. If it still fails, contact support.",
     );
   });
+  it.each([
+    new ConnectRepositoryError("read source", "connection_unavailable"),
+    new Error("connection_unavailable"),
+    "connection_unavailable",
+  ])("uses the caller's recovery message for a bare error code", (error) => {
+    expect(readerErrorMessage(error, "Reconnect and search again.")).toBe(
+      "Reconnect and search again.",
+    );
+  });
+
   it("preserves actionable operation errors", () => {
     expect(readerErrorMessage(new Error("The operation timed out."), "Try again.")).toBe(
       "The operation timed out.",

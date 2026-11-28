@@ -127,7 +127,9 @@ export function LibraryWorkspace({
     ReadonlyMap<string, Readonly<Record<string, unknown>>>
   >(() => new Map());
   const [loading, setLoading] = useState(Boolean(view.path));
-  const [problem, setProblem] = useState<string | null>(null);
+  const [viewProblem, setViewProblem] = useState<string | null>(null);
+  const [editProblem, setEditProblem] = useState<string | null>(null);
+  const problem = editProblem ?? (mode === "sources" ? viewProblem : null) ?? controller.problem;
   const [saving, setSaving] = useState(false);
   const executionFamily = `reader-library-view:${useId()}`;
 
@@ -143,13 +145,14 @@ export function LibraryWorkspace({
       })
       .then((result) => {
         if (!controller.signal.aborted) {
+          setViewProblem(null);
           setExecutedSources(result.sources);
           setValuesByPath(result.valuesByPath);
         }
       })
       .catch((reason: unknown) => {
         if (!controller.signal.aborted) {
-          setProblem(
+          setViewProblem(
             readerErrorMessage(
               reason,
               translate({ message: "Reader could not execute this mdbase view." }),
@@ -588,9 +591,9 @@ export function LibraryWorkspace({
         ) : null}
       </header>
 
-      {(problem ?? controller.problem) ? (
+      {problem ? (
         <div className="library-view-problem" role="alert">
-          {problem ?? controller.problem}
+          {problem}
         </div>
       ) : null}
       {writes.notice ? (
@@ -715,7 +718,9 @@ export function LibraryWorkspace({
                   ? {
                       onEditField: (source: SourceSummary, key: string, text: string) =>
                         writes.saveField?.(source, key, text).catch((reason: unknown) => {
-                          setProblem(readerErrorMessage(reason, t`Reader could not save ${key}.`));
+                          setEditProblem(
+                            readerErrorMessage(reason, t`Reader could not save ${key}.`),
+                          );
                           throw reason;
                         }) ?? Promise.resolve(),
                     }

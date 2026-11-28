@@ -1,4 +1,4 @@
-import { matchTextQuote, resolveSearchQuote, type TextQuote } from "@mdbase-reader/core";
+import { textQuoteMatcher, resolveSearchQuote, type TextQuote } from "@mdbase-reader/core";
 
 export type { TextQuote } from "@mdbase-reader/core";
 
@@ -13,8 +13,9 @@ export function locateTextQuote(root: Element, quote: TextQuote): Range | null {
 /** Reuse an index while a caller guarantees that the root's text has not changed. */
 export function createTextQuoteLocator(root: Element): (quote: TextQuote) => Range | null {
   const index = textIndex(root);
+  const matchQuote = textQuoteMatcher(index.text);
   return (quote) => {
-    const match = matchTextQuote(index.text, quote);
+    const match = matchQuote(quote);
     return match ? rangeAt(root.ownerDocument, index.nodes, match.start, match.end) : null;
   };
 }

@@ -102,27 +102,24 @@ export function matchesCondition(
   }
   const raw = propertyValue(source, condition.key, selected);
   const items = Array.isArray(raw) ? (raw as readonly unknown[]) : [raw];
-  const empty = items.every((item) => item === undefined || item === null || item === "");
-  const wanted = condition.value.trim().toLocaleLowerCase();
-  const texts = items.flatMap((item) =>
-    item === undefined || item === null
-      ? []
-      : [
-          typeof item === "string" ? item.toLocaleLowerCase() : "",
-          conditionValue(item).toLocaleLowerCase(),
-        ].filter(Boolean),
-  );
+  if (!operatorNeedsValue(condition.operator)) {
+    const empty = items.every((item) => item === undefined || item === null || item === "");
+    return condition.operator === "empty" ? empty : !empty;
+  }
   switch (condition.operator) {
-    case "empty":
-      return empty;
-    case "not-empty":
-      return !empty;
     case "is":
-      return texts.includes(wanted);
     case "is-not":
-      return !texts.includes(wanted);
-    case "contains":
-      return texts.some((text) => text.includes(wanted));
+    case "contains": {
+      const wanted = condition.value.trim().toLocaleLowerCase();
+      const matches = (text: string): boolean =>
+        condition.operator === "contains" ? text.includes(wanted) : text === wanted;
+      const found = items.some(
+        (item) =>
+          (typeof item === "string" && matches(item.toLocaleLowerCase())) ||
+          matches(conditionValue(item).toLocaleLowerCase()),
+      );
+      return condition.operator === "is-not" ? !found : found;
+    }
     default:
       return compare(items, condition);
   }

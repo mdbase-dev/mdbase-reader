@@ -2,7 +2,7 @@ import { collectionId } from "@mdbase-reader/core";
 import { describe, expect, it, vi } from "vitest";
 
 import { ConnectContentSearchRepository } from "./content-search-repository.js";
-import { mockSdk, testQuery, testRecord } from "./records.fixtures.js";
+import { linkIndex, mockSdk, testQuery, testRecord } from "./records.fixtures.js";
 
 import type { QueryResult, RecordView } from "@mdbase-dev/sdk";
 
@@ -68,6 +68,38 @@ describe("ConnectContentSearchRepository", () => {
       }),
       expect.objectContaining({}),
     );
+  });
+
+  it("finds annotations linked by filename across pages, reading their owner once", async () => {
+    const source = testRecord({
+      path: "sources/My paper.md",
+      effective: { type: "reader-source", id: "stable" },
+    });
+    const records = Array.from({ length: 6 }, (_, index) =>
+      testRecord({
+        path: `annotations/${String(index)}.md`,
+        effective: { type: "reader-annotation", source: "[[My paper|Study]]" },
+        body: `Matched passage ${String(index)}`,
+      }),
+    );
+    const links = linkIndex([source], (link) =>
+      link === "[[My paper|Study]]" ? source.path : null,
+    );
+    const find = vi.fn().mockResolvedValue(source);
+    const client = mockSdk({
+      ...links,
+      find,
+      pages: () => queryStream([page(records.slice(0, 2), 0, false), page(records.slice(2))]),
+    });
+    const result = await new ConnectContentSearchRepository(client).search(
+      collectionId("reading"),
+      "matched",
+    );
+    expect(result.map((match) => match.sourceId)).toEqual(["stable"]);
+    expect(result[0]?.passages?.map((passage) => passage.path)).toEqual(
+      records.slice(0, 3).map((record) => record.path),
+    );
+    expect(find).toHaveBeenCalledTimes(1);
   });
 
   it("includes bounded passage context without losing record destinations", async () => {
