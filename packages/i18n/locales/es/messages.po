@@ -2064,6 +2064,7 @@ msgid "Collection title"
 msgstr "Título de la colección"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
+#: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Collection version"
 msgstr "Versión de la colección"
 
@@ -5703,6 +5704,10 @@ msgstr "Otras fuentes de Readwise"
 msgid "other source"
 msgstr "otra fuente"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Other version"
+msgstr "Otra versión"
+
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
 msgstr "Índice"
@@ -6150,6 +6155,10 @@ msgstr "Propiedades"
 #: apps/reader/src/CitationLookup.tsx
 msgid "Proposed"
 msgstr "Propuesto"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Protected local edit"
+msgstr "Edición local protegida"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7684,6 +7693,10 @@ msgctxt "CSL item type"
 msgid "Software"
 msgstr "Programa informático"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Some changes need review after sync. Compare the preserved versions below."
+msgstr "Hay cambios que debes revisar después de la sincronización. Compara las versiones conservadas que se muestran abajo."
+
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
 msgstr "Algunas ediciones no han llegado a la colección. Los borradores son locales a este dispositivo, no están guardados en la colección, y cambiar de colección puede interrumpir los guardados pendientes. Termina primero tus ediciones para evitar perder trabajo."
@@ -9188,6 +9201,10 @@ msgstr "Verificando los registros importados"
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
 msgstr "Versión"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Version kept during sync"
+msgstr "Versión conservada durante la sincronización"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"

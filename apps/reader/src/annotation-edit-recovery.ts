@@ -2,16 +2,13 @@ import {
   annotationDraftSnapshot,
   saveAnnotationDraft,
   whenAnnotationDraftReady,
+  type AnnotationLocalDraft,
 } from "./annotation-drafts.js";
 
-export interface LegacyAnnotationEdits {
-  readonly body: string;
-  readonly baseBody?: string;
-}
-/** Compatibility only: do not discard unfinished comments written by older Reader versions. */
+/** Also reads unfinished comments written by older Reader versions. */
 export function readLegacyEdits(
   key: string,
-  ready: (value: LegacyAnnotationEdits | null) => void,
+  ready: (value: AnnotationLocalDraft | null) => void,
 ): void {
   whenAnnotationDraftReady(key, () => ready(annotationDraftSnapshot(key).value));
 }

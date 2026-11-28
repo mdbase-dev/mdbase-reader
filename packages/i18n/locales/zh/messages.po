@@ -2064,6 +2064,7 @@ msgid "Collection title"
 msgstr "集合标题"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
+#: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Collection version"
 msgstr "集合版本"
 
@@ -5703,6 +5704,10 @@ msgstr "其他 Readwise 来源"
 msgid "other source"
 msgstr "其他来源"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Other version"
+msgstr "另一版本"
+
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
 msgstr "目录"
@@ -6150,6 +6155,10 @@ msgstr "属性"
 #: apps/reader/src/CitationLookup.tsx
 msgid "Proposed"
 msgstr "建议值"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Protected local edit"
+msgstr "受保护的本地编辑"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7684,6 +7693,10 @@ msgctxt "CSL item type"
 msgid "Software"
 msgstr "软件"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Some changes need review after sync. Compare the preserved versions below."
+msgstr "同步后有些更改需要核对。请比较下方保留的版本。"
+
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
 msgstr "部分编辑尚未写入集合。草稿仅保留在此设备上，未保存到集合；切换集合可能中断待完成的保存操作。请先完成编辑，以免丢失内容。"
@@ -9188,6 +9201,10 @@ msgstr "正在验证已导入的记录"
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
 msgstr "版本"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Version kept during sync"
+msgstr "同步时采用的版本"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"

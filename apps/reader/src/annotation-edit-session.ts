@@ -4,15 +4,21 @@ import {
   openReaderRecord,
   type Mdbase,
   type RecordLease,
+  type RecordSessionSnapshot,
   type RecordSessionState,
 } from "@mdbase-reader/connect";
 import { describeError } from "@mdbase-reader/connect/native";
 
+import {
+  clearAnnotationDraftIfCurrent,
+  flushAnnotationDraft,
+  saveAnnotationDraft,
+  type AnnotationLocalDraft,
+} from "./annotation-drafts.js";
 import { clearLegacyEdits, readLegacyEdits } from "./annotation-edit-recovery.js";
 import { recordEditStatus } from "./record-edit-status.js";
 import { trackAnnotationEdits } from "./unsaved-annotation-edits.js";
 
-import type { LegacyAnnotationEdits } from "./annotation-edit-recovery.js";
 import type { AnnotationEditSnapshot } from "./annotation-edit-types.js";
 import type { Annotation } from "@mdbase-reader/core";
 
@@ -37,6 +43,7 @@ export class AnnotationEditSession {
   private text: string;
   private readonly listeners = new Set<() => void>();
   private legacy = false;
+  private deviceDraft: AnnotationLocalDraft | null = null;
   private restoredConflict: Annotation | null = null;
   private removed = false;
   private lockOwner: object | undefined;
@@ -62,15 +69,16 @@ export class AnnotationEditSession {
       }
       const [lease, draft] = await Promise.all([
         openReaderRecord(this.mdbase, base.collectionId, base.path, { autosave: { idleMs: 1000 } }),
-        new Promise<LegacyAnnotationEdits | null>((ready) => readLegacyEdits(this.key, ready)),
+        new Promise<AnnotationLocalDraft | null>((ready) => readLegacyEdits(this.key, ready)),
       ]);
       this.lease = lease;
       const record = lease.session.getSnapshot();
       this.current = annotationFromDocument(base.collectionId, record.record, base.sourceId);
-      this.legacy = draft !== null;
+      this.deviceDraft = draft?.savedOnDevice ? draft : null;
+      this.legacy = draft !== null && !this.deviceDraft;
       if (draft && draft.body !== this.current.body) {
         this.text = draft.body;
-        if (draft.baseBody !== this.current.body) {
+        if (draft.savedOnDevice || draft.baseBody !== this.current.body) {
           this.restoredConflict = this.current;
         } else {
           lease.session.setBody(draft.body);
@@ -96,6 +104,9 @@ export class AnnotationEditSession {
       this.listeners.delete(listener);
       if (!this.listeners.size) {
         this.detached = true;
+        if (this.deviceDraft) {
+          flushAnnotationDraft(this.key);
+        }
         this.releaseSaved();
       }
     };
@@ -123,6 +134,9 @@ export class AnnotationEditSession {
       return;
     }
     this.text = body;
+    if (this.deviceDraft) {
+      this.checkpointDeviceDraft(body);
+    }
     if (!this.restoredConflict) {
       this.lease.session.setBody(body);
       this.lease.session.patchFrontmatter({ modified_at: new Date().toISOString() });
@@ -136,6 +150,9 @@ export class AnnotationEditSession {
     await this.opened;
     if (!this.lease || this.restoredConflict) {
       return;
+    }
+    if (this.deviceDraft) {
+      flushAnnotationDraft(this.key);
     }
     await this.lease.session.flush();
     this.sync();
@@ -151,6 +168,9 @@ export class AnnotationEditSession {
     }
     if (this.restoredConflict) {
       this.restoredConflict = null;
+      if (choice === "remote") {
+        this.clearDeviceDraft();
+      }
       this.lease.session.setBody(choice === "local" ? this.text : this.current.body);
     } else {
       this.lease.session.resolve({ keep: choice === "local" ? "mine" : "theirs" });
@@ -161,7 +181,10 @@ export class AnnotationEditSession {
     if (!this.lease || this.snapshot.status === "saving" || this.snapshot.locked) {
       return;
     }
-    this.restoredConflict = null;
+    if (this.restoredConflict) {
+      this.restoredConflict = null;
+      this.clearDeviceDraft();
+    }
     if (this.lease.session.getSnapshot().remote) {
       this.lease.session.resolve({ keep: "theirs" });
     }
@@ -208,9 +231,11 @@ export class AnnotationEditSession {
       this.current.sourceId,
     );
     const published = next.recordRevision !== this.current.recordRevision;
+    const previousText = this.text;
+    this.reconcileDeviceDraft(record, next);
     this.current = next;
     const text = this.restoredConflict ? this.text : record.body;
-    const changed = text !== this.text;
+    const changed = text !== previousText;
     this.text = text;
     this.clearRecoveredDraft(record.state);
     const status = this.restoredConflict ? "unsaved" : recordEditStatus(record.state);
@@ -233,6 +258,45 @@ export class AnnotationEditSession {
     }
     this.releaseSaved();
   }
+  private reconcileDeviceDraft(record: RecordSessionSnapshot, next: Annotation): void {
+    if (
+      record.state === "saved_on_device" &&
+      this.snapshot.status === "saving" &&
+      record.body !== this.current.body
+    ) {
+      this.checkpointDeviceDraft(record.body);
+      flushAnnotationDraft(this.key);
+    }
+    if (record.state !== "saved" || !this.deviceDraft) {
+      return;
+    }
+    if (record.body === this.deviceDraft.body) {
+      this.restoredConflict = null;
+      this.clearDeviceDraft();
+    } else {
+      this.text = this.deviceDraft.body;
+      this.restoredConflict = next;
+    }
+  }
+  private checkpointDeviceDraft(body: string): void {
+    const draft = {
+      body,
+      baseBody: this.deviceDraft?.baseBody ?? this.current.body,
+      savedOnDevice: true,
+    };
+    this.deviceDraft = draft;
+    this.legacy = false;
+    saveAnnotationDraft(this.key, draft);
+  }
+  private clearDeviceDraft(): void {
+    const draft = this.deviceDraft;
+    this.deviceDraft = null;
+    if (draft) {
+      void clearAnnotationDraftIfCurrent(this.key, draft).catch(() => {
+        // A retained checkpoint is safe to review on the next open.
+      });
+    }
+  }
   private clearRecoveredDraft(state: RecordSessionState): void {
     if (state === "saved" && this.legacy && !this.restoredConflict) {
       clearLegacyEdits(this.key);
@@ -242,7 +306,13 @@ export class AnnotationEditSession {
 
   private releaseSaved(): void {
     const record = this.lease?.session.getSnapshot();
-    if (!this.detached || record?.state !== "saved" || record.dirty || record.recovery) {
+    if (
+      !this.detached ||
+      this.restoredConflict ||
+      record?.state !== "saved" ||
+      record.dirty ||
+      record.recovery
+    ) {
       return;
     }
     this.stopLease?.();

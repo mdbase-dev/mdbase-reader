@@ -2064,6 +2064,7 @@ msgid "Collection title"
 msgstr "컬렉션 제목"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
+#: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Collection version"
 msgstr "컬렉션 버전"
 
@@ -5703,6 +5704,10 @@ msgstr "기타 Readwise 출처"
 msgid "other source"
 msgstr "다른 자료"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Other version"
+msgstr "다른 버전"
+
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
 msgstr "목차"
@@ -6150,6 +6155,10 @@ msgstr "속성"
 #: apps/reader/src/CitationLookup.tsx
 msgid "Proposed"
 msgstr "제안됨"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Protected local edit"
+msgstr "보호된 로컬 편집 내용"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7684,6 +7693,10 @@ msgctxt "CSL item type"
 msgid "Software"
 msgstr "소프트웨어"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Some changes need review after sync. Compare the preserved versions below."
+msgstr "동기화 후 확인이 필요한 변경 사항이 있습니다. 아래에 보존된 버전을 비교하세요."
+
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
 msgstr "일부 수정 사항이 컬렉션에 반영되지 않았습니다. 초안은 컬렉션에 저장되지 않고 이 기기에만 있으며, 전환하면 진행 중인 저장이 중단될 수 있습니다. 변경 사항이 사라지지 않도록 먼저 편집을 마치세요."
@@ -9188,6 +9201,10 @@ msgstr "가져온 레코드 확인 중"
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
 msgstr "버전"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Version kept during sync"
+msgstr "동기화에서 채택된 버전"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"

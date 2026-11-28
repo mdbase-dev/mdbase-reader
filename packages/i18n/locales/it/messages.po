@@ -2063,6 +2063,7 @@ msgid "Collection title"
 msgstr "Titolo della raccolta"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
+#: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Collection version"
 msgstr "Versione della raccolta"
 
@@ -5702,6 +5703,10 @@ msgstr "Altre fonti Readwise"
 msgid "other source"
 msgstr "altra fonte"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Other version"
+msgstr "Altra versione"
+
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
 msgstr "Sommario"
@@ -6149,6 +6154,10 @@ msgstr "Proprietà"
 #: apps/reader/src/CitationLookup.tsx
 msgid "Proposed"
 msgstr "Proposto"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Protected local edit"
+msgstr "Modifica locale protetta"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7683,6 +7692,10 @@ msgctxt "CSL item type"
 msgid "Software"
 msgstr "Software"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Some changes need review after sync. Compare the preserved versions below."
+msgstr "Alcune modifiche devono essere controllate dopo la sincronizzazione. Confronta le versioni conservate qui sotto."
+
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
 msgstr "Alcune modifiche non sono arrivate alla raccolta. Le bozze sono locali a questo dispositivo, non salvate nella raccolta, e il cambio di raccolta può interrompere i salvataggi in corso. Completa prima le modifiche per evitare di perdere il lavoro."
@@ -9187,6 +9200,10 @@ msgstr "Verifica dei record importati"
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
 msgstr "Versione"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Version kept during sync"
+msgstr "Versione mantenuta durante la sincronizzazione"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"

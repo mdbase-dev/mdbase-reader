@@ -6,6 +6,7 @@ export interface StoredSourceDraft {
   readonly baseRevision: string;
   readonly baseBody: string;
   readonly body: string;
+  readonly savedOnDevice?: boolean;
   readonly recovery?: RecordRecoveryRef;
 }
 
@@ -41,12 +42,14 @@ export function writeSourceDraft(
   source: Source,
   body: string,
   recovery?: RecordRecoveryRef,
+  savedOnDevice = false,
 ): void {
   const value: StoredSourceDraft = {
     version: 1,
     baseRevision: source.recordRevision,
     baseBody: source.body,
     body,
+    ...(savedOnDevice ? { savedOnDevice } : {}),
     ...(recovery
       ? {
           recovery: {

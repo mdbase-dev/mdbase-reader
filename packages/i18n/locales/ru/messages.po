@@ -2064,6 +2064,7 @@ msgid "Collection title"
 msgstr "Название коллекции"
 
 #: apps/reader/src/DraftRecoveryNotice.tsx
+#: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Collection version"
 msgstr "Версия коллекции"
 
@@ -5703,6 +5704,10 @@ msgstr "Другие источники Readwise"
 msgid "other source"
 msgstr "другой источник"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Other version"
+msgstr "Другая версия"
+
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
 msgstr "Оглавление"
@@ -6150,6 +6155,10 @@ msgstr "Свойства"
 #: apps/reader/src/CitationLookup.tsx
 msgid "Proposed"
 msgstr "Предложено"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Protected local edit"
+msgstr "Защищённое локальное изменение"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7684,6 +7693,10 @@ msgctxt "CSL item type"
 msgid "Software"
 msgstr "Программное обеспечение"
 
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Some changes need review after sync. Compare the preserved versions below."
+msgstr "Некоторые изменения нужно проверить после синхронизации. Сравните сохранённые версии ниже."
+
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
 msgstr "Некоторые изменения ещё не попали в коллекцию. Черновики хранятся на этом устройстве, а не в коллекции; при переключении ожидающие сохранения могут прерваться. Сначала завершите редактирование, чтобы не потерять данные."
@@ -9188,6 +9201,10 @@ msgstr "Проверка импортированных записей"
 msgctxt "CSL bibliographic field or item type"
 msgid "Version"
 msgstr "Версия"
+
+#: apps/reader/src/ReaderSyncConflicts.tsx
+msgid "Version kept during sync"
+msgstr "Версия, сохранённая при синхронизации"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"

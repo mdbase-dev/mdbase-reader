@@ -57,3 +57,11 @@
 .reader-save-details time {
   color: var(--muted);
 }
+.reader-sync-versions summary {
+  white-space: normal;
+}
+.reader-sync-versions pre {
+  margin-block: 4px 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

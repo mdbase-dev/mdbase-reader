@@ -18,6 +18,39 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it("shows both versions of SDK conflicts and holds even when no writes are pending", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  const host = document.createElement("div");
+  document.body.append(host);
+  root = createRoot(host);
+  const app = await createTestApp();
+  try {
+    const replica = app.replica();
+    const source = replica.seed({ path: "sources/article.md" });
+    const annotation = replica.seed({ path: "annotations/note.md" });
+    replica.conflict(source.id, { field: "tags", kept: ["peer-tag"], lost: ["offline-tag"] });
+    replica.hold(annotation.id, { mine: "Offline comment", theirs: "Peer comment" });
+    await vi.waitFor(() => {
+      expect(app.client().status.holds).toBe(1);
+      expect(app.client().status.unresolved).toBe(1);
+    });
+    app.set("ready");
+    await act(async () => {
+      root.render(<ReaderSaveStatus mdbase={app.mdbase} online={true} />);
+      await Promise.resolve();
+    });
+    await vi.waitFor(() => {
+      expect(host.textContent).toContain("Changes need attention");
+      for (const value of ["peer-tag", "offline-tag", "Offline comment", "Peer comment"]) {
+        expect(host.textContent).toContain(value);
+      }
+    });
+    expect(app.client().ledger.getSnapshot().pending).toHaveLength(0);
+  } finally {
+    await app.close();
+  }
+});
+
 it("offers a reload only when the SDK marks pending writes as long", () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   const host = document.createElement("div");

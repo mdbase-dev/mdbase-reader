@@ -55,18 +55,9 @@ function rangeAt(
 ): Range | null {
   // A start on a node boundary belongs to the node that begins there, not the one ending there;
   // otherwise the range would open with the preceding text's line box.
-  const startNode =
-    nodes.find((entry) => start >= entry.start && start < entry.end) ??
-    nodes.find((entry) => start >= entry.start && start <= entry.end);
-  let endNode: IndexedText["nodes"][number] | undefined;
-  for (let index = nodes.length - 1; index >= 0; index -= 1) {
-    const entry = nodes[index];
-    // The end belongs to the text that ends here, not the following element at offset 0.
-    if (entry && end > entry.start && end <= entry.end) {
-      endNode = entry;
-      break;
-    }
-  }
+  const startNode = textNodeAt(nodes, start + 1);
+  // The end belongs to the text that ends here, not the following element at offset 0.
+  const endNode = textNodeAt(nodes, end);
   if (!startNode || !endNode) {
     return null;
   }
@@ -74,4 +65,23 @@ function rangeAt(
   range.setStart(startNode.node, start - startNode.start);
   range.setEnd(endNode.node, end - endNode.start);
   return range;
+}
+
+/** First node containing a character at the given one-based text offset. */
+function textNodeAt(
+  nodes: IndexedText["nodes"],
+  offset: number,
+): IndexedText["nodes"][number] | undefined {
+  let low = 0;
+  let high = nodes.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    const entry = nodes[middle];
+    if (entry && entry.end < offset) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return nodes[low];
 }

@@ -5,6 +5,7 @@ import {
   type Mdbase,
   type RecordLease,
   type RecordRecoveryRef,
+  type RecordSessionSnapshot,
 } from "@mdbase-reader/connect";
 import { describeError } from "@mdbase-reader/connect/native";
 
@@ -40,6 +41,7 @@ export class SourceDraftSession {
   private stopLease: (() => void) | undefined;
   private detached = false;
   private storedBody: string | undefined;
+  private deviceBody: string | undefined;
   private restoredBaseBody: string | undefined;
   private recovery: RecordRecoveryRef | undefined;
   private restoredConflict: Source | null = null;
@@ -65,6 +67,7 @@ export class SourceDraftSession {
     try {
       const draft = readSourceDraft(storage, base);
       this.storedBody = draft?.body;
+      this.deviceBody = draft?.savedOnDevice ? draft.body : undefined;
       this.recovery = draft?.recovery;
       if (draft && draft.body !== base.body) {
         this.restoredBaseBody = draft.baseBody;
@@ -75,8 +78,6 @@ export class SourceDraftSession {
           locallySaved: true,
           recovered: true,
         };
-      } else if (draft) {
-        clearSourceDraft(storage, base, base.body);
       }
     } catch {
       this.snapshot = {
@@ -107,7 +108,8 @@ export class SourceDraftSession {
         if (
           !recovery &&
           changed &&
-          (this.restoredBaseBody ?? base.body) !== this.current.body &&
+          (this.deviceBody !== undefined ||
+            (this.restoredBaseBody ?? base.body) !== this.current.body) &&
           local !== this.current.body
         ) {
           this.restoredConflict = this.current;
@@ -147,6 +149,9 @@ export class SourceDraftSession {
     if (body === this.snapshot.body) {
       return;
     }
+    if (this.deviceBody !== undefined) {
+      this.deviceBody = body;
+    }
     this.update({ body, status: "unsaved", recovered: false, locallySaved: false });
     if (!this.restoredConflict) {
       this.lease?.session.setBody(body);
@@ -178,6 +183,9 @@ export class SourceDraftSession {
       return;
     }
     const checkpointBody = this.storedBody ?? this.snapshot.body;
+    if (choice === "remote") {
+      this.deviceBody = undefined;
+    }
     if (this.restoredConflict) {
       this.restoredConflict = null;
       this.lease.session.setBody(choice === "local" ? this.snapshot.body : this.current.body);
@@ -200,22 +208,20 @@ export class SourceDraftSession {
     this.sync();
   };
   private sync(): void {
-    if (!this.lease || this.restoredConflict) {
+    if (!this.lease) {
       return;
     }
     const record = this.lease.session.getSnapshot();
     const source = sourceFromDocument(this.current.collectionId, record.record);
     const status = recordEditStatus(record.state);
     const acknowledged = source.recordRevision !== this.current.recordRevision;
+    const restoredConflict = this.reconcileDeviceDraft(record, source);
     this.current = source;
-    if (record.state === "saved") {
-      this.checkpoint.cancel();
-      try {
-        clearSourceDraft(this.storage, source, record.body);
-        this.storedBody = undefined;
-      } catch {
-        /* Keep an older checkpoint if storage is unavailable. */
+    if (restoredConflict) {
+      if (acknowledged) {
+        this.publish(source);
       }
+      return;
     }
     this.update({
       body: record.body,
@@ -239,6 +245,39 @@ export class SourceDraftSession {
     }
     this.releaseSaved();
   }
+  private reconcileDeviceDraft(record: RecordSessionSnapshot, source: Source): boolean {
+    if (
+      record.state === "saved_on_device" &&
+      this.snapshot.status === "saving" &&
+      record.body !== this.current.body
+    ) {
+      this.deviceBody = record.body;
+      this.store(record.body);
+    }
+    if (this.restoredConflict) {
+      if (source.recordRevision !== this.current.recordRevision) {
+        this.restoredConflict = source;
+        this.update({ conflict: source });
+      }
+      return true;
+    }
+    if (record.state === "saved") {
+      if (this.deviceBody !== undefined && record.body !== this.deviceBody) {
+        this.restoredConflict = source;
+        this.update({ conflict: source, status: "unsaved", recovered: true });
+        return true;
+      }
+      this.deviceBody = undefined;
+      this.checkpoint.cancel();
+      try {
+        clearSourceDraft(this.storage, source, record.body);
+        this.storedBody = undefined;
+      } catch {
+        /* Keep an older checkpoint if storage is unavailable. */
+      }
+    }
+    return false;
+  }
   private releaseSaved(): void {
     const record = this.lease?.session.getSnapshot();
     if (!this.detached || record?.state !== "saved" || record.dirty || record.recovery) {
@@ -250,16 +289,17 @@ export class SourceDraftSession {
     this.lease = null;
     this.opened = null;
   }
-  private store(): void {
+  private store(body = this.snapshot.body): void {
     this.checkpoint.cancel();
     try {
       writeSourceDraft(
         this.storage,
         this.current,
-        this.snapshot.body,
+        body,
         this.lease?.session.getSnapshot().recovery ?? undefined,
+        this.deviceBody !== undefined,
       );
-      this.storedBody = this.snapshot.body;
+      this.storedBody = body;
       this.update({ locallySaved: true, localProblem: null });
     } catch {
       this.update({
