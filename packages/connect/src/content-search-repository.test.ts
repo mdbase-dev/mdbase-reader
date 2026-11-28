@@ -107,6 +107,34 @@ describe("ConnectContentSearchRepository", () => {
     );
   });
 
+  it("reuses a matched source note when later pages link to it", async () => {
+    const source = testRecord({
+      path: "sources/Paper.md",
+      effective: { type: "reader-source", id: "stable" },
+      body: "Matched note",
+    });
+    const annotation = testRecord({
+      path: "annotations/one.md",
+      effective: { type: "reader-annotation", source: "[[Paper]]" },
+      body: "Matched annotation",
+    });
+    const links = linkIndex([source], () => source.path);
+    const find = vi.fn();
+    const repository = new ConnectContentSearchRepository(
+      mockSdk({
+        ...links,
+        find,
+        pages: () => queryStream([page([source], 0, false), page([annotation])]),
+      }),
+    );
+    const result = await repository.search(collectionId("reading"), "matched");
+    expect(result).toHaveLength(1);
+    expect(result[0]?.kinds).toEqual(["source-note", "annotation"]);
+    expect(result[0]?.passages?.map(({ path }) => path)).toEqual([source.path, annotation.path]);
+    expect(links.resolveLinks).toHaveBeenCalledOnce();
+    expect(find).not.toHaveBeenCalled();
+  });
+
   it("resolves identical links independently by folder and on each search", async () => {
     const first = testRecord({ path: "one/Owner.md", effective: { id: "first" } });
     const second = testRecord({ path: "two/Owner.md", effective: { id: "second" } });

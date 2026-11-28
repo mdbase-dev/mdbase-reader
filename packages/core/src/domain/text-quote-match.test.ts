@@ -97,6 +97,17 @@ describe("matchTextQuote", () => {
     }
   });
 
+  it("keeps the original UTF-16 range when repeated placements start using the index", () => {
+    const text = "some text ".repeat(5000) + "left 📖\u00ad story right; another 📖 story";
+    const place = textQuoteMatcher(text, "range");
+    const quote = { exact: "📖 story", prefix: "left ", suffix: " right" };
+    const start = text.indexOf("📖");
+    for (let count = 0; count < 20; count++) {
+      expect(place(quote)).toEqual({ start, end: start + "📖\u00ad story".length });
+    }
+    expect(place({ exact: "missing" })).toBeNull();
+  });
+
   it("locates many quotations in one prepared text", () => {
     const match = textQuoteMatcher("one two three");
     expect([match({ exact: "one" })?.start, match({ exact: "three" })?.start]).toEqual([0, 8]);

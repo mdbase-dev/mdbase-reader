@@ -1,3 +1,5 @@
+import { indexedSubstringSearch } from "./indexed-substring-search.js";
+
 import type { QuoteSelector } from "./selector.js";
 
 /**
@@ -89,6 +91,8 @@ export function textQuoteMatcher(
   mode?: "range",
 ): (quote: TextQuote) => QuoteRange | null {
   const haystack = normalize(text);
+  let searches = 0;
+  let indexedSearch: ((needle: string) => number) | undefined;
   return (quote) => {
     const needle = quote.exact.replace(ignorable, "");
     if (!needle) {
@@ -99,7 +103,17 @@ export function textQuoteMatcher(
     if (mode === "range") {
       // Painting needs the first best range. A full context match already has the
       // maximum possible score, even when a later occurrence ties.
-      const found = haystack.text.indexOf(prefix + needle + suffix);
+      // A handful of highlights cost less to scan directly. Amortize the index
+      // over repeated placements on the same long, immutable normalized text.
+      if (
+        ++searches === 16 &&
+        haystack.text.length >= 32_768 &&
+        haystack.text.length <= 4_194_304
+      ) {
+        indexedSearch = indexedSubstringSearch(haystack.text);
+      }
+      const contextual = prefix + needle + suffix;
+      const found = indexedSearch ? indexedSearch(contextual) : haystack.text.indexOf(contextual);
       if (found >= 0) {
         const start = found + prefix.length;
         return originalRange(haystack, start, start + needle.length);

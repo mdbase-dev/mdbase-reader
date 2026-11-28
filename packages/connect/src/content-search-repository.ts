@@ -18,8 +18,9 @@ import { completeReaderPages } from "./repository-client.js";
 import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
 
 interface SourceMatches {
-  readonly kinds: Set<SourceTextMatchKind>;
-  readonly passages: NonNullable<SourceTextSearchMatch["passages"]>[number][];
+  readonly sourceId: SourceId;
+  readonly kinds: SourceTextMatchKind[];
+  passages?: NonNullable<SourceTextSearchMatch["passages"]>[number][];
 }
 
 export class ConnectContentSearchRepository implements ContentSearchRepository {
@@ -61,27 +62,37 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
         }
         let entry = matches.get(match.id);
         if (!entry) {
-          entry = { kinds: new Set(), passages: [] };
+          entry = { sourceId: sourceId(match.id), kinds: [match.kind] };
           matches.set(match.id, entry);
+        } else if (!entry.kinds.includes(match.kind)) {
+          entry.kinds.push(match.kind);
         }
-        entry.kinds.add(match.kind);
-        if (entry.passages.length < 3 && typeof record.body === "string") {
-          const index = record.body.toLowerCase().indexOf(normalized);
-          if (index >= 0) {
-            entry.passages.push({
-              kind: match.kind,
-              path: record.path,
-              text: record.body.slice(Math.max(0, index - 100), index + normalized.length + 150),
-            });
-          }
+        if (match.kind === "source-note") {
+          // A later page can resolve a link to this path without a second SDK read.
+          sourceIds.set(record.path, entry.sourceId);
         }
+        appendPassage(entry, record, match.kind, normalized);
       }
     }
-    return [...matches].map(([id, { kinds, passages }]) => ({
-      sourceId: sourceId(id),
-      kinds: [...kinds],
-      ...(passages.length ? { passages } : {}),
-    }));
+    return [...matches.values()];
+  }
+}
+
+function appendPassage(
+  entry: SourceMatches,
+  record: RecordView,
+  kind: SourceTextMatchKind,
+  normalized: string,
+): void {
+  if ((entry.passages?.length ?? 0) < 3 && typeof record.body === "string") {
+    const index = record.body.toLowerCase().indexOf(normalized);
+    if (index >= 0) {
+      (entry.passages ??= []).push({
+        kind,
+        path: record.path,
+        text: record.body.slice(Math.max(0, index - 100), index + normalized.length + 150),
+      });
+    }
   }
 }
 
