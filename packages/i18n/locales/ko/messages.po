@@ -5706,7 +5706,7 @@ msgstr "다른 자료"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Other version"
-msgstr ""
+msgstr "다른 버전"
 
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
@@ -6158,7 +6158,7 @@ msgstr "제안됨"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Protected local edit"
-msgstr ""
+msgstr "보호된 로컬 편집 내용"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7695,7 +7695,7 @@ msgstr "소프트웨어"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Some changes need review after sync. Compare the preserved versions below."
-msgstr ""
+msgstr "동기화 후 확인이 필요한 변경 사항이 있습니다. 아래에 보존된 버전을 비교하세요."
 
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
@@ -9204,7 +9204,7 @@ msgstr "버전"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Version kept during sync"
-msgstr ""
+msgstr "동기화에서 채택된 버전"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"

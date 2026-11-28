@@ -5706,7 +5706,7 @@ msgstr "другой источник"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Other version"
-msgstr ""
+msgstr "Другая версия"
 
 #: packages/renderer-pdf/src/pdf-accessibility.ts
 msgid "Outline"
@@ -6158,7 +6158,7 @@ msgstr "Предложено"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Protected local edit"
-msgstr ""
+msgstr "Защищённое локальное изменение"
 
 #: apps/reader/src/CitationStructuredEditor.tsx
 msgid "Publication"
@@ -7695,7 +7695,7 @@ msgstr "Программное обеспечение"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Some changes need review after sync. Compare the preserved versions below."
-msgstr ""
+msgstr "Некоторые изменения нужно проверить после синхронизации. Сравните сохранённые версии ниже."
 
 #: apps/reader/src/collection-switching.ts
 msgid "Some edits have not reached the collection. Drafts are local to this device, not saved to the collection, and switching may interrupt pending saves. Finish your edits first to avoid losing work."
@@ -9204,7 +9204,7 @@ msgstr "Версия"
 
 #: apps/reader/src/ReaderSyncConflicts.tsx
 msgid "Version kept during sync"
-msgstr ""
+msgstr "Версия, сохранённая при синхронизации"
 
 #: packages/renderer-pdf/src/pdf-translations.ts
 msgctxt "PDF viewer page"
