@@ -43,6 +43,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     const noteIds: SourceId[] = [];
     let sourceIds: Map<string, SourceId | undefined> | undefined;
     let linksByFolder: AnnotationLinkTargets | undefined;
+    let occurrences: Map<string, string> | undefined;
     const rememberSource = (path: string, id: SourceId): void => {
       if (sourceIds) {
         sourceIds.set(path, id);
@@ -80,6 +81,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
           options,
           sourceIds,
           linksByFolder,
+          (occurrences ??= new Map<string, string>()),
         );
       }
       options.signal?.throwIfAborted();
@@ -128,11 +130,16 @@ function appendPassage(
   if ((entry.passages?.length ?? 0) < 3 && typeof record.body === "string") {
     const index = record.body.toLowerCase().indexOf(normalized);
     if (index >= 0) {
-      (entry.passages ??= []).push({
+      const passage = {
         kind,
         path: record.path,
         text: record.body.slice(Math.max(0, index - 100), index + normalized.length + 150),
-      });
+      };
+      if (entry.passages) {
+        entry.passages.push(passage);
+      } else {
+        entry.passages = [passage];
+      }
     }
   }
 }
