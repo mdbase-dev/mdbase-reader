@@ -120,3 +120,24 @@ it("notes a run of cards outside their chapter's pages once, on its first headin
     false,
   ]);
 });
+
+it("looks up owners once per library and retains the first title for a duplicate id", () => {
+  let reads = 0;
+  const owners = Array.from({ length: 100 }, (_, index) => ({
+    ...sources[0]!,
+    get id() {
+      reads++;
+      return sourceId(String(index));
+    },
+    title: String(index),
+  }));
+  const last = sourceId("99");
+  const headings = annotationGroupHeadings(
+    Array.from({ length: 100 }, (_, index) => onPage(String(index), index, last)),
+    undefined,
+    [...owners, { ...sources[0]!, id: last, title: "Duplicate" }],
+    true,
+  );
+  expect(headings.every((heading) => heading?.source?.summary === owners.at(-1))).toBe(true);
+  expect(reads).toBeLessThanOrEqual(2 * owners.length);
+});

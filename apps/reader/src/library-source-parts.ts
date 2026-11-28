@@ -36,6 +36,20 @@ export function librarySourceParts(
   readonly sources: readonly SourceSummary[];
   readonly rows: ReadonlyMap<SourceId, LibraryPartRow>;
 } {
+  // With no part-of edges among the matches, even a filtered list is already in tree order.
+  if (
+    !matches.some(
+      (source) =>
+        source.partOf !== undefined ||
+        source.relations?.some(({ relation }) => relation === "part-of"),
+    )
+  ) {
+    const rows = new Map<SourceId, LibraryPartRow>();
+    for (const { id } of matches) {
+      rows.set(id, { depth: 0, expandable: false, expanded: !collapsed.has(id) });
+    }
+    return { sources: matches, rows };
+  }
   const byId = new Map([...library, ...matches].map((source) => [source.id, source]));
   const included = new Set(matches.map(({ id }) => id));
   const children = new Map<SourceId, SourceSummary[]>();

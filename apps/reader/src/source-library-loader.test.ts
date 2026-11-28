@@ -17,6 +17,30 @@ const first: SourceSummary = {
 };
 
 describe("loadSourceLibrary", () => {
+  it("shows the first row immediately without publishing every one-row page", async () => {
+    const sources = Array.from({ length: 1000 }, (_, i) => ({
+      ...first,
+      id: sourceId(String(i)),
+    }));
+    const progress = vi.fn<(snapshot: ReaderLibrarySnapshot) => void>();
+    async function* pages(): AsyncGenerator<Page<SourceSummary>> {
+      for (const source of sources) {
+        yield await Promise.resolve({ items: [source] });
+      }
+    }
+    const complete = await loadSourceLibrary({
+      repository: { listPages: pages } as unknown as SourceRepository,
+      collectionId: first.collectionId,
+      collectionName: "Reading",
+      options: {},
+      onProgress: progress,
+    });
+    expect(progress.mock.calls[0]?.[0].sources).toEqual(sources.slice(0, 1));
+    expect(progress.mock.calls.reduce((sum, [page]) => sum + page.sources.length, 0)).toBeLessThan(
+      5000,
+    );
+    expect(complete.sources).toEqual(sources);
+  });
   it("bounds cumulative snapshot copies when old authorities keep small pages", async () => {
     const sources = Array.from({ length: 10_000 }, (_, i) => ({
       ...first,

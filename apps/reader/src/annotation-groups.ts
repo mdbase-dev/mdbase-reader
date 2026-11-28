@@ -31,9 +31,8 @@ export interface AnnotationGroupHeading {
 /** A PDF annotation owned by a chapter source but placed outside that chapter's page range. */
 export function annotationOutsideChapter(
   annotation: Annotation,
-  sources: readonly SourceSummary[],
+  owner: SourceSummary | undefined,
 ): boolean {
-  const owner = sources.find(({ id }) => id === annotation.sourceId);
   const range = owner?.documents.find(
     (document) =>
       sameDocument(document, annotation.document) &&
@@ -78,8 +77,18 @@ export function annotationGroupHeadings(
   let headed = false;
   let outsideRun = false;
   let outsideNoted = false;
+  if (results.length === 0) {
+    return [];
+  }
+  const byId = new Map<SourceId, SourceSummary>();
+  for (const source of sources) {
+    if (!byId.has(source.id)) {
+      byId.set(source.id, source);
+    }
+  }
   return results.map((annotation) => {
-    const outside = annotationOutsideChapter(annotation, sources);
+    const owner = byId.get(annotation.sourceId);
+    const outside = annotationOutsideChapter(annotation, owner);
     if (!outside || !outsideRun) {
       outsideNoted = false;
     }
@@ -94,7 +103,7 @@ export function annotationGroupHeadings(
     headed = true;
     const heading = {
       label: group.label,
-      source: group.other ? groupSource(annotation, sources) : null,
+      source: group.other ? groupSource(annotation, owner) : null,
     };
     if (outside && !outsideNoted) {
       outsideNoted = true;
@@ -126,8 +135,7 @@ function annotationGroup(
 
 function groupSource(
   annotation: Annotation,
-  sources: readonly SourceSummary[],
+  summary: SourceSummary | undefined,
 ): NonNullable<AnnotationGroupHeading["source"]> {
-  const summary = sources.find(({ id }) => id === annotation.sourceId);
   return summary ? { title: summary.title, summary } : { title: annotation.source };
 }

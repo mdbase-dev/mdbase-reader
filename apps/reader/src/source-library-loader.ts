@@ -88,7 +88,7 @@ async function loadStablePages(
     total = page.totalCount ?? total;
     // Old authorities may still pin tiny pages. Avoid repeatedly copying and
     // rerendering the entire growing index; first rows stay immediate.
-    if (sources.length <= 1000 || sources.length - published >= Math.ceil(published / 4)) {
+    if (sources.length - published >= Math.max(1, Math.ceil(published / 4))) {
       publish(input, sources, false, total);
       published = sources.length;
     }
