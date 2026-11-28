@@ -67,7 +67,7 @@ export async function resolveAnnotationSources(
   options: ReaderRequestOptions = {},
   ids = new Map<string, SourceId | undefined>(),
   linksByFolder: AnnotationLinkTargets = new Map(),
-  occurrences = new Map<string, string>(),
+  occurrences?: Map<string, string>,
 ): Promise<Map<string, SourceId | undefined>> {
   const owners = new Map<string, SourceId | undefined>();
   const folders: FolderLinks = new Map();
@@ -175,11 +175,11 @@ async function readSourceIds(
 }
 
 /** A frontmatter link as the resolver takes it; a bare value is read as a wikilink target. */
-function linkOccurrence(value: unknown, occurrences: Map<string, string>): string | undefined {
+function linkOccurrence(value: unknown, occurrences?: Map<string, string>): string | undefined {
   if (typeof value !== "string") {
     return undefined;
   }
-  const known = occurrences.get(value);
+  const known = occurrences?.get(value);
   if (known !== undefined) {
     return known;
   }
@@ -188,7 +188,7 @@ function linkOccurrence(value: unknown, occurrences: Map<string, string>): strin
     return undefined;
   }
   const link = /^!?\[\[[^\]]+\]\]$|^!?\[[^\]]*\]\([^)]+\)$/u.test(raw) ? raw : `[[${raw}]]`;
-  occurrences.set(value, link);
+  occurrences?.set(value, link);
   return link;
 }
 

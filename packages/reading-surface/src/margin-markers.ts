@@ -75,7 +75,7 @@ export class MarginMarkers {
     // Measure from the layer itself: EPUB frames offset and zoom the root element, so viewport
     // coordinates are converted into the layer's own positioning space.
     const origin = this.#layer.getBoundingClientRect();
-    const scale = this.#scale();
+    const scale = origin.width / marginLayerWidth || 1;
     this.#layoutScale = scale;
     this.#positions = [];
     const markers = this.#ranges.flatMap(({ id, range, hasNote, color }) => {
@@ -131,16 +131,6 @@ export class MarginMarkers {
     return nearest;
   }
 
-  /** Rendered pixels per CSS pixel inside the layer, e.g. under a zoomed root. */
-  #scale(): number {
-    const probe = this.#document.createElement("i");
-    probe.style.cssText = "position:absolute;visibility:hidden;width:100px;height:0";
-    this.#layer.append(probe);
-    const scale = probe.getBoundingClientRect().width / 100;
-    probe.remove();
-    return scale > 0 ? scale : 1;
-  }
-
   public destroy(): void {
     this.#unsubscribe();
     this.#layer.remove();
@@ -164,9 +154,12 @@ function blockAncestor(node: Node): Element | null {
 
 // The bar takes its highlight's ink: translucent at rest, solid with a note or when active. A page
 // that follows a dark theme marks its root with data-reader-scheme="dark" and takes the dark ink.
+// The layer stays zero-height. Its measured width also gives the frame's zoom,
+// without inserting a temporary element and forcing layout between range reads.
+const marginLayerWidth = 100;
 const marginStyles = `
 html { position: relative; }
-[data-mdbase-reader="margin"] { position: absolute; inset: 0 auto auto 0; width: 0; height: 0; z-index: 2; }
+[data-mdbase-reader="margin"] { position: absolute; inset: 0 auto auto 0; width: ${String(marginLayerWidth)}px; height: 0; z-index: 2; }
 [data-mdbase-reader="margin"] > span { --ink: var(--mdbase-marker, #e0a61e); position: absolute; width: 3px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 60%, transparent); cursor: pointer; transition: background .15s, width .15s, transform .15s; }
 :root[data-reader-scheme="dark"] [data-mdbase-reader="margin"] > span { --ink: var(--mdbase-marker-dark, #edc14d); }
 [data-mdbase-reader="margin"] > span::after { content: ""; position: absolute; inset: -2px -8px; }
