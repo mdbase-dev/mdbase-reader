@@ -134,3 +134,72 @@ After installing workspace dependencies and Playwright Chromium, run
 `node apps/reader/scripts/audit-library-article.mjs` for the browser fixture.
 It starts and closes its own loopback server. To compare an earlier commit, copy
 the two benchmark files into a worktree at that commit and run the same commands.
+
+## Search, imports and reading progress (2026-11-28)
+
+The comparison starts at `d739e84f`, which includes #352 and #354. Each timing is
+the median of seven samples after one warm-up. Vitest ran with Node 22.22.0 on the
+shared build VM. Chromium 156.0.8078.4 ran on the local workstation against fixtures.
+
+| Vitest operation                      | 5,000 before | 5,000 after | 10,000 before | 10,000 after |
+| ------------------------------------- | -----------: | ----------: | ------------: | -----------: |
+| Three title, author and tag queries   |      6.86 ms |     4.05 ms |      15.29 ms |      9.04 ms |
+| Tag and status filter and custom sort |      0.78 ms |     0.42 ms |       0.94 ms |      0.38 ms |
+| Tag suggestions                       |      0.53 ms |     0.53 ms |       0.26 ms |      0.23 ms |
+| Source-note and annotation results    |      4.74 ms |     4.01 ms |       6.72 ms |      5.76 ms |
+| Link occurrences sent to the SDK      |        5,000 |          25 |        10,000 |           50 |
+
+The mixed search returns 200 annotations and a source note per owner. Results
+retain both kinds and the first three passages per owner. Link resolution is
+shared by folder and exact link text for the current paged search. The CPU fixture
+uses preselected SDK pages and excludes the authority's evaluator and transport.
+Tag suggestions sample 2,000 sources. The warmed metadata query benefits from
+caching each unchanged summary, with chapter titles resolved against the current
+parent collection.
+
+Chromium results take the median of three runs per revision, alternating
+baseline and candidate on the same workstation. The metadata rows provide
+context for the import path and varied with workstation load.
+
+| Chromium operation                       |   Before |   After |
+| ---------------------------------------- | -------: | ------: |
+| Plan and hash HTML (568 KB)              |   1.0 ms |  0.6 ms |
+| Plan and hash EPUB (1.17 MB)             |   2.0 ms |  1.4 ms |
+| Plan and hash PDF (2.70 MB)              |   5.4 ms |  3.4 ms |
+| Read HTML import metadata                |   3.2 ms |  3.6 ms |
+| Read EPUB import metadata                |  12.3 ms | 11.6 ms |
+| Read PDF import metadata                 |  22.6 ms | 21.0 ms |
+| Sanitize HTML                            |  11.4 ms |  7.1 ms |
+| Open EPUB, read and sanitize the chapter |  63.2 ms | 54.3 ms |
+| Sanitize the loaded EPUB chapter         |  47.7 ms | 33.3 ms |
+| Dispatch 1,000 chapter position updates  | 624.2 ms |  1.3 ms |
+| Writes after a settled burst and leaving |        2 |       1 |
+
+The fixtures cover HTML and XHTML documents with 1,200 paragraphs, the latter
+with a 600 KB inline data payload, and a 1,000-page PDF. Import planning includes
+format detection and Web Crypto hashing against an in-memory repository. The
+metadata and sanitizer rows run the corresponding Reader and renderer code in
+Chromium. File transfer and hosted storage are outside these measurements.
+
+Progress dispatch sends 1,000 locator events to the real HTML surface and
+Reader's resume hook with the browser offline. The write port uses real browser
+storage in the fixture. It checks the last locator after the idle save and after
+leaving with a pending update. Dispatch timing excludes the 1.2-second debounce,
+and the storage test covers the Reader hook through its write boundary.
+
+The 360 px touch fixture checks the library, open filter menu and HTML reader
+with axe-core in both colour schemes. It also checks URL reload and browser Back,
+slash search, Escape and ArrowDown focus, and PageDown within the article. The
+first All sources tab owns the URL fragment. Search text stays out of HTTP
+requests, and unrelated query parameters survive filter edits.
+
+```sh
+rpnpm --filter @mdbase-reader/app run bench:library
+pnpm --filter @mdbase-reader/app run bench:import-progress
+pnpm --filter @mdbase-reader/app run test:mobile-library
+```
+
+For a baseline, copy the benchmark scripts and their fixtures into a checkout
+of the baseline commit and run the same entry points there. For Chromium, run
+`node apps/reader/scripts/benchmark-import-progress.mjs` if the baseline predates
+the package script.

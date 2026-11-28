@@ -61,6 +61,8 @@ jobs:
         run: pnpm --filter @mdbase-reader/app test:pdf-touch
       - name: Verify library keyboard navigation and restored article highlights
         run: pnpm --filter @mdbase-reader/app test:library-article
+      - name: Verify mobile library filters and article accessibility
+        run: pnpm --filter @mdbase-reader/app test:mobile-library
       - name: Verify imported SVG rendering in the HTML sandbox
         run: pnpm --filter @mdbase-reader/app test:html-svg
       - name: Verify private feedback with sample data and intercepted delivery

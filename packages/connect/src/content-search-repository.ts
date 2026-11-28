@@ -7,7 +7,11 @@ import {
   type SourceTextSearchMatch,
 } from "@mdbase-reader/core";
 
-import { annotationSourceValue, resolveAnnotationSources } from "./annotation-source.js";
+import {
+  annotationSourceValue,
+  resolveAnnotationSources,
+  type AnnotationLinkTargets,
+} from "./annotation-source.js";
 import { completeReaderPages } from "./repository-client.js";
 
 import type { MdbaseClient, Query, RecordView } from "@mdbase-dev/sdk";
@@ -32,6 +36,7 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
     }
     const matches = new Map<string, SourceMatches>();
     const sourceIds = new Map<string, string | undefined>();
+    const linksByFolder: AnnotationLinkTargets = new Map();
     for await (const outcome of completeReaderPages(this.client, searchInput(normalized), {
       ...options,
       include: { effective: true, body: true },
@@ -41,7 +46,15 @@ export class ConnectContentSearchRepository implements ContentSearchRepository {
         path: record.path,
         reference: annotationSourceValue(record),
       }));
-      const owners = await resolveAnnotationSources(this.client, references, options, sourceIds);
+      options.signal?.throwIfAborted();
+      const owners = await resolveAnnotationSources(
+        this.client,
+        references,
+        options,
+        sourceIds,
+        linksByFolder,
+      );
+      options.signal?.throwIfAborted();
       for (const record of records) {
         const match = recordMatch(record, owners);
         if (!match) {

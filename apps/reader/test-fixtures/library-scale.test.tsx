@@ -20,7 +20,7 @@ const collection = collectionId("benchmark");
 const collapsed = new Set<SourceSummary["id"]>();
 
 /** Local CPU only. Already-decoded pages, no network, SDK I/O, React commit or paint. */
-for (const count of [2000, 10_000]) {
+for (const count of [5000, 10_000]) {
   it(`profiles a library of ${String(count)} sources`, async () => {
     const sources: SourceSummary[] = Array.from({ length: count }, (_, index) => ({
       collectionId: collection,
@@ -29,6 +29,7 @@ for (const count of [2000, 10_000]) {
       title: `Paper ${String((index * 7919) % count)}`,
       creators: ["Research group"],
       tags: [index % 10 === 0 ? "history" : "science"],
+      readingStatus: index % 3 === 0 ? "reading" : "inbox",
       properties: { score: index % 100, tags: [index % 10 === 0 ? "history" : "science"] },
       documents: [],
     }));
@@ -89,34 +90,60 @@ for (const count of [2000, 10_000]) {
     await median("tag suggestions", () => {
       expect(fieldValueSuggestions(sources, "tags")).toEqual(["science", "history"]);
     });
+    await median("tag/status filtering and custom-field sort", () => {
+      const results = applyLibraryViewConfiguration(sources, {
+        ...view,
+        filter: { ...view.filter, tag: "history", status: "reading" },
+        sortField: "property:score",
+        sortDirection: "desc",
+      });
+      expect(results).toHaveLength(Math.ceil(count / 30));
+      expect(results[0]?.properties?.["score"]).toBe(90);
+    });
     // Each heavily annotated source contributes 200 matching notes spread across pages.
     const notes = annotations.map((annotation, index) => ({
       path: `annotations/${annotation.id}.md`,
       types: ["reader-annotation"],
-      effective: { source: `[[source-${String(index % (count / 200))}]]` },
+      effective: { source: `[[sources/${String(index % (count / 200))}]]` },
       body: `Selected passage ${String(index)} ${"annotation context ".repeat(40)}`,
     }));
+    const records = [
+      ...notes,
+      ...sources.slice(0, count / 200).map((source) => ({
+        path: source.path,
+        types: ["reader-source"],
+        effective: { id: source.id },
+        body: `Selected passage in a source note about ${source.title}`,
+      })),
+    ];
+    let resolvedLinks = 0;
     const search = new ConnectContentSearchRepository({
       async *pages() {
-        for (let offset = 0; offset < notes.length; offset += 128) {
+        for (let offset = 0; offset < records.length; offset += 128) {
           yield await Promise.resolve({
             complete: true,
-            records: notes.slice(offset, offset + 128),
+            records: records.slice(offset, offset + 128),
           });
         }
       },
-      // Legacy bare-ID links, with no record at the link target in this fixture.
-      resolveLinks: (_from: string, links: string[]) =>
-        Promise.resolve({
+      resolveLinks: (_from: string, links: string[]) => {
+        resolvedLinks += links.length;
+        return Promise.resolve({
           complete: true,
-          resolutions: links.map(() => ({ kind: "not_found" })),
-        }),
+          resolutions: links.map((link) => ({ kind: "record", path: `${link.slice(2, -2)}.md` })),
+        });
+      },
+      find: ({ path }: { path: string }) =>
+        Promise.resolve({ effective: { id: `source-${path.slice(8, -3)}` } }),
     } as unknown as MdbaseClient);
-    await median("annotation search results", async () => {
+    await median("source-note and annotation search results", async () => {
+      resolvedLinks = 0;
       const results = await search.search(collection, "passage");
       expect(results).toHaveLength(count / 200);
       expect(results.every((match) => match.passages?.length === 3)).toBe(true);
+      expect(results.every((match) => match.kinds.join() === "annotation,source-note")).toBe(true);
     });
+    stdout.write(`links passed to SDK: ${String(resolvedLinks)}\n`);
     await median("collection highlight headings", () => {
       const headings = annotationGroupHeadings(annotations, undefined, sources, true);
       expect(headings.at(-1)?.source?.summary).toBe(sources.at(-1));

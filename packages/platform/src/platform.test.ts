@@ -91,6 +91,14 @@ describe("StorageCreateJournal", () => {
 });
 
 describe("createReaderRuntimeServices", () => {
+  it("hashes only the supplied bytes of an offset view", async () => {
+    const { hasher } = createReaderRuntimeServices(new MemoryStorage());
+    const view = new Uint8Array([0, 97, 98, 99, 0]).subarray(1, 4);
+    await expect(hasher.sha256(view)).resolves.toBe(
+      "sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    );
+  });
+
   it("creates UUID mutation identities accepted by resumable file transfers", () => {
     const services = createReaderRuntimeServices(new MemoryStorage());
 

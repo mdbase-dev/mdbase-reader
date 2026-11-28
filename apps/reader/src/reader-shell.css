@@ -3164,7 +3164,14 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--action);
+  border: 0;
+  border-radius: var(--ui-radius);
+  color: var(--ink);
+  background: transparent;
+}
+
+.reader-menu-panel .library-condition-add:hover {
+  background: var(--hover);
 }
 
 .library-condition-add svg {

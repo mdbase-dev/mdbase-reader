@@ -228,6 +228,43 @@ it("leaves a reader outside the chapter where they are when the source record re
   expect(surface.currentLocation()).toEqual({ kind: "pdf", pageIndex: 22 });
 });
 
+it("flushes a pending chapter position when leaving without resaving a settled position", async () => {
+  const { chapter } = await anthology();
+  const surface = pdf(chapter);
+  const save = vi.fn().mockResolvedValue(undefined);
+  function Harness(): null {
+    useReadingResume({ source: chapter, surface, save });
+    return null;
+  }
+  const open = async (): Promise<void> => {
+    await act(async () => {
+      root.render(<Harness />);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+  };
+  await open();
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 13 });
+    await vi.advanceTimersByTimeAsync(1200);
+    root.render(null);
+  });
+  expect(save).toHaveBeenCalledTimes(1);
+
+  await open();
+  await act(async () => {
+    await surface.goTo({ kind: "pdf", pageIndex: 14 });
+    await surface.goTo({ kind: "pdf", pageIndex: 15 });
+    root.render(null);
+  });
+  expect(save).toHaveBeenCalledTimes(2);
+  expect(save).toHaveBeenLastCalledWith(
+    chapter.id,
+    surface.document.document,
+    { kind: "pdf", pageIndex: 15 },
+    0.5,
+  );
+});
+
 it("restores a position saved elsewhere while the surface was inactive, instead of overwriting it", async () => {
   const { chapter } = await anthology();
   const surface = pdf(chapter);

@@ -30,7 +30,7 @@ const unwrappedElements = ["form", "button"] as const;
  */
 export const outsideArticleRevealedAttribute = "data-reader-revealed";
 
-const urlAttributes = ["href", "src", "poster", "action", "formaction", "xlink:href"] as const;
+const urlAttributes = new Set(["href", "src", "poster", "action", "formaction", "xlink:href"]);
 
 /** The article's text: page text kept outside the article is left out. */
 export function htmlDocumentText(document: Document): string {
@@ -91,24 +91,30 @@ export function prepareHtmlDocument(source: string): string {
 }
 
 function sanitizeAttributes(element: Element): void {
-  for (const attribute of [...element.attributes]) {
-    const name = attribute.name.toLocaleLowerCase();
+  for (const attribute of element.getAttributeNames()) {
+    const name = attribute.toLocaleLowerCase();
     if (name.startsWith("on") || name === "srcdoc" || name === "srcset" || name === "style") {
-      element.removeAttribute(attribute.name);
+      element.removeAttribute(attribute);
+    } else if (urlAttributes.has(attribute)) {
+      sanitizeResource(element, attribute);
     }
   }
-  for (const name of urlAttributes) {
-    const value = element.getAttribute(name)?.trim();
-    if (name === "src" && element.localName === "img" && value) {
-      const svg = sanitizedSvgImage(value);
-      if (svg) {
-        element.setAttribute(name, svg);
-        continue;
-      }
+}
+
+function sanitizeResource(element: Element, name: string): void {
+  const value = element.getAttribute(name)?.trim();
+  if (!value) {
+    return;
+  }
+  if (name === "src" && element.localName === "img") {
+    const svg = sanitizedSvgImage(value);
+    if (svg) {
+      element.setAttribute(name, svg);
+      return;
     }
-    if (value && !safeResource(name, value)) {
-      element.removeAttribute(name);
-    }
+  }
+  if (!safeResource(name, value)) {
+    element.removeAttribute(name);
   }
 }
 

@@ -6,6 +6,13 @@ import type { FetchImplementation } from "@readium/shared";
 
 const ACTIVE_ELEMENTS = "script, iframe, frame, frameset, object, embed, form, base";
 const URL_ATTRIBUTES = ["href", "src", "xlink:href", "poster", "data", "action", "formaction"];
+const ACTIVE_URL_PREFIXES = [
+  "javascript:",
+  "vbscript:",
+  "data:text/html",
+  "data:application/xhtml+xml",
+];
+const MAX_ACTIVE_URL_PREFIX_LENGTH = Math.max(...ACTIVE_URL_PREFIXES.map(({ length }) => length));
 
 export const safePublicationFetch: FetchImplementation = async (input, init) => {
   const response = await fetch(input, init);
@@ -55,6 +62,9 @@ function sanitizePublicationDocument(markup: string, mediaType: string): Documen
 }
 
 function sanitizeElement(element: Element): void {
+  if (!element.hasAttributes()) {
+    return;
+  }
   for (const attribute of [...element.attributes]) {
     const name = attribute.name.toLowerCase();
     if (name.startsWith("on") || ["srcdoc", "ping"].includes(name)) {
@@ -71,18 +81,18 @@ function sanitizeElement(element: Element): void {
 
 function unsafeActiveUrl(value: string): boolean {
   let compact = "";
-  for (let index = 0; index < value.length; index += 1) {
+  // Only the scheme and media type can match. A data URL can contain megabytes after them.
+  for (
+    let index = 0;
+    index < value.length && compact.length < MAX_ACTIVE_URL_PREFIX_LENGTH;
+    index += 1
+  ) {
     if (value.charCodeAt(index) > 32) {
       compact += value.charAt(index);
     }
   }
   compact = compact.toLowerCase();
-  return (
-    compact.startsWith("javascript:") ||
-    compact.startsWith("vbscript:") ||
-    compact.startsWith("data:text/html") ||
-    compact.startsWith("data:application/xhtml+xml")
-  );
+  return ACTIVE_URL_PREFIXES.some((prefix) => compact.startsWith(prefix));
 }
 
 function parserMediaType(mediaType: string): DOMParserSupportedType {
